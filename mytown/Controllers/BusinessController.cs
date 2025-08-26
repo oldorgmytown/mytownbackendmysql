@@ -230,7 +230,12 @@ namespace mytown.Controllers
             return Ok(categories);
         }
 
-
+        [HttpGet("BusinessSubCategoriesforStores")]
+        public async Task<ActionResult<IEnumerable<businesscategoriescs>>> BusinessSubCategoriesforStores(int buscatid)
+        {
+            var subcategories = await _businessRepository.BusinessSubCategoriesforStores(buscatid);
+            return Ok(subcategories);
+        }
 
         [HttpPost("Add_Products")]
         public async Task<IActionResult> CreateProduct([FromBody] products product)

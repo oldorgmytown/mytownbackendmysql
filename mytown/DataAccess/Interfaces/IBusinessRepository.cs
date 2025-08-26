@@ -19,7 +19,7 @@ namespace mytown.DataAccess
         Task<BusinessRegister> GetBusinessByIdAsync(int busRegId);
         Task<ActionResult<IEnumerable<businesscategoriescs>>> GetBusinessCategories();
         Task<ActionResult<IEnumerable<businessservices>>> GetBusinessServices();
-        Task<IEnumerable<product_sub_categories>> GetSubCategoriesByBuscatIdAsync(int buscatId);
+        Task<IEnumerable<product_sub_categories>> BusinessSubCategoriesforStores(int buscatId);
         Task AddOrUpdateSubcategoryImageAsync(subcategoryimages_busregid subcategoryImage);
         Task<List<subcategoryimages_busregid>> GetSubcategoryImagesByBusRegIdAsync(int busRegId);
         Task<products> CreateProductAsync(products product);

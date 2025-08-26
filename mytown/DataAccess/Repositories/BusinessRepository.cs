@@ -101,7 +101,7 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Fetch subcategories by BuscatId
-        public async Task<IEnumerable<product_sub_categories>> GetSubCategoriesByBuscatIdAsync(int buscatId)
+        public async Task<IEnumerable<product_sub_categories>> BusinessSubCategoriesforStores(int buscatId)
         {
             return await _context.product_sub_categories
                                  .Where(p => p.BuscatId == buscatId)
