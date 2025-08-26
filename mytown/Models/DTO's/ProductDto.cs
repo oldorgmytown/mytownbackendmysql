@@ -25,6 +25,10 @@
         public decimal? Discount { get; set; }
         public decimal? DiscountPrice { get; set; }
 
+        public string Color { get; set; }
+
+        public string Size { get; set; }
+
 
         // 🔹 Extra field from BusinessRegister
         public string BusinessName { get; set; }

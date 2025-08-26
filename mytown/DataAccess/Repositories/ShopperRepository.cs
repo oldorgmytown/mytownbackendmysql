@@ -240,6 +240,8 @@ namespace mytown.DataAccess.Repositories
                     ProductWeight = v.Product.product_weight,
                     Quantity = v.Product.product_quantity,
                     ProductHeight = v.Product.product_height,
+                    Size = v.Product.size,
+                    Color = v.Product.color,
                     Discount = v.Product.discount,
                     DiscountPrice = v.Product.discount_price,
                     BusinessName = v.Product.BusinessRegister.Businessname

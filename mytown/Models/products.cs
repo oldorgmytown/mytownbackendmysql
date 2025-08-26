@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
@@ -51,8 +52,12 @@ namespace mytown.Models
         [Range(0, double.MaxValue)]
         public decimal? discount_price { get; set; }  // nullable
 
+        public string color { get; set; }
 
-        public virtual BusinessRegister BusinessRegister { get; set; }
+        public string size { get; set; }
+
+        [JsonIgnore]
+        public virtual BusinessRegister? BusinessRegister { get; set; }
 
 
     }

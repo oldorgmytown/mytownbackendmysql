@@ -105,6 +105,8 @@ namespace mytown.DataAccess.Repositories
                     ProductWeight = p.product_weight,
                     Quantity = p.product_quantity,
                     ProductHeight = p.product_height,
+                    Color = p.color,
+                    Size = p.size,
 
                     Discount = p.discount,
                     DiscountPrice = p.discount_price,
@@ -136,6 +138,8 @@ namespace mytown.DataAccess.Repositories
                     ProductWeight = p.product_weight,
                     Quantity = p.product_quantity,
                     ProductHeight = p.product_height,
+                    Size = p.size,
+                    Color = p.color,
                     Discount = p.discount,
                     DiscountPrice = p.discount_price,
                     BusinessName = p.BusinessRegister.Businessname,
