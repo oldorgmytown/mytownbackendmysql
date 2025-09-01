@@ -40,8 +40,9 @@ namespace mytown.Models
             public DbSet<CourierBranch> CourierBranches { get; set; }
 
             public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; }
+            public DbSet<ProductImage> ProductImages { get; set; }
 
-           
+
 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -84,6 +85,12 @@ namespace mytown.Models
                 modelBuilder.Entity<ShopperProductRecentView>()
                    .HasIndex(v => new { v.ShopperId, v.ProductId })
                    .IsUnique();
+
+                modelBuilder.Entity<ProductImage>()
+             .HasOne(pi => pi.Product)
+             .WithMany(p => p.Images)   // you need to add ICollection<ProductImage> Images in products model
+             .HasForeignKey(pi => pi.ProductId)
+             .OnDelete(DeleteBehavior.Cascade);
             }
         }
             

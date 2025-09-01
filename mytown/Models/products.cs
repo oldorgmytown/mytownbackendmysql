@@ -59,6 +59,9 @@ namespace mytown.Models
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
 
+        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
+
 
     }
 }

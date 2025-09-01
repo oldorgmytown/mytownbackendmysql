@@ -32,5 +32,9 @@
 
         // 🔹 Extra field from BusinessRegister
         public string BusinessName { get; set; }
+        // Multiple images
+        //public List<string> Images { get; set; }
+
+        //public List<string> DeletedImages { get; set; }
     }
 }

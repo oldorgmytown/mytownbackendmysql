@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
 using mytown.DataAccess.Interfaces;
+using mytown.Models.DTO_s;
+using Azure.Storage.Blobs;
 
 
 namespace MyTown.Controllers
@@ -11,26 +13,81 @@ namespace MyTown.Controllers
     {
         private readonly IProductRepository _productRepo;
         private readonly ILogger<ProductController> _logger;
+        private readonly IConfiguration _configuration;
 
-        public ProductController(IProductRepository productRepo,
+        public ProductController(IProductRepository productRepo, IConfiguration configuration,
                                  ILogger<ProductController> logger)
         {
             _productRepo = productRepo ?? throw new ArgumentNullException(nameof(productRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration;
         }
 
 
-        [HttpPost("Add_Products")]
-        public async Task<IActionResult> CreateProduct([FromBody] products product)
+        //[HttpPost("Add_Products")]
+        //public async Task<IActionResult> CreateProduct([FromBody] products product)
+        //{
+        //    if (product == null)
+        //    {
+        //        return BadRequest("Product data is required.");
+        //    }
+
+        //    await _productRepo.CreateProductAsync(product);
+        //    return Ok(new { productId = product.product_id });
+        //}
+
+
+
+        [HttpPost("Save_Product")]
+        public async Task<IActionResult> SaveProduct([FromForm] ProductDto request, [FromForm] List<IFormFile> files)
         {
-            if (product == null)
+            if (request == null)
+                return BadRequest("Invalid product data.");
+
+            var product = new products
             {
-                return BadRequest("Product data is required.");
+                product_id = request.ProductId,
+                BusRegId = request.BusRegId,
+                BuscatId = request.BuscatId,
+                prod_subcat_id = request.ProdSubcatId,
+                product_name = request.ProductName,
+                product_subject = request.ProductSubject,
+                product_description = request.ProductDescription,
+                product_cost = request.ProductAmount,
+                product_length = request.ProductLength,
+                product_width = request.ProductWidth,
+                product_weight = request.ProductWeight,
+                product_quantity = request.Quantity,
+                product_height = request.ProductHeight,
+                discount = request.Discount,
+                discount_price = request.DiscountPrice,
+                color = request.Color,
+                size = request.Size,
+
+                  product_image = "" // for tetsing purpose
+            };
+
+            products savedProduct;
+
+            if (request.ProductId == 0)
+            {
+                savedProduct = await _productRepo.CreateProductAsync(product, files);
+            }
+            else
+            {
+                savedProduct = await _productRepo.UpdateProductAsync(product, files);
+                if (savedProduct == null)
+                    return NotFound(new { message = "Product not found." });
             }
 
-            await _productRepo.CreateProductAsync(product);
-            return Ok(new { productId = product.product_id });
+            return Ok(new
+            {
+                message = request.ProductId == 0 ? "Product created successfully" : "Product updated successfully",
+                productId = savedProduct.product_id
+            });
         }
+
+
 
         [HttpDelete("deleteProduct")]
         public async Task<IActionResult> DeleteProductAsync(int productId)
@@ -52,22 +109,22 @@ namespace MyTown.Controllers
             }
         }
 
-        [HttpPut("updateProduct")]
-        public IActionResult UpdateProduct([FromBody] products updatedProduct)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { message = "Invalid product data" });
-            }
+        //[HttpPut("updateProduct")]
+        //public IActionResult UpdateProduct([FromBody] products updatedProduct)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(new { message = "Invalid product data" });
+        //    }
 
-            var isUpdated = _productRepo.UpdateProductAsync(updatedProduct);
-            //if (!isUpdated)
-            //{
-            //    return NotFound(new { message = "Product not found" });
-            //}
+        //    var isUpdated = _productRepo.UpdateProductAsync(updatedProduct);
+        //    //if (!isUpdated)
+        //    //{
+        //    //    return NotFound(new { message = "Product not found" });
+        //    //}
 
-            return Ok(new { message = "Product updated successfully" });
-        }
+        //    return Ok(new { message = "Product updated successfully" });
+        //}
 
         // GET: api/products/{id}
         [HttpGet("GetProductById/{productId}")]

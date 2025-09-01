@@ -6,12 +6,19 @@ namespace mytown.DataAccess.Interfaces
 {
     public interface IProductRepository
     {
-        Task<products> CreateProductAsync(products product);
+        Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles);
+
+
+
+        Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles);
+
+        Task<string> UploadToBlobAsync(IFormFile file, string imageType);
+        Task DeleteFromBlobAsync(string fileName);
         //    Task<products> GetProductByIdAsync(int productId);
-        Task<products> UpdateProductAsync(products product);
+        //  Task<products> UpdateProductAsync(products product);
 
         Task DeleteProductAsync(int productId);
-        bool UpdateProduct(products product);
+       // bool UpdateProduct(products product);
         Task<products> GetProductById(int productId); 
         Task<IEnumerable<products>> GetAllProductsAsync(int BusRegId);
         Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync();
