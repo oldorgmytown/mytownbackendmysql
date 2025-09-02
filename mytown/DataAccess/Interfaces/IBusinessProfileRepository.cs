@@ -11,6 +11,8 @@ namespace mytown.DataAccess.Interfaces
 
         Task<businessprofile> AddBusinessProfileAsync(businessprofile businessProfile);
 
+        Task<string> UploadToBlobAsync(IFormFile file, string imageType);
+
         Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath);
         Task<bool> UpdateLogoPathAsync(int busRegId, string logoPath);
 

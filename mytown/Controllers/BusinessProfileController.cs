@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using MyTown.Controllers;
 
 namespace mytown.Controllers
@@ -23,33 +24,91 @@ namespace mytown.Controllers
         }
 
 
-
-       
-            [HttpPost("addBusinessProfile")]
-        public async Task<IActionResult> AddBusinessProfile([FromBody] businessprofile businessProfile)
+        [HttpPost("addBusinessProfile")]
+        public async Task<IActionResult> AddBusinessProfile(
+     [FromForm] BusinessProfileCreateDto businessProfileDto,
+     IFormFile? bannerFile,
+     IFormFile? logoFile)
         {
-            if (businessProfile == null)
-            {
+            if (businessProfileDto == null)
                 return BadRequest(new { message = "Invalid business profile data" });
-            }
 
             try
             {
-                // Add the business profile and get the saved object
-                var savedBusinessProfile = await _businessprofileRepo.AddBusinessProfileAsync(businessProfile);
+                string? bannerPath = null;
+                string? logoPath = null;
 
-                // Return the saved business profile along with a success message
+                // Upload banner if provided
+                if (bannerFile != null)
+                    bannerPath = await _businessprofileRepo.UploadToBlobAsync(bannerFile, "banner");
+
+                // Upload logo if provided
+                if (logoFile != null)
+                    logoPath = await _businessprofileRepo.UploadToBlobAsync(logoFile, "logo");
+
+                // Map DTO → Entity
+                var entity = new businessprofile
+                {
+                    BusRegId = businessProfileDto.BusRegId,
+                    BusinessUsername = businessProfileDto.BusinessUsername,
+                    business_location = businessProfileDto.BusinessLocation,
+                    business_about = businessProfileDto.BusinessAbout,
+                    profile_status = businessProfileDto.ProfileStatus,
+                    bus_time = businessProfileDto.BusTime,
+                    Businessservice_name = businessProfileDto.BusinessServiceName,
+                    Businesscategory_name = businessProfileDto.BusinessCategoryName,
+                    banner_path = bannerPath, // new banner (if any)
+                    logo_path = logoPath      // new logo (if any)
+                };
+
+                // Repository handles both Add and Update
+                var savedBusinessProfile = await _businessprofileRepo.AddBusinessProfileAsync(entity);
+
                 return Ok(new
                 {
-                    message = "Business profile added successfully",
+                    message = savedBusinessProfile.businessprofile_id == 0
+                                ? "Business profile added successfully"
+                                : "Business profile updated successfully",
                     data = savedBusinessProfile
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "An error occurred while adding the business profile", error = ex.Message });
+                return StatusCode(500, new
+                {
+                    message = "An error occurred while saving the business profile",
+                    error = ex.Message
+                });
             }
         }
+
+
+
+        //    [HttpPost("addBusinessProfile")]
+        //public async Task<IActionResult> AddBusinessProfile([FromBody] businessprofile businessProfile)
+        //{
+        //    if (businessProfile == null)
+        //    {
+        //        return BadRequest(new { message = "Invalid business profile data" });
+        //    }
+
+        //    try
+        //    {
+        //        // Add the business profile and get the saved object
+        //        var savedBusinessProfile = await _businessprofileRepo.AddBusinessProfileAsync(businessProfile);
+
+        //        // Return the saved business profile along with a success message
+        //        return Ok(new
+        //        {
+        //            message = "Business profile added successfully",
+        //            data = savedBusinessProfile
+        //        });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, new { message = "An error occurred while adding the business profile", error = ex.Message });
+        //    }
+        //}
 
         [HttpPut("update-banner/{busRegId}")]
         public async Task<IActionResult> UpdateBannerPath(int busRegId, [FromBody] UpdateBannerRequest request)

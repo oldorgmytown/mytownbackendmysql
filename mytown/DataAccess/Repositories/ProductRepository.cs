@@ -158,12 +158,52 @@ namespace mytown.DataAccess.Repositories
         //edit or update product details 
         public async Task DeleteProductAsync(int productId)
         {
-            var product = await _context.products
-                .FirstOrDefaultAsync(p => p.product_id == productId);
-            if (product != null)
+            // Wrap in transaction to ensure consistency
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
+                //  Get product
+                var product = await _context.products
+                    .FirstOrDefaultAsync(p => p.product_id == productId);
+
+                if (product == null)
+                    return;
+
+                // Get all images for this product
+                var productImages = await _context.ProductImages
+                    .Where(pi => pi.ProductId == productId)
+                    .ToListAsync();
+
+                if (productImages.Any())
+                {
+                    // Delete from Blob Storage
+                    var containerName = _configuration["AzureBlobStorage:ContainerName"];
+                    var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+                    var blobServiceClient = new BlobServiceClient(connectionString);
+                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+                    foreach (var image in productImages)
+                    {
+                        var blobClient = containerClient.GetBlobClient(image.FileName);
+                        await blobClient.DeleteIfExistsAsync();
+                    }
+
+                    // Delete from DB
+                    _context.ProductImages.RemoveRange(productImages);
+                }
+
+                // Delete product itself
                 _context.products.Remove(product);
+
+                //  Commit
                 await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw; 
             }
         }
 
@@ -196,7 +236,7 @@ namespace mytown.DataAccess.Repositories
         //    return true;
         //}
 
-   
+
 
 
         public async Task<products> GetProductById(int productId)

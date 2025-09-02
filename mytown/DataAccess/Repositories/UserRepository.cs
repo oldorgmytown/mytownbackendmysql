@@ -152,10 +152,8 @@ namespace mytown.DataAccess.Repositories
                             bp.BusServId,
                             bp.Businessservice_name,
                             bp.Businesscategory_name,
-                            bp.approved_date,
-                            bp.image_positionx,
-                            bp.image_positiony,
-                            bp.zoom
+                            bp.approved_date
+                           
                         })
                         .FirstOrDefaultAsync();
 
@@ -429,10 +427,10 @@ namespace mytown.DataAccess.Repositories
                 existingProfile.BusCatId = businessProfile.BusCatId;
                 existingProfile.BusServId = businessProfile.BusServId;
 
-                // Update image position & zoom
-                existingProfile.image_positionx = businessProfile.image_positionx;
-                existingProfile.image_positiony = businessProfile.image_positiony;
-                existingProfile.zoom = businessProfile.zoom;
+                //// Update image position & zoom
+                //existingProfile.image_positionx = businessProfile.image_positionx;
+                //existingProfile.image_positiony = businessProfile.image_positiony;
+                //existingProfile.zoom = businessProfile.zoom;
 
                 // Mark entity as modified
                 _context.BusinessProfiles.Update(existingProfile);
@@ -440,12 +438,12 @@ namespace mytown.DataAccess.Repositories
             else
             {
                 // Set default values if they are not provided
-                if (businessProfile.image_positionx == 0 && businessProfile.image_positiony == 0 && businessProfile.zoom == 0)
-                {
-                    businessProfile.image_positionx = 0;
-                    businessProfile.image_positiony = 0;
-                    businessProfile.zoom = 1; // Default zoom value
-                }
+                //if (businessProfile.image_positionx == 0 && businessProfile.image_positiony == 0 && businessProfile.zoom == 0)
+                //{
+                //    businessProfile.image_positionx = 0;
+                //    businessProfile.image_positiony = 0;
+                //    businessProfile.zoom = 1; // Default zoom value
+                //}
 
                 // Add a new profile
                 await _context.BusinessProfiles.AddAsync(businessProfile);

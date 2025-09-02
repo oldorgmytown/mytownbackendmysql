@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Storage.Blobs;
+using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
@@ -9,11 +10,14 @@ namespace mytown.DataAccess.Repositories
     public class BusinessProfileRepository : IBusinessProfileRepository
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public BusinessProfileRepository(AppDbContext context)
+        public BusinessProfileRepository(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
+        
 
         // Get all business profiles including related BusinessRegister data
         public async Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync()
@@ -160,15 +164,15 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.Businesscategory_name))
                     existingProfile.Businesscategory_name = businessProfile.Businesscategory_name;
 
-                // Update coordinates only if they are different from default
-                if (businessProfile.image_positionx != 0)
-                    existingProfile.image_positionx = businessProfile.image_positionx;
+                //// Update coordinates only if they are different from default
+                //if (businessProfile.image_positionx != 0)
+                //    existingProfile.image_positionx = businessProfile.image_positionx;
 
-                if (businessProfile.image_positiony != 0)
-                    existingProfile.image_positiony = businessProfile.image_positiony;
+                //if (businessProfile.image_positiony != 0)
+                //    existingProfile.image_positiony = businessProfile.image_positiony;
 
-                if (businessProfile.zoom != 0)
-                    existingProfile.zoom = businessProfile.zoom;
+                //if (businessProfile.zoom != 0)
+                //    existingProfile.zoom = businessProfile.zoom;
 
                 _context.BusinessProfiles.Update(existingProfile);
             }
@@ -180,6 +184,32 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
             return existingProfile ?? businessProfile;
+        }
+
+        public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
+        {
+            var containerName = _configuration["AzureBlobStorage:ContainerName"];
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            await containerClient.CreateIfNotExistsAsync();
+            await containerClient.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
+            var fileExtension = Path.GetExtension(file.FileName);
+            var newFileName = $"{imageType}_{fileNameWithoutExtension}_{timestamp}{fileExtension}";
+
+            var blobClient = containerClient.GetBlobClient(newFileName);
+
+            using (var stream = file.OpenReadStream())
+            {
+                await blobClient.UploadAsync(stream, overwrite: true);
+            }
+
+            return newFileName; // return file name (store in DB)
         }
 
 

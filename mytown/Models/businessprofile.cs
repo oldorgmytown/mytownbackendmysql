@@ -27,10 +27,10 @@ namespace mytown.Models
 
         public DateTime? approved_date { get; set; }
 
-        // Store pan data as separate columns
-        public int image_positionx { get; set; } = 0;
-        public int image_positiony { get; set; } = 0;
-        public float zoom { get; set; } = 1; // Safe default
+        //// Store pan data as separate columns
+        //public int image_positionx { get; set; } = 0;
+        //public int image_positiony { get; set; } = 0;
+        //public float zoom { get; set; } = 1; // Safe default
 
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
