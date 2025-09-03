@@ -141,10 +141,26 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.business_about = businessProfile.business_about;
 
                 if (!string.IsNullOrEmpty(businessProfile.banner_path))
+                {
+                    // If a new banner is uploaded
+                    if (!string.IsNullOrEmpty(existingProfile.banner_path))
+                    {
+                        // Delete old banner from blob
+                        await DeleteFromBlobAsync(existingProfile.banner_path);
+                    }
                     existingProfile.banner_path = businessProfile.banner_path;
+                }
 
                 if (!string.IsNullOrEmpty(businessProfile.logo_path))
+                {
+                    // If a new logo is uploaded
+                    if (!string.IsNullOrEmpty(existingProfile.logo_path))
+                    {
+                        // Delete old logo from blob
+                        await DeleteFromBlobAsync(existingProfile.logo_path);
+                    }
                     existingProfile.logo_path = businessProfile.logo_path;
+                }
 
                 if (!string.IsNullOrEmpty(businessProfile.profile_status))
                     existingProfile.profile_status = businessProfile.profile_status;
@@ -164,15 +180,7 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.Businesscategory_name))
                     existingProfile.Businesscategory_name = businessProfile.Businesscategory_name;
 
-                //// Update coordinates only if they are different from default
-                //if (businessProfile.image_positionx != 0)
-                //    existingProfile.image_positionx = businessProfile.image_positionx;
-
-                //if (businessProfile.image_positiony != 0)
-                //    existingProfile.image_positiony = businessProfile.image_positiony;
-
-                //if (businessProfile.zoom != 0)
-                //    existingProfile.zoom = businessProfile.zoom;
+               
 
                 _context.BusinessProfiles.Update(existingProfile);
             }
@@ -184,6 +192,19 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
             return existingProfile ?? businessProfile;
+        }
+
+
+        public async Task DeleteFromBlobAsync(string fileName)
+        {
+            var containerName = _configuration["AzureBlobStorage:ContainerName"];
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            var blobClient = containerClient.GetBlobClient(fileName);
+            await blobClient.DeleteIfExistsAsync();
         }
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
