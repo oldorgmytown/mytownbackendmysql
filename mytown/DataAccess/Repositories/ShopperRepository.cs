@@ -215,15 +215,19 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
-     // get recently viewed products for that shopper
+        // get recently viewed products for that shopper
         public async Task<IEnumerable<ProductDto>> GetRecentlyViewedProductsAsync(
-     int shopperId, int days = 7, int limit = 10)
+    int shopperId, int days = 7, int limit = 10)
         {
             var sinceDate = DateTime.UtcNow.AddDays(-days);
 
             var productDtos = await _context.ShopperProductRecentViews
                 .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate)
                 .OrderByDescending(v => v.LastViewedAt)
+                .Include(v => v.Product)                     // include product
+                    .ThenInclude(p => p.BusinessRegister)    // include store
+                .Include(v => v.Product)
+                    .ThenInclude(p => p.Images)              // include images
                 .Select(v => new ProductDto
                 {
                     ProductId = v.Product.product_id,
@@ -233,7 +237,6 @@ namespace mytown.DataAccess.Repositories
                     ProductName = v.Product.product_name,
                     ProductSubject = v.Product.product_subject,
                     ProductDescription = v.Product.product_description,
-                    ProductImage = v.Product.product_image,
                     ProductAmount = v.Product.product_cost,
                     ProductLength = v.Product.product_length,
                     ProductWidth = v.Product.product_width,
@@ -244,7 +247,17 @@ namespace mytown.DataAccess.Repositories
                     Color = v.Product.color,
                     Discount = v.Product.discount,
                     DiscountPrice = v.Product.discount_price,
-                    BusinessName = v.Product.BusinessRegister.Businessname
+                    BusinessName = v.Product.BusinessRegister.Businessname,
+
+                    // 🔹 Map product images
+                    Images = v.Product.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
                 })
                 .Take(limit)
                 .ToListAsync();

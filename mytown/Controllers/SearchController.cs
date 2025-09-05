@@ -2,6 +2,7 @@
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Services;
+using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace mytown.Controllers
 {
@@ -94,22 +95,24 @@ namespace mytown.Controllers
         }
 
 
-        [HttpGet("search-business-by-product")]
-        public IActionResult SearchBusinessByCategoryOrProduct([FromQuery] string product)
+        [HttpGet("searchproductandbusiness")]
+        public IActionResult SearchBusinessByCategoryOrProduct([FromQuery] string searchterm)
         {
-            if (string.IsNullOrEmpty(product))
+            if (string.IsNullOrEmpty(searchterm))
             {
                 return BadRequest("Product search string cannot be empty.");
             }
+            var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm);
+            return Ok(results);
 
-            var businessIds = _searchRepository.GetBusinessProfilesBySearchTerm(product);
+            //var businessIds = _searchRepository.GetBusinessProfilesBySearchTerm(product);
 
-            if (!businessIds.Any())
-            {
-                return NotFound("No businesses found for the given search term.");
-            }
+            //if (!businessIds.Any())
+            //{
+            //    return NotFound("No businesses found for the given search term.");
+            //}
 
-            return Ok(businessIds);
+            //return Ok(businessIds);
         }
 
         [HttpGet("SearchProfilesByProductAndLocation")]
@@ -142,6 +145,20 @@ namespace mytown.Controllers
                 return NotFound("No product subcategories found for the given location.");
 
             return Ok(subCategories);
+        }
+
+        [HttpGet("business-categories-by-location")]
+        public async Task<IActionResult> GetBusinessCategoriesByLocation([FromQuery] string location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+                return BadRequest("Location cannot be empty.");
+
+            var busCategories = await _searchRepository.GetBusinessCategoriesByLocationAsync(location);
+
+            if (!busCategories.Any())
+                return NotFound("No Business categories found for the given location.");
+
+            return Ok(busCategories);
         }
 
     }

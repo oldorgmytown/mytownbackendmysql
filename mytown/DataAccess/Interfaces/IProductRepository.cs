@@ -18,9 +18,9 @@ namespace mytown.DataAccess.Interfaces
         //  Task<products> UpdateProductAsync(products product);
 
         Task DeleteProductAsync(int productId);
-       // bool UpdateProduct(products product);
-        Task<products> GetProductById(int productId); 
-        Task<IEnumerable<products>> GetAllProductsAsync(int BusRegId);
+        // bool UpdateProduct(products product);
+        Task<ProductDto?> GetProductByIdAsync(int productId);
+        Task<IEnumerable<ProductDto>> GetAllProductsAsync(int busRegId);
         Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync();
 
         Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId);

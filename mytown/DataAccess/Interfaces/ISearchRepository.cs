@@ -1,4 +1,5 @@
 ﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -14,12 +15,14 @@ namespace mytown.DataAccess.Interfaces
         List<businessprofile> GetBusinessProfilesByLocation(string location);
 
         // Get business profiles by product/category search term
-        List<businessprofile> GetBusinessProfilesBySearchTerm(string searchTerm);
+        SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm);
 
         // Get business profiles based on both product and location search terms
         List<businessprofile> GetBusinessProfilesByProductAndLocation(string productSearchTerm, string locationSearchTerm);
 
         //Get product sub categories for that searched town or exitsing in that town
         Task<IEnumerable<product_sub_categories>> GetProductSubCategoriesByLocationAsync(string location);
+
+        Task<IEnumerable<businesscategoriescs>> GetBusinessCategoriesByLocationAsync(string location);
     }
 }

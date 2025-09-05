@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using static mytown.Models.busprofilepreview;
 
@@ -290,22 +291,59 @@ namespace mytown.DataAccess.Repositories
 
 
         // businessprofiels with discount products
-        public async Task<IEnumerable<businessprofile>> GetBusinessProfilesWithDiscountedProductsAsync()
+        //public async Task<IEnumerable<businessprofile>> GetBusinessProfilesWithDiscountedProductsAsync()
+        //{
+        //    // Step 1: Get distinct business ids from products having discounts
+        //    var businessIdsWithDiscounts = await _context.products
+        //        .Where(p => p.discount.HasValue && p.discount > 0) // only products with valid discount
+        //        .Select(p => p.BusRegId)
+        //        .Distinct()
+        //        .ToListAsync();
+
+        //    // Step 2: Fetch business profiles for those business ids
+        //    var businessProfiles = await _context.BusinessProfiles
+        //        .Where(bp => businessIdsWithDiscounts.Contains(bp.BusRegId))
+        //        .ToListAsync();
+
+        //    return businessProfiles;
+        //}
+
+        public async Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync()
         {
-            // Step 1: Get distinct business ids from products having discounts
-            var businessIdsWithDiscounts = await _context.products
-                .Where(p => p.discount.HasValue && p.discount > 0) // only products with valid discount
-                .Select(p => p.BusRegId)
-                .Distinct()
+            // Step 1: Get max discount per business
+            var businessDiscounts = await _context.products
+                .Where(p => p.discount.HasValue && p.discount > 0)
+                .GroupBy(p => p.BusRegId)
+                .Select(g => new
+                {
+                    BusRegId = g.Key,
+                    MaxDiscount = g.Max(p => p.discount.Value)
+                })
+                .OrderByDescending(g => g.MaxDiscount) // highest discount first
                 .ToListAsync();
 
-            // Step 2: Fetch business profiles for those business ids
+            // Step 2: Fetch profiles
+            var businessIds = businessDiscounts.Select(b => b.BusRegId).ToList();
+
             var businessProfiles = await _context.BusinessProfiles
-                .Where(bp => businessIdsWithDiscounts.Contains(bp.BusRegId))
+                .Where(bp => businessIds.Contains(bp.BusRegId))
                 .ToListAsync();
 
-            return businessProfiles;
+            // Step 3: Merge results (preserve discount order)
+            var result = businessDiscounts
+                .Join(businessProfiles,
+                      bd => bd.BusRegId,
+                      bp => bp.BusRegId,
+                      (bd, bp) => new BusinessProfileWithDiscountDto
+                      {
+                          Profile = bp,
+                          MaxDiscount = bd.MaxDiscount
+                      })
+                .ToList();
+
+            return result;
         }
+
 
 
     }

@@ -1,4 +1,5 @@
 ﻿using mytown.Models;
+using mytown.Models.DTO_s;
 using static mytown.Models.busprofilepreview;
 
 namespace mytown.DataAccess.Interfaces
@@ -20,7 +21,7 @@ namespace mytown.DataAccess.Interfaces
 
         List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId);
         Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync();
-        Task<IEnumerable<businessprofile>> GetBusinessProfilesWithDiscountedProductsAsync();
+        Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync();
     }
 }
 

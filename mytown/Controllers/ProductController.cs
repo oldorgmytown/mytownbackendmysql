@@ -3,6 +3,7 @@ using mytown.Models;
 using mytown.DataAccess.Interfaces;
 using mytown.Models.DTO_s;
 using Azure.Storage.Blobs;
+using mytown.DataAccess.Repositories;
 
 
 namespace MyTown.Controllers
@@ -130,7 +131,7 @@ namespace MyTown.Controllers
         [HttpGet("GetProductById/{productId}")]
         public async Task<ActionResult<products>> GetProductById(int productId)
         {
-            var product = await _productRepo.GetProductById(productId);
+            var product = await _productRepo.GetProductByIdAsync(productId);
 
             if (product == null)
             {
@@ -208,5 +209,16 @@ namespace MyTown.Controllers
             await _productRepo.SaveProductViewAsync(shopperId, productId);
             return Ok(new { message = "Product view recorded" });
         }
+
+        //[HttpGet("TopPurchasedProductsByTown")]
+        //public async Task<IActionResult> GetTopPurchasedProductsByTown(string town, int limit = 10)
+        //{
+        //    var products = await _productRepo.GetTopPurchasedProductsByTownAsync(town, limit);
+
+        //    if (!products.Any())
+        //        return NotFound(new { message = $"No products found for town: {town}" });
+
+        //    return Ok(products);
+        //}
     }
 }

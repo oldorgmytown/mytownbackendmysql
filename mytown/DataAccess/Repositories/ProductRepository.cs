@@ -238,30 +238,57 @@ namespace mytown.DataAccess.Repositories
 
 
 
-
-        public async Task<products> GetProductById(int productId)
+        public async Task<ProductDto?> GetProductByIdAsync(int productId)
         {
             var product = await _context.products
+                .Include(p => p.Images)
+                .Include(p => p.BusinessRegister)
                 .FirstOrDefaultAsync(p => p.product_id == productId);
 
-            return product ?? new products(); // Return an empty product if not found
+            if (product == null) return null;
+
+            return new ProductDto
+            {
+                ProductId = product.product_id,
+                BusRegId = product.BusRegId,
+                BuscatId = product.BuscatId,
+                ProductType = 0,
+                ProdSubcatId = product.prod_subcat_id,
+                ProductName = product.product_name,
+                ProductSubject = product.product_subject,
+                ProductDescription = product.product_description,
+                ProductAmount = product.product_cost,
+                ProductLength = product.product_length,
+                ProductWidth = product.product_width,
+                ProductWeight = product.product_weight,
+                Quantity = product.product_quantity,
+                ProductHeight = product.product_height,
+                PurchasedCount = 0,
+                Discount = product.discount,
+                DiscountPrice = product.discount_price,
+                Color = product.color,
+                Size = product.size,
+                BusinessName = product.BusinessRegister?.Businessname,
+                Images = product.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new ProductImageDto
+                    {
+                        FileName = i.FileName,
+                        SortOrder = i.SortOrder
+                    })
+                    .ToList()
+            };
         }
 
 
 
-        // Get all products from the database based on busregid
-        public async Task<IEnumerable<products>> GetAllProductsAsync(int BusRegId)
-        {
-            return await _context.products
-                                 .Where(p => p.BusRegId == BusRegId) // Filter by BusRegId
-                                 .ToListAsync(); // Fetch matching products
-        }
 
-        public async Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync()
+        public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(int busRegId)
         {
             return await _context.products
-                .Include(p => p.BusinessRegister)
-                .Where(p => p.discount != null) //filter only products with discount
+                .Where(p => p.BusRegId == busRegId)
+                .Include(p => p.Images)              // load product images
+                .Include(p => p.BusinessRegister)    // load business info
                 .Select(p => new ProductDto
                 {
                     ProductId = p.product_id,
@@ -271,23 +298,73 @@ namespace mytown.DataAccess.Repositories
                     ProductName = p.product_name,
                     ProductSubject = p.product_subject,
                     ProductDescription = p.product_description,
-                    ProductImage = p.product_image,
                     ProductAmount = p.product_cost,
                     ProductLength = p.product_length,
                     ProductWidth = p.product_width,
                     ProductWeight = p.product_weight,
                     Quantity = p.product_quantity,
                     ProductHeight = p.product_height,
+                    Discount = p.discount,
+                    DiscountPrice = p.discount_price,
                     Color = p.color,
                     Size = p.size,
+                    BusinessName = p.BusinessRegister.Businessname,
+
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
+
+        public async Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync()
+        {
+            return await _context.products
+                .Include(p => p.BusinessRegister)
+                .Include(p => p.Images) // include related product images
+                .Where(p => p.discount != null) // filter only products with discount
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.product_id,
+                    BusRegId = p.BusRegId,
+                    BuscatId = p.BuscatId,
+                    ProdSubcatId = p.prod_subcat_id,
+                    ProductName = p.product_name ?? string.Empty,
+                    ProductSubject = p.product_subject ?? string.Empty,
+                    ProductDescription = p.product_description ?? string.Empty,
+                    ProductImage = p.product_image ?? string.Empty,
+                    ProductAmount = p.product_cost,
+                    ProductLength = p.product_length,
+                    ProductWidth = p.product_width,
+                    ProductWeight = p.product_weight,
+                    Quantity = p.product_quantity,
+                    ProductHeight = p.product_height,
+                    Color = p.color ?? string.Empty,
+                    Size = p.size ?? string.Empty,
 
                     Discount = p.discount,
                     DiscountPrice = p.discount_price,
 
-                    BusinessName = p.BusinessRegister.Businessname
+                    BusinessName = p.BusinessRegister.Businessname ?? string.Empty,
+
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder) // keep consistent order
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName ?? string.Empty,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
         }
+
 
 
         public async Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId)
@@ -295,35 +372,46 @@ namespace mytown.DataAccess.Repositories
             var products = await _context.products
                 .Where(p => p.prod_subcat_id == subCategoryId)
                 .Include(p => p.BusinessRegister)
+                .Include(p => p.Images)
                 .Select(p => new ProductDto
                 {
                     ProductId = p.product_id,
                     BusRegId = p.BusRegId,
                     BuscatId = p.BuscatId,
                     ProdSubcatId = p.prod_subcat_id,
-                    ProductName = p.product_name,
-                    ProductSubject = p.product_subject,
-                    ProductDescription = p.product_description,
-                    ProductImage = p.product_image,
+                    ProductName = p.product_name ?? string.Empty,
+                    ProductSubject = p.product_subject ?? string.Empty,
+                    ProductDescription = p.product_description ?? string.Empty,
                     ProductAmount = p.product_cost,
                     ProductLength = p.product_length,
                     ProductWidth = p.product_width,
                     ProductWeight = p.product_weight,
                     Quantity = p.product_quantity,
                     ProductHeight = p.product_height,
-                    Size = p.size,
-                    Color = p.color,
+                    Size = p.size ?? string.Empty,
+                    Color = p.color ?? string.Empty,
                     Discount = p.discount,
                     DiscountPrice = p.discount_price,
-                    BusinessName = p.BusinessRegister.Businessname,
+                    BusinessName = p.BusinessRegister.Businessname ?? string.Empty,
 
                     // optional fields
-                    PurchasedCount = 0, // you can calculate later if needed
+                    PurchasedCount = 0,
+
+                    // Map product images
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName ?? string.Empty,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
                 })
                 .ToListAsync();
 
             return products;
         }
+
 
         // save shopper recently viewd products
         public async Task SaveProductViewAsync(int shopperId, int productId)
@@ -339,6 +427,39 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //public async Task<IEnumerable<ProductDto>> GetTopPurchasedProductsByTownAsync(string town, int limit = 10)
+        //{
+        //    var products = await _context.products
+        //        .Where(p => p.BusinessRegister.Town == town) // join products → BusinessRegister (Town filter)
+        //        .OrderByDescending(p => p.PurchasedCount)    // most purchased first
+        //        .Take(limit)
+        //        .Include(p => p.Images)                      // include product images
+        //        .Select(p => new ProductDto
+        //        {
+        //            ProductId = p.product_id,
+        //            BusRegId = p.BusRegId,
+        //            BuscatId = p.BuscatId,
+        //            ProdSubcatId = p.prod_subcat_id,
+        //            ProductName = p.product_name,
+        //            ProductSubject = p.product_subject,
+        //            ProductDescription = p.product_description,
+        //            ProductAmount = p.product_cost,
+        //            Discount = p.discount,
+        //            DiscountPrice = p.discount_price,
+        //            Color = p.color,
+        //            Size = p.size,
+        //            PurchasedCount = p.PurchasedCount,
+        //            BusinessName = p.BusinessRegister.Businessname,
+        //            Images = p.Images.Select(i => new ProductImageDto
+        //            {
+        //                FileName = i.FileName,
+        //                SortOrder = i.SortOrder
+        //            }).ToList()
+        //        })
+        //        .ToListAsync();
+
+        //    return products;
+        //}
 
     }
 }

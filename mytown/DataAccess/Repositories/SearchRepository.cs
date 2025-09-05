@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 
 namespace mytown.DataAccess.Repositories
@@ -69,7 +70,7 @@ namespace mytown.DataAccess.Repositories
             return productsQuery.ToList();
         }
 
-        // Search from location and product/category and get the matching store details
+        // Search from location and product/category and get the matching store  details
         public async Task<List<businessprofile>> SearchBusinessesAsync(string location, string categoryProduct)
         {
             var productResults = new List<products>();
@@ -180,9 +181,9 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
         }
 
-        // Search for product name in category, subcategory and products tables
-        public List<businessprofile> GetBusinessProfilesBySearchTerm(string searchTerm)
+        public SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm)
         {
+            // 🔹 1. Find matching categories
             var matchingBusCatIds = _context.BusinessCategories
                 .Where(bc => bc.Businesscategory_name.Contains(searchTerm))
                 .Select(bc => bc.BuscatId)
@@ -194,6 +195,7 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .ToList();
 
+            // 🔹 2. If no businesses, check subcategories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
@@ -208,6 +210,7 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
             }
 
+            // 🔹 3. If still no businesses, check products directly
             if (!businessIds.Any())
             {
                 businessIds = _context.products
@@ -220,10 +223,60 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
             }
 
-            return _context.BusinessProfiles
+            // 🔹 4. Get matching business profiles
+            var stores = _context.BusinessProfiles
                 .Where(bp => businessIds.Contains(bp.BusRegId))
                 .ToList();
+
+            // 🔹 5. Get matching products
+            var products = _context.products
+                .Where(p =>
+                    p.product_name.Contains(searchTerm) ||
+                    p.product_subject.Contains(searchTerm) ||
+                    p.product_description.Contains(searchTerm))
+                .Include(p => p.Images)
+                .Select(p => new ProductDto
+                {
+                    ProductId = p.product_id,
+                    BusRegId = p.BusRegId,
+                    BuscatId = p.BuscatId,
+                    ProdSubcatId = p.prod_subcat_id,
+                    ProductName = p.product_name,
+                    ProductSubject = p.product_subject,
+                    ProductDescription = p.product_description,
+                    ProductAmount = p.product_cost,
+                    Discount = p.discount,
+                    DiscountPrice = p.discount_price,
+                    Color = p.color,
+                    Images = p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
+                })
+                .ToList();
+
+            // 🔹 6. Collect distinct colors
+            var colors = products
+                .Where(p => !string.IsNullOrEmpty(p.Color))
+                .Select(p => p.Color!)
+                .Distinct()
+                .ToList();
+
+            // 🔹 7. Return combined result with counts
+            return new SearchResultDto
+            {
+                Stores = stores,
+                Products = products,
+                Colors = colors,
+                StoreCount = stores.Count,
+                ProductCount = products.Count
+            };
         }
+
 
         // Fetch Business Profiles based on Product & Location Search Terms
         public List<businessprofile> GetBusinessProfilesByProductAndLocation(string productSearchTerm, string locationSearchTerm)
@@ -302,6 +355,33 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
 
             return subCategories;
+        }
+
+
+        public async Task<IEnumerable<businesscategoriescs>> GetBusinessCategoriesByLocationAsync(string location)
+        {
+            // Step 1: Get all business profiles matching the location
+            var busCatIds = await _context.BusinessProfiles
+                .Where(bp => bp.business_location != null &&
+                             bp.business_location.Contains(location))
+                .Select(bp => bp.BusCatId)
+                .Distinct()
+                .ToListAsync();
+
+            if (!busCatIds.Any())
+                return new List<businesscategoriescs>();
+
+            // Step 2: Get all business categories for those BusCatIds
+            var categories = await _context.BusinessCategories
+                .Where(bc => busCatIds.Contains(bc.BuscatId))
+                .Select(bc => new businesscategoriescs
+                {
+                    BuscatId = bc.BuscatId,
+                    Businesscategory_name = bc.Businesscategory_name
+                })
+                .ToListAsync();
+
+            return categories;
         }
 
     }

@@ -204,12 +204,18 @@ namespace mytown.Controllers
 
         //get stores with discounted products
 
-        
+       
+
         [HttpGet("BusinessprofileswithDiscountproducts")]
         public async Task<IActionResult> GetStoresWithDiscountedProducts()
         {
             var result = await _businessprofileRepo.GetBusinessProfilesWithDiscountedProductsAsync();
+
+            if (result == null || !result.Any())
+                return NotFound("No business profiles with discounted products found.");
+
             return Ok(result);
         }
+
     }
 }
