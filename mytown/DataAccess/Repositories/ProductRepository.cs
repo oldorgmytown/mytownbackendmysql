@@ -460,6 +460,58 @@ namespace mytown.DataAccess.Repositories
 
         //    return products;
         //}
+        public List<ProductDto> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
+        {
+            if (string.IsNullOrEmpty(location))
+                return new List<ProductDto>();
+
+            var query =
+                from bp in _context.BusinessProfiles
+                where bp.business_location != null && bp.business_location.Contains(location)
+                join p in _context.products on bp.BusRegId equals p.BusRegId
+                join o in _context.OrderDetails on p.product_id equals o.ProductId into productOrders
+                select new
+                {
+                    Product = p,
+                    StoreId = bp.BusRegId,
+                    StoreName = bp.BusinessUsername ?? string.Empty,
+                    TotalOrders = productOrders.Sum(po => (int?)po.Quantity) ?? 0
+                };
+
+            var result = query
+                .Where(x => x.TotalOrders > minOrders)
+                .OrderByDescending(x => x.TotalOrders)
+                .Select(x => new ProductDto
+                {
+                    ProductId = x.Product.product_id,
+                    BusRegId = x.StoreId,
+                    StoreName = x.StoreName,
+                    BuscatId = x.Product.BuscatId,
+                    ProdSubcatId = x.Product.prod_subcat_id,
+                    ProductName = x.Product.product_name,
+                    ProductSubject = x.Product.product_subject,
+                    ProductDescription = x.Product.product_description,
+                    ProductAmount = x.Product.product_cost,
+                    Discount = x.Product.discount,
+                    DiscountPrice = x.Product.discount_price,
+                    Color = x.Product.color,
+                    PurchasedCount = x.TotalOrders,
+                    Images = x.Product.Images != null
+                        ? x.Product.Images
+                            .OrderBy(i => i.SortOrder)
+                            .Select(i => new ProductImageDto
+                            {
+                                FileName = i.FileName,
+                                SortOrder = i.SortOrder
+                            })
+                            .ToList()
+                        : new List<ProductImageDto>()
+                })
+                .ToList();
+
+            return result ?? new List<ProductDto>();
+        }
+
 
     }
 }

@@ -14,11 +14,11 @@ namespace mytown.DataAccess.Interfaces
         // Get business profiles by location
         List<businessprofile> GetBusinessProfilesByLocation(string location);
 
-        // Get business profiles by product/category search term
-        SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm);
+        // stores and profiles based on both search bars - location, search term for product n store
+        SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm, string? locationQuery = null);
 
-        // Get business profiles based on both product and location search terms
-        List<businessprofile> GetBusinessProfilesByProductAndLocation(string productSearchTerm, string locationSearchTerm);
+        // Get business profiles and products based on both product and location search terms
+        SearchResultDto GetBusinessProfilesAndProductsByProductAndLocation(string productSearchTerm, string locationSearchTerm);
 
         //Get product sub categories for that searched town or exitsing in that town
         Task<IEnumerable<product_sub_categories>> GetProductSubCategoriesByLocationAsync(string location);

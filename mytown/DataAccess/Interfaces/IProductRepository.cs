@@ -26,5 +26,8 @@ namespace mytown.DataAccess.Interfaces
         Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId);
 
         Task SaveProductViewAsync(int shopperId, int productId);
+
+        //get top purchased prodcuts in that location
+        List<ProductDto> GetTopPurchasedProductsByLocation(string location, int minOrders = 5);
     }
 }

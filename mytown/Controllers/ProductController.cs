@@ -210,15 +210,24 @@ namespace MyTown.Controllers
             return Ok(new { message = "Product view recorded" });
         }
 
-        //[HttpGet("TopPurchasedProductsByTown")]
-        //public async Task<IActionResult> GetTopPurchasedProductsByTown(string town, int limit = 10)
-        //{
-        //    var products = await _productRepo.GetTopPurchasedProductsByTownAsync(town, limit);
+        [HttpGet("TopPurchasedProductsByTown")]
 
-        //    if (!products.Any())
-        //        return NotFound(new { message = $"No products found for town: {town}" });
+        public IActionResult GetTopPurchasedProductsByLocation([FromQuery] string location, [FromQuery] int minOrders = 5)
+        {
+            if (string.IsNullOrEmpty(location))
+            {
+                return BadRequest("Location cannot be empty.");
+            }
 
-        //    return Ok(products);
-        //}
+            var products = _productRepo.GetTopPurchasedProductsByLocation(location, minOrders);
+
+            if (products == null || !products.Any())
+            {
+                return NotFound(new { Message = "No products found for the given location and criteria." });
+            }
+
+            return Ok(products);
+        }
+
     }
 }

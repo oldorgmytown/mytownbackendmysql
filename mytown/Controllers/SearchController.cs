@@ -96,26 +96,26 @@ namespace mytown.Controllers
 
 
         [HttpGet("searchproductandbusiness")]
-        public IActionResult SearchBusinessByCategoryOrProduct([FromQuery] string searchterm)
+        public IActionResult SearchBusinessByCategoryOrProduct(
+     [FromQuery] string searchterm,
+     [FromQuery] string? location)
         {
             if (string.IsNullOrEmpty(searchterm))
             {
-                return BadRequest("Product search string cannot be empty.");
+                return BadRequest("search parameteris required.");
             }
-            var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm);
+
+            var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm, location);
+
+            if (results == null)
+            {
+                return NotFound("No businesses or products found matching the criteria.");
+            }
+
             return Ok(results);
-
-            //var businessIds = _searchRepository.GetBusinessProfilesBySearchTerm(product);
-
-            //if (!businessIds.Any())
-            //{
-            //    return NotFound("No businesses found for the given search term.");
-            //}
-
-            //return Ok(businessIds);
         }
 
-        [HttpGet("SearchProfilesByProductAndLocation")]
+        [HttpGet("SearchProfilesandProducts_ByProductAndLocation")]
         public IActionResult SearchProfilesByProductAndLocation([FromQuery] string productSearchTerm, [FromQuery] string locationSearchTerm)
         {
             if (string.IsNullOrWhiteSpace(productSearchTerm) || string.IsNullOrWhiteSpace(locationSearchTerm))
@@ -123,9 +123,9 @@ namespace mytown.Controllers
                 return BadRequest(new { message = "Both product and location search terms are required." });
             }
 
-            var businessProfiles = _searchRepository.GetBusinessProfilesByProductAndLocation(productSearchTerm, locationSearchTerm);
+            var businessProfiles = _searchRepository.GetBusinessProfilesAndProductsByProductAndLocation(productSearchTerm, locationSearchTerm);
 
-            if (!businessProfiles.Any())
+            if (businessProfiles == null)
             {
                 return NotFound(new { message = "No matching business profiles found." });
             }

@@ -24,7 +24,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync()
         {
             return await _context.BusinessProfiles
-                .Include(bp => bp.BusinessRegister) // eager load BusinessRegister
+                .Include(bp => bp.BusinessRegister) //  load BusinessRegister
                 .ToListAsync();
         }
 

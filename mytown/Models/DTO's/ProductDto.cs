@@ -4,6 +4,8 @@
     {
         public int ProductId { get; set; }
         public int BusRegId { get; set; }
+
+        public string StoreName { get; set; }
         public int BuscatId { get; set; }
         public int ProductType { get; set; }
         public int ProdSubcatId { get; set; }
