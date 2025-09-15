@@ -144,6 +144,25 @@ namespace mytown.Controllers
             var subCategories = await _businessprofileRepo.GetAllSubCategoriesAsync();
             return Ok(subCategories);
         }
+
+        //get product category details like type, fabric,design on add product form
+
+        [HttpGet("GetSubcatdetails_onaddproductform")]
+        public async Task<ActionResult<ProductDetailsDto>> GetBySubCategory(int subcatId)
+        {
+            var result = await _businessprofileRepo.GetDetailsBySubCategoryAsync(subcatId);
+
+            if ((result.ProductTypes == null || !result.ProductTypes.Any()) &&
+                (result.Fabrics == null || !result.Fabrics.Any()) &&
+                (result.Designs == null || !result.Designs.Any()))
+            {
+                return NotFound(new { message = "No details found for this subcategory." });
+            }
+
+            return Ok(result);
+        }
+
+
         //get sub categories of each business
         [HttpGet("GetProductSubCategories/{BusRegId}")]
         public IActionResult GetProductSubCategories(int busRegId)

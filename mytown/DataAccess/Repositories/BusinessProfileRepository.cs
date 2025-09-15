@@ -289,6 +289,34 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
+        // //get product category details like type, fabric,design on add product form
+
+        public async Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId)
+        {
+            var types = await _context.Product_Types
+                                      .Where(pt => pt.prod_subcat_id == prodSubcatId)
+                                      .OrderBy(pt => pt.prod_type_name)
+                                      .ToListAsync();
+
+            var fabrics = await _context.Fabrics
+                                        .Where(f => f.prod_subcat_id == prodSubcatId)
+                                        .OrderBy(f => f.fabric_name)
+                                        .ToListAsync();
+
+            var designs = await _context.Designs
+                                        .Where(d => d.prod_subcat_id == prodSubcatId)
+                                        .OrderBy(d => d.design_name)
+                                        .ToListAsync();
+
+            return new ProductDetailsDto
+            {
+                ProdSubcatId = prodSubcatId,
+                ProductTypes = types,
+                Fabrics = fabrics,
+                Designs = designs
+            };
+        }
+
 
         // businessprofiels with discount products
         //public async Task<IEnumerable<businessprofile>> GetBusinessProfilesWithDiscountedProductsAsync()

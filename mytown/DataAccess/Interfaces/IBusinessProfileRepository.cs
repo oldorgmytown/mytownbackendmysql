@@ -19,6 +19,9 @@ namespace mytown.DataAccess.Interfaces
 
         Task<IEnumerable<product_sub_categories>> GetAllSubCategoriesAsync();
 
+        //get type,fabric,design on add product form
+        Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId);
+
         List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId);
         Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync();
         Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync();

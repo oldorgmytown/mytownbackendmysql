@@ -42,6 +42,10 @@ namespace mytown.Models
             public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; }
             public DbSet<ProductImage> ProductImages { get; set; }
 
+            public DbSet<ProductType> Product_Types { get; set; }
+            public DbSet<Fabric> Fabrics { get; set; }
+            public DbSet<Design> Designs { get; set; }
+
 
 
 
