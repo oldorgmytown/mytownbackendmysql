@@ -308,14 +308,22 @@ namespace mytown.DataAccess.Repositories
                                         .OrderBy(d => d.design_name)
                                         .ToListAsync();
 
+
+            var sizes = await _context.Product_Sizes      
+                                      .Where(s => s.prod_subcat_id == prodSubcatId)
+                                      .OrderBy(s => s.SizeName)
+                                      .ToListAsync();
+
             return new ProductDetailsDto
             {
                 ProdSubcatId = prodSubcatId,
                 ProductTypes = types,
                 Fabrics = fabrics,
-                Designs = designs
+                Designs = designs,
+                Sizes = sizes          
             };
         }
+    
 
 
         // businessprofiels with discount products

@@ -305,8 +305,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             ProductId = x.Product.product_id,
             ProductType = x.Product.prod_subcat_id,
             ProductName = x.Product.product_name,
-            ProductAmount = x.Product.product_cost,
-            Quantity = x.Product.product_quantity,
+            ProductAmount = x.Product.product_cost??0,
+            Quantity = x.Product.product_quantity??0,
             PurchasedCount = x.PurchasedCount,
             ProductImage = x.Product.product_image,
             // You can add Rating & Review here if you have that data

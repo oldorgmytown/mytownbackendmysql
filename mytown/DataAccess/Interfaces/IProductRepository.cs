@@ -6,10 +6,14 @@ namespace mytown.DataAccess.Interfaces
 {
     public interface IProductRepository
     {
+        //latest - add only prod main details----------------------------------------------//
+        Task<products> AddProductAsync(products product);
+        Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files);
+        
+        //---------------------------------------------------------------------------------//
+
+
         Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles);
-
-
-
         Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles);
 
         Task<string> UploadToBlobAsync(IFormFile file, string imageType);

@@ -18,15 +18,65 @@ namespace mytown.DataAccess.Repositories
             _configuration = configuration;
         }
 
+        //latest code to add produicts main data and varinats with images
+        public async Task<products> AddProductAsync(products product)
+        {
+            _context.products.Add(product);
+            await _context.SaveChangesAsync();
+            return product;
+        }
+        public async Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)
+        {
+            var variant = new Sku_ProductVariant
+            {
+                ProductId = dto.ProductId,
+                Color = dto.Color,
+                Size = dto.Size,
+               Sku_Cost = dto.Sku_Cost,
+                DiscountPrice = dto.DiscountPrice,
+                Quantity = dto.Quantity,
+                Length = dto.Length,
+                Width = dto.Width,
+                Height = dto.Height,
+                Weight = dto.Weight,
+                Discount = dto.Discount
+            };
 
-        //public async Task<products> CreateProductAsync(products product)
-        //{
-        //    await _context.products.AddAsync(product);
-        //    await _context.SaveChangesAsync();
-        //    return product;
-        //}
+            await _context.Sku_ProductVariants.AddAsync(variant);
+            await _context.SaveChangesAsync(); // variant gets SkuId
+
+            if (files != null && files.Any())
+            {
+                int order = 1; // just increment for each image
+
+                foreach (var file in files)
+                {
+                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+                    // Upload to blob storage
+                    await UploadToBlobAsync(file, fileName);
+
+                    var image = new ProductImage
+
+                    {
+                        ProductId = variant.ProductId,
+                        SkuId = variant.SkuId,  // link image to the variant
+                        FileName = fileName,
+                        SortOrder = order++      // simple incremental order
+                    };
+
+                    await _context.ProductImages.AddAsync(image);
+                }
+
+                await _context.SaveChangesAsync();
+            }
 
 
+            return variant;
+        }
+      
+
+      //------------------------------------------------------------------------------------------------------------------------------------------------//
         public async Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles)
         {
             await _context.products.AddAsync(product);
@@ -257,12 +307,12 @@ namespace mytown.DataAccess.Repositories
                 ProductName = product.product_name,
                 ProductSubject = product.product_subject,
                 ProductDescription = product.product_description,
-                ProductAmount = product.product_cost,
-                ProductLength = product.product_length,
-                ProductWidth = product.product_width,
-                ProductWeight = product.product_weight,
-                Quantity = product.product_quantity,
-                ProductHeight = product.product_height,
+                ProductAmount = product.product_cost??0,
+                ProductLength = product.product_length??0,
+                ProductWidth = product.product_width ?? 0,
+                ProductWeight = product.product_weight ?? 0,
+                Quantity = product.product_quantity ?? 0,
+                ProductHeight = product.product_height ?? 0,
                 PurchasedCount = 0,
                 Discount = product.discount,
                 DiscountPrice = product.discount_price,
@@ -298,12 +348,12 @@ namespace mytown.DataAccess.Repositories
                     ProductName = p.product_name,
                     ProductSubject = p.product_subject,
                     ProductDescription = p.product_description,
-                    ProductAmount = p.product_cost,
-                    ProductLength = p.product_length,
-                    ProductWidth = p.product_width,
-                    ProductWeight = p.product_weight,
-                    Quantity = p.product_quantity,
-                    ProductHeight = p.product_height,
+                    ProductAmount = p.product_cost ?? 0,
+                    ProductLength = p.product_length ?? 0,
+                    ProductWidth = p.product_width ?? 0,
+                    ProductWeight = p.product_weight ?? 0,
+                    Quantity = p.product_quantity ?? 0,
+                    ProductHeight = p.product_height ?? 0,
                     Discount = p.discount,
                     DiscountPrice = p.discount_price,
                     Color = p.color,
@@ -339,12 +389,12 @@ namespace mytown.DataAccess.Repositories
                     ProductSubject = p.product_subject ?? string.Empty,
                     ProductDescription = p.product_description ?? string.Empty,
                     ProductImage = p.product_image ?? string.Empty,
-                    ProductAmount = p.product_cost,
-                    ProductLength = p.product_length,
-                    ProductWidth = p.product_width,
-                    ProductWeight = p.product_weight,
-                    Quantity = p.product_quantity,
-                    ProductHeight = p.product_height,
+                    ProductAmount = p.product_cost ?? 0,
+                    ProductLength = p.product_length ?? 0,
+                    ProductWidth = p.product_width ?? 0,
+                    ProductWeight = p.product_weight ?? 0,
+                    Quantity = p.product_quantity ?? 0,
+                    ProductHeight = p.product_height ?? 0,
                     Color = p.color ?? string.Empty,
                     Size = p.size ?? string.Empty,
 
@@ -382,12 +432,12 @@ namespace mytown.DataAccess.Repositories
                     ProductName = p.product_name ?? string.Empty,
                     ProductSubject = p.product_subject ?? string.Empty,
                     ProductDescription = p.product_description ?? string.Empty,
-                    ProductAmount = p.product_cost,
-                    ProductLength = p.product_length,
-                    ProductWidth = p.product_width,
-                    ProductWeight = p.product_weight,
-                    Quantity = p.product_quantity,
-                    ProductHeight = p.product_height,
+                    ProductAmount = p.product_cost ?? 0,
+                    ProductLength = p.product_length ?? 0,
+                    ProductWidth = p.product_width ?? 0,
+                    ProductWeight = p.product_weight ?? 0,
+                    Quantity = p.product_quantity ?? 0,
+                    ProductHeight = p.product_height ?? 0,
                     Size = p.size ?? string.Empty,
                     Color = p.color ?? string.Empty,
                     Discount = p.discount,
@@ -491,7 +541,7 @@ namespace mytown.DataAccess.Repositories
                     ProductName = x.Product.product_name,
                     ProductSubject = x.Product.product_subject,
                     ProductDescription = x.Product.product_description,
-                    ProductAmount = x.Product.product_cost,
+                    ProductAmount = x.Product.product_cost??0,
                     Discount = x.Product.discount,
                     DiscountPrice = x.Product.discount_price,
                     Color = x.Product.color,

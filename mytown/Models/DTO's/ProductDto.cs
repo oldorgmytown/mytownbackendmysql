@@ -10,10 +10,15 @@
         public int ProductType { get; set; }
         public int ProdSubcatId { get; set; }
 
+        public int? ProductTypeId { get; set; }  
+        public int? FabricId { get; set; }       
+        public int? DesignId { get; set; }
+
         public string? ProductName { get; set; }
         public string? ProductSubject { get; set; }
         public string? ProductDescription { get; set; }
         public string? ProductImage { get; set; }
+        public string? SupplierName { get; set; }
 
         public decimal ProductAmount { get; set; }
         public decimal ProductLength { get; set; }

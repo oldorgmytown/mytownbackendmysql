@@ -45,6 +45,10 @@ namespace mytown.Models
             public DbSet<ProductType> Product_Types { get; set; }
             public DbSet<Fabric> Fabrics { get; set; }
             public DbSet<Design> Designs { get; set; }
+            public DbSet<Product_Sizes> Product_Sizes { get; set; }
+            public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; }
+          //  public DbSet<ProductImage> ProductImages { get; set; }
+
 
 
 

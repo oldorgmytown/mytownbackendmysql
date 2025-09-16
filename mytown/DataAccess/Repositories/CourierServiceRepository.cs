@@ -196,7 +196,7 @@ namespace mytown.DataAccess.Repositories
                                     ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
                                     StoreName = store.Businessname,
                                     ProductName = product.product_name,
-                                    ProductWeight = product.product_weight,
+                                    ProductWeight = product.product_weight??0,
                                     Quantity = orderDetail.Quantity,
                                     ShippingType = shipping.Shipping_type,
                                     ShippingStatus = shipping.ShippingStatus,

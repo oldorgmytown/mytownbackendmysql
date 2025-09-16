@@ -1064,7 +1064,7 @@ namespace mytown.DataAccess.Repositories
                                        product_subject = product.product_subject,
                                        product_description = product.product_description,
                                        product_image = product.product_image,
-                                       product_cost = product.product_cost,
+                                       product_cost = product.product_cost ?? 0,
                                        StoreName = business.BusinessUsername, // Store name
                                        StoreLocation = business.business_location // Store location
                                    }).ToListAsync();
