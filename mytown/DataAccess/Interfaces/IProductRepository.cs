@@ -9,20 +9,27 @@ namespace mytown.DataAccess.Interfaces
         //latest - add only prod main details----------------------------------------------//
         Task<products> AddProductAsync(products product);
         Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files);
+
+        Task<ProductCreateDto?> GetProductandVariantAsync(int productId);
+
+        //Update productvariant
+        Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles);
         
+
         //---------------------------------------------------------------------------------//
 
 
-        Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles);
-        Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles);
+        //Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles);
+        //Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles);
 
         Task<string> UploadToBlobAsync(IFormFile file, string imageType);
         Task DeleteFromBlobAsync(string fileName);
-        //    Task<products> GetProductByIdAsync(int productId);
-        //  Task<products> UpdateProductAsync(products product);
-
+       
+        //Delete product and related variants
         Task DeleteProductAsync(int productId);
-        // bool UpdateProduct(products product);
+        //Delete variant and images
+        Task DeleteProductVariantAsync(int productId, int skuId);
+       
         Task<ProductDto?> GetProductByIdAsync(int productId);
         Task<IEnumerable<ProductDto>> GetAllProductsAsync(int busRegId);
         Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync();

@@ -32,9 +32,9 @@ namespace mytown.DataAccess.Repositories
                 ProductId = dto.ProductId,
                 Color = dto.Color,
                 Size = dto.Size,
-               Sku_Cost = dto.Sku_Cost,
+               Sku_Cost = dto.Sku_Cost??0,
                 DiscountPrice = dto.DiscountPrice,
-                Quantity = dto.Quantity,
+                Quantity = dto.Quantity??0,
                 Length = dto.Length,
                 Width = dto.Width,
                 Height = dto.Height,
@@ -51,10 +51,10 @@ namespace mytown.DataAccess.Repositories
 
                 foreach (var file in files)
                 {
-                    var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                  //  var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
                     // Upload to blob storage
-                    await UploadToBlobAsync(file, fileName);
+                   var fileName =  await UploadToBlobAsync(file, "product");
 
                     var image = new ProductImage
 
@@ -74,95 +74,204 @@ namespace mytown.DataAccess.Repositories
 
             return variant;
         }
-      
 
-      //------------------------------------------------------------------------------------------------------------------------------------------------//
-        public async Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles)
+        public async Task<ProductCreateDto?> GetProductandVariantAsync(int productId)
         {
-            await _context.products.AddAsync(product);
-            await _context.SaveChangesAsync();
+            var product = await _context.products
+                .Include(p => p.Sku_ProductVariants)
+                    .ThenInclude(v => v.Images)
+                .FirstOrDefaultAsync(p => p.product_id == productId);
 
-            if (imageFiles != null && imageFiles.Any())
+            if (product == null) return null;
+
+            return new ProductCreateDto
             {
-                int order = 1;
-                foreach (var file in imageFiles)
+                ProductId = product.product_id,
+                BusRegId = product.BusRegId,
+                BuscatId = product.BuscatId,
+                ProdSubcatId = product.prod_subcat_id,
+                ProductName = product.product_name,                
+                ProductDescription = product.product_description,              
+                SupplierName = product.supplier_name,
+               
+
+                Variants = product.Sku_ProductVariants.Select(v => new Sku_ProductVariantDto
                 {
-                    var newFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-
-                    // Upload to Blob
-                    await UploadToBlobAsync(file, newFileName);
-
-                    // Save in DB
-                    var productImage = new ProductImage
-                    {
-                        ProductId = product.product_id,
-                        FileName = newFileName,
-                        SortOrder = order++
-                    };
-                    await _context.ProductImages.AddAsync(productImage);
-                }
-                await _context.SaveChangesAsync();
-            }
-
-            return product;
+                    SkuId_Productvariant = v.SkuId,
+                    ProductId = v.ProductId,
+                    Color = v.Color,
+                    Size = v.Size,
+                    Sku_Cost = v.Sku_Cost,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.Quantity,
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
+                }).ToList()
+            };
         }
 
 
-        public async Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles)
-        {
-            var existingProduct = await _context.products
-                .Include(p => p.Images)
-                .FirstOrDefaultAsync(p => p.product_id == updatedProduct.product_id);
 
-            if (existingProduct == null)
+
+        //------------------------------------------------------------------------------------------------------------------------------------------------//
+        //public async Task<products> CreateProductAsync(products product, List<IFormFile> imageFiles)
+        //{
+        //    await _context.products.AddAsync(product);
+        //    await _context.SaveChangesAsync();
+
+        //    if (imageFiles != null && imageFiles.Any())
+        //    {
+        //        int order = 1;
+        //        foreach (var file in imageFiles)
+        //        {
+        //            var newFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+        //            // Upload to Blob
+        //            await UploadToBlobAsync(file, newFileName);
+
+        //            // Save in DB
+        //            var productImage = new ProductImage
+        //            {
+        //                ProductId = product.product_id,
+        //                FileName = newFileName,
+        //                SortOrder = order++
+        //            };
+        //            await _context.ProductImages.AddAsync(productImage);
+        //        }
+        //        await _context.SaveChangesAsync();
+        //    }
+
+        //    return product;
+        //}
+
+
+        //public async Task<products> UpdateProductAsync(products updatedProduct, List<IFormFile> imageFiles)
+        //{
+        //    var existingProduct = await _context.products
+        //        .Include(p => p.Images)
+        //        .FirstOrDefaultAsync(p => p.product_id == updatedProduct.product_id);
+
+        //    if (existingProduct == null)
+        //        return null;
+
+        //    //  Update product fields
+        //    existingProduct.product_name = updatedProduct.product_name;
+        //    existingProduct.product_subject = updatedProduct.product_subject;
+        //    existingProduct.product_description = updatedProduct.product_description;
+        //    existingProduct.product_cost = updatedProduct.product_cost;
+        //    existingProduct.product_length = updatedProduct.product_length;
+        //    existingProduct.product_width = updatedProduct.product_width;
+        //    existingProduct.product_weight = updatedProduct.product_weight;
+        //    existingProduct.product_quantity = updatedProduct.product_quantity;
+        //    existingProduct.product_height = updatedProduct.product_height;
+        //    existingProduct.discount = updatedProduct.discount;
+        //    existingProduct.discount_price = updatedProduct.discount_price;
+        //    existingProduct.color = updatedProduct.color;
+        //    existingProduct.size = updatedProduct.size;
+
+        //    //  Remove old images (from Blob + DB)
+        //    foreach (var oldImage in existingProduct.Images)
+        //    {
+        //        await DeleteFromBlobAsync(oldImage.FileName);
+        //    }
+        //    _context.ProductImages.RemoveRange(existingProduct.Images);
+
+        //    //  Add new images
+        //    if (imageFiles != null && imageFiles.Any())
+        //    {
+        //        int order = 1;
+        //        foreach (var file in imageFiles)
+        //        {
+        //            var newFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+
+        //            // Upload to Blob
+        //            await UploadToBlobAsync(file, newFileName);
+
+        //            // Save in DB
+        //            var productImage = new ProductImage
+        //            {
+        //                ProductId = existingProduct.product_id,
+        //                FileName = newFileName,
+        //                SortOrder = order++
+        //            };
+        //            await _context.ProductImages.AddAsync(productImage);
+        //        }
+        //    }
+
+        //    await _context.SaveChangesAsync();
+        //    return existingProduct;
+        //}
+
+        // Update Product Variant details
+
+        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles)
+        {
+            var variant = await _context.Sku_ProductVariants
+                .Include(v => v.Images)
+                .FirstOrDefaultAsync(v => v.SkuId == dto.SkuId_Productvariant);
+
+            if (variant == null)
                 return null;
 
-            //  Update product fields
-            existingProduct.product_name = updatedProduct.product_name;
-            existingProduct.product_subject = updatedProduct.product_subject;
-            existingProduct.product_description = updatedProduct.product_description;
-            existingProduct.product_cost = updatedProduct.product_cost;
-            existingProduct.product_length = updatedProduct.product_length;
-            existingProduct.product_width = updatedProduct.product_width;
-            existingProduct.product_weight = updatedProduct.product_weight;
-            existingProduct.product_quantity = updatedProduct.product_quantity;
-            existingProduct.product_height = updatedProduct.product_height;
-            existingProduct.discount = updatedProduct.discount;
-            existingProduct.discount_price = updatedProduct.discount_price;
-            existingProduct.color = updatedProduct.color;
-            existingProduct.size = updatedProduct.size;
+            // --- Update only if values were supplied ---
+            if (!string.IsNullOrWhiteSpace(dto.Color))
+                variant.Color = dto.Color;
 
-            //  Remove old images (from Blob + DB)
-            foreach (var oldImage in existingProduct.Images)
-            {
-                await DeleteFromBlobAsync(oldImage.FileName);
-            }
-            _context.ProductImages.RemoveRange(existingProduct.Images);
+            if (!string.IsNullOrWhiteSpace(dto.Size))
+                variant.Size = dto.Size;
 
-            //  Add new images
+            if (dto.Sku_Cost.HasValue)
+                variant.Sku_Cost = dto.Sku_Cost.Value;
+
+            if (dto.Quantity.HasValue)
+                variant.Quantity = dto.Quantity.Value;
+
+            if (dto.DiscountPrice.HasValue)
+                variant.DiscountPrice = dto.DiscountPrice.Value;
+
+            if (dto.Length.HasValue) variant.Length = dto.Length.Value;
+            if (dto.Width.HasValue) variant.Width = dto.Width.Value;
+            if (dto.Height.HasValue) variant.Height = dto.Height.Value;
+            if (dto.Weight.HasValue) variant.Weight = dto.Weight.Value;
+            if (dto.Discount.HasValue) variant.Discount = dto.Discount.Value;
+
+            // ----- Handle images -----
             if (imageFiles != null && imageFiles.Any())
             {
+                // delete old images (db + blob)
+                foreach (var img in variant.Images)
+                    await DeleteFromBlobAsync(img.FileName);
+
+                _context.ProductImages.RemoveRange(variant.Images);
+
                 int order = 1;
                 foreach (var file in imageFiles)
                 {
-                    var newFileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+                    var storedFileName = await UploadToBlobAsync(file, "product");
 
-                    // Upload to Blob
-                    await UploadToBlobAsync(file, newFileName);
-
-                    // Save in DB
-                    var productImage = new ProductImage
+                    await _context.ProductImages.AddAsync(new ProductImage
                     {
-                        ProductId = existingProduct.product_id,
-                        FileName = newFileName,
+                        ProductId = variant.ProductId,
+                        SkuId = variant.SkuId,
+                        FileName = storedFileName,
                         SortOrder = order++
-                    };
-                    await _context.ProductImages.AddAsync(productImage);
+                    });
                 }
             }
 
             await _context.SaveChangesAsync();
-            return existingProduct;
+            return variant;
         }
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
@@ -205,7 +314,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        //edit or update product details 
+      
         public async Task DeleteProductAsync(int productId)
         {
             // Wrap in transaction to ensure consistency
@@ -233,27 +342,73 @@ namespace mytown.DataAccess.Repositories
                     var blobServiceClient = new BlobServiceClient(connectionString);
                     var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
-                    foreach (var image in productImages)
+                    foreach (var variant in product.Sku_ProductVariants)
                     {
-                        var blobClient = containerClient.GetBlobClient(image.FileName);
-                        await blobClient.DeleteIfExistsAsync();
+                        foreach (var img in variant.Images)
+                        {
+                            var blobClient = containerClient.GetBlobClient(img.FileName);
+                            await blobClient.DeleteIfExistsAsync();
+                        }
+
+                        _context.ProductImages.RemoveRange(variant.Images);
                     }
 
-                    // Delete from DB
-                    _context.ProductImages.RemoveRange(productImages);
+                    // 3️⃣ Delete all variants
+                    _context.Sku_ProductVariants.RemoveRange(product.Sku_ProductVariants);
+
+                    // 4️⃣ Delete product itself
+                    _context.products.Remove(product);
+
+                    // 5️⃣ Commit
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
                 }
-
-                // Delete product itself
-                _context.products.Remove(product);
-
-                //  Commit
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
             }
             catch
             {
                 await transaction.RollbackAsync();
-                throw; 
+                throw;
+            }
+        }
+
+        public async Task DeleteProductVariantAsync(int productId, int skuId)
+        {
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 1️⃣ Load variant with its images
+                var variant = await _context.Sku_ProductVariants
+                    .Include(v => v.Images)
+                    .FirstOrDefaultAsync(v => v.ProductId == productId && v.SkuId == skuId);
+
+                if (variant == null)
+                    return;
+
+                // 2️⃣ Delete images from blob + DB
+                var containerName = _configuration["AzureBlobStorage:ContainerName"];
+                var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+                var blobServiceClient = new BlobServiceClient(connectionString);
+                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+                foreach (var img in variant.Images)
+                {
+                    var blobClient = containerClient.GetBlobClient(img.FileName);
+                    await blobClient.DeleteIfExistsAsync();
+                }
+
+                _context.ProductImages.RemoveRange(variant.Images);
+
+                // 3️⃣ Delete the variant itself
+                _context.Sku_ProductVariants.Remove(variant);
+
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
             }
         }
 

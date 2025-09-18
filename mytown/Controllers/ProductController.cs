@@ -65,7 +65,45 @@ namespace MyTown.Controllers
                 });
             }
         }
-            
+
+        [HttpGet("GetProductandVariantDetails/{productId}")]
+        public async Task<ActionResult<ProductDetailsDto>> GetProductandVariantDetails(int productId)
+        {
+            var result = await _productRepo.GetProductandVariantAsync(productId);
+            if (result == null)
+                return NotFound(new { message = "Product not found." });
+
+            return Ok(result);
+        }
+
+        [HttpPut("UpdateProductVariants")]
+        public async Task<IActionResult> UpdateVariant(
+    [FromForm] Sku_ProductVariantDto dto,
+    [FromForm] List<IFormFile>? images)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _productRepo.UpdateVariantAsync(dto, images ?? new());
+
+            if (result == null)
+                return NotFound(new { Message = "Variant not found." });
+
+            return Ok(new
+            {
+                result.SkuId,
+                result.Color,
+                result.Size,
+                result.Sku_Cost,
+                result.Quantity,
+                Images = result.Images.Select(i => new
+                {
+                    i.ImageId,
+                    i.FileName,
+                    i.SortOrder
+                })
+            });
+        }
 
 
         //[HttpPost("Save_Product")]
@@ -124,18 +162,29 @@ namespace MyTown.Controllers
         {
             try
             {
-                // Use the repository to delete the product
+                
                 await _productRepo.DeleteProductAsync(productId);
 
                 return Ok(new { message = "Product deleted successfully" });
             }
             catch (Exception ex)
             {
-                // Log the exception
-                Console.WriteLine($"Error deleting product: {ex.Message}");
-
-                // Return a generic error response
+                
+                Console.WriteLine($"Error deleting product: {ex.Message}");                
                 return StatusCode(500, new { message = "An error occurred while deleting the product." });
+            }
+        }
+        [HttpDelete("delete_ProductVariant")]
+        public async Task<IActionResult> DeleteVariant(int productId, int sku_VariantId)
+        {
+            try
+            {
+                await _productRepo.DeleteProductVariantAsync(productId, sku_VariantId);
+                return Ok(new { message = "Variant deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error deleting variant: {ex.Message}");
             }
         }
 

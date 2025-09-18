@@ -18,17 +18,17 @@ namespace mytown.Models
 
         [Required]
         [StringLength(100)]
-        public string product_name { get; set; }
+        public string? product_name { get; set; }
 
-        [Required]
+        
         [StringLength(100)]
-        public string product_subject { get; set; }
+        public string? product_subject { get; set; }
 
         [Required]
         [StringLength(500)]
-        public string product_description   { get; set; }
-        public string product_image { get; set; }
-        public string supplier_name { get; set; }
+        public string? product_description   { get; set; }
+        public string? product_image { get; set; }
+        public string? supplier_name { get; set; }
 
         public int? ProductTypeId { get; set; }
         public int? FabricId { get; set; }
@@ -75,7 +75,8 @@ namespace mytown.Models
         public virtual BusinessRegister? BusinessRegister { get; set; }
 
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
-
+        public virtual ICollection<Sku_ProductVariant> Sku_ProductVariants { get; set; }
+        = new List<Sku_ProductVariant>();
 
 
     }
