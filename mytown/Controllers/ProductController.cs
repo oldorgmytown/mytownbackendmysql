@@ -27,15 +27,14 @@ namespace MyTown.Controllers
 
 
         [HttpPost("Add_Product")]
-        public async Task<IActionResult> AddProduct([FromBody] ProductDto dto)
+        public async Task<IActionResult> AddProduct([FromBody] ProductCreateDto dto)
         {
             var entity = new products
             {
                 BusRegId = dto.BusRegId,
                 BuscatId = dto.BuscatId,
                 prod_subcat_id = dto.ProdSubcatId,
-                product_name = dto.ProductName,
-                product_subject = dto.ProductSubject,
+                product_name = dto.ProductName,               
                 product_description = dto.ProductDescription,
                 ProductTypeId = dto.ProductTypeId,
                 FabricId = dto.FabricId,
@@ -67,7 +66,7 @@ namespace MyTown.Controllers
         }
 
         [HttpGet("GetProductandVariantDetails/{productId}")]
-        public async Task<ActionResult<ProductDetailsDto>> GetProductandVariantDetails(int productId)
+        public async Task<ActionResult<ProdVariantdetailsDto>> GetProductandVariantDetails(int productId)
         {
             var result = await _productRepo.GetProductandVariantAsync(productId);
             if (result == null)
@@ -221,7 +220,7 @@ namespace MyTown.Controllers
 
         // GET: api/User/GetAllProducts
         [HttpGet("GetAllProductsforbusid/{BusRegId}")]
-        public async Task<ActionResult<products>> GetAllProducts(int BusRegId)
+        public async Task<ActionResult<ProdVariantdetailsDto>> GetAllProducts(int BusRegId)
         {
             try
             {

@@ -10,7 +10,7 @@ namespace mytown.DataAccess.Interfaces
         Task<products> AddProductAsync(products product);
         Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files);
 
-        Task<ProductCreateDto?> GetProductandVariantAsync(int productId);
+        Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId);
 
         //Update productvariant
         Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles);
@@ -31,7 +31,7 @@ namespace mytown.DataAccess.Interfaces
         Task DeleteProductVariantAsync(int productId, int skuId);
        
         Task<ProductDto?> GetProductByIdAsync(int productId);
-        Task<IEnumerable<ProductDto>> GetAllProductsAsync(int busRegId);
+        Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId);
         Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync();
 
         Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId);

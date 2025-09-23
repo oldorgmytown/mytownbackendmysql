@@ -75,7 +75,7 @@ namespace mytown.DataAccess.Repositories
             return variant;
         }
 
-        public async Task<ProductCreateDto?> GetProductandVariantAsync(int productId)
+        public async Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId)
         {
             var product = await _context.products
                 .Include(p => p.Sku_ProductVariants)
@@ -84,7 +84,7 @@ namespace mytown.DataAccess.Repositories
 
             if (product == null) return null;
 
-            return new ProductCreateDto
+            return new ProdVariantdetailsDto
             {
                 ProductId = product.product_id,
                 BusRegId = product.BusRegId,
@@ -93,7 +93,11 @@ namespace mytown.DataAccess.Repositories
                 ProductName = product.product_name,                
                 ProductDescription = product.product_description,              
                 SupplierName = product.supplier_name,
-               
+                ProductTypeId = product.ProductTypeId,
+                FabricId = product.FabricId,
+                DesignId = product.DesignId,
+
+
 
                 Variants = product.Sku_ProductVariants.Select(v => new Sku_ProductVariantDto
                 {
@@ -488,34 +492,44 @@ namespace mytown.DataAccess.Repositories
 
 
 
-        public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(int busRegId)
+        public async Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId)
         {
             return await _context.products
-                .Where(p => p.BusRegId == busRegId)
-                .Include(p => p.Images)              // load product images
-                .Include(p => p.BusinessRegister)    // load business info
-                .Select(p => new ProductDto
+        .Where(p => p.BusRegId == busRegId)
+        .Include(p => p.Images) // product images
+        .Include(p => p.Sku_ProductVariants)
+            .ThenInclude(v => v.Images) // variant images
+        .Include(p => p.BusinessRegister) // business info
+        .Select(p => new ProdVariantdetailsDto
+        {
+            ProductId = p.product_id,
+            BusRegId = p.BusRegId,
+            BuscatId = p.BuscatId,
+            ProdSubcatId = p.prod_subcat_id,
+            ProductName = p.product_name,
+            ProductDescription = p.product_description,
+            SupplierName = p.supplier_name,
+            ProductTypeId = p.ProductTypeId,
+            FabricId = p.FabricId,
+            DesignId = p.DesignId,
+            
+            // Variants
+            Variants = p.Sku_ProductVariants
+                .Select(v => new Sku_ProductVariantDto
                 {
-                    ProductId = p.product_id,
-                    BusRegId = p.BusRegId,
-                    BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
-                    ProductName = p.product_name,
-                    ProductSubject = p.product_subject,
-                    ProductDescription = p.product_description,
-                    ProductAmount = p.product_cost ?? 0,
-                    ProductLength = p.product_length ?? 0,
-                    ProductWidth = p.product_width ?? 0,
-                    ProductWeight = p.product_weight ?? 0,
-                    Quantity = p.product_quantity ?? 0,
-                    ProductHeight = p.product_height ?? 0,
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-                    Color = p.color,
-                    Size = p.size,
-                    BusinessName = p.BusinessRegister.Businessname,
-
-                    Images = p.Images
+                    SkuId_Productvariant = v.SkuId,
+                    ProductId = v.ProductId,
+                    Color = v.Color,
+                    Size = v.Size,
+                    Sku_Cost = v.Sku_Cost,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.Quantity,
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => new ProductImageDto
                         {
@@ -524,7 +538,9 @@ namespace mytown.DataAccess.Repositories
                         })
                         .ToList()
                 })
-                .ToListAsync();
+                .ToList()
+        })
+        .ToListAsync();
         }
 
 

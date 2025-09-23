@@ -1,12 +1,10 @@
-﻿using System.Text.Json.Serialization;
-namespace mytown.Models.DTO_s
-   
+﻿namespace mytown.Models.DTO_s
 {
-    public class ProductCreateDto
+    public class ProdVariantdetailsDto
     {
         public int ProductId { get; set; }
         public int BusRegId { get; set; }
-       // public string? BusinessName { get; set; }
+        // public string? BusinessName { get; set; }
         public int BuscatId { get; set; }
         public int ProdSubcatId { get; set; }
         public int? ProductTypeId { get; set; }
@@ -14,16 +12,13 @@ namespace mytown.Models.DTO_s
         public int? DesignId { get; set; }
 
         public string? ProductName { get; set; }
-       // public string? ProductSubject { get; set; }
+        // public string? ProductSubject { get; set; }
         public string? ProductDescription { get; set; }
-       // public string? ProductImage { get; set; }
+        // public string? ProductImage { get; set; }
         public string? SupplierName { get; set; }
 
 
-
-        // All variants for this product
-
-        [JsonIgnore]
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
     }
 }
+

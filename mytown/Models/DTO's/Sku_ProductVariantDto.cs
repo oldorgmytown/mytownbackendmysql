@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models.DTO_s
 {
@@ -20,9 +21,9 @@ namespace mytown.Models.DTO_s
         public decimal? Discount { get; set; }
 
 
-        public string VariantName => $"{SkuId_Productvariant}-{Color}";
+        public string? VariantName => $"{SkuId_Productvariant}-{Color}";
 
-       
+        [JsonIgnore]
         public List<ProductImageDto> Images { get; set; } = new();
 
         //  public List<ProductImageDto>? Images { get; set; }
