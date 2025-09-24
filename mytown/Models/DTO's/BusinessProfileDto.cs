@@ -10,9 +10,9 @@
         public string? BannerPath { get; set; }
         public string? LogoPath { get; set; }
         public string? ProfileStatus { get; set; }
-        public string? BusTime { get; set; }
-        public string? BusinessServiceName { get; set; }
-        public string? BusinessCategoryName { get; set; }
+        //public string? BusTime { get; set; }
+        //public string? BusinessServiceName { get; set; }
+        //public string? BusinessCategoryName { get; set; }
 
     }
 }

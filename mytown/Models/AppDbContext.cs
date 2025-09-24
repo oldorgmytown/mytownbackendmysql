@@ -47,7 +47,9 @@ namespace mytown.Models
             public DbSet<Design> Designs { get; set; }
             public DbSet<Product_Sizes> Product_Sizes { get; set; }
             public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; }
-          //  public DbSet<ProductImage> ProductImages { get; set; }
+            //  public DbSet<ProductImage> ProductImages { get; set; }
+
+            public DbSet<ProductSize_Measurement> ProductSize_Measurements { get; set; }
 
 
 

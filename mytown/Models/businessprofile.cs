@@ -19,11 +19,11 @@ namespace mytown.Models
         public string? banner_path { get; set; }
         public string? logo_path { get; set; }
         public string? profile_status { get; set; }
-        public string? bus_time { get; set; }
+       // public string? bus_time { get; set; }
         public int BusCatId { get; set; }
         public int BusServId { get; set; }
-        public string? Businessservice_name { get; set; }
-        public string? Businesscategory_name { get; set; }
+        //public string? Businessservice_name { get; set; }
+        //public string? Businesscategory_name { get; set; }
 
         public DateTime? approved_date { get; set; }
 

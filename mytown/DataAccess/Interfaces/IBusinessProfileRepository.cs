@@ -25,6 +25,8 @@ namespace mytown.DataAccess.Interfaces
         List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId);
         Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync();
         Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync();
+
+        Task<List<string>> GetUniqueCountriesAsync();
     }
 }
 

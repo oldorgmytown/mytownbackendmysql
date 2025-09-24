@@ -147,11 +147,11 @@ namespace mytown.DataAccess.Repositories
                             bp.banner_path,
                             bp.logo_path,
                             bp.profile_status,
-                            bp.bus_time,
+                           // bp.bus_time,
                             bp.BusCatId,
                             bp.BusServId,
-                            bp.Businessservice_name,
-                            bp.Businesscategory_name,
+                            //bp.Businessservice_name,
+                            //bp.Businesscategory_name,
                             bp.approved_date
                            
                         })
@@ -423,7 +423,7 @@ namespace mytown.DataAccess.Repositories
                 existingProfile.business_about = businessProfile.business_about;
                 existingProfile.banner_path = businessProfile.banner_path;
                 existingProfile.profile_status = businessProfile.profile_status;
-                existingProfile.bus_time = businessProfile.bus_time;
+               // existingProfile.bus_time = businessProfile.bus_time;
                 existingProfile.BusCatId = businessProfile.BusCatId;
                 existingProfile.BusServId = businessProfile.BusServId;
 

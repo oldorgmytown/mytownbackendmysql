@@ -4,6 +4,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using System.Globalization;
 using static mytown.Models.busprofilepreview;
 
 namespace mytown.DataAccess.Repositories
@@ -48,11 +49,11 @@ namespace mytown.DataAccess.Repositories
                                     banner_path = bp.banner_path,
                                     logo_path = bp.logo_path,
                                     profile_status = bp.profile_status,
-                                    bus_time = bp.bus_time,
+                                   // bus_time = bp.bus_time,
                                     BusCatId = bp.BusCatId,
                                     BusServId = bp.BusServId,
-                                    Businessservice_name = bs != null ? bs.Businessservice_name : null,
-                                    Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
+                                    //Businessservice_name = bs != null ? bs.Businessservice_name : null,
+                                    //Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
 
                                     //// Map Pan as an object
                                     //Pan = new PanData
@@ -166,8 +167,8 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.profile_status))
                     existingProfile.profile_status = businessProfile.profile_status;
 
-                if (!string.IsNullOrEmpty(businessProfile.bus_time))
-                    existingProfile.bus_time = businessProfile.bus_time;
+                //if (!string.IsNullOrEmpty(businessProfile.bus_time))
+                //    existingProfile.bus_time = businessProfile.bus_time;
 
                 if (businessProfile.BusCatId != 0)
                     existingProfile.BusCatId = businessProfile.BusCatId;
@@ -175,11 +176,11 @@ namespace mytown.DataAccess.Repositories
                 if (businessProfile.BusServId != 0)
                     existingProfile.BusServId = businessProfile.BusServId;
 
-                if (!string.IsNullOrEmpty(businessProfile.Businessservice_name))
-                    existingProfile.Businessservice_name = businessProfile.Businessservice_name;
+                //if (!string.IsNullOrEmpty(businessProfile.Businessservice_name))
+                //    existingProfile.Businessservice_name = businessProfile.Businessservice_name;
 
-                if (!string.IsNullOrEmpty(businessProfile.Businesscategory_name))
-                    existingProfile.Businesscategory_name = businessProfile.Businesscategory_name;
+                //if (!string.IsNullOrEmpty(businessProfile.Businesscategory_name))
+                //    existingProfile.Businesscategory_name = businessProfile.Businesscategory_name;
 
                
 
@@ -380,7 +381,26 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
+        //Get countries having profil on mytown
+        public async Task<List<string>> GetUniqueCountriesAsync()
+        {
+            // Step 1: Get raw locations from DB
+            var locations = await _context.BusinessProfiles
+                .Where(b => b.business_location != null && b.business_location.Contains(","))
+                .Select(b => b.business_location)
+                .ToListAsync();
 
+            // Step 2: Process in memory (C# side)
+            var countries = locations
+                .Select(loc => loc.Substring(loc.LastIndexOf(',') + 1).Trim()) // take last part
+                .Where(c => !string.IsNullOrWhiteSpace(c) && c != "0000")
+                .Select(c => c.ToLower()) // normalize case
+                .Distinct()
+                .Select(c => char.ToUpper(c[0]) + c.Substring(1)) // TitleCase
+                .ToList();
+
+            return countries;
+        }
 
     }
 }

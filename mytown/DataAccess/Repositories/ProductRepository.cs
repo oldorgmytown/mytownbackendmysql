@@ -75,6 +75,25 @@ namespace mytown.DataAccess.Repositories
             return variant;
         }
 
+
+        // get Size measurements on add product form
+
+        public async Task<ProductSizeMeasurementDto?> GetMeasurementBySizeIdAsync(int sizeId)
+        {
+            return await _context.ProductSize_Measurements
+                .Where(m => m.SizeId == sizeId)
+                .Select(m => new ProductSizeMeasurementDto
+                {
+                    MeasurementId = m.MeasurementId,
+                    SizeId = m.SizeId,
+                    Length = m.Length,
+                    Height = m.Height,
+                    Width = m.Width,
+                    Weight = m.Weight,
+                    Unit = m.Unit
+                })
+                .FirstOrDefaultAsync();
+        }
         public async Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId)
         {
             var product = await _context.products

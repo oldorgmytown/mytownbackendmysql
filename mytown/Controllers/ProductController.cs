@@ -65,6 +65,19 @@ namespace MyTown.Controllers
             }
         }
 
+        // Get measurements based on Size selection on add product form
+        [HttpGet("GetSizeMeasurements")]
+        public async Task<IActionResult> GetMeasurementBySizeId(int sizeId)
+        {
+            var result = await _productRepo.GetMeasurementBySizeIdAsync(sizeId);
+
+            if (result == null)
+                return NotFound(new { message = "No measurements found for this size" });
+
+            return Ok(result);
+        }
+
+
         [HttpGet("GetProductandVariantDetails/{productId}")]
         public async Task<ActionResult<ProdVariantdetailsDto>> GetProductandVariantDetails(int productId)
         {

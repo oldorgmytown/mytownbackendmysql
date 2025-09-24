@@ -54,9 +54,9 @@ namespace mytown.Controllers
                     business_location = businessProfileDto.BusinessLocation,
                     business_about = businessProfileDto.BusinessAbout,
                     profile_status = businessProfileDto.ProfileStatus,
-                    bus_time = businessProfileDto.BusTime,
-                    Businessservice_name = businessProfileDto.BusinessServiceName,
-                    Businesscategory_name = businessProfileDto.BusinessCategoryName,
+                    //bus_time = businessProfileDto.BusTime,
+                    //Businessservice_name = businessProfileDto.BusinessServiceName,
+                    //Businesscategory_name = businessProfileDto.BusinessCategoryName,
                     banner_path = bannerPath, // new banner (if any)
                     logo_path = logoPath      // new logo (if any)
                 };
@@ -236,5 +236,13 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        //get unique countries registerd profile on mytown
+
+        [HttpGet("uniquecountries")]
+        public async Task<IActionResult> GetUniqueCountries()
+        {
+            var countries = await _businessprofileRepo.GetUniqueCountriesAsync();
+            return Ok(countries);
+        }
     }
 }
