@@ -8,7 +8,7 @@ namespace mytown.DataAccess.Interfaces
     {
         //latest - add only prod main details----------------------------------------------//
         Task<products> AddProductAsync(products product);
-        Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files);
+        Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto);
 
         Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId);
 

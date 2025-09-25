@@ -294,6 +294,15 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId)
         {
+
+            //var subcat = await _context.product_sub_categories
+            //                  .Where(sc => sc.prod_subcat_id == prodSubcatId)
+            //                  .Select(sc => new ProductSubCategories
+            //                  {
+            //                      ProdSubcatId = sc.prod_subcat_id,
+            //                      ProdSubcatName = sc.prod_subcat_name
+            //                  })
+            //                  .FirstOrDefaultAsync();
             var types = await _context.Product_Types
                                       .Where(pt => pt.prod_subcat_id == prodSubcatId)
                                       .OrderBy(pt => pt.prod_type_name)

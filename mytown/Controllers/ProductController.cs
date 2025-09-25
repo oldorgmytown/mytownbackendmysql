@@ -49,21 +49,12 @@ namespace MyTown.Controllers
 
 
         [HttpPost("Add_SKU_ProductVariant")]
-        public async Task<IActionResult> AddProductVariant([FromForm] Sku_ProductVariantDto dto, [FromForm] List<IFormFile> files)
+        public async Task<IActionResult> AddProductVariant([FromForm] Sku_CreateVariantDto dto)
         {
-            {
-                if (dto == null)
-                    return BadRequest("Variant data is required.");
-
-                var variant = await _productRepo.AddProductVariantAsync(dto, files);
-
-                return Ok(new
-                {
-                    message = "Variant added successfully",
-                    skuId = variant.SkuId
-                });
-            }
+            var variant = await _productRepo.AddProductVariantAsync(dto);
+            return Ok(variant);
         }
+
 
         // Get measurements based on Size selection on add product form
         [HttpGet("GetSizeMeasurements")]

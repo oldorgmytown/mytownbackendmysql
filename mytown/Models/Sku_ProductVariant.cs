@@ -61,7 +61,7 @@ namespace mytown.Models
         [JsonIgnore]
         public virtual products Product { get; set; }
 
-        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+        public virtual ICollection<ProductImage>? Images { get; set; } = new List<ProductImage>();
     }
 }
 

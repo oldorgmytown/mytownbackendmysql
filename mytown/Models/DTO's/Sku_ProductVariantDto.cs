@@ -23,7 +23,7 @@ namespace mytown.Models.DTO_s
 
         public string? VariantName => $"{SkuId_Productvariant}-{Color}";
 
-        [JsonIgnore]
+        
         public List<ProductImageDto> Images { get; set; } = new();
 
         //  public List<ProductImageDto>? Images { get; set; }

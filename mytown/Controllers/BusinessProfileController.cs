@@ -54,6 +54,7 @@ namespace mytown.Controllers
                     business_location = businessProfileDto.BusinessLocation,
                     business_about = businessProfileDto.BusinessAbout,
                     profile_status = businessProfileDto.ProfileStatus,
+                    BusCatId = businessProfileDto.Buscatid,
                     //bus_time = businessProfileDto.BusTime,
                     //Businessservice_name = businessProfileDto.BusinessServiceName,
                     //Businesscategory_name = businessProfileDto.BusinessCategoryName,

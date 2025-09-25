@@ -25,16 +25,16 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
             return product;
         }
-        public async Task<Sku_ProductVariant> AddProductVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)
+        public async Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto)
         {
             var variant = new Sku_ProductVariant
             {
                 ProductId = dto.ProductId,
                 Color = dto.Color,
                 Size = dto.Size,
-               Sku_Cost = dto.Sku_Cost??0,
+                Sku_Cost = dto.Sku_Cost ?? 0,
                 DiscountPrice = dto.DiscountPrice,
-                Quantity = dto.Quantity??0,
+                Quantity = dto.Quantity ?? 0,
                 Length = dto.Length,
                 Width = dto.Width,
                 Height = dto.Height,
@@ -43,26 +43,23 @@ namespace mytown.DataAccess.Repositories
             };
 
             await _context.Sku_ProductVariants.AddAsync(variant);
-            await _context.SaveChangesAsync(); // variant gets SkuId
+            await _context.SaveChangesAsync(); // ensures SkuId is generated
 
-            if (files != null && files.Any())
+            if (dto.Images != null && dto.Images.Any())
             {
-                int order = 1; // just increment for each image
+                int order = 1;
 
-                foreach (var file in files)
+                foreach (var file in dto.Images)
                 {
-                  //  var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-
                     // Upload to blob storage
-                   var fileName =  await UploadToBlobAsync(file, "product");
+                    var fileName = await UploadToBlobAsync(file, "product");
 
                     var image = new ProductImage
-
                     {
                         ProductId = variant.ProductId,
-                        SkuId = variant.SkuId,  // link image to the variant
+                        SkuId = variant.SkuId,
                         FileName = fileName,
-                        SortOrder = order++      // simple incremental order
+                        SortOrder = order++
                     };
 
                     await _context.ProductImages.AddAsync(image);
@@ -70,7 +67,6 @@ namespace mytown.DataAccess.Repositories
 
                 await _context.SaveChangesAsync();
             }
-
 
             return variant;
         }
@@ -238,7 +234,7 @@ namespace mytown.DataAccess.Repositories
 
         // Update Product Variant details
 
-        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles)
+        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)
         {
             var variant = await _context.Sku_ProductVariants
                 .Include(v => v.Images)
@@ -270,7 +266,7 @@ namespace mytown.DataAccess.Repositories
             if (dto.Discount.HasValue) variant.Discount = dto.Discount.Value;
 
             // ----- Handle images -----
-            if (imageFiles != null && imageFiles.Any())
+            if (files != null && files.Any())
             {
                 // delete old images (db + blob)
                 foreach (var img in variant.Images)
@@ -279,7 +275,7 @@ namespace mytown.DataAccess.Repositories
                 _context.ProductImages.RemoveRange(variant.Images);
 
                 int order = 1;
-                foreach (var file in imageFiles)
+                foreach (var file in files)
                 {
                     var storedFileName = await UploadToBlobAsync(file, "product");
 

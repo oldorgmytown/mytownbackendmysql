@@ -2,6 +2,7 @@
 {
     public class ProductDetailsDto
     {
+        //public List<(int ProdSubcatId, string ProdSubcatName)> ProductSubCategories { get; set; } = new();
         public int ProdSubcatId { get; set; }
         public IEnumerable<ProductType> ProductTypes { get; set; }
         public IEnumerable<Fabric> Fabrics { get; set; }
