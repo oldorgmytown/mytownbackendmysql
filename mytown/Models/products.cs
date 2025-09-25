@@ -6,6 +6,7 @@ namespace mytown.Models
 {
     public class products
     {
+        [Column("product_id")]
         [Key]
         public int product_id {  get; set; }
 

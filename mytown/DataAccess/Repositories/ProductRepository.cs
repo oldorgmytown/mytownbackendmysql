@@ -337,55 +337,49 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-      
+
         public async Task DeleteProductAsync(int productId)
         {
-            // Wrap in transaction to ensure consistency
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                //  Get product
+                //  Get product with variants and images
                 var product = await _context.products
+                    .Include(p => p.Sku_ProductVariants)
+                        .ThenInclude(v => v.Images)
                     .FirstOrDefaultAsync(p => p.product_id == productId);
 
                 if (product == null)
                     return;
 
-                // Get all images for this product
-                var productImages = await _context.ProductImages
-                    .Where(pi => pi.ProductId == productId)
-                    .ToListAsync();
-
-                if (productImages.Any())
+                //  Delete product images from Blob
+                foreach (var variant in product.Sku_ProductVariants)
                 {
-                    // Delete from Blob Storage
-                    var containerName = _configuration["AzureBlobStorage:ContainerName"];
-                    var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
-                    var blobServiceClient = new BlobServiceClient(connectionString);
-                    var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-
-                    foreach (var variant in product.Sku_ProductVariants)
+                    foreach (var img in variant.Images)
                     {
-                        foreach (var img in variant.Images)
+                        try
                         {
-                            var blobClient = containerClient.GetBlobClient(img.FileName);
-                            await blobClient.DeleteIfExistsAsync();
+                            await DeleteFromBlobAsync(img.FileName); // ✅ reuse your method
                         }
-
-                        _context.ProductImages.RemoveRange(variant.Images);
+                        catch (Exception ex)
+                        {
+                            throw new Exception($"Failed to delete blob {img.FileName}", ex);
+                        }
                     }
 
-                    // 3️⃣ Delete all variants
-                    _context.Sku_ProductVariants.RemoveRange(product.Sku_ProductVariants);
-
-                    // 4️⃣ Delete product itself
-                    _context.products.Remove(product);
-
-                    // 5️⃣ Commit
-                    await _context.SaveChangesAsync();
-                    await transaction.CommitAsync();
+                    _context.ProductImages.RemoveRange(variant.Images);
                 }
+
+                // Delete variants
+                _context.Sku_ProductVariants.RemoveRange(product.Sku_ProductVariants);
+
+                // 4️ Delete product itself
+                _context.products.Remove(product);
+
+                // 5️ Save and commit
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
             catch
             {
@@ -409,20 +403,20 @@ namespace mytown.DataAccess.Repositories
                     return;
 
                 // 2️⃣ Delete images from blob + DB
-                var containerName = _configuration["AzureBlobStorage:ContainerName"];
-                var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
-                var blobServiceClient = new BlobServiceClient(connectionString);
-                var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-
                 foreach (var img in variant.Images)
                 {
-                    var blobClient = containerClient.GetBlobClient(img.FileName);
-                    await blobClient.DeleteIfExistsAsync();
+                    try
+                    {
+                        await DeleteFromBlobAsync(img.FileName);                    }
+                    catch (Exception ex)
+                    {
+                        throw new Exception($"Failed to delete blob {img.FileName}", ex);
+                    }
                 }
 
                 _context.ProductImages.RemoveRange(variant.Images);
 
-                // 3️⃣ Delete the variant itself
+                // 3️ Delete the variant itself
                 _context.Sku_ProductVariants.Remove(variant);
 
                 await _context.SaveChangesAsync();
@@ -434,6 +428,7 @@ namespace mytown.DataAccess.Repositories
                 throw;
             }
         }
+
 
         //public async Task<products> UpdateProductAsync(products product)
         //{
