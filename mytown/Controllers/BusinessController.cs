@@ -148,8 +148,10 @@ namespace mytown.Controllers
                 var newProfile = new businessprofile
                 {
                     BusRegId = newBusiness.BusRegId,
-                    profile_status = "Incomplete", 
-                   // CreatedAt = DateTime.UtcNow
+                    profile_status = "Incomplete",
+                    BusinessUsername = newBusiness.Businessname,                   
+                    business_location = $"{newBusiness.Town}, {newBusiness.businessCity}, {newBusiness.businessState}, {newBusiness.businessCountry}"
+                    // CreatedAt = DateTime.UtcNow
                 };
 
                 await _businessRepository.CreateProfile(newProfile);
