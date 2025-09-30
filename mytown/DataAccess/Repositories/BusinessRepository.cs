@@ -83,11 +83,21 @@ namespace mytown.DataAccess.Repositories
         //get business owner home page with busregid
         public async Task<BusinessRegister> GetBusinessByIdAsync(int busRegId)
         {
+            //return await _context.BusinessRegisters
+            //                    .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
+
             return await _context.BusinessRegisters
-                                .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
+                        .Include(b => b.BusinessProfile) // load related profile
+                        .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
         }
 
+        //create profile during business registration
 
+        public async Task CreateProfile(businessprofile profile)
+        {
+            _context.BusinessProfiles.Add(profile);
+            await _context.SaveChangesAsync();
+        }
         //get business store types
         public async Task<ActionResult<IEnumerable<businesscategoriescs>>> GetBusinessCategories()
         {

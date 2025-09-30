@@ -18,9 +18,6 @@
         public decimal? Discount { get; set; }
 
 
-      //  public string? VariantName => $"{SkuId_Productvariant}-{Color}";
-
-
         public List<IFormFile> Images { get; set; } = new();
     }
 }

@@ -17,6 +17,9 @@ namespace mytown.DataAccess
         Task<BusinessVerification> FindPendingVerificationByEmail(string email);
         Task RemoveVerification(BusinessVerification verification);
         Task<BusinessRegister> GetBusinessByIdAsync(int busRegId);
+
+        //add profile after email verification
+        Task CreateProfile(businessprofile profile);
         Task<ActionResult<IEnumerable<businesscategoriescs>>> GetBusinessCategories();
         Task<ActionResult<IEnumerable<businessservices>>> GetBusinessServices();
         Task<IEnumerable<product_sub_categories>> BusinessSubCategoriesforStores(int buscatId);

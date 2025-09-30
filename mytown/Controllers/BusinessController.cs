@@ -143,6 +143,16 @@ namespace mytown.Controllers
                 };
 
                 await _businessRepository.RegisterBusiness(newBusiness);
+
+                // adding busprfile id soon after verification
+                var newProfile = new businessprofile
+                {
+                    BusRegId = newBusiness.BusRegId,
+                    profile_status = "Incomplete", 
+                   // CreatedAt = DateTime.UtcNow
+                };
+
+                await _businessRepository.CreateProfile(newProfile);
                 await _businessRepository.DeletePendingVerification(token);
 
                 _logger.LogInformation("Email verified and business registered for {Email}", newBusiness.BusEmail);
