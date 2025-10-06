@@ -52,8 +52,8 @@ namespace mytown.DataAccess.Repositories
                                    // bus_time = bp.bus_time,
                                     BusCatId = bp.BusCatId,
                                     BusServId = bp.BusServId,
-                                    //Businessservice_name = bs != null ? bs.Businessservice_name : null,
-                                    //Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
+                                    Businessservice_name = bs != null ? bs.Businessservice_name : null,
+                                    Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
 
                                     //// Map Pan as an object
                                     //Pan = new PanData
