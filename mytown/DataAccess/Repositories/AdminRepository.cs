@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Services;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 
@@ -9,10 +10,12 @@ namespace mytown.DataAccess.Repositories
     public class AdminRepository : IAdminRepository
     {
         private readonly AppDbContext _context;
+        private readonly IEmailService _emailService;
 
-        public AdminRepository(AppDbContext context)
+        public AdminRepository(AppDbContext context, IEmailService emailservice)
         {
             _context = context;
+            _emailService = emailservice;
         }
 
         //ADMIN PANEL
@@ -142,7 +145,8 @@ namespace mytown.DataAccess.Repositories
         public async Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status)
         {
             var profile = await _context.BusinessProfiles
-                .FirstOrDefaultAsync(p => p.BusRegId == busRegId);
+      .Include(p => p.BusinessRegister) // Include the related BusinessRegister
+      .FirstOrDefaultAsync(p => p.BusRegId == busRegId);
 
             if (profile == null)
                 return false;
@@ -152,6 +156,18 @@ namespace mytown.DataAccess.Repositories
 
             _context.BusinessProfiles.Update(profile);
             await _context.SaveChangesAsync();
+
+            // Now capture the business details
+            var business = profile.BusinessRegister;
+            if (business != null)
+            {
+                string businessName = business.Businessname;
+                string username = business.BusinessUsername;
+                string email = business.BusEmail;
+
+                // Call your email sending logic here
+                await _emailService.SendBusinessStatusEmailAsync(email, username, businessName, status);
+            }
 
             return true;
         }

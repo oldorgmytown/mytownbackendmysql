@@ -165,7 +165,7 @@ namespace mytown.Controllers
 
 
         //get sub categories of each business
-        [HttpGet("GetProductSubCategories/{BusRegId}")]
+        [HttpGet("GetProductCategoriesbybusregid")]
         public IActionResult GetProductSubCategories(int busRegId)
         {
             var subCategories = _businessprofileRepo.GetProductSubCategoriesByBusRegId(busRegId);

@@ -310,5 +310,90 @@ public class EmailService : IEmailService
         }
     }
 
+    //Admin Approval or Rejection of submitted business profile
+
+    public async Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                string statusLower = status.ToLower();
+                string statusColor = statusLower == "approved" ? "#28a745" : "#dc3545"; // green or red
+                string statusText = status.ToUpper();
+
+                // Different message for Approved or Rejected
+                string messageContent = statusLower switch
+                {
+                    "approved" => $@"
+                    <p>
+                      Congratulations! Your business profile <strong>({businessName})</strong> has been 
+                      <span style='color: {statusColor}; font-weight: bold;'>APPROVED</span> by our admin team.
+                    </p>
+                    <p>
+                      You can now log in and start using all features of the platform. Welcome aboard!
+                    </p>",
+
+                    "rejected" => $@"
+                    <p>
+                      We regret to inform you that your business profile <strong>({businessName})</strong> 
+                      has been <span style='color: {statusColor}; font-weight: bold;'>REJECTED</span> after review.
+                    </p>
+                    <p>
+                      Please check the details you submitted and ensure they meet our registration criteria. 
+                      You may revise your profile and resubmit for approval.
+                    </p>",
+
+                    _ => $@"
+                    <p>
+                      The status of your business profile <strong>({businessName})</strong> has been updated to 
+                      <span style='color: {statusColor}; font-weight: bold;'>{statusText}</span>.
+                    </p>"
+                };
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Your Business Profile Status Update",
+                    Body = $@"
+<html>
+  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
+    <h3 style='color: #000;'>Business Profile Status Notification</h3>
+
+    <p>Hello <strong>{businessUsername}</strong>,</p>
+
+    {messageContent}
+
+    <p>
+      <strong>Updated On:</strong> {DateTime.Now:dd-MMM-yyyy hh:mm tt}
+    </p>
+
+    <p style='margin-top: 30px;'>
+      Best regards,<br />
+      <strong style='color: #004481;'>ItIsMyTown Business Support</strong><br />
+      <em>[Contact Details]</em>
+    </p>
+  </body>
+</html>",
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending business status email: {ex.Message}");
+            throw new Exception("Failed to send business status notification email.");
+        }
+    }
 
 }
