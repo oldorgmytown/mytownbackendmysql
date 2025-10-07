@@ -31,41 +31,38 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<List<busprofilepreview>> GetBusinessProfilesByBusRegIdAsync(int busRegId)
         {
-            var result = await (from bp in _context.BusinessProfiles
-                                join bs in _context.BusinessServices
-                                    on bp.BusServId equals bs.BusservId into bsGroup
-                                from bs in bsGroup.DefaultIfEmpty()
-                                join bc in _context.BusinessCategories
-                                    on bp.BusCatId equals bc.BuscatId into bcGroup
-                                from bc in bcGroup.DefaultIfEmpty()
-                                where bp.BusRegId == busRegId
-                                select new busprofilepreview
-                                {
-                                    businessprofile_id = bp.businessprofile_id,
-                                    BusRegId = bp.BusRegId,
-                                    BusinessUsername = bp.BusinessUsername,
-                                    business_location = bp.business_location,
-                                    business_about = bp.business_about,
-                                    banner_path = bp.banner_path,
-                                    logo_path = bp.logo_path,
-                                    profile_status = bp.profile_status,
-                                   // bus_time = bp.bus_time,
-                                    BusCatId = bp.BusCatId,
-                                    BusServId = bp.BusServId,
-                                    Businessservice_name = bs != null ? bs.Businessservice_name : null,
-                                    Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
-
-                                    //// Map Pan as an object
-                                    //Pan = new PanData
-                                    //{
-                                    //    X = bp.image_positionx,
-                                    //    Y = bp.image_positiony,
-                                    //    Zoom = bp.zoom
-                                    //}
-                                }).ToListAsync();
+            var result = await (
+                from bp in _context.BusinessProfiles
+                join br in _context.BusinessRegisters
+                    on bp.BusRegId equals br.BusRegId
+                join bs in _context.BusinessServices
+                    on bp.BusServId equals bs.BusservId into bsGroup
+                from bs in bsGroup.DefaultIfEmpty()
+                join bc in _context.BusinessCategories
+                    on bp.BusCatId equals bc.BuscatId into bcGroup
+                from bc in bcGroup.DefaultIfEmpty()
+                where bp.BusRegId == busRegId
+                select new busprofilepreview
+                {
+                    businessprofile_id = bp.businessprofile_id,
+                    BusRegId = bp.BusRegId,
+                    Businessname = br.Businessname, // From BusinessRegister table
+                    Businessusername = br.BusinessUsername, // from business register table
+                    business_location = bp.business_location,
+                    business_about = bp.business_about,
+                    banner_path = bp.banner_path,
+                    logo_path = bp.logo_path,
+                    profile_status = bp.profile_status,
+                    BusCatId = bp.BusCatId,
+                    BusServId = bp.BusServId,
+                    Businessservice_name = bs != null ? bs.Businessservice_name : null,
+                    Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
+                }
+            ).ToListAsync();
 
             return result;
         }
+
 
 
 

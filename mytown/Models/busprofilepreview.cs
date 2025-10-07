@@ -6,7 +6,8 @@ namespace mytown.Models
     {
         public int businessprofile_id { get; set; }
         public int BusRegId { get; set; }
-        public string BusinessUsername { get; set; }
+        public string Businessname { get; set; }
+        public string Businessusername { get; set; }
         public string business_location { get; set; }
         public string business_about { get; set; }
         public string banner_path { get; set; }
