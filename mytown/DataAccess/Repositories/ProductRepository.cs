@@ -232,6 +232,43 @@ namespace mytown.DataAccess.Repositories
         //    return existingProduct;
         //}
 
+
+        //Update only product main details
+        public async Task<products> UpdateProductAsync(int productId, ProductCreateDto dto)
+{
+    var existingProduct = await _context.products.FindAsync(productId);
+    if (existingProduct == null) return null;
+
+    // Only update if new value is not null
+    if (dto.BusRegId != 0) existingProduct.BusRegId = dto.BusRegId;
+    if (dto.BuscatId != 0) existingProduct.BuscatId = dto.BuscatId;
+    if (dto.ProdSubcatId != 0) existingProduct.prod_subcat_id = dto.ProdSubcatId;
+
+    if (!string.IsNullOrWhiteSpace(dto.ProductName))
+        existingProduct.product_name = dto.ProductName;
+
+    if (!string.IsNullOrWhiteSpace(dto.ProductDescription))
+        existingProduct.product_description = dto.ProductDescription;
+
+    if (!string.IsNullOrWhiteSpace(dto.SupplierName))
+        existingProduct.supplier_name = dto.SupplierName;
+
+    if (dto.ProductTypeId.HasValue)
+        existingProduct.ProductTypeId = dto.ProductTypeId;
+
+    if (dto.FabricId.HasValue)
+        existingProduct.FabricId = dto.FabricId;
+
+    if (dto.DesignId.HasValue)
+        existingProduct.DesignId = dto.DesignId;
+
+    _context.products.Update(existingProduct);
+    await _context.SaveChangesAsync();
+
+    return existingProduct;
+}
+
+
         // Update Product Variant details
 
         public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)

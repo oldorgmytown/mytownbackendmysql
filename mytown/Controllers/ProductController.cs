@@ -79,6 +79,27 @@ namespace MyTown.Controllers
             return Ok(result);
         }
 
+        //Update product main details
+
+        [HttpPut("Update_Productdetails")]
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductCreateDto dto)
+        {
+            if (dto == null || dto.ProductId == 0)
+                return BadRequest(new { message = "Valid ProductId is required in the request body." });
+
+            var updatedProduct = await _productRepo.UpdateProductAsync(dto.ProductId, dto);
+
+            if (updatedProduct == null)
+                return NotFound(new { message = $"Product with ID {dto.ProductId} not found." });
+
+            return Ok(new
+            {
+                productId = updatedProduct.product_id,
+                message = "Product updated successfully."
+            });
+        }
+
+
         [HttpPut("UpdateProductVariants")]
         public async Task<IActionResult> UpdateVariant(
     [FromForm] Sku_ProductVariantDto dto,

@@ -12,6 +12,9 @@ namespace mytown.DataAccess.Interfaces
 
         Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId);
 
+        //update product main details
+        Task<products> UpdateProductAsync(int productId, ProductCreateDto dto);
+
         //Update productvariant
         Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles);
 
