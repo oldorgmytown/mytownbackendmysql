@@ -21,9 +21,9 @@ namespace mytown.Models
         [Column("color")]
         public string? Color { get; set; }
 
-        [StringLength(50)]
-        [Column("size")]
-        public string? Size { get; set; }
+
+        [Column("size_id")]
+        public int? SizeId { get; set; }
 
         [Range(0, double.MaxValue)]
         [Column("sku_cost")]
@@ -62,6 +62,10 @@ namespace mytown.Models
         public virtual products Product { get; set; }
 
         public virtual ICollection<ProductImage>? Images { get; set; } = new List<ProductImage>();
+
+
+        [ForeignKey("SizeId")]
+        public virtual Product_Sizes Size { get; set; }
     }
 }
 

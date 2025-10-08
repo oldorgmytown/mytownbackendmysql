@@ -31,7 +31,7 @@ namespace mytown.DataAccess.Repositories
             {
                 ProductId = dto.ProductId,
                 Color = dto.Color,
-                Size = dto.Size,
+                SizeId = dto.SizeId,
                 Sku_Cost = dto.Sku_Cost ?? 0,
                 DiscountPrice = dto.DiscountPrice,
                 Quantity = dto.Quantity ?? 0,
@@ -95,6 +95,8 @@ namespace mytown.DataAccess.Repositories
             var product = await _context.products
                 .Include(p => p.Sku_ProductVariants)
                     .ThenInclude(v => v.Images)
+                .Include(p => p.Sku_ProductVariants)
+            .ThenInclude(v => v.Size) //get sizename
                 .FirstOrDefaultAsync(p => p.product_id == productId);
 
             if (product == null) return null;
@@ -119,7 +121,8 @@ namespace mytown.DataAccess.Repositories
                     SkuId_Productvariant = v.SkuId,
                     ProductId = v.ProductId,
                     Color = v.Color,
-                    Size = v.Size,
+                    SizeId = v.SizeId,
+                    SizeName = v.Size != null ? v.Size.SizeName : null,
                     Sku_Cost = v.Sku_Cost,
                     DiscountPrice = v.DiscountPrice,
                     Quantity = v.Quantity,
@@ -284,8 +287,8 @@ namespace mytown.DataAccess.Repositories
             if (!string.IsNullOrWhiteSpace(dto.Color))
                 variant.Color = dto.Color;
 
-            if (!string.IsNullOrWhiteSpace(dto.Size))
-                variant.Size = dto.Size;
+            if (dto.SizeId.HasValue)
+                variant.SizeId = dto.SizeId;
 
             if (dto.Sku_Cost.HasValue)
                 variant.Sku_Cost = dto.Sku_Cost.Value;
@@ -546,6 +549,8 @@ namespace mytown.DataAccess.Repositories
         .Include(p => p.Images) // product images
         .Include(p => p.Sku_ProductVariants)
             .ThenInclude(v => v.Images) // variant images
+         .Include(p => p.Sku_ProductVariants)
+            .ThenInclude(v => v.Size) //get sizename
         .Include(p => p.BusinessRegister) // business info
         .Select(p => new ProdVariantdetailsDto
         {
@@ -567,7 +572,8 @@ namespace mytown.DataAccess.Repositories
                     SkuId_Productvariant = v.SkuId,
                     ProductId = v.ProductId,
                     Color = v.Color,
-                    Size = v.Size,
+                    SizeId = v.SizeId,
+                    SizeName = v.Size != null ? v.Size.SizeName : null,
                     Sku_Cost = v.Sku_Cost,
                     DiscountPrice = v.DiscountPrice,
                     Quantity = v.Quantity,

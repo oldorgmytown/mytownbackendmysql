@@ -5,7 +5,7 @@
         public int SkuId_Productvariant { get; set; }
         public int ProductId { get; set; }
         public string? Color { get; set; }
-        public string? Size { get; set; }
+        public int? SizeId { get; set; }
 
         public decimal? Sku_Cost { get; set; }
         public decimal? DiscountPrice { get; set; }
