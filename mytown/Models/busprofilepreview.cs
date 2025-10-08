@@ -19,6 +19,8 @@ namespace mytown.Models
         public string Businessservice_name { get; set; }
         public string Businesscategory_name { get; set; }
 
+        public string Currency { get; set; }  
+
         //// Pan object
         //public PanData Pan { get; set; }
         //public class PanData

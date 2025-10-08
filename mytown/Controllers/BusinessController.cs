@@ -139,7 +139,8 @@ namespace mytown.Controllers
                     businessCountry = businessDto.businessCountry,
                     postalCode = businessDto.postalCode,
                     Password = hashedPassword,
-                    IsEmailVerified = true
+                    IsEmailVerified = true,
+                    Currency = GetCurrencyByCountry(businessDto.businessCountry)
                 };
 
                 await _businessRepository.RegisterBusiness(newBusiness);
@@ -167,6 +168,22 @@ namespace mytown.Controllers
             }
         }
 
+        private string GetCurrencyByCountry(string country)
+        {
+            var countryCurrencyMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "India", "INR" },
+        { "United States", "USD" },
+        { "UK", "GBP" },
+        { "Germany", "EUR" },
+        { "France", "EUR" },
+        { "Australia", "AUD" },
+        { "Canada", "CAD" },
+        // add more as needed
+    };
+
+            return countryCurrencyMap.TryGetValue(country, out var currency) ? currency : "INR"; // default fallback
+        }
 
         [HttpPost("resend-business-verification")]
         public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)

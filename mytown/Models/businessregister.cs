@@ -1,6 +1,6 @@
-﻿using static System.Runtime.InteropServices.JavaScript.JSType;
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace mytown.Models
 {
@@ -46,6 +46,11 @@ namespace mytown.Models
 
 
         public bool IsEmailVerified { get; set; } = false;
+
+        [Column("currency")]
+        [StringLength(10)]
+        public string? Currency { get; set; }
+
 
         [Required]
         [StringLength(200)]
