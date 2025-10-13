@@ -354,14 +354,15 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync()
         {
-            // Step 1: Get max discount per business
-            var businessDiscounts = await _context.products
-                .Where(p => p.discount.HasValue && p.discount > 0)
-                .GroupBy(p => p.BusRegId)
+            // Step 1: Get max discount per business from SKU variants
+            var businessDiscounts = await _context.Sku_ProductVariants
+                .Where(v => v.Discount.HasValue && v.Discount > 0)
+                .Include(v => v.Product) // Include product to access BusRegId
+                .GroupBy(v => v.Product.BusRegId)
                 .Select(g => new
                 {
                     BusRegId = g.Key,
-                    MaxDiscount = g.Max(p => p.discount.Value)
+                    MaxDiscount = g.Max(v => v.Discount.Value)
                 })
                 .OrderByDescending(g => g.MaxDiscount) // highest discount first
                 .ToListAsync();

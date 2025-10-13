@@ -19,6 +19,7 @@ namespace mytown.DataAccess.Repositories
             var existingCartItem = await _context.addtocart
          .FirstOrDefaultAsync(c =>
              c.product_id == cartItem.product_id &&
+             c.sku_id == cartItem.sku_id &&       // Include variant check
              c.BusRegId == cartItem.BusRegId && // Check if the product is from the same store
              c.ShopperRegId == cartItem.ShopperRegId &&
              c.orderstatus == "cart"); // Only check active cart items

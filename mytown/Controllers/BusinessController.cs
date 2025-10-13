@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess;
+using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Services;
 using System.Text.Json;
-using mytown.DataAccess.Interfaces;
-using mytown.Models.DTO_s;
-using Azure.Storage.Blobs;
+using System.Text.RegularExpressions;
 
 
 namespace mytown.Controllers
@@ -184,6 +185,39 @@ namespace mytown.Controllers
 
             return countryCurrencyMap.TryGetValue(country, out var currency) ? currency : "INR"; // default fallback
         }
+
+        [HttpPost("check-email")]
+        public async Task<IActionResult> CheckBusinessEmail([FromBody] EmailCheckRequestDto request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Email))
+            {
+                return BadRequest(new { error = "Email is required." });
+            }
+
+            var errors = new List<string>();
+
+            // Validate email format
+            const string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(request.Email, emailPattern))
+            {
+                errors.Add("Please enter a valid email address.");
+            }
+
+            if (errors.Count > 0)
+            {
+                _logger.LogWarning("Email validation failed: {Email}, Errors: {Errors}", request.Email, errors);
+                return BadRequest(new { errors });
+            }
+
+            bool isTaken = await _businessRepository.IsEmailTaken(request.Email);
+            if (isTaken)
+            {
+                return Conflict(new { error = "This email is already registered. Try logging in instead." });
+            }
+
+            return Ok(new { message = "Email is valid and available." });
+        }
+
 
         [HttpPost("resend-business-verification")]
         public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)

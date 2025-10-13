@@ -35,13 +35,13 @@ namespace mytown.DataAccess.Interfaces
        
         Task<ProductDto?> GetProductByIdAsync(int productId);
         Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId);
-        Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync();
+        Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync();
 
-        Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId);
+        Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId);
 
         Task SaveProductViewAsync(int shopperId, int productId);
 
         //get top purchased prodcuts in that location
-        List<ProductDto> GetTopPurchasedProductsByLocation(string location, int minOrders = 5);
+        Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5);
     }
 }

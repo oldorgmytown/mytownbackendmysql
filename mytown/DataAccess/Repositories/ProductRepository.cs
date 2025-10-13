@@ -597,93 +597,146 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public async Task<IEnumerable<ProductDto>> GetDiscountedProductsAsync()
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
         {
-            return await _context.products
-                .Include(p => p.BusinessRegister)
-                .Include(p => p.Images) // include related product images
-                .Where(p => p.discount != null) // filter only products with discount
-                .Select(p => new ProductDto
+            return await _context.Sku_ProductVariants
+       .Where(v => v.Discount != null && v.Discount > 0) // only discounted variants
+       .Include(v => v.Images)
+       .Include(v => v.Product)
+           .ThenInclude(p => p.BusinessRegister)
+       .Include(v => v.Product)
+           .ThenInclude(p => p.ProductType)
+       .Include(v => v.Product)
+           .ThenInclude(p => p.Fabric)
+       .Include(v => v.Product)
+           .ThenInclude(p => p.Design)
+       .Select(v => new ProdcVariantforShopperDto
+       {
+           ProductId = v.ProductId,
+
+           BusRegId = v.Product.BusRegId,
+           BusinessName = v.Product.BusinessRegister.Businessname,
+
+           BuscatId = v.Product.BuscatId,
+         //  BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+
+           ProdcatId = v.Product.prod_subcat_id,
+          // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
+
+           ProductTypeId = v.Product.ProductTypeId,
+           ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.prod_type_name : null,
+
+           FabricId = v.Product.FabricId,
+           FabricName = v.Product.Fabric != null ? v.Product.Fabric.fabric_name: null,
+
+           DesignId = v.Product.DesignId,
+           DesignName = v.Product.Design != null ? v.Product.Design.design_name : null,
+
+           ProductName = v.Product.product_name,
+           ProductDescription = v.Product.product_description,
+           SupplierName = v.Product.supplier_name,
+
+           Variants = new List<Sku_ProductVariantDto>
+           {
+                new Sku_ProductVariantDto
                 {
-                    ProductId = p.product_id,
-                    BusRegId = p.BusRegId,
-                    BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
-                    ProductName = p.product_name ?? string.Empty,
-                    ProductSubject = p.product_subject ?? string.Empty,
-                    ProductDescription = p.product_description ?? string.Empty,
-                    ProductImage = p.product_image ?? string.Empty,
-                    ProductAmount = p.product_cost ?? 0,
-                    ProductLength = p.product_length ?? 0,
-                    ProductWidth = p.product_width ?? 0,
-                    ProductWeight = p.product_weight ?? 0,
-                    Quantity = p.product_quantity ?? 0,
-                    ProductHeight = p.product_height ?? 0,
-                    Color = p.color ?? string.Empty,
-                    Size = p.size ?? string.Empty,
-
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-
-                    BusinessName = p.BusinessRegister.Businessname ?? string.Empty,
-
-                    Images = p.Images
-                        .OrderBy(i => i.SortOrder) // keep consistent order
+                    SkuId_Productvariant = v.SkuId,
+                    ProductId = v.ProductId,
+                    Color = v.Color,
+                     SizeId = v.SizeId,
+                    SizeName = v.Size != null ? v.Size.SizeName : null,
+                    Sku_Cost = v.Sku_Cost,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.Quantity,
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
+                        .OrderBy(i => i.SortOrder)
                         .Select(i => new ProductImageDto
                         {
-                            FileName = i.FileName ?? string.Empty,
+                            FileName = i.FileName,
                             SortOrder = i.SortOrder
-                        })
-                        .ToList()
-                })
-                .ToListAsync();
+                        }).ToList()
+                }
+           }
+       })
+       .ToListAsync();
         }
 
 
 
-        public async Task<IEnumerable<ProductDto>> GetProductsBySubCategoryAsync(int subCategoryId)
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId)
         {
-            var products = await _context.products
-                .Where(p => p.prod_subcat_id == subCategoryId)
-                .Include(p => p.BusinessRegister)
-                .Include(p => p.Images)
-                .Select(p => new ProductDto
+            return await _context.Sku_ProductVariants
+        .Where(v => v.Product.prod_subcat_id == subCategoryId)
+        .Include(v => v.Images)
+        .Include(v => v.Product)
+            .ThenInclude(p => p.BusinessRegister)
+        .Include(v => v.Product)
+            .ThenInclude(p => p.ProductType)
+        .Include(v => v.Product)
+            .ThenInclude(p => p.Fabric)
+        .Include(v => v.Product)
+            .ThenInclude(p => p.Design)
+        .Select(v => new ProdcVariantforShopperDto
+        {
+            ProductId = v.ProductId,
+
+            BusRegId = v.Product.BusRegId,
+            BusinessName = v.Product.BusinessRegister.Businessname,
+
+            BuscatId = v.Product.BuscatId,
+            //BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+
+            ProdcatId = v.Product.prod_subcat_id,
+            // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
+
+            ProductTypeId = v.Product.ProductTypeId,
+            ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.prod_type_name : null,
+
+            FabricId = v.Product.FabricId,
+            FabricName = v.Product.Fabric != null ? v.Product.Fabric.fabric_name : null,
+
+            DesignId = v.Product.DesignId,
+            DesignName = v.Product.Design != null ? v.Product.Design.design_name : null,
+
+
+            ProductName = v.Product.product_name,
+            ProductDescription = v.Product.product_description,
+            SupplierName = v.Product.supplier_name,
+
+            Variants = new List<Sku_ProductVariantDto>
+            {
+                new Sku_ProductVariantDto
                 {
-                    ProductId = p.product_id,
-                    BusRegId = p.BusRegId,
-                    BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
-                    ProductName = p.product_name ?? string.Empty,
-                    ProductSubject = p.product_subject ?? string.Empty,
-                    ProductDescription = p.product_description ?? string.Empty,
-                    ProductAmount = p.product_cost ?? 0,
-                    ProductLength = p.product_length ?? 0,
-                    ProductWidth = p.product_width ?? 0,
-                    ProductWeight = p.product_weight ?? 0,
-                    Quantity = p.product_quantity ?? 0,
-                    ProductHeight = p.product_height ?? 0,
-                    Size = p.size ?? string.Empty,
-                    Color = p.color ?? string.Empty,
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-                    BusinessName = p.BusinessRegister.Businessname ?? string.Empty,
-
-                    // optional fields
-                    PurchasedCount = 0,
-
-                    // Map product images
-                    Images = p.Images
+                    SkuId_Productvariant = v.SkuId,
+                    ProductId = v.ProductId,
+                    Color = v.Color,
+                    SizeId = v.SizeId,
+                    SizeName = v.Size != null ? v.Size.SizeName : null,
+                    Sku_Cost = v.Sku_Cost,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.Quantity,
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => new ProductImageDto
                         {
-                            FileName = i.FileName ?? string.Empty,
+                            FileName = i.FileName,
                             SortOrder = i.SortOrder
-                        })
-                        .ToList()
-                })
-                .ToListAsync();
-
-            return products;
+                        }).ToList()
+                }
+            }
+        })
+        .ToListAsync();
+           
         }
 
 
@@ -734,56 +787,87 @@ namespace mytown.DataAccess.Repositories
 
         //    return products;
         //}
-        public List<ProductDto> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
         {
             if (string.IsNullOrEmpty(location))
-                return new List<ProductDto>();
+                return new List<ProdcVariantforShopperDto>();
 
             var query =
                 from bp in _context.BusinessProfiles
                 where bp.business_location != null && bp.business_location.Contains(location)
                 join p in _context.products on bp.BusRegId equals p.BusRegId
-                join o in _context.OrderDetails on p.product_id equals o.ProductId into productOrders
-                select new
-                {
-                    Product = p,
-                    StoreId = bp.BusRegId,
-                    StoreName = bp.BusinessUsername ?? string.Empty,
-                    TotalOrders = productOrders.Sum(po => (int?)po.Quantity) ?? 0
-                };
+                join v in _context.Sku_ProductVariants on p.product_id equals v.ProductId
+                select new { Product = p, Variant = v, Store = bp };
 
-            var result = query
+            var result = await query
+                .Select(x => new
+                {
+                    Product = x.Product,
+                    Variant = x.Variant,
+                    Store = x.Store,
+                    TotalOrders = _context.OrderDetails
+                        .Where(o => o.ProductId == x.Product.product_id)
+                        .Sum(o => (int?)o.Quantity) ?? 0
+                })
                 .Where(x => x.TotalOrders > minOrders)
                 .OrderByDescending(x => x.TotalOrders)
-                .Select(x => new ProductDto
+                .Select(x => new ProdcVariantforShopperDto
                 {
                     ProductId = x.Product.product_id,
-                    BusRegId = x.StoreId,
-                    StoreName = x.StoreName,
-                    BuscatId = x.Product.BuscatId,
-                    ProdSubcatId = x.Product.prod_subcat_id,
-                    ProductName = x.Product.product_name,
-                    ProductSubject = x.Product.product_subject,
-                    ProductDescription = x.Product.product_description,
-                    ProductAmount = x.Product.product_cost??0,
-                    Discount = x.Product.discount,
-                    DiscountPrice = x.Product.discount_price,
-                    Color = x.Product.color,
-                    PurchasedCount = x.TotalOrders,
-                    Images = x.Product.Images != null
-                        ? x.Product.Images
-                            .OrderBy(i => i.SortOrder)
-                            .Select(i => new ProductImageDto
-                            {
-                                FileName = i.FileName,
-                                SortOrder = i.SortOrder
-                            })
-                            .ToList()
-                        : new List<ProductImageDto>()
-                })
-                .ToList();
 
-            return result ?? new List<ProductDto>();
+                    BusRegId = x.Store.BusRegId,
+                    BusinessName = x.Store.BusinessUsername,
+
+                    BuscatId = x.Product.BuscatId,
+                    //BuscatName = x.Product.BusinessRegister != null ? x.Product.BusinessRegister.Businesscategory_name : null,
+
+                    ProdcatId = x.Product.prod_subcat_id,
+                   // ProdcatName = x.Product.Productsubcategory_name,
+
+                    ProductTypeId = x.Product.ProductTypeId,
+                    ProductTypeName = x.Product.ProductType != null ? x.Product.ProductType.prod_type_name : null,
+
+                    FabricId = x.Product.FabricId,
+                    FabricName = x.Product.Fabric != null ? x.Product.Fabric.fabric_name : null,
+
+                    DesignId = x.Product.DesignId,
+                    DesignName = x.Product.Design != null ? x.Product.Design.design_name : null,
+
+                    ProductName = x.Product.product_name,
+                    ProductDescription = x.Product.product_description,
+                    SupplierName = x.Product.supplier_name,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
+                new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = x.Variant.SkuId,
+                    ProductId = x.Variant.ProductId,
+                    Color = x.Variant.Color,
+                    SizeId = x.Variant.SizeId,
+                    SizeName = x.Variant.Size != null ? x.Variant.Size.SizeName : null,
+                    Sku_Cost = x.Variant.Sku_Cost,
+                    DiscountPrice = x.Variant.DiscountPrice,
+                    Quantity = x.Variant.Quantity,
+                    Length = x.Variant.Length,
+                    Width = x.Variant.Width,
+                    Height = x.Variant.Height,
+                    Weight = x.Variant.Weight,
+                    Discount = x.Variant.Discount,
+                    Images = x.Variant.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList()
+                }
+                    }
+                })
+                .ToListAsync();
+
+            return result;
         }
 
 

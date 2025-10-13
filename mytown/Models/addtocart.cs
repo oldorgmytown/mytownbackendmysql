@@ -9,6 +9,8 @@ namespace mytown.Models
         [Required]
         public int product_id { get; set; }
         [Required]
+        public int sku_id { get; set; }
+        [Required]
         public int BusRegId { get; set; }
         [Required]
         public int BuscatId { get; set; }

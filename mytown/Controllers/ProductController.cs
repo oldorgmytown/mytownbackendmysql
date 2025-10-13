@@ -313,20 +313,15 @@ namespace MyTown.Controllers
         }
 
         [HttpGet("TopPurchasedProductsByTown")]
-
-        public IActionResult GetTopPurchasedProductsByLocation([FromQuery] string location, [FromQuery] int minOrders = 5)
+        public async Task<IActionResult> GetTopPurchasedProductsByLocationAsync([FromQuery] string location, [FromQuery] int minOrders = 5)
         {
             if (string.IsNullOrEmpty(location))
-            {
-                return BadRequest("Location cannot be empty.");
-            }
+                return BadRequest(new { Message = "Location cannot be empty." });
 
-            var products = _productRepo.GetTopPurchasedProductsByLocation(location, minOrders);
+            var products = await _productRepo.GetTopPurchasedProductsByLocation(location, minOrders);
 
             if (products == null || !products.Any())
-            {
                 return NotFound(new { Message = "No products found for the given location and criteria." });
-            }
 
             return Ok(products);
         }

@@ -23,8 +23,8 @@ namespace mytown.DataAccess.Interfaces
         Task<ShopperRegister> GetShopperByIdAsync(int shopperRegId);
         Task<IEnumerable<object>> GetTownsWithStoreCountByCountryAsync(string country);
 
-        Task<IEnumerable<ProductDto>> GetRecentlyViewedProductsAsync(int shopperId, int days = 7, int limit = 10);
-
+        Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
+      int shopperId, int days = 7, int limit = 10);
     }
 }
 

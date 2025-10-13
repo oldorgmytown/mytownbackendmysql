@@ -216,48 +216,68 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
         // get recently viewed products for that shopper
-        public async Task<IEnumerable<ProductDto>> GetRecentlyViewedProductsAsync(
-    int shopperId, int days = 7, int limit = 10)
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
+      int shopperId, int days = 7, int limit = 10)
         {
             var sinceDate = DateTime.UtcNow.AddDays(-days);
 
             var productDtos = await _context.ShopperProductRecentViews
                 .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate)
                 .OrderByDescending(v => v.LastViewedAt)
-                .Include(v => v.Product)                     // include product
-                    .ThenInclude(p => p.BusinessRegister)    // include store
                 .Include(v => v.Product)
-                    .ThenInclude(p => p.Images)              // include images
-                .Select(v => new ProductDto
+                    .ThenInclude(p => p.BusinessRegister)
+                .Include(v => v.Product)
+                    .ThenInclude(p => p.Sku_ProductVariants)
+                        .ThenInclude(s => s.Images)
+                .Include(v => v.Product)
+                    .ThenInclude(p => p.ProductType)
+                .Include(v => v.Product)
+                    .ThenInclude(p => p.Fabric)
+                .Include(v => v.Product)
+                    .ThenInclude(p => p.Design)
+                .Select(v => new ProdcVariantforShopperDto
                 {
                     ProductId = v.Product.product_id,
                     BusRegId = v.Product.BusRegId,
-                    BuscatId = v.Product.BuscatId,
-                    ProdSubcatId = v.Product.prod_subcat_id,
-                    ProductName = v.Product.product_name,
-                    ProductSubject = v.Product.product_subject,
-                    ProductDescription = v.Product.product_description,
-                    ProductAmount = v.Product.product_cost ?? 0,
-                    ProductLength = v.Product.product_length ?? 0,
-                    ProductWidth = v.Product.product_width ?? 0,
-                    ProductWeight = v.Product.product_weight ?? 0,
-                    Quantity = v.Product.product_quantity ?? 0,
-                    ProductHeight = v.Product.product_height ?? 0,
-                    Size = v.Product.size,
-                    Color = v.Product.color,
-                    Discount = v.Product.discount,
-                    DiscountPrice = v.Product.discount_price,
                     BusinessName = v.Product.BusinessRegister.Businessname,
+                    BuscatId = v.Product.BuscatId,
+                  //  BuscatName = v.Product.BusinessRegister.BusinessCategoryName, // if you have it
+                    ProdcatId = v.Product.prod_subcat_id,
+                 //   ProdcatName = v.Product.ProductSubCategoryName, // if you have it
+                    ProductTypeId = v.Product.ProductTypeId,
+                    ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.prod_type_name : null,
+                    FabricId = v.Product.FabricId,
+                    FabricName = v.Product.Fabric != null ? v.Product.Fabric.fabric_name : null,
+                    DesignId = v.Product.DesignId,
+                    DesignName = v.Product.Design != null ? v.Product.Design.design_name : null,
+                    ProductName = v.Product.product_name,
+                    ProductDescription = v.Product.product_description,
+                    SupplierName = v.Product.supplier_name,
 
-                    // 🔹 Map product images
-                    Images = v.Product.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
-                        {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
-                        })
-                        .ToList()
+                    Variants = v.Product.Sku_ProductVariants.Select(s => new Sku_ProductVariantDto
+                    {
+                        SkuId_Productvariant = s.SkuId,
+                        ProductId = s.ProductId,
+                        Color = s.Color,
+                        SizeId = s.SizeId,
+                        SizeName = s.Size != null ? s.Size.SizeName : null,
+                        Sku_Cost = s.Sku_Cost,
+                        DiscountPrice = s.DiscountPrice,
+                        Quantity = s.Quantity,
+                        Length = s.Length,
+                        Width = s.Width,
+                        Height = s.Height,
+                        Weight = s.Weight,
+                        Discount = s.Discount,
+                        Images = s.Images
+                            .OrderBy(i => i.SortOrder)
+                            .Select(img => new ProductImageDto
+                            {
+                                FileName = img.FileName,
+                                SortOrder = img.SortOrder
+                            })
+                            .ToList()
+                    }).ToList()
                 })
                 .Take(limit)
                 .ToListAsync();
@@ -265,12 +285,14 @@ namespace mytown.DataAccess.Repositories
             return productDtos;
         }
 
-
-
     }
 
 
 
-
-
 }
+
+
+
+
+
+
