@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.Models;
+using mytown.Models.DTO_s;
 
 
 namespace mytown.Models
@@ -51,8 +52,7 @@ namespace mytown.Models
 
             public DbSet<ProductSize_Measurement> ProductSize_Measurements { get; set; }
 
-
-
+            public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; }
 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)

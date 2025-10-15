@@ -285,6 +285,81 @@ namespace mytown.DataAccess.Repositories
             return productDtos;
         }
 
+
+        // Shopper Alternate Address
+
+        public async Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesByShopperIdAsync(int shopperRegId)
+        {
+            return await _context.ShopperAlternateAddresses
+                .Where(a => a.ShopperRegId == shopperRegId)
+                .Select(a => new ShopperAlternateAddressDto
+                {
+                    AltAddressId = a.AltAddressId,
+                    ShopperRegId = a.ShopperRegId,
+                    AltName = a.AltName,
+                    AltPhoneNumber = a.AltPhoneNumber,
+                    AltAddress = a.AltAddress,
+                    AltTown = a.AltTown,
+                    AltCity = a.AltCity,
+                    AltState = a.AltState,
+                    AltCountry = a.AltCountry,
+                    AltPostalCode = a.AltPostalCode,
+                    DeliveryNotes = a.DeliveryNotes
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id)
+        {
+            return await _context.ShopperAlternateAddresses
+                .Where(a => a.AltAddressId == id)
+                .Select(a => new ShopperAlternateAddressDto
+                {
+                    AltAddressId = a.AltAddressId,
+                    AltName = a.AltName,
+                    AltPhoneNumber = a.AltPhoneNumber,
+                    AltAddress = a.AltAddress,
+                    AltTown = a.AltTown,
+                    AltCity = a.AltCity,
+                    AltState = a.AltState,
+                    AltCountry = a.AltCountry,
+                    AltPostalCode = a.AltPostalCode,
+                    DeliveryNotes = a.DeliveryNotes
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress address)
+        {
+            _context.ShopperAlternateAddresses.Add(address);
+            await _context.SaveChangesAsync();
+
+            return new ShopperAlternateAddressDto
+            {
+                AltAddressId = address.AltAddressId,
+                AltName = address.AltName,
+                AltPhoneNumber = address.AltPhoneNumber,
+                AltAddress = address.AltAddress,
+                AltTown = address.AltTown,
+                AltCity = address.AltCity,
+                AltState = address.AltState,
+                AltCountry = address.AltCountry,
+                AltPostalCode = address.AltPostalCode,
+                DeliveryNotes = address.DeliveryNotes
+            };
+        }
+
+        public async Task<bool> DeleteAddressAsync(int id)
+        {
+            var address = await _context.ShopperAlternateAddresses.FindAsync(id);
+            if (address == null) return false;
+
+            _context.ShopperAlternateAddresses.Remove(address);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+
     }
 
 

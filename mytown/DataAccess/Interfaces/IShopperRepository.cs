@@ -11,11 +11,11 @@ namespace mytown.DataAccess.Interfaces
         //     Task<bool> VerifyEmail(string token);
 
         //resend email
-             Task<ShopperVerification> FindPendingVerificationByEmail(string email);
-            Task RemoveVerification(ShopperVerification verification);
-      
+        Task<ShopperVerification> FindPendingVerificationByEmail(string email);
+        Task RemoveVerification(ShopperVerification verification);
 
-     
+
+
 
         Task SavePendingVerification(PendingVerification pending);
         Task<PendingVerification> FindPendingVerificationByToken(string token);
@@ -25,6 +25,19 @@ namespace mytown.DataAccess.Interfaces
 
         Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
       int shopperId, int days = 7, int limit = 10);
+
+        // Alternate Shopper address
+
+        Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesByShopperIdAsync(int shopperRegId);
+
+
+        Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id);
+
+        // Add a new alternate address
+        Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress addressDto);
+
+        // Delete an alternate address by ID
+        Task<bool> DeleteAddressAsync(int id);
     }
 }
 

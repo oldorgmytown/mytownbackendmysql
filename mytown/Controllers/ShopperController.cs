@@ -308,5 +308,69 @@ namespace mytown.Controllers
             return Ok(products);
         }
 
+
+        // Shopper Alternate Address
+
+        [HttpGet("GetShopperAltAddress")]
+        public async Task<IActionResult> GetAddresses(int shopperRegId)
+        {
+            var addresses = await _shopperRepository.GetAddressesByShopperIdAsync(shopperRegId);
+            return Ok(addresses);
+        }
+
+        // POST: api/shopper/AddAltShopperAddress
+        [HttpPost("AddAltShopperAddress")]
+        public async Task<IActionResult> AddAddress([FromBody] ShopperAlternateAddressDto addressDto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Map DTO to entity
+            var address = new ShopperAlternateAddress
+            {
+                ShopperRegId = addressDto.ShopperRegId,
+                AltName = addressDto.AltName,
+                AltPhoneNumber = addressDto.AltPhoneNumber,
+                AltAddress = addressDto.AltAddress,
+                AltTown = addressDto.AltTown,
+                AltCity = addressDto.AltCity,
+                AltState = addressDto.AltState,
+                AltCountry = addressDto.AltCountry,
+                AltPostalCode = addressDto.AltPostalCode,
+                DeliveryNotes = addressDto.DeliveryNotes
+            };
+
+            var newAddress = await _shopperRepository.AddAddressAsync(address);
+
+            // Map entity back to DTO for response
+            var resultDto = new ShopperAlternateAddressDto
+            {
+                AltAddressId = newAddress.AltAddressId,
+                ShopperRegId = address.ShopperRegId,
+                AltName = newAddress.AltName,
+                AltPhoneNumber = newAddress.AltPhoneNumber,
+                AltAddress = newAddress.AltAddress,
+                AltTown = newAddress.AltTown,
+                AltCity = newAddress.AltCity,
+                AltState = newAddress.AltState,
+                AltCountry = newAddress.AltCountry,
+                AltPostalCode = newAddress.AltPostalCode,
+                DeliveryNotes = newAddress.DeliveryNotes
+            };
+
+            return CreatedAtAction(nameof(GetAddresses), new { shopperRegId = resultDto.AltAddressId }, resultDto);
+        }
+
+        // DELETE: api/shopper/DeleteShopperAltAddress/5
+        [HttpDelete("DeleteShopperAltAddress/{id}")]
+        public async Task<IActionResult> DeleteAddress(int id)
+        {
+            var deleted = await _shopperRepository.DeleteAddressAsync(id);
+            if (!deleted)
+                return NotFound(new { message = $"Alternate address with ID {id} not found." });
+
+            return Ok(new { message = $"Alternate address with ID {id} has been successfully deleted." });
+        }
+    
     }
     }

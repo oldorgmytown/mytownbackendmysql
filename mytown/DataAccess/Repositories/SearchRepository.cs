@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MailKit.Search;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
@@ -200,7 +201,7 @@ namespace mytown.DataAccess.Repositories
         // stores and profiles based on both search bars - location (optional), search term for product n store
         public SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm, string? locationQuery = null)
         {
-            // 1. Find matching categories
+            // 1️⃣ Matching categories
             var matchingBusCatIds = _context.BusinessCategories
                 .Where(bc => bc.Businesscategory_name.Contains(searchTerm))
                 .Select(bc => bc.BuscatId);
@@ -210,7 +211,7 @@ namespace mytown.DataAccess.Repositories
                 .Select(p => p.BusRegId)
                 .Distinct();
 
-            // 2. If no businesses, check subcategories
+            // 2️⃣ If no businesses, check subcategories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
@@ -223,7 +224,7 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // 3. If still no businesses, check products directly
+            // 3️⃣ If still no businesses, check products directly
             if (!businessIds.Any())
             {
                 businessIds = _context.products
@@ -235,7 +236,19 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // 4. Apply location filtering if provided
+            // 4️⃣ Also search in SKU variants (for color, size, etc.)
+            var skuBusinessIds = _context.Sku_ProductVariants
+                .Include(v => v.Product)
+                .Where(v =>
+                    v.Color.Contains(searchTerm) ||
+                    (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
+                .Select(v => v.Product.BusRegId)
+                .Distinct();
+
+            // Merge SKU-based and product-based business IDs
+            businessIds = businessIds.Union(skuBusinessIds);
+
+            // 5️⃣ Apply location filtering if provided
             if (!string.IsNullOrEmpty(locationQuery))
             {
                 var locationBusinessIds = _context.BusinessRegisters
@@ -253,50 +266,72 @@ namespace mytown.DataAccess.Repositories
 
             var businessIdList = businessIds.ToList();
 
-            // 5. Get matching business profiles
+            // 6️⃣ Fetch matching business profiles
             var stores = _context.BusinessProfiles
                 .Where(bp => businessIdList.Contains(bp.BusRegId))
                 .ToList();
 
-            // 6. Get matching products (filtered by businessIds)
+            // 7️⃣ Fetch products (filtered by businessIds)
             var products = _context.products
                 .Where(p => businessIdList.Contains(p.BusRegId) &&
                     (p.product_name.Contains(searchTerm) ||
                      p.product_subject.Contains(searchTerm) ||
-                     p.product_description.Contains(searchTerm)))
-                .Include(p => p.Images)
-                .Select(p => new ProductDto
+                     p.product_description.Contains(searchTerm) ||
+                     p.Sku_ProductVariants.Any(v =>
+                         v.Color.Contains(searchTerm) ||
+                         (v.Size != null && v.Size.SizeName.Contains(searchTerm)))))
+                .Include(p => p.Sku_ProductVariants)
+                    .ThenInclude(v => v.Images)
+                .Select(p => new ProdcVariantforShopperDto
                 {
                     ProductId = p.product_id,
                     BusRegId = p.BusRegId,
+                    BusinessName = p.BusinessRegister.Businessname,
                     BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
+                  //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
+                    ProdcatId = p.prod_subcat_id,
+                  //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
                     ProductName = p.product_name,
-                    ProductSubject = p.product_subject,
                     ProductDescription = p.product_description,
-                    ProductAmount = p.product_cost??0,
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-                    Color = p.color,
-                    Images = p.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
+                    SupplierName = p.supplier_name,
+
+                    Variants = p.Sku_ProductVariants
+                        .Select(v => new Sku_ProductVariantDto
                         {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
+                            SkuId_Productvariant = v.SkuId,
+                            ProductId = v.ProductId,
+                            Color = v.Color,
+                            SizeId = v.SizeId,
+                            SizeName = v.Size != null ? v.Size.SizeName : null,
+                            Sku_Cost = v.Sku_Cost,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.Quantity,
+                            Length = v.Length,
+                            Width = v.Width,
+                            Height = v.Height,
+                            Weight = v.Weight,
+                            Discount = v.Discount,
+                            Images = v.Images
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList()
                         })
                         .ToList()
                 })
                 .ToList();
 
-            // 7. Collect distinct colors
+            // Collect colors only from the returned products/variants
             var colors = products
-                .Where(p => !string.IsNullOrEmpty(p.Color))
-                .Select(p => p.Color!)
+                .SelectMany(p => p.Variants)        // flatten all variants
+                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
+                .Select(v => v.Color!)
                 .Distinct()
                 .ToList();
-
-            // 8. Return result
+            // 9️⃣ Return combined result
             return new SearchResultDto
             {
                 Stores = stores,
@@ -306,6 +341,7 @@ namespace mytown.DataAccess.Repositories
                 ProductCount = products.Count
             };
         }
+
 
 
 
@@ -372,38 +408,62 @@ namespace mytown.DataAccess.Repositories
                 .Where(p => finalBusinessIds.Contains(p.BusRegId) &&
                     (p.product_name.Contains(productSearchTerm) ||
                      p.product_subject.Contains(productSearchTerm) ||
-                     p.product_description.Contains(productSearchTerm)))
-                .Include(p => p.Images)
-                .Select(p => new ProductDto
+                     p.product_description.Contains(productSearchTerm) ||
+                     p.Sku_ProductVariants.Any(v =>
+                         v.Color.Contains(productSearchTerm) ||
+                         (v.Size != null && v.Size.SizeName.Contains(productSearchTerm)))))
+                .Include(p => p.Sku_ProductVariants)
+                    .ThenInclude(v => v.Images)
+                .Select(p => new ProdcVariantforShopperDto
                 {
                     ProductId = p.product_id,
                     BusRegId = p.BusRegId,
+                    BusinessName = p.BusinessRegister.Businessname,
                     BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
+                    //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
+                    ProdcatId = p.prod_subcat_id,
+                    //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
                     ProductName = p.product_name,
-                    ProductSubject = p.product_subject,
                     ProductDescription = p.product_description,
-                    ProductAmount = p.product_cost ?? 0,
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-                    Color = p.color,
-                    Images = p.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
+                    SupplierName = p.supplier_name,
+
+                    Variants = p.Sku_ProductVariants
+                        .Select(v => new Sku_ProductVariantDto
                         {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
+                            SkuId_Productvariant = v.SkuId,
+                            ProductId = v.ProductId,
+                            Color = v.Color,
+                            SizeId = v.SizeId,
+                            SizeName = v.Size != null ? v.Size.SizeName : null,
+                            Sku_Cost = v.Sku_Cost,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.Quantity,
+                            Length = v.Length,
+                            Width = v.Width,
+                            Height = v.Height,
+                            Weight = v.Weight,
+                            Discount = v.Discount,
+                            Images = v.Images
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList()
                         })
                         .ToList()
                 })
                 .ToList();
 
-            // 7. Collect distinct colors
+            // Collect colors only from the returned products/variants
             var colors = products
-                .Where(p => !string.IsNullOrEmpty(p.Color))
-                .Select(p => p.Color!)
+                .SelectMany(p => p.Variants)        // flatten all variants
+                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
+                .Select(v => v.Color!)
                 .Distinct()
                 .ToList();
+
 
             // 8. Return both stores & products
             return new SearchResultDto
@@ -493,7 +553,7 @@ namespace mytown.DataAccess.Repositories
                 return new SearchResultDto
                 {
                     Stores = new List<businessprofile>(),
-                    Products = new List<ProductDto>(),
+                    Products = new List<ProdcVariantforShopperDto>(),
                     Colors = new List<string>(),
                     StoreCount = 0,
                     ProductCount = 0
@@ -507,40 +567,64 @@ namespace mytown.DataAccess.Repositories
                               bp.business_about.Contains(searchTerm)))
                 .ToList();
 
-            var productMatches = _context.products
-                .Where(p => locationBusinessIds.Contains(p.BusRegId) &&
-                            (p.product_name.Contains(searchTerm) ||
-                             p.product_subject.Contains(searchTerm) ||
-                             p.product_description.Contains(searchTerm)))
-                .Include(p => p.Images)
-                .Select(p => new ProductDto
-                {
-                    ProductId = p.product_id,
-                    BusRegId = p.BusRegId,
-                    BuscatId = p.BuscatId,
-                    ProdSubcatId = p.prod_subcat_id,
-                    ProductName = p.product_name,
-                    ProductSubject = p.product_subject,
-                    ProductDescription = p.product_description,
-                    ProductAmount = p.product_cost ?? 0,
-                    Discount = p.discount,
-                    DiscountPrice = p.discount_price,
-                    Color = p.color,
-                    Images = p.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
-                        {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
-                        })
-                        .ToList()
-                })
-                .ToList();
 
-            // 3. Distinct colors
-            var colors = productMatches
-                .Where(p => !string.IsNullOrEmpty(p.Color))
-                .Select(p => p.Color!)
+            var products = _context.products
+               .Where(p => locationBusinessIds.Contains(p.BusRegId) &&
+                   (p.product_name.Contains(searchTerm) ||
+                    p.product_subject.Contains(searchTerm) ||
+                    p.product_description.Contains(searchTerm) ||
+                    p.Sku_ProductVariants.Any(v =>
+                        v.Color.Contains(searchTerm) ||
+                        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))))
+               .Include(p => p.Sku_ProductVariants)
+                   .ThenInclude(v => v.Images)
+               .Select(p => new ProdcVariantforShopperDto
+               {
+                   ProductId = p.product_id,
+                   BusRegId = p.BusRegId,
+                   BusinessName = p.BusinessRegister.Businessname,
+                   BuscatId = p.BuscatId,
+                   //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
+                   ProdcatId = p.prod_subcat_id,
+                   //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
+                   ProductName = p.product_name,
+                   ProductDescription = p.product_description,
+                   SupplierName = p.supplier_name,
+
+                   Variants = p.Sku_ProductVariants
+                       .Select(v => new Sku_ProductVariantDto
+                       {
+                           SkuId_Productvariant = v.SkuId,
+                           ProductId = v.ProductId,
+                           Color = v.Color,
+                           SizeId = v.SizeId,
+                           SizeName = v.Size != null ? v.Size.SizeName : null,
+                           Sku_Cost = v.Sku_Cost,
+                           DiscountPrice = v.DiscountPrice,
+                           Quantity = v.Quantity,
+                           Length = v.Length,
+                           Width = v.Width,
+                           Height = v.Height,
+                           Weight = v.Weight,
+                           Discount = v.Discount,
+                           Images = v.Images
+                               .OrderBy(i => i.SortOrder)
+                               .Select(i => new ProductImageDto
+                               {
+                                   FileName = i.FileName,
+                                   SortOrder = i.SortOrder
+                               })
+                               .ToList()
+                       })
+                       .ToList()
+               })
+               .ToList();
+
+            // Collect colors only from the returned products/variants
+            var colors = products
+                .SelectMany(p => p.Variants)        // flatten all variants
+                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
+                .Select(v => v.Color!)
                 .Distinct()
                 .ToList();
 
@@ -548,10 +632,10 @@ namespace mytown.DataAccess.Repositories
             return new SearchResultDto
             {
                 Stores = storeMatches,
-                Products = productMatches,
+                Products = products,
                 Colors = colors,
                 StoreCount = storeMatches.Count,
-                ProductCount = productMatches.Count
+                ProductCount = products.Count
             };
         }
 
