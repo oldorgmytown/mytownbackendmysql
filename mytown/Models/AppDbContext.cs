@@ -54,6 +54,8 @@ namespace mytown.Models
 
             public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; }
 
+            public DbSet<AdminComment> AdminComments { get; set; }
+
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {

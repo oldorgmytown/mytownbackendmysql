@@ -7,15 +7,16 @@ namespace mytown.DataAccess.Interfaces
     {
         // Admin panel methods
 
-        Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize);
-
-        Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize);
+        Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize, string? search = null);
+        Task<(List<BusinessRegister> Records, int TotalRecords)>
+      GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize, string? search);
         Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginated(string status, int page, int pageSize);
 
         Task<Dictionary<string, Dictionary<string, int>>> Businessprofilestatuscounts();
 
-        Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status);
-        Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
+        Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comments = null);
+        
+            Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
         Task<bool> UpdateShopperStatusAsync(int shopperId, string newStatus);
         Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
 

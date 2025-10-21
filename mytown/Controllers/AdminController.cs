@@ -20,14 +20,14 @@ namespace mytown.Controllers
         }
 
         [HttpGet("getBusinessRegistersPaginated")]
-        public async Task<IActionResult> GetBusinessRegistersPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 2)
+        public async Task<IActionResult> GetBusinessRegistersPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 2, string? search = null)
         {
             if (page < 1 || pageSize < 1)
             {
                 return BadRequest(new { message = "Invalid pagination parameters." });
             }
 
-            var (records, totalRecords) = await _adminRepo.GetBusinessRegistersPaginatedAsync(page, pageSize);
+            var (records, totalRecords) = await _adminRepo.GetBusinessRegistersPaginatedAsync(page, pageSize,search);
 
             return Ok(new
             {
@@ -39,26 +39,26 @@ namespace mytown.Controllers
         }
 
         // for stores with all profil status types
-
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
-        [FromQuery] string status,
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 10)
+            [FromQuery] string status,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null)
+        {
+            if (page < 1 || pageSize < 1)
+                return BadRequest(new { message = "Invalid pagination parameters." });
+
+            var (records, totalRecords) = await _adminRepo.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize, search);
+
+            return Ok(new
             {
-                if (page < 1 || pageSize < 1)
-                    return BadRequest(new { message = "Invalid pagination parameters." });
-
-                var (records, totalRecords) = await _adminRepo.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize);
-
-                return Ok(new
-                {
-                    data = records,
-                    totalRecords,
-                    currentPage = page,
-                    pageSize
-                });
-         }
+                data = records,
+                totalRecords,
+                currentPage = page,
+                pageSize
+            });
+        }
 
         // for services with all profile status
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
@@ -98,12 +98,12 @@ namespace mytown.Controllers
         }
 
         [HttpPost("updateprofilestatusbyadmin")]
-        public async Task<IActionResult> updateprofilestatusbyadmin([FromQuery] int busRegId, [FromQuery] string status)
+        public async Task<IActionResult> updateprofilestatusbyadmin([FromQuery] int busRegId, [FromQuery] string status, [FromQuery] string? comments = null)
         {
             if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
 
-            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status);
+            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status, comments);
 
             if (!updated)
                 return NotFound($"No business profile found with BusRegId {busRegId}.");

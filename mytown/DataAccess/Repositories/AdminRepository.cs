@@ -21,71 +21,101 @@ namespace mytown.DataAccess.Repositories
         //ADMIN PANEL
 
         //to get all business profiles with status
-        public async Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize)
+        public async Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize, string? search = null)
         {
             var skip = (page - 1) * pageSize;
 
-            var totalRecords = await _context.BusinessRegisters.CountAsync();
+            // Step 1: start query
+            var query = from b in _context.BusinessRegisters
+                        join bp in _context.BusinessProfiles
+                            on b.BusRegId equals bp.BusRegId into bpJoin
+                        from bp in bpJoin.DefaultIfEmpty()
+                        select new
+                        {
+                            b.BusRegId,
+                            b.BusinessUsername,
+                            b.Businessname,
+                            b.LicenseType,
+                            b.Gstin,
+                            b.BusservId,
+                            b.BuscatId,
+                            b.Town,
+                            b.BusMobileNo,
+                            b.BusEmail,
+                            b.IsEmailVerified,
+                            b.Address1,
+                            b.Address2,
+                            b.businessCity,
+                            b.businessState,
+                            b.businessCountry,
+                            b.postalCode,
+                            b.Password,
+                            b.BusinessRegDate,
+                            ProfileStatus = bp != null && bp.profile_status != null ? bp.profile_status : "pending",
+                            bp.approved_date,
+                            ServiceType =
+                                b.BusservId == 1 && b.BuscatId == 1 ? "product, service" :
+                                b.BuscatId == 1 ? "product" :
+                                b.BusservId == 1 ? "service" : "none"
+                        };
 
-            var records = await (
-                from b in _context.BusinessRegisters
-                join bp in _context.BusinessProfiles
-                    on b.BusRegId equals bp.BusRegId into bpJoin
-                from bp in bpJoin.DefaultIfEmpty()
-                select new
-                {
-                    b.BusRegId,
-                    b.BusinessUsername,
-                    b.Businessname,
-                    b.LicenseType,
-                    b.Gstin,
-                    b.BusservId,
-                    b.BuscatId,
-                    b.Town,
-                    b.BusMobileNo,
-                    b.BusEmail,
-                    b.IsEmailVerified,
-                    b.Address1,
-                    b.Address2,
-                    b.businessCity,
-                    b.businessState,
-                    b.businessCountry,
-                    b.postalCode,
-                    b.Password,
-                    b.BusinessRegDate,
+            // Step 2: apply search if provided
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(b =>
+                    b.Businessname.ToLower().Contains(search) ||
+                    b.BusinessUsername.ToLower().Contains(search) ||
+                    b.BusEmail.ToLower().Contains(search) ||
+                    b.BusMobileNo.ToLower().Contains(search) ||
+                    b.Town.ToLower().Contains(search) ||
+                     b.businessCity.ToLower().Contains(search) ||
+                    b.businessState.ToLower().Contains(search) ||
+                    b.businessCountry.ToLower().Contains(search) ||
+                    b.ProfileStatus.ToLower().Contains(search));
+            }
 
-                    ProfileStatus = bp != null && bp.profile_status != null ? bp.profile_status : "pending",
-                    bp.approved_date,
+            // Step 3: get total records after filtering
+            var totalRecords = await query.CountAsync();
 
-                    ServiceType =
-                        b.BusservId == 1 && b.BuscatId == 1 ? "product, service" :
-                        b.BuscatId == 1 ? "product" :
-                        b.BusservId == 1 ? "service" : "none"
-                }
-            )
-            .Skip(skip)
-            .Take(pageSize)
-            .ToListAsync();
+            // Step 4: apply pagination
+            var records = await query
+                .OrderByDescending(b => b.BusRegId)
+                .Skip(skip)
+                .Take(pageSize)
+                .ToListAsync();
 
             return (records, totalRecords);
         }
 
 
-        //get business services
+        //get business stores by sttaus
 
-        public async Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize)
+        public async Task<(List<BusinessRegister> Records, int TotalRecords)>
+      GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize, string? search)
         {
             var query = from br in _context.BusinessRegisters
                         join bp in _context.BusinessProfiles
                             on br.BusRegId equals bp.BusRegId into bpGroup
-                        from bp in bpGroup.DefaultIfEmpty() // Left join
-                        where
-                            br.BuscatId == 1 && // Filter by productcategory
-                            (
-                                (bp != null && bp.profile_status.ToLower() == status.ToLower()) ||
-                                (bp == null && status.ToLower() == "incomplete")
-                            )
+                        from bp in bpGroup.DefaultIfEmpty()
+                        where br.BuscatId == 1 && (
+                            (bp != null && bp.profile_status.ToLower() == status.ToLower()) ||
+                            (bp == null && status.ToLower() == "incomplete")
+                        )
                         select br;
+
+            //  Apply search filter if provided
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower();
+                query = query.Where(br =>
+                    br.Businessname.ToLower().Contains(search) ||
+                    br.BusinessUsername.ToLower().Contains(search) ||
+                    br.BusEmail.ToLower().Contains(search) ||
+                    br.Town.ToLower().Contains(search) ||
+                    br.businessCity.ToLower().Contains(search) ||
+                    br.businessState.ToLower().Contains(search) ||
+                    br.businessCountry.ToLower().Contains(search));
+            }
 
             int totalRecords = await query.CountAsync();
 
@@ -96,6 +126,7 @@ namespace mytown.DataAccess.Repositories
 
             return (records, totalRecords);
         }
+
 
         //Business summary count for profile status
         public async Task<Dictionary<string, Dictionary<string, int>>> Businessprofilestatuscounts()
@@ -142,7 +173,7 @@ namespace mytown.DataAccess.Repositories
 
         // Admin  - Approve, Reject, Block business profiles
 
-        public async Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status)
+        public async Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comments = null)
         {
             var profile = await _context.BusinessProfiles
       .Include(p => p.BusinessRegister) // Include the related BusinessRegister
@@ -155,6 +186,21 @@ namespace mytown.DataAccess.Repositories
             profile.approved_date = status.ToLower() == "approved" ? DateTime.Now : profile.approved_date;
 
             _context.BusinessProfiles.Update(profile);
+
+            //Save admin comments to admin_comments table
+    if (!string.IsNullOrEmpty(comments))
+            {
+                var adminComment = new AdminComment
+                {
+                    BusRegId = busRegId,
+                    Comments = comments,
+                    Status = status, // optionally save the new status in comments table too
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                await _context.AdminComments.AddAsync(adminComment);
+            }
             await _context.SaveChangesAsync();
 
             // Now capture the business details
