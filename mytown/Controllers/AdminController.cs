@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
+using mytown.Models.DTO_s;
 
 namespace mytown.Controllers
 {
@@ -98,17 +99,17 @@ namespace mytown.Controllers
         }
 
         [HttpPost("updateprofilestatusbyadmin")]
-        public async Task<IActionResult> updateprofilestatusbyadmin([FromQuery] int busRegId, [FromQuery] string status, [FromQuery] string? comments = null)
+        public async Task<IActionResult> UpdateProfileStatusByAdmin([FromBody] AdminProfileUpdateDto dto)
         {
-            if (string.IsNullOrEmpty(status))
+            if (string.IsNullOrEmpty(dto.Status))
                 return BadRequest("Status is required.");
 
-            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status, comments);
+            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(dto.BusRegId, dto.Status, dto.Comment);
 
             if (!updated)
-                return NotFound($"No business profile found with BusRegId {busRegId}.");
+                return NotFound($"No business profile found with BusRegId {dto.BusRegId}.");
 
-            return Ok("Profile status updated successfully.");
+            return Ok("Profile status and comment updated successfully.");
         }
 
 
