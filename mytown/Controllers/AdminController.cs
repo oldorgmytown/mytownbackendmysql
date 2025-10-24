@@ -99,17 +99,20 @@ namespace mytown.Controllers
         }
 
         [HttpPost("updateprofilestatusbyadmin")]
-        public async Task<IActionResult> UpdateProfileStatusByAdmin([FromBody] AdminProfileUpdateDto dto)
+        public async Task<IActionResult> UpdateProfileStatusByAdmin(
+    [FromQuery] int busRegId,
+    [FromQuery] string status,
+    [FromBody] AdminProfileUpdateDto commentDto)
         {
-            if (string.IsNullOrEmpty(dto.Status))
+            if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
 
-            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(dto.BusRegId, dto.Status, dto.Comment);
+            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status, commentDto.Comment);
 
             if (!updated)
-                return NotFound($"No business profile found with BusRegId {dto.BusRegId}.");
+                return NotFound($"No business profile found with BusRegId {busRegId}.");
 
-            return Ok("Profile status and comment updated successfully.");
+            return Ok("Profile status updated successfully.");
         }
 
 
