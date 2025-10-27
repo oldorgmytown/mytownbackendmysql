@@ -206,7 +206,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<object>> GetTownsWithStoreCountByCountryAsync(string country)
         {
             return await _context.BusinessRegisters
-                .Where(br => br.BusinessProfile != null && br.businessCountry == country) 
+                .Where(br => br.BusinessProfile != null && br.BusinessCountry == country) 
                 .GroupBy(br => br.Town)                                                  
                 .Select(g => new
                 {
@@ -239,7 +239,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     ProductId = v.Product.product_id,
                     BusRegId = v.Product.BusRegId,
-                    BusinessName = v.Product.BusinessRegister.Businessname,
+                    BusinessName = v.Product.BusinessRegister.BusinessName,
                     BuscatId = v.Product.BuscatId,
                   //  BuscatName = v.Product.BusinessRegister.BusinessCategoryName, // if you have it
                     ProdcatId = v.Product.prod_subcat_id,
@@ -331,7 +331,30 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress address)
         {
-            _context.ShopperAlternateAddresses.Add(address);
+            var existingAddress = await _context.ShopperAlternateAddresses
+         .FirstOrDefaultAsync(a => a.AltAddressId == address.AltAddressId);
+
+            if (existingAddress == null)
+            {
+                // Add new record
+                _context.ShopperAlternateAddresses.Add(address);
+            }
+            else
+            {
+                // Update existing record
+                existingAddress.AltName = address.AltName;
+                existingAddress.AltPhoneNumber = address.AltPhoneNumber;
+                existingAddress.AltAddress = address.AltAddress;
+                existingAddress.AltTown = address.AltTown;
+                existingAddress.AltCity = address.AltCity;
+                existingAddress.AltState = address.AltState;
+                existingAddress.AltCountry = address.AltCountry;
+                existingAddress.AltPostalCode = address.AltPostalCode;
+                existingAddress.DeliveryNotes = address.DeliveryNotes;
+
+                _context.ShopperAlternateAddresses.Update(existingAddress);
+            }
+
             await _context.SaveChangesAsync();
 
             return new ShopperAlternateAddressDto

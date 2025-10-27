@@ -16,4 +16,12 @@
     public string StoreLocation { get; set; }
 
     public int StoreId { get; set; }
+
+    // SKU / Variant Info
+    public string? Color { get; set; }
+    public int SizeId { get; set; }
+    public string? SizeName { get; set; }
+    public decimal? Sku_Cost { get; set; }
+    public decimal? Discount { get; set; }
+    public decimal? DiscountPrice { get; set; }
 }

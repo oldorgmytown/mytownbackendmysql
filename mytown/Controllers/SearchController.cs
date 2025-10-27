@@ -77,7 +77,7 @@ namespace mytown.Controllers
 
         ///** get profile based on location search 
         [HttpGet("searchbylocation")]
-        public ActionResult<List<businessprofile>> GetBusinessProfilesByLocation([FromQuery] string location)
+        public ActionResult<List<BusinessProfile>> GetBusinessProfilesByLocation([FromQuery] string location)
         {
             if (string.IsNullOrEmpty(location))
             {

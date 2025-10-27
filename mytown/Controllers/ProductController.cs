@@ -230,18 +230,18 @@ namespace MyTown.Controllers
         //}
 
         // GET: api/products/{id}
-        [HttpGet("GetProductById/{productId}")]
-        public async Task<ActionResult<products>> GetProductById(int productId)
-        {
-            var product = await _productRepo.GetProductByIdAsync(productId);
+        //[HttpGet("GetProductById/{productId}")]
+        //public async Task<ActionResult<products>> GetProductById(int productId)
+        //{
+        //    var product = await _productRepo.GetProductByIdAsync(productId);
 
-            if (product == null)
-            {
-                return NotFound();
-            }
+        //    if (product == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return Ok(product);
-        }
+        //    return Ok(product);
+        //}
 
         // GET: api/User/GetAllProducts
         [HttpGet("GetAllProductsforbusid/{BusRegId}")]

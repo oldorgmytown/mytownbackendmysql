@@ -233,6 +233,76 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task SendShopperNotification(string email, string shopperName, int orderId, decimal amountPaid)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Order Payment Confirmation",
+                    Body = $@"
+<html>
+  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
+    <h3 style='color: #000;'>Payment Confirmation – Thank You for Your Purchase!</h3>
+
+    <p>Dear <strong>{shopperName}</strong>,</p>
+
+    <p>
+      We are delighted to inform you that your payment for 
+      <strong>Order ID #{orderId}</strong> has been successfully processed.
+    </p>
+
+    <p>
+      <strong>Payment Details:</strong><br />
+      Amount Paid: <strong>₹{amountPaid:F2}</strong><br />
+      Payment Date: <strong>{DateTime.Now:dd MMM yyyy, hh:mm tt}</strong>
+    </p>
+
+    <p>
+      Our partner stores have been notified and will begin preparing your order for shipment.
+      You can track your order status anytime by logging in to your account.
+    </p>
+
+    <p>
+      If you have any questions or need assistance, please don’t hesitate to reach out to our support team.
+    </p>
+
+    <p style='margin-top: 30px;'>
+      Thank you for shopping with <strong style='color: #004481;'>ItIsMyTown</strong>!<br />
+      We hope to serve you again soon.
+    </p>
+
+    <hr style='border: none; border-top: 1px solid #ccc; margin: 25px 0;' />
+    <p style='font-size: 0.9em; color: #666;'>
+      <em>This is an automated message. Please do not reply directly to this email.</em><br/>
+      <strong>ItIsMyTown</strong><br/>
+      support@itismytown.com | +91-XXXXXXXXXX
+    </p>
+  </body>
+</html>",
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending shopper notification email: {ex.Message}");
+            throw new Exception("Failed to send shopper notification email.");
+        }
+    }
 
     private async Task<bool> DomainHasMX(string email)
     {

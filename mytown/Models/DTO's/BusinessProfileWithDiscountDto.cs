@@ -2,7 +2,7 @@
 {
     public class BusinessProfileWithDiscountDto
     {
-        public businessprofile Profile { get; set; }
+        public BusinessProfile Profile { get; set; }
         public decimal MaxDiscount { get; set; }
     }
 }

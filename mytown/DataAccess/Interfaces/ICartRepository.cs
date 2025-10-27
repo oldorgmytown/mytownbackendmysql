@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -23,7 +24,11 @@ namespace mytown.DataAccess.Interfaces
 
         Task<bool> UpdateCartStatusByShopperAsync(int shopperRegId);
         Task<ShopperRegister> GetShopperDetails(int shopperRegId);
-        
+
+        //get prodcut and variant details for cart
+        Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId);
+
+
 
     }
 }

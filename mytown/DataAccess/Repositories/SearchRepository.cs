@@ -5,6 +5,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -30,9 +31,9 @@ namespace mytown.DataAccess.Repositories
                 filteredBusinesses = _context.BusinessRegisters
                     .Where(b =>
                         b.Town.Contains(locationQuery) ||
-                        b.businessCity.Contains(locationQuery) ||
-                        b.businessState.Contains(locationQuery) ||
-                        b.businessCountry.Contains(locationQuery) ||
+                        b.BusinessCity.Contains(locationQuery) ||
+                        b.BusinessState.Contains(locationQuery) ||
+                        b.BusinessCountry.Contains(locationQuery) ||
                         b.Address1.Contains(locationQuery) ||
                         b.Address2.Contains(locationQuery)
                     )
@@ -44,8 +45,8 @@ namespace mytown.DataAccess.Repositories
             }
 
             var matchingCategories = _context.BusinessCategories
-                .Where(c => c.Businesscategory_name.Contains(productQuery))
-                .Select(c => c.BuscatId)
+                .Where(c => c.BusinessCategoryName.Contains(productQuery))
+                .Select(c => c.BusCatId)
                 .ToList();
 
             var matchingSubCategories = _context.product_sub_categories
@@ -72,7 +73,7 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Search from location and product/category and get the matching store  details
-        public async Task<List<businessprofile>> SearchBusinessesAsync(string location, string categoryProduct)
+        public async Task<List<BusinessProfile>> SearchBusinessesAsync(string location, string categoryProduct)
         {
             var productResults = new List<products>();
             var busRegIds = new List<int>();
@@ -96,13 +97,13 @@ namespace mytown.DataAccess.Repositories
                 else
                 {
                     var category = await _context.BusinessCategories
-                        .Where(c => c.Businesscategory_name.Contains(categoryProduct))
+                        .Where(c => c.BusinessCategoryName.Contains(categoryProduct))
                         .FirstOrDefaultAsync();
 
                     if (category != null)
                     {
                         productResults = await _context.products
-                            .Where(p => p.BuscatId == category.BuscatId)
+                            .Where(p => p.BuscatId == category.BusCatId)
                             .ToListAsync();
 
                         busRegIds.AddRange(productResults.Select(p => p.BusRegId).Distinct());
@@ -124,9 +125,9 @@ namespace mytown.DataAccess.Repositories
             {
                 businessesByLocation = await _context.BusinessRegisters
                     .Where(br => br.Town.Contains(location) ||
-                                 br.businessCity.Contains(location) ||
-                                 br.businessState.Contains(location) ||
-                                 br.businessCountry.Contains(location))
+                                 br.BusinessCity.Contains(location) ||
+                                 br.BusinessState.Contains(location) ||
+                                 br.BusinessCountry.Contains(location))
                     .ToListAsync();
             }
 
@@ -158,7 +159,7 @@ namespace mytown.DataAccess.Repositories
                 combinedResults = new List<BusinessRegister>();
             }
 
-            var result = new List<businessprofile>();
+            var result = new List<BusinessProfile>();
 
             foreach (var business in combinedResults)
             {
@@ -175,11 +176,11 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Get profiles based on location search
-        public List<businessprofile> GetBusinessProfilesByLocation(string location)
+        public List<BusinessProfile> GetBusinessProfilesByLocation(string location)
         {
             var query =
         from bp in _context.BusinessProfiles
-        where bp.business_location.Contains(location)
+        where bp.BusinessLocation.Contains(location)
         select new
         {
             BusinessProfile = bp,
@@ -203,8 +204,8 @@ namespace mytown.DataAccess.Repositories
         {
             // 1️⃣ Matching categories
             var matchingBusCatIds = _context.BusinessCategories
-                .Where(bc => bc.Businesscategory_name.Contains(searchTerm))
-                .Select(bc => bc.BuscatId);
+                .Where(bc => bc.BusinessCategoryName.Contains(searchTerm))
+                .Select(bc => bc.BusCatId);
 
             var businessIds = _context.products
                 .Where(p => matchingBusCatIds.Contains(p.BuscatId))
@@ -254,9 +255,9 @@ namespace mytown.DataAccess.Repositories
                 var locationBusinessIds = _context.BusinessRegisters
                     .Where(b =>
                         (b.Town != null && b.Town.Contains(locationQuery)) ||
-                        (b.businessCity != null && b.businessCity.Contains(locationQuery)) ||
-                        (b.businessState != null && b.businessState.Contains(locationQuery)) ||
-                        (b.businessCountry != null && b.businessCountry.Contains(locationQuery)) ||
+                        (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
+                        (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
+                        (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
                         (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
                         (b.Address2 != null && b.Address2.Contains(locationQuery)))
                     .Select(b => b.BusRegId);
@@ -286,7 +287,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     ProductId = p.product_id,
                     BusRegId = p.BusRegId,
-                    BusinessName = p.BusinessRegister.Businessname,
+                    BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
                   //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
                     ProdcatId = p.prod_subcat_id,
@@ -350,8 +351,8 @@ namespace mytown.DataAccess.Repositories
         {
             // 1. Match categories
             var matchingBusCatIds = _context.BusinessCategories
-                .Where(bc => bc.Businesscategory_name.Contains(productSearchTerm))
-                .Select(bc => bc.BuscatId)
+                .Where(bc => bc.BusinessCategoryName.Contains(productSearchTerm))
+                .Select(bc => bc.BusCatId)
                 .ToList();
 
             var businessIds = _context.products
@@ -391,7 +392,7 @@ namespace mytown.DataAccess.Repositories
             // 4. Apply location filter directly on business_location
             var finalBusinessIds = _context.BusinessProfiles
                 .Where(bp => businessIds.Contains(bp.BusRegId) &&
-                             bp.business_location.Contains(locationSearchTerm))
+                             bp.BusinessLocation.Contains(locationSearchTerm))
                 .Select(bp => bp.BusRegId)
                 .ToList();
 
@@ -418,7 +419,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     ProductId = p.product_id,
                     BusRegId = p.BusRegId,
-                    BusinessName = p.BusinessRegister.Businessname,
+                    BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
                     //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
                     ProdcatId = p.prod_subcat_id,
@@ -481,8 +482,8 @@ namespace mytown.DataAccess.Repositories
         {
             // Step 1: Get all business profiles matching location
             var busCatIds = await _context.BusinessProfiles
-            .Where(bp => bp.business_location != null &&
-                         bp.business_location.Contains(location)) // property name matches model
+            .Where(bp => bp.BusinessLocation != null &&
+                         bp.BusinessLocation.Contains(location)) // property name matches model
             .Select(bp => bp.BusCatId)
             .Distinct()
             .ToListAsync();
@@ -506,26 +507,26 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public async Task<IEnumerable<businesscategoriescs>> GetBusinessCategoriesByLocationAsync(string location)
+        public async Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location)
         {
             // Step 1: Get all business profiles matching the location
             var busCatIds = await _context.BusinessProfiles
-                .Where(bp => bp.business_location != null &&
-                             bp.business_location.Contains(location))
+                .Where(bp => bp.BusinessLocation != null &&
+                             bp.BusinessLocation.Contains(location))
                 .Select(bp => bp.BusCatId)
                 .Distinct()
                 .ToListAsync();
 
             if (!busCatIds.Any())
-                return new List<businesscategoriescs>();
+                return new List<BusinessCategory>();
 
             // Step 2: Get all business categories for those BusCatIds
             var categories = await _context.BusinessCategories
-                .Where(bc => busCatIds.Contains(bc.BuscatId))
-                .Select(bc => new businesscategoriescs
+                .Where(bc => busCatIds.Contains(bc.BusCatId))
+                .Select(bc => new BusinessCategory
                 {
-                    BuscatId = bc.BuscatId,
-                    Businesscategory_name = bc.Businesscategory_name
+                    BusCatId = bc.BusCatId,
+                    BusinessCategoryName = bc.BusinessCategoryName
                 })
                 .ToListAsync();
 
@@ -540,9 +541,9 @@ namespace mytown.DataAccess.Repositories
             var locationBusinessIds = _context.BusinessRegisters
                 .Where(b =>
                     (b.Town != null && b.Town.Contains(locationQuery)) ||
-                    (b.businessCity != null && b.businessCity.Contains(locationQuery)) ||
-                    (b.businessState != null && b.businessState.Contains(locationQuery)) ||
-                    (b.businessCountry != null && b.businessCountry.Contains(locationQuery)) ||
+                    (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
+                    (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
+                    (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
                     (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
                     (b.Address2 != null && b.Address2.Contains(locationQuery)))
                 .Select(b => b.BusRegId)
@@ -552,7 +553,7 @@ namespace mytown.DataAccess.Repositories
             {
                 return new SearchResultDto
                 {
-                    Stores = new List<businessprofile>(),
+                    Stores = new List<BusinessProfile>(),
                     Products = new List<ProdcVariantforShopperDto>(),
                     Colors = new List<string>(),
                     StoreCount = 0,
@@ -563,8 +564,8 @@ namespace mytown.DataAccess.Repositories
             // 2. Filter stores by store name OR products/categories inside those stores
             var storeMatches = _context.BusinessProfiles
                 .Where(bp => locationBusinessIds.Contains(bp.BusRegId) &&
-                             (bp.BusinessUsername.Contains(searchTerm) ||
-                              bp.business_about.Contains(searchTerm)))
+                             (bp.BusinessName.Contains(searchTerm) ||
+                              bp.BusinessAbout.Contains(searchTerm)))
                 .ToList();
 
 
@@ -582,7 +583,7 @@ namespace mytown.DataAccess.Repositories
                {
                    ProductId = p.product_id,
                    BusRegId = p.BusRegId,
-                   BusinessName = p.BusinessRegister.Businessname,
+                   BusinessName = p.BusinessRegister.BusinessName,
                    BuscatId = p.BuscatId,
                    //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
                    ProdcatId = p.prod_subcat_id,

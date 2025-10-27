@@ -1,13 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess.Interfaces;
-using mytown.Models;
 using Microsoft.AspNetCore.Mvc;
+using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
+using mytown.Models;
 
 namespace mytown.Controllers
 {
     [Route("api/shoppingcart")]
     [ApiController]
-    public class CartController: ControllerBase
+    public class CartController : ControllerBase
     {
         private readonly ICartRepository _cartRepo;
 
@@ -149,6 +150,16 @@ namespace mytown.Controllers
 
             return Ok(shopper);
         }
+        // get product and varinat details for cart
 
+        [HttpGet("GetProductVariantDetailsforCart/{productId}")]
+        public async Task<IActionResult> GetProductVariantDetails(int productId)
+        {
+            var productDetails = await _cartRepo.GetProductAndVariantforCartAsync(productId);
+            if (productDetails == null)
+                return NotFound(new { Message = "Product not found" });
+
+            return Ok(productDetails);
+        }
     }
 }

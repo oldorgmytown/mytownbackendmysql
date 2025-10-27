@@ -53,7 +53,12 @@ namespace mytown.Controllers
                 //email to courier main with the branch id
                 await _paymentRepo.SendEmailToCourier(shipping.BranchId, shipping.ShippingDetailId);
             }
-
+            // 4️⃣ Notify shopper
+            var shopper = _paymentRepo.GetShopperDetailsByOrderId(model.OrderId);
+            if (shopper != null && !string.IsNullOrEmpty(shopper.Email))
+            {
+                await _emailService.SendShopperNotification(shopper.Email, shopper.Username, model.OrderId, model.AmountPaid);
+            }
 
             return Ok(new { message = "Payment successful!", paymentId = payment.PaymentId });
         }

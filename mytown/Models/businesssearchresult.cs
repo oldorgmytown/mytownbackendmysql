@@ -1,8 +1,10 @@
-﻿namespace mytown.Models
+﻿using MyTown.Models;
+
+namespace mytown.Models
 {
     public class BusinessSearchResult
     {
         public BusinessRegister BusinessRegister { get; set; }
-        public businessprofile BusinessProfile { get; set; }
+        public BusinessProfile BusinessProfile { get; set; }
     }
 }

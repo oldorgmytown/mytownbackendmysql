@@ -22,7 +22,7 @@ namespace mytown.DataAccess.Repositories
         
 
         // Get all business profiles including related BusinessRegister data
-        public async Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync()
+        public async Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync()
         {
             return await _context.BusinessProfiles
                 .Include(bp => bp.BusinessRegister) //  load BusinessRegister
@@ -36,27 +36,27 @@ namespace mytown.DataAccess.Repositories
                 join br in _context.BusinessRegisters
                     on bp.BusRegId equals br.BusRegId
                 join bs in _context.BusinessServices
-                    on bp.BusServId equals bs.BusservId into bsGroup
+                    on bp.BusServId equals bs.BusServId into bsGroup
                 from bs in bsGroup.DefaultIfEmpty()
                 join bc in _context.BusinessCategories
-                    on bp.BusCatId equals bc.BuscatId into bcGroup
+                    on bp.BusCatId equals bc.BusCatId into bcGroup
                 from bc in bcGroup.DefaultIfEmpty()
                 where bp.BusRegId == busRegId
                 select new busprofilepreview
                 {
-                    businessprofile_id = bp.businessprofile_id,
+                    businessprofile_id = bp.BusinessProfileId,
                     BusRegId = bp.BusRegId,
-                    Businessname = br.Businessname, // From BusinessRegister table
+                    Businessname = br.BusinessName, // From BusinessRegister table
                     Businessusername = br.BusinessUsername, // from business register table
-                    business_location = bp.business_location,
-                    business_about = bp.business_about,
-                    banner_path = bp.banner_path,
-                    logo_path = bp.logo_path,
-                    profile_status = bp.profile_status,
+                    business_location = bp.BusinessLocation,
+                    business_about = bp.BusinessAbout,
+                    banner_path = bp.BannerPath,
+                    logo_path = bp.LogoPath,
+                    profile_status = bp.ProfileStatus,
                     BusCatId = bp.BusCatId,
                     BusServId = bp.BusServId,
-                    Businessservice_name = bs != null ? bs.Businessservice_name : null,
-                    Businesscategory_name = bc != null ? bc.Businesscategory_name : null,
+                    Businessservice_name = bs != null ? bs.BusinessServiceName : null,
+                    Businesscategory_name = bc != null ? bc.BusinessCategoryName : null,
                     Currency = br.Currency // from BusinessRegister table
                 }
             ).ToListAsync();
@@ -123,7 +123,7 @@ namespace mytown.DataAccess.Repositories
         //    return existingProfile ?? businessProfile;
         //}
 
-        public async Task<businessprofile> AddBusinessProfileAsync(businessprofile businessProfile)
+        public async Task<BusinessProfile> AddBusinessProfileAsync(BusinessProfile businessProfile)
         {
             var existingProfile = await _context.BusinessProfiles
                 .FirstOrDefaultAsync(bp => bp.BusRegId == businessProfile.BusRegId);
@@ -131,39 +131,39 @@ namespace mytown.DataAccess.Repositories
             if (existingProfile != null)
             {
                 // Update only if values are provided
-                if (!string.IsNullOrEmpty(businessProfile.BusinessUsername))
-                    existingProfile.BusinessUsername = businessProfile.BusinessUsername;
+                if (!string.IsNullOrEmpty(businessProfile.BusinessName))
+                    existingProfile.BusinessName = businessProfile.BusinessName;
 
-                if (!string.IsNullOrEmpty(businessProfile.business_location))
-                    existingProfile.business_location = businessProfile.business_location;
+                if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
+                    existingProfile.BusinessLocation = businessProfile.BusinessLocation;
 
-                if (!string.IsNullOrEmpty(businessProfile.business_about))
-                    existingProfile.business_about = businessProfile.business_about;
+                if (!string.IsNullOrEmpty(businessProfile.BusinessAbout))
+                    existingProfile.BusinessAbout = businessProfile.BusinessAbout;
 
-                if (!string.IsNullOrEmpty(businessProfile.banner_path))
+                if (!string.IsNullOrEmpty(businessProfile.BannerPath))
                 {
                     // If a new banner is uploaded
-                    if (!string.IsNullOrEmpty(existingProfile.banner_path))
+                    if (!string.IsNullOrEmpty(existingProfile.BannerPath))
                     {
                         // Delete old banner from blob
-                        await DeleteFromBlobAsync(existingProfile.banner_path);
+                        await DeleteFromBlobAsync(existingProfile.BannerPath);
                     }
-                    existingProfile.banner_path = businessProfile.banner_path;
+                    existingProfile.BannerPath = businessProfile.BannerPath;
                 }
 
-                if (!string.IsNullOrEmpty(businessProfile.logo_path))
+                if (!string.IsNullOrEmpty(businessProfile.LogoPath))
                 {
                     // If a new logo is uploaded
-                    if (!string.IsNullOrEmpty(existingProfile.logo_path))
+                    if (!string.IsNullOrEmpty(existingProfile.LogoPath))
                     {
                         // Delete old logo from blob
-                        await DeleteFromBlobAsync(existingProfile.logo_path);
+                        await DeleteFromBlobAsync(existingProfile.LogoPath);
                     }
-                    existingProfile.logo_path = businessProfile.logo_path;
+                    existingProfile.LogoPath = businessProfile.LogoPath;
                 }
 
-                if (!string.IsNullOrEmpty(businessProfile.profile_status))
-                    existingProfile.profile_status = businessProfile.profile_status;
+                if (!string.IsNullOrEmpty(businessProfile.ProfileStatus))
+                    existingProfile.ProfileStatus = businessProfile.ProfileStatus;
 
                 //if (!string.IsNullOrEmpty(businessProfile.bus_time))
                 //    existingProfile.bus_time = businessProfile.bus_time;
@@ -242,7 +242,7 @@ namespace mytown.DataAccess.Repositories
             if (business == null)
                 return false; // Business not found
 
-            business.banner_path = bannerPath;
+            business.BannerPath = bannerPath;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -254,7 +254,7 @@ namespace mytown.DataAccess.Repositories
             if (business == null)
                 return false; // Business not found
 
-            business.logo_path = logoPath;
+            business.LogoPath = logoPath;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -394,8 +394,8 @@ namespace mytown.DataAccess.Repositories
         {
             // Step 1: Get raw locations from DB
             var locations = await _context.BusinessProfiles
-                .Where(b => b.business_location != null && b.business_location.Contains(","))
-                .Select(b => b.business_location)
+                .Where(b => b.BusinessLocation != null && b.BusinessLocation.Contains(","))
+                .Select(b => b.BusinessLocation)
                 .ToListAsync();
 
             // Step 2: Process in memory (C# side)

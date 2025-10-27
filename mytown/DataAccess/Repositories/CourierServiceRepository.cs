@@ -194,7 +194,7 @@ namespace mytown.DataAccess.Repositories
                                     CustomerName = shopper.Username,
                                     CustomerPhoneNumber = shopper.PhoneNumber,
                                     ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
-                                    StoreName = store.Businessname,
+                                    StoreName = store.BusinessName,
                                     ProductName = product.product_name,
                                     ProductWeight = product.product_weight??0,
                                     Quantity = orderDetail.Quantity,

@@ -497,47 +497,47 @@ namespace mytown.DataAccess.Repositories
 
 
 
-        public async Task<ProductDto?> GetProductByIdAsync(int productId)
-        {
-            var product = await _context.products
-                .Include(p => p.Images)
-                .Include(p => p.BusinessRegister)
-                .FirstOrDefaultAsync(p => p.product_id == productId);
+        //public async Task<ProductDto?> GetProductByIdAsync(int productId)
+        //{
+        //    var product = await _context.products
+        //        .Include(p => p.Images)
+        //        .Include(p => p.BusinessRegister)
+        //        .FirstOrDefaultAsync(p => p.product_id == productId);
 
-            if (product == null) return null;
+        //    if (product == null) return null;
 
-            return new ProductDto
-            {
-                ProductId = product.product_id,
-                BusRegId = product.BusRegId,
-                BuscatId = product.BuscatId,
-                ProductType = 0,
-                ProdSubcatId = product.prod_subcat_id,
-                ProductName = product.product_name,
-                ProductSubject = product.product_subject,
-                ProductDescription = product.product_description,
-                ProductAmount = product.product_cost??0,
-                ProductLength = product.product_length??0,
-                ProductWidth = product.product_width ?? 0,
-                ProductWeight = product.product_weight ?? 0,
-                Quantity = product.product_quantity ?? 0,
-                ProductHeight = product.product_height ?? 0,
-                PurchasedCount = 0,
-                Discount = product.discount,
-                DiscountPrice = product.discount_price,
-                Color = product.color,
-                Size = product.size,
-                BusinessName = product.BusinessRegister?.Businessname,
-                Images = product.Images
-                    .OrderBy(i => i.SortOrder)
-                    .Select(i => new ProductImageDto
-                    {
-                        FileName = i.FileName,
-                        SortOrder = i.SortOrder
-                    })
-                    .ToList()
-            };
-        }
+        //    return new ProductDto
+        //    {
+        //        ProductId = product.product_id,
+        //        BusRegId = product.BusRegId,
+        //        BuscatId = product.BuscatId,
+        //        ProductType = 0,
+        //        ProdSubcatId = product.prod_subcat_id,
+        //        ProductName = product.product_name,
+        //        ProductSubject = product.product_subject,
+        //        ProductDescription = product.product_description,
+        //        ProductAmount = product.product_cost??0,
+        //        ProductLength = product.product_length??0,
+        //        ProductWidth = product.product_width ?? 0,
+        //        ProductWeight = product.product_weight ?? 0,
+        //        Quantity = product.product_quantity ?? 0,
+        //        ProductHeight = product.product_height ?? 0,
+        //        PurchasedCount = 0,
+        //        Discount = product.discount,
+        //        DiscountPrice = product.discount_price,
+        //        Color = product.color,
+        //        Size = product.size,
+        //        BusinessName = product.BusinessRegister?.Businessname,
+        //        Images = product.Images
+        //            .OrderBy(i => i.SortOrder)
+        //            .Select(i => new ProductImageDto
+        //            {
+        //                FileName = i.FileName,
+        //                SortOrder = i.SortOrder
+        //            })
+        //            .ToList()
+        //    };
+        //}
 
 
 
@@ -615,7 +615,7 @@ namespace mytown.DataAccess.Repositories
            ProductId = v.ProductId,
 
            BusRegId = v.Product.BusRegId,
-           BusinessName = v.Product.BusinessRegister.Businessname,
+           BusinessName = v.Product.BusinessRegister.BusinessName,
 
            BuscatId = v.Product.BuscatId,
          //  BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
@@ -686,7 +686,7 @@ namespace mytown.DataAccess.Repositories
             ProductId = v.ProductId,
 
             BusRegId = v.Product.BusRegId,
-            BusinessName = v.Product.BusinessRegister.Businessname,
+            BusinessName = v.Product.BusinessRegister.BusinessName,
 
             BuscatId = v.Product.BuscatId,
             //BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
@@ -794,7 +794,7 @@ namespace mytown.DataAccess.Repositories
 
             var query =
                 from bp in _context.BusinessProfiles
-                where bp.business_location != null && bp.business_location.Contains(location)
+                where bp.BusinessLocation != null && bp.BusinessLocation.Contains(location)
                 join p in _context.products on bp.BusRegId equals p.BusRegId
                 join v in _context.Sku_ProductVariants on p.product_id equals v.ProductId
                 select new { Product = p, Variant = v, Store = bp };
@@ -816,7 +816,7 @@ namespace mytown.DataAccess.Repositories
                     ProductId = x.Product.product_id,
 
                     BusRegId = x.Store.BusRegId,
-                    BusinessName = x.Store.BusinessUsername,
+                    BusinessName = x.Store.BusinessName,
 
                     BuscatId = x.Product.BuscatId,
                     //BuscatName = x.Product.BusinessRegister != null ? x.Product.BusinessRegister.Businesscategory_name : null,

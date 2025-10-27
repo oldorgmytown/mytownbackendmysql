@@ -10,7 +10,7 @@ namespace mytown.DataAccess.Interfaces
 
         IEnumerable<products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
 
-        Task<businessprofile> AddBusinessProfileAsync(businessprofile businessProfile);
+        Task<BusinessProfile> AddBusinessProfileAsync(BusinessProfile businessProfile);
 
         Task<string> UploadToBlobAsync(IFormFile file, string imageType);
 
@@ -23,7 +23,7 @@ namespace mytown.DataAccess.Interfaces
         Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId);
 
         List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId);
-        Task<IEnumerable<businessprofile>> GetAllBusinessProfilesAsync();
+        Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync();
         Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync();
 
         Task<List<string>> GetUniqueCountriesAsync();

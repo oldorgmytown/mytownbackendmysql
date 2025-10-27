@@ -2,7 +2,7 @@
 {
     public class SearchResultDto
     {
-        public List<businessprofile> Stores { get; set; } = new();
+        public List<BusinessProfile> Stores { get; set; } = new();
         public List<ProdcVariantforShopperDto> Products { get; set; } = new();
         public List<string> Colors { get; set; } = new List<string>();
 

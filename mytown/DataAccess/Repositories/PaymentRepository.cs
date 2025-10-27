@@ -58,7 +58,7 @@ namespace mytown.DataAccess.Repositories
                                        .Select(od => new BusinessRegisterDto
                                        {
                                            BusRegId = od.Store.BusRegId,
-                                           Businessname = od.Store.Businessname,
+                                           Businessname = od.Store.BusinessName,
                                            BusinessUsername = od.Store.BusinessUsername,
                                            BusEmail = od.Store.BusEmail,
                                            BusMobileNo = od.Store.BusMobileNo
@@ -67,6 +67,33 @@ namespace mytown.DataAccess.Repositories
                                        .ToList();
 
             return storeDetails;
+        }
+
+        public ShopperRegisterDto GetShopperDetailsByOrderId(int orderId)
+        {
+            var shopperDetails = _context.Orders
+                .Where(o => o.OrderId == orderId)
+                .Select(o => new ShopperRegisterDto
+                {
+                    ShopperRegId = o.ShopperRegister.ShopperRegId,
+                    Username = o.ShopperRegister.Username,
+                    Email = o.ShopperRegister.Email,
+                    IsEmailVerified = o.ShopperRegister.IsEmailVerified,
+                    Address = o.ShopperRegister.Address,
+                    Town = o.ShopperRegister.Town,
+                    City = o.ShopperRegister.City,
+                    State = o.ShopperRegister.State,
+                    Country = o.ShopperRegister.Country,
+                    PostalCode = o.ShopperRegister.PostalCode,
+                    PhoneNumber = o.ShopperRegister.PhoneNumber,
+                    PhotoName = o.ShopperRegister.PhotoName,
+                   // Status = o.ShopperRegister.Status,
+                   // Password = o.ShopperRegister.Password,
+                    ShopperRegDate = o.ShopperRegister.ShopperRegDate
+                })
+                .FirstOrDefault(); // Single shopper per order
+
+            return shopperDetails;
         }
 
         public List<ShippingDetails> GetShippingDetailsByOrderId(int orderId)

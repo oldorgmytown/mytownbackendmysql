@@ -47,19 +47,19 @@ namespace mytown.Controllers
                     logoPath = await _businessprofileRepo.UploadToBlobAsync(logoFile, "logo");
 
                 // Map DTO → Entity
-                var entity = new businessprofile
+                var entity = new BusinessProfile
                 {
                     BusRegId = businessProfileDto.BusRegId,
-                    BusinessUsername = businessProfileDto.BusinessUsername,
-                    business_location = businessProfileDto.BusinessLocation,
-                    business_about = businessProfileDto.BusinessAbout,
-                    profile_status = businessProfileDto.ProfileStatus,
+                    BusinessName = businessProfileDto.BusinessUsername,
+                    BusinessLocation = businessProfileDto.BusinessLocation,
+                    BusinessAbout = businessProfileDto.BusinessAbout,
+                    ProfileStatus = businessProfileDto.ProfileStatus,
                     BusCatId = businessProfileDto.Buscatid ?? 0,
                     //bus_time = businessProfileDto.BusTime,
                     //Businessservice_name = businessProfileDto.BusinessServiceName,
                     //Businesscategory_name = businessProfileDto.BusinessCategoryName,
-                    banner_path = bannerPath, // new banner (if any)
-                    logo_path = logoPath      // new logo (if any)
+                    BannerPath = bannerPath, // new banner (if any)
+                    LogoPath = logoPath      // new logo (if any)
                 };
 
                 // Repository handles both Add and Update
@@ -67,7 +67,7 @@ namespace mytown.Controllers
 
                 return Ok(new
                 {
-                    message = savedBusinessProfile.businessprofile_id == 0
+                    message = savedBusinessProfile.BusinessProfileId == 0
                                 ? "Business profile added successfully"
                                 : "Business profile updated successfully",
                     data = savedBusinessProfile

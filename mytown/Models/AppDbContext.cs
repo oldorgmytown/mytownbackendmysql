@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
+using System.Text.RegularExpressions;
 
 
 namespace mytown.Models
@@ -13,11 +15,11 @@ namespace mytown.Models
 
             public DbSet<User> Users { get; set; }
             public DbSet<Registration> Registrations { get; set; } // Pluralized name
-            public DbSet<BusinessRegister> BusinessRegisters { get; set; } // Pluralized name
-           public DbSet<BusinessVerification> BusinessVerification { get; set; }
-            public DbSet<businessprofile> BusinessProfiles { get; set; }
-            public DbSet<businessservices> BusinessServices { get; set; }
-            public DbSet<businesscategoriescs> BusinessCategories { get; set; }
+            public DbSet<BusinessRegister> BusinessRegisters { get; set; } // done
+           public DbSet<BusinessVerification> BusinessVerification { get; set; }//done
+            public DbSet<BusinessProfile> BusinessProfiles { get; set; }//done
+            public DbSet<BusinessService> BusinessServices { get; set; } //done
+            public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
             public DbSet<product_sub_categories> product_sub_categories { get; set; }
             public DbSet<services_sub_categories> services_sub_categories { get; set; }
             public DbSet<products> products { get; set; }
@@ -33,7 +35,7 @@ namespace mytown.Models
             public DbSet<orderdetails> OrderDetails { get; set; }
             public DbSet<Payments> Payments { get; set; }
             public DbSet<PendingVerification> PendingVerifications{ get; set; }
-            public DbSet<PendingBusinessVerification> PendingBusinessVerifications { get; set; }
+            public DbSet<PendingBusinessVerification> PendingBusinessVerifications { get; set; }//done
             public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
             public DbSet<ShippingDetails> ShippingDetails { get; set; }
             public DbSet<CourierService> CourierService { get; set; }
@@ -89,9 +91,9 @@ namespace mytown.Models
                 modelBuilder.Entity<subcategoryimages_busregid>().ToTable("subcategoryimages_Busregids");
 
                 // Seed data for businesscategoriescs: inserting "products" and "services"
-                modelBuilder.Entity<businesscategoriescs>().HasData(
-                    new businesscategoriescs { BuscatId = 1, Businesscategory_name = "products" },
-                    new businesscategoriescs { BuscatId = 2, Businesscategory_name = "services" }
+                modelBuilder.Entity<BusinessCategory>().HasData(
+                    new BusinessCategory { BusCatId = 1, BusinessCategoryName = "products" },
+                    new BusinessCategory { BusCatId = 2, BusinessCategoryName = "services" }
                 );
 
                 modelBuilder.Entity<ShopperProductRecentView>()
@@ -103,9 +105,29 @@ namespace mytown.Models
              .WithMany(p => p.Images)   // you need to add ICollection<ProductImage> Images in products model
              .HasForeignKey(pi => pi.ProductId)
              .OnDelete(DeleteBehavior.Cascade);
+
+                // Convert all table and column names to snake_case
+                foreach (var entity in modelBuilder.Model.GetEntityTypes())
+                {
+                    entity.SetTableName(ToSnakeCase(entity.GetTableName()));
+
+                    foreach (var property in entity.GetProperties())
+                    {
+                        property.SetColumnName(ToSnakeCase(property.GetColumnName()));
+                    }
+                }
             }
+                  private static string ToSnakeCase(string name)
+            {
+                if (string.IsNullOrEmpty(name)) return name;
+                return Regex.Replace(name, "([a-z0-9])([A-Z])", "$1_$2").ToLower();
+            }
+
+
         }
-            
-        
     }
-}
+
+       
+          
+ }
+

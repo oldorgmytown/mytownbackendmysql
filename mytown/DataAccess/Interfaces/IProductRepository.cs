@@ -33,7 +33,7 @@ namespace mytown.DataAccess.Interfaces
         //Delete variant and images
         Task DeleteProductVariantAsync(int productId, int skuId);
        
-        Task<ProductDto?> GetProductByIdAsync(int productId);
+      //  Task<ProductDto?> GetProductByIdAsync(int productId);
         Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId);
         Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync();
 

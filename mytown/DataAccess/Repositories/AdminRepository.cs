@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
-using mytown.Services;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using mytown.Services;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -34,43 +35,43 @@ namespace mytown.DataAccess.Repositories
                         {
                             b.BusRegId,
                             b.BusinessUsername,
-                            b.Businessname,
+                            b.BusinessName,
                             b.LicenseType,
                             b.Gstin,
-                            b.BusservId,
-                            b.BuscatId,
+                            b.BusServId,
+                            b.BusCatId,
                             b.Town,
                             b.BusMobileNo,
                             b.BusEmail,
                             b.IsEmailVerified,
                             b.Address1,
                             b.Address2,
-                            b.businessCity,
-                            b.businessState,
-                            b.businessCountry,
-                            b.postalCode,
+                            b.BusinessCity,
+                            b.BusinessState,
+                            b.BusinessCountry,
+                            b.PostalCode,
                             b.Password,
                             b.BusinessRegDate,
-                            ProfileStatus = bp != null && bp.profile_status != null ? bp.profile_status : "pending",
-                            bp.approved_date,
+                            ProfileStatus = bp != null && bp.ProfileStatus != null ? bp.ProfileStatus : "pending",
+                            bp.ApprovedDate,
                             ServiceType =
-                                b.BusservId == 1 && b.BuscatId == 1 ? "product, service" :
-                                b.BuscatId == 1 ? "product" :
-                                b.BusservId == 1 ? "service" : "none"
+                                b.BusServId == 1 && b.BusCatId == 1 ? "product, service" :
+                                b.BusCatId == 1 ? "product" :
+                                b.BusServId == 1 ? "service" : "none"
                         };
 
             // Step 2: apply search if provided
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(b =>
-                    b.Businessname.ToLower().Contains(search) ||
+                    b.BusinessName.ToLower().Contains(search) ||
                     b.BusinessUsername.ToLower().Contains(search) ||
                     b.BusEmail.ToLower().Contains(search) ||
                     b.BusMobileNo.ToLower().Contains(search) ||
                     b.Town.ToLower().Contains(search) ||
-                     b.businessCity.ToLower().Contains(search) ||
-                    b.businessState.ToLower().Contains(search) ||
-                    b.businessCountry.ToLower().Contains(search) ||
+                     b.BusinessCity.ToLower().Contains(search) ||
+                    b.BusinessState.ToLower().Contains(search) ||
+                    b.BusinessCountry.ToLower().Contains(search) ||
                     b.ProfileStatus.ToLower().Contains(search));
             }
 
@@ -97,8 +98,8 @@ namespace mytown.DataAccess.Repositories
                         join bp in _context.BusinessProfiles
                             on br.BusRegId equals bp.BusRegId into bpGroup
                         from bp in bpGroup.DefaultIfEmpty()
-                        where br.BuscatId == 1 && (
-                            (bp != null && bp.profile_status.ToLower() == status.ToLower()) ||
+                        where br.BusCatId == 1 && (
+                            (bp != null && bp.ProfileStatus.ToLower() == status.ToLower()) ||
                             (bp == null && status.ToLower() == "incomplete")
                         )
                         select br;
@@ -108,13 +109,13 @@ namespace mytown.DataAccess.Repositories
             {
                 search = search.ToLower();
                 query = query.Where(br =>
-                    br.Businessname.ToLower().Contains(search) ||
+                    br.BusinessName.ToLower().Contains(search) ||
                     br.BusinessUsername.ToLower().Contains(search) ||
                     br.BusEmail.ToLower().Contains(search) ||
                     br.Town.ToLower().Contains(search) ||
-                    br.businessCity.ToLower().Contains(search) ||
-                    br.businessState.ToLower().Contains(search) ||
-                    br.businessCountry.ToLower().Contains(search));
+                    br.BusinessCity.ToLower().Contains(search) ||
+                    br.BusinessState.ToLower().Contains(search) ||
+                    br.BusinessCountry.ToLower().Contains(search));
             }
 
             int totalRecords = await query.CountAsync();
@@ -136,7 +137,7 @@ namespace mytown.DataAccess.Repositories
             var businessProfiles = await _context.BusinessProfiles
                 .Select(bp => new
                 {
-                    bp.profile_status,
+                    bp.ProfileStatus,
                     bp.BusCatId,
                     bp.BusServId
                 })
@@ -146,7 +147,7 @@ namespace mytown.DataAccess.Repositories
             var storeCounts = allStatuses.ToDictionary(
                 status => status,
                 status => businessProfiles.Count(bp =>
-                    bp.profile_status.Equals(status, StringComparison.OrdinalIgnoreCase) &&
+                    bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
                     bp.BusCatId == 1
                 )
             );
@@ -155,7 +156,7 @@ namespace mytown.DataAccess.Repositories
             var serviceCounts = allStatuses.ToDictionary(
                 status => status,
                 status => businessProfiles.Count(bp =>
-                    bp.profile_status.Equals(status, StringComparison.OrdinalIgnoreCase) &&
+                    bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
                     bp.BusServId == 1
                 )
             );
@@ -182,8 +183,8 @@ namespace mytown.DataAccess.Repositories
             if (profile == null)
                 return false;
 
-            profile.profile_status = status;
-            profile.approved_date = status.ToLower() == "approved" ? DateTime.Now : profile.approved_date;
+            profile.ProfileStatus = status;
+            profile.ApprovedDate = status.ToLower() == "approved" ? DateTime.Now : profile.ApprovedDate;
 
             _context.BusinessProfiles.Update(profile);
 
@@ -207,7 +208,7 @@ namespace mytown.DataAccess.Repositories
             var business = profile.BusinessRegister;
             if (business != null)
             {
-                string businessName = business.Businessname;
+                string businessName = business.BusinessName;
                 string username = business.BusinessUsername;
                 string email = business.BusEmail;
 
@@ -224,9 +225,9 @@ namespace mytown.DataAccess.Repositories
                             on br.BusRegId equals bp.BusRegId into bpGroup
                         from bp in bpGroup.DefaultIfEmpty() // Left join
                         where
-                            br.BusservId == 1 && // Filter by servicecategory
+                            br.BusServId == 1 && // Filter by servicecategory
                             (
-                                (bp != null && bp.profile_status.ToLower() == status.ToLower()) ||
+                                (bp != null && bp.ProfileStatus.ToLower() == status.ToLower()) ||
                                 (bp == null && status.ToLower() == "incomplete")
                             )
                         select br;
@@ -258,7 +259,7 @@ namespace mytown.DataAccess.Repositories
 
             // Unique Cities
             var uniqueCities = await _context.BusinessRegisters
-                .Select(b => b.businessCity)
+                .Select(b => b.BusinessCity)
                 .Where(city => !string.IsNullOrEmpty(city))
                 .Union(
                     _context.ShopperRegisters
@@ -270,7 +271,7 @@ namespace mytown.DataAccess.Repositories
 
             // Unique States
             var uniqueStates = await _context.BusinessRegisters
-                .Select(b => b.businessState)
+                .Select(b => b.BusinessState)
                 .Where(state => !string.IsNullOrEmpty(state))
                 .Union(
                     _context.ShopperRegisters
@@ -282,7 +283,7 @@ namespace mytown.DataAccess.Repositories
 
             // Unique Countries
             var uniqueCountries = await _context.BusinessRegisters
-                .Select(b => b.businessCountry)
+                .Select(b => b.BusinessCountry)
                 .Where(country => !string.IsNullOrEmpty(country))
                 .Union(
                     _context.ShopperRegisters
@@ -326,7 +327,7 @@ namespace mytown.DataAccess.Repositories
 
             // Fetch unique cities from both tables
             var uniqueCities = await _context.BusinessRegisters
-                .Select(b => b.businessCity)
+                .Select(b => b.BusinessCity)
                 .Where(city => !string.IsNullOrEmpty(city))
                 .Union(
                     _context.ShopperRegisters
@@ -338,7 +339,7 @@ namespace mytown.DataAccess.Repositories
 
             // Fetch unique states from both tables
             var uniqueStates = await _context.BusinessRegisters
-                .Select(b => b.businessState)
+                .Select(b => b.BusinessState)
                 .Where(state => !string.IsNullOrEmpty(state))
                 .Union(
                     _context.ShopperRegisters
@@ -350,7 +351,7 @@ namespace mytown.DataAccess.Repositories
 
             // Fetch unique countries from both tables
             var uniqueCountries = await _context.BusinessRegisters
-                .Select(b => b.businessCountry)
+                .Select(b => b.BusinessCountry)
                 .Where(country => !string.IsNullOrEmpty(country))
                 .Union(
                     _context.ShopperRegisters
@@ -430,12 +431,12 @@ namespace mytown.DataAccess.Repositories
         {
             // 1. Get all pending profiles from DB
             var pendingProfiles = await _context.BusinessProfiles
-                .Where(bp => bp.profile_status.ToLower() == "incomplete")
+                .Where(bp => bp.ProfileStatus.ToLower() == "incomplete")
                 .ToListAsync(); // Materialize here!
 
             // 2. Group and process in memory
             var result = pendingProfiles
-                .GroupBy(bp => bp.business_location.Trim())
+                .GroupBy(bp => bp.BusinessLocation.Trim())
                 .Where(g => g.Count() >= 3)
                 .Select(g =>
                 {

@@ -39,7 +39,7 @@ public class Startup
     // Consolidates all AddScoped registrations.
     private void RegisterApplicationServices(IServiceCollection services)
     {
-        services.AddScoped<UserRepository>();
+       // services.AddScoped<UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IShopperRegistrationValidator, ShopperRegistrationValidator>();

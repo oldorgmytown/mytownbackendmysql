@@ -115,20 +115,29 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<int> CreateOrderAndOrderDetailsAsync(int shopperRegId)
         {
-            var cartItems = await _context.addtocart
-                .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "Cart")
-                .ToListAsync();
+            // Step 1: Get all cart items for this shopper
+            var cartItems = await (from cart in _context.addtocart
+                                   join sku in _context.Sku_ProductVariants
+                                   on cart.sku_id equals sku.SkuId
+                                   where cart.ShopperRegId == shopperRegId && cart.orderstatus == "Cart"
+                                   select new
+                                   {
+                                       cart,
+                                       sku
+                                   }).ToListAsync();
 
             if (!cartItems.Any())
                 return 0;
 
-            decimal totalAmount = cartItems.Sum(c => c.product_price * c.prod_qty);
+            // Step 2: Calculate total order amount based on SKU cost
+            decimal totalAmount = cartItems.Sum(c => (c.sku.Sku_Cost) * c.cart.prod_qty);
 
+            // Step 3: Create a new order
             var newOrder = new Order
             {
                 ShopperRegId = shopperRegId,
                 TotalAmount = totalAmount,
-                ShippingType = "Multiple", // Or leave null
+                ShippingType = "Multiple", // Optional
                 OrderStatus = "Pending",
                 OrderDate = DateTime.UtcNow
             };
@@ -136,13 +145,15 @@ namespace mytown.DataAccess.Repositories
             _context.Orders.Add(newOrder);
             await _context.SaveChangesAsync();
 
+            // Step 4: Create order details (use SKU cost instead of product price)
             List<orderdetails> orderDetailsList = cartItems.Select(item => new orderdetails
             {
                 OrderId = newOrder.OrderId,
-                ProductId = item.product_id,
-                StoreId = item.BusRegId,
-                Quantity = item.prod_qty,
-                Price = item.product_price
+                ProductId = item.cart.product_id,
+                sku_id = item.cart.sku_id,        // Include SKU ID
+                StoreId = item.cart.BusRegId,
+                Quantity = item.cart.prod_qty,
+                Price = item.sku.Sku_Cost    //  Use SKU cost
             }).ToList();
 
             _context.OrderDetails.AddRange(orderDetailsList);

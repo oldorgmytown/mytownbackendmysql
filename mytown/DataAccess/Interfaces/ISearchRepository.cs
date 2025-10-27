@@ -9,10 +9,10 @@ namespace mytown.DataAccess.Interfaces
         List<products> SearchBusinessesWithProducts(string locationQuery, string productQuery);
 
         // Search for businesses by location and category/product
-        Task<List<businessprofile>> SearchBusinessesAsync(string location, string categoryProduct);
+        Task<List<BusinessProfile>> SearchBusinessesAsync(string location, string categoryProduct);
 
         // Get business profiles by location
-        List<businessprofile> GetBusinessProfilesByLocation(string location);
+        List<BusinessProfile> GetBusinessProfilesByLocation(string location);
 
         // stores and profiles based on both search bars - location, search term for product n store
         SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm, string? locationQuery = null);
@@ -23,6 +23,6 @@ namespace mytown.DataAccess.Interfaces
         //Get product sub categories for that searched town or exitsing in that town
         Task<IEnumerable<product_sub_categories>> GetProductSubCategoriesByLocationAsync(string location);
 
-        Task<IEnumerable<businesscategoriescs>> GetBusinessCategoriesByLocationAsync(string location);
+        Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location);
     }
 }

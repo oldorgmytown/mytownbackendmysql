@@ -10,6 +10,8 @@ namespace mytown.DataAccess.Interfaces
 
         Task SendEmailToCourier(int branchId, int shippingDetailId);
 
+        ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);
+
 
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 
 namespace mytown.DataAccess.Repositories
@@ -54,6 +55,12 @@ namespace mytown.DataAccess.Repositories
             on cart.product_id equals product.product_id
                                    join business in _context.BusinessProfiles
                                    on product.BusRegId equals business.BusRegId
+                                   join sku in _context.Sku_ProductVariants
+                                   on product.product_id equals sku.ProductId into skuGroup
+                                   from skuVariant in skuGroup.DefaultIfEmpty()
+                                   join size in _context.Product_Sizes
+                                   on skuVariant.SizeId equals size.SizeId into sizeGroup
+                                   from sizeDetail in sizeGroup.DefaultIfEmpty()
                                    where cart.ShopperRegId == shopperRegId && cart.orderstatus == "cart"
                                    select new CartItemDto
                                    {
@@ -66,10 +73,18 @@ namespace mytown.DataAccess.Repositories
                                        product_subject = product.product_subject,
                                        product_description = product.product_description,
                                        product_image = product.product_image,
-                                       product_cost = product.product_cost ?? 0,
-                                       StoreName = business.BusinessUsername, // Store name
-                                       StoreLocation = business.business_location, // Store location
-                                       StoreId = business.BusRegId
+                                       product_cost =  product.product_cost ?? 0,  // Prefer SKU cost if available
+                                       StoreName = business.BusinessName,
+                                       StoreLocation = business.BusinessLocation,
+                                       StoreId = business.BusRegId,
+
+                                       // ✅ SKU / Variant details
+                                       Color = skuVariant.Color,
+                                       SizeId = skuVariant.SizeId ?? 0,
+                                       SizeName = sizeDetail.SizeName,
+                                       Sku_Cost = skuVariant.Sku_Cost,
+                                       Discount = skuVariant.Discount ?? 0,
+                                       DiscountPrice = skuVariant.DiscountPrice ?? 0
                                    }).ToListAsync();
 
             return cartItems;
@@ -195,5 +210,73 @@ namespace mytown.DataAccess.Repositories
         {
             return await _context.ShopperRegisters.FindAsync(shopperRegId);
         }
+
+        // get product and variant details on cart for shopper
+
+        public async Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId)
+        {
+            var product = await _context.products
+                .Include(p => p.Sku_ProductVariants)
+                    .ThenInclude(v => v.Images)
+                .Include(p => p.Sku_ProductVariants)
+                    .ThenInclude(v => v.Size)
+                .Include(p => p.BusinessRegister)
+                
+                .Include(p => p.ProductType)
+                .Include(p => p.Fabric)
+                .Include(p => p.Design)
+                .FirstOrDefaultAsync(p => p.product_id == productId);
+
+            if (product == null)
+                return null;
+
+            return new ProdcVariantforShopperDto
+            {
+                ProductId = product.product_id,
+                BusRegId = product.BusRegId,
+                BuscatId = product.BuscatId,
+                ProdcatId = product.prod_subcat_id,
+
+                ProductName = product.product_name,
+                ProductDescription = product.product_description,
+                SupplierName = product.supplier_name,
+                ProductTypeId = product.ProductTypeId,
+                FabricId = product.FabricId,
+                DesignId = product.DesignId,
+
+                ProductTypeName = product.ProductType != null ? product.ProductType.prod_type_name : null,
+                FabricName = product.Fabric != null ? product.Fabric.fabric_name : null,
+                DesignName = product.Design != null ? product.Design.design_name : null,
+
+                
+                BusinessName = product.BusinessRegister != null ? product.BusinessRegister.BusinessName : null,
+              
+                //  Variants
+                Variants = product.Sku_ProductVariants.Select(v => new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = v.SkuId,
+                    ProductId = v.ProductId,
+                    Color = v.Color,
+                    SizeId = v.SizeId,
+                    SizeName = v.Size != null ? v.Size.SizeName : null,
+                    Sku_Cost = v.Sku_Cost,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.Quantity,
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        }).ToList()
+                }).ToList()
+            };
+        }
+
     }
 }

@@ -5,6 +5,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services;
+using MyTown.Models;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -125,20 +126,20 @@ namespace mytown.Controllers
                 var newBusiness = new BusinessRegister
                 {
                     BusinessUsername = businessDto.BusinessUsername,
-                    Businessname = businessDto.Businessname,
+                    BusinessName = businessDto.Businessname,
                     LicenseType = businessDto.LicenseType,
                     Gstin = businessDto.Gstin,
-                    BusservId = businessDto.BusservId,
-                    BuscatId = businessDto.BuscatId,
+                    BusServId = businessDto.BusservId,
+                    BusCatId = businessDto.BuscatId,
                     Town = businessDto.Town,
                     BusMobileNo = businessDto.BusMobileNo,
                     BusEmail = businessDto.BusEmail,
                     Address1 = businessDto.Address1,
                     Address2 = businessDto.Address2,
-                    businessCity = businessDto.businessCity,
-                    businessState = businessDto.businessState,
-                    businessCountry = businessDto.businessCountry,
-                    postalCode = businessDto.postalCode,
+                    BusinessCity = businessDto.businessCity,
+                    BusinessState = businessDto.businessState,
+                    BusinessCountry = businessDto.businessCountry,
+                    PostalCode = businessDto.postalCode,
                     Password = hashedPassword,
                     IsEmailVerified = true,
                     Currency = GetCurrencyByCountry(businessDto.businessCountry)
@@ -147,12 +148,12 @@ namespace mytown.Controllers
                 await _businessRepository.RegisterBusiness(newBusiness);
 
                 // adding busprfile id soon after verification
-                var newProfile = new businessprofile
+                var newProfile = new BusinessProfile
                 {
                     BusRegId = newBusiness.BusRegId,
-                    profile_status = "Incomplete",
-                    BusinessUsername = newBusiness.Businessname,                   
-                    business_location = $"{newBusiness.Town}, {newBusiness.businessCity}, {newBusiness.businessState}, {newBusiness.businessCountry}"
+                    ProfileStatus = "Incomplete",
+                    BusinessName = newBusiness.BusinessName,
+                    BusinessLocation = $"{newBusiness.Town}, {newBusiness.BusinessCity}, {newBusiness.BusinessState}, {newBusiness.BusinessCountry}"
                     // CreatedAt = DateTime.UtcNow
                 };
 
@@ -287,14 +288,14 @@ namespace mytown.Controllers
 
 
         [HttpGet("BusinessCategories")]
-        public async Task<ActionResult<IEnumerable<businesscategoriescs>>> GetBusinessCategories()
+        public async Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories()
         {
             var categories = await _businessRepository.GetBusinessCategories();
             return Ok(categories);
         }
 
         [HttpGet("BusinessSubCategoriesforStores")]
-        public async Task<ActionResult<IEnumerable<businesscategoriescs>>> BusinessSubCategoriesforStores(int buscatid)
+        public async Task<ActionResult<IEnumerable<BusinessCategory>>> BusinessSubCategoriesforStores(int buscatid)
         {
             var subcategories = await _businessRepository.BusinessSubCategoriesforStores(buscatid);
             return Ok(subcategories);
