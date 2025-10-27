@@ -50,8 +50,8 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
 
             var matchingSubCategories = _context.product_sub_categories
-                .Where(sc => sc.prod_subcat_name.Contains(productQuery))
-                .Select(sc => sc.prod_subcat_id)
+                .Where(sc => sc.ProdSubcatName.Contains(productQuery))
+                .Select(sc => sc.ProdSubcatId)
                 .ToList();
 
             var productsQuery = _context.products.AsQueryable();
@@ -83,13 +83,13 @@ namespace mytown.DataAccess.Repositories
             if (!string.IsNullOrEmpty(categoryProduct) && categoryProduct != "null")
             {
                 var subCategory = await _context.product_sub_categories
-                    .Where(psc => psc.prod_subcat_name.Contains(categoryProduct))
+                    .Where(psc => psc.ProdSubcatName.Contains(categoryProduct))
                     .FirstOrDefaultAsync();
 
                 if (subCategory != null)
                 {
                     productResults = await _context.products
-                        .Where(p => p.prod_subcat_id == subCategory.prod_subcat_id)
+                        .Where(p => p.prod_subcat_id == subCategory.ProdSubcatId)
                         .ToListAsync();
 
                     busRegIds.AddRange(productResults.Select(p => p.BusRegId).Distinct());
@@ -216,8 +216,8 @@ namespace mytown.DataAccess.Repositories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
-                    .Where(sc => sc.prod_subcat_name.Contains(searchTerm))
-                    .Select(sc => sc.prod_subcat_id);
+                    .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
+                    .Select(sc => sc.ProdSubcatId);
 
                 businessIds = _context.products
                     .Where(p => matchingSubcatIds.Contains(p.prod_subcat_id))
@@ -365,8 +365,8 @@ namespace mytown.DataAccess.Repositories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
-                    .Where(sc => sc.prod_subcat_name.Contains(productSearchTerm))
-                    .Select(sc => sc.prod_subcat_id)
+                    .Where(sc => sc.ProdSubcatName.Contains(productSearchTerm))
+                    .Select(sc => sc.ProdSubcatId)
                     .ToList();
 
                 businessIds = _context.products
@@ -478,7 +478,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public async Task<IEnumerable<product_sub_categories>> GetProductSubCategoriesByLocationAsync(string location)
+        public async Task<IEnumerable<ProductSubCategory>> GetProductSubCategoriesByLocationAsync(string location)
         {
             // Step 1: Get all business profiles matching location
             var busCatIds = await _context.BusinessProfiles
@@ -489,16 +489,16 @@ namespace mytown.DataAccess.Repositories
             .ToListAsync();
 
             if (!busCatIds.Any())
-                return new List<product_sub_categories>();
+                return new List<ProductSubCategory>();
 
             // Step 2: Get all product_sub_categories for those categories
             var subCategories = await _context.product_sub_categories
                 .Where(sc => busCatIds.Contains(sc.BuscatId))
-                .Select(sc => new product_sub_categories
+                .Select(sc => new ProductSubCategory
                 {
-                    prod_subcat_id = sc.prod_subcat_id,
-                    prod_subcat_name = sc.prod_subcat_name,
-                    prod_subcat_image = sc.prod_subcat_image,
+                    ProdSubcatId = sc.ProdSubcatId,
+                    ProdSubcatName = sc.ProdSubcatName,
+                    ProdSubcatImage = sc.ProdSubcatImage,
                     BuscatId = sc.BuscatId
                 })
                 .ToListAsync();

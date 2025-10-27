@@ -23,13 +23,13 @@ namespace mytown.DataAccess
         Task CreateProfile(BusinessProfile profile);
         Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories();
         Task<ActionResult<IEnumerable<BusinessService>>> GetBusinessServices();
-        Task<IEnumerable<product_sub_categories>> BusinessSubCategoriesforStores(int buscatId);
+        Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatId);
        
        
         Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath);
 
       
-        List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId);
+        List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId);
        
         IEnumerable<products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
     }

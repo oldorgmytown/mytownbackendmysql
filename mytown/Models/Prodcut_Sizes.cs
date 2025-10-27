@@ -34,6 +34,6 @@ namespace mytown.Models
         public decimal? Weight { get; set; }
 
         // Navigation property
-        public virtual product_sub_categories SubCategory { get; set; }
+        public virtual ProductSubCategory SubCategory { get; set; }
     }
 }

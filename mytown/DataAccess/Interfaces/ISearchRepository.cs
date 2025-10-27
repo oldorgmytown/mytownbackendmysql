@@ -21,7 +21,7 @@ namespace mytown.DataAccess.Interfaces
         SearchResultDto GetBusinessProfilesAndProductsByProductAndLocation(string productSearchTerm, string locationSearchTerm);
 
         //Get product sub categories for that searched town or exitsing in that town
-        Task<IEnumerable<product_sub_categories>> GetProductSubCategoriesByLocationAsync(string location);
+        Task<IEnumerable<ProductSubCategory>> GetProductSubCategoriesByLocationAsync(string location);
 
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location);
     }

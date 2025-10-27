@@ -20,7 +20,7 @@ namespace mytown.Models
             public DbSet<BusinessProfile> BusinessProfiles { get; set; }//done
             public DbSet<BusinessService> BusinessServices { get; set; } //done
             public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
-            public DbSet<product_sub_categories> product_sub_categories { get; set; }
+            public DbSet<ProductSubCategory> product_sub_categories { get; set; } //done
             public DbSet<services_sub_categories> services_sub_categories { get; set; }
             public DbSet<products> products { get; set; }
             public DbSet<services> services { get; set; }

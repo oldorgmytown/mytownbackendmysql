@@ -260,27 +260,27 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Get all product subcategories
-        public async Task<IEnumerable<product_sub_categories>> GetAllSubCategoriesAsync()
+        public async Task<IEnumerable<ProductSubCategory>> GetAllSubCategoriesAsync()
         {
             return await _context.product_sub_categories.ToListAsync();
         }
         //get categories ofproducts for a businessid
-        public List<product_sub_categories> GetProductSubCategoriesByBusRegId(int busRegId)
+        public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
         {
             var result = (from product in _context.products
                           join subCategory in _context.product_sub_categories
-                          on product.prod_subcat_id equals subCategory.prod_subcat_id
+                          on product.prod_subcat_id equals subCategory.ProdSubcatId
                           join subCatImage in _context.Subcategoryimages_Busregids
-                          on new { product.BusRegId, ProdSubCatId = subCategory.prod_subcat_id }
+                          on new { product.BusRegId, ProdSubCatId = subCategory.ProdSubcatId }
                           equals new { subCatImage.BusRegId, ProdSubCatId = subCatImage.Prod_subcat_id }
                           into subCatImageGroup
                           from subCatImage in subCatImageGroup.DefaultIfEmpty()
                           where product.BusRegId == busRegId
-                          select new product_sub_categories
+                          select new ProductSubCategory
                           {
-                              prod_subcat_id = subCategory.prod_subcat_id,
-                              prod_subcat_name = subCategory.prod_subcat_name,
-                              prod_subcat_image = subCatImage != null ? subCatImage.Prod_subcat_image : null
+                              ProdSubcatId = subCategory.ProdSubcatId,
+                              ProdSubcatName = subCategory.ProdSubcatName,
+                              ProdSubcatImage = subCatImage != null ? subCatImage.Prod_subcat_image : null
                           })
                           .Distinct()
                           .ToList();
