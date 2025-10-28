@@ -213,7 +213,7 @@ namespace mytown.Controllers
                         PhoneNumber = shopperDto.PhoneNumber,
                         PhotoName = shopperDto.PhotoName,
                         IsEmailVerified = true,
-                        status = "Active"
+                        Status = "Active"
                     };
 
                     await _shopperRepository.RegisterShopper(newShopper);

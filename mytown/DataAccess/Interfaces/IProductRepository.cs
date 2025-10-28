@@ -7,13 +7,13 @@ namespace mytown.DataAccess.Interfaces
     public interface IProductRepository
     {
         //latest - add only prod main details----------------------------------------------//
-        Task<products> AddProductAsync(products product);
+        Task<Products> AddProductAsync(Products product);
         Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto);
 
         Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId);
 
         //update product main details
-        Task<products> UpdateProductAsync(int productId, ProductCreateDto dto);
+        Task<Products> UpdateProductAsync(int productId, ProductCreateDto dto);
 
         //Update productvariant
         Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles);

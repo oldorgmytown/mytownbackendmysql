@@ -181,7 +181,7 @@ namespace mytown.DataAccess.Repositories
         {
             var result = await (from shipping in _context.ShippingDetails
                                 join orderDetail in _context.OrderDetails on shipping.OrderDetailId equals orderDetail.OrderDetailId
-                                join product in _context.products on orderDetail.ProductId equals product.product_id
+                                join product in _context.products on orderDetail.ProductId equals product.ProductId
                                 join order in _context.Orders on orderDetail.OrderId equals order.OrderId
                                 join shopper in _context.ShopperRegisters on order.ShopperRegId equals shopper.ShopperRegId
                                 join store in _context.BusinessRegisters on orderDetail.StoreId equals store.BusRegId
@@ -195,10 +195,10 @@ namespace mytown.DataAccess.Repositories
                                     CustomerPhoneNumber = shopper.PhoneNumber,
                                     ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
                                     StoreName = store.BusinessName,
-                                    ProductName = product.product_name,
-                                    ProductWeight = product.product_weight??0,
+                                    ProductName = product.ProductName,
+                                   // ProductWeight = product.product_weight??0,
                                     Quantity = orderDetail.Quantity,
-                                    ShippingType = shipping.Shipping_type,
+                                    ShippingType = shipping.ShippingType,
                                     ShippingStatus = shipping.ShippingStatus,
                                     Cost = shipping.Cost,
                                     TrackingId = shipping.TrackingId,

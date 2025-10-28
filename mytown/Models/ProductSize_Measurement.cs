@@ -34,7 +34,7 @@ namespace mytown.Models
 
             // Navigation property (link back to Sizes table)
             [ForeignKey("SizeId")]
-            public virtual Product_Sizes? Size { get; set; }
+            public virtual ProductSize? Size { get; set; }
         }
     
 }

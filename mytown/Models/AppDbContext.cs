@@ -22,70 +22,53 @@ namespace mytown.Models
             public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
             public DbSet<ProductSubCategory> product_sub_categories { get; set; } //done
             public DbSet<services_sub_categories> services_sub_categories { get; set; }
-            public DbSet<products> products { get; set; }
-            public DbSet<services> services { get; set; }
-            public DbSet<ShopperRegister> ShopperRegisters { get; set; }
-           public DbSet<ShopperVerification> ShopperVerification { get; set; }
+            public DbSet<Products> products { get; set; } //done
+            public DbSet<Service> services { get; set; }
+            public DbSet<ShopperRegister> ShopperRegisters { get; set; } //done
+           public DbSet<ShopperVerification> ShopperVerification { get; set; } //done
             public DbSet<subcategoryimages_busregid> Subcategoryimages_Busregids { get; set; }
             public IEnumerable<object> businessprofile { get; internal set; }
 
-            public DbSet<addtocart> addtocart { get; set; }
-            public DbSet<Order> Orders { get; set; }
+            public DbSet<AddToCart> addtocart { get; set; } //done
+            public DbSet<Order> Orders { get; set; } //done
 
-            public DbSet<orderdetails> OrderDetails { get; set; }
-            public DbSet<Payments> Payments { get; set; }
+            public DbSet<orderdetails> OrderDetails { get; set; } //done
+            public DbSet<Payments> Payments { get; set; } //done
             public DbSet<PendingVerification> PendingVerifications{ get; set; }
             public DbSet<PendingBusinessVerification> PendingBusinessVerifications { get; set; }//done
-            public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
-            public DbSet<ShippingDetails> ShippingDetails { get; set; }
-            public DbSet<CourierService> CourierService { get; set; }
+            public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } //done
+            public DbSet<ShippingDetails> ShippingDetails { get; set; } //done
+            public DbSet<CourierService> CourierService { get; set; } //DONE
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
-            public DbSet<CourierBranch> CourierBranches { get; set; }
+            public DbSet<CourierBranch> CourierBranches { get; set; } //DONE
 
-            public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; }
-            public DbSet<ProductImage> ProductImages { get; set; }
+            public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; } //done
+            public DbSet<ProductImage> ProductImages { get; set; } //done
 
-            public DbSet<ProductType> Product_Types { get; set; }
-            public DbSet<Fabric> Fabrics { get; set; }
-            public DbSet<Design> Designs { get; set; }
-            public DbSet<Product_Sizes> Product_Sizes { get; set; }
-            public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; }
+            public DbSet<ProductType> Product_Types { get; set; } //done
+            public DbSet<Fabric> Fabrics { get; set; } //done
+            public DbSet<Design> Designs { get; set; } //done
+            public DbSet<ProductSize> ProductSizes { get; set; } //done
+            public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; } //done
             //  public DbSet<ProductImage> ProductImages { get; set; }
 
             public DbSet<ProductSize_Measurement> ProductSize_Measurements { get; set; }
 
-            public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; }
+            public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; } //done
 
-            public DbSet<AdminComment> AdminComments { get; set; }
+            public DbSet<AdminComment> AdminComments { get; set; } //done
 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
                 base.OnModelCreating(modelBuilder);
 
-                // Define precision and scale for the decimal fields in the products table
-                modelBuilder.Entity<products>(entity =>
-                {
-                    entity.Property(e => e.product_cost)
-                          .HasPrecision(18, 2);  // precision = 18, scale = 2
-
-                    entity.Property(e => e.product_length)
-                          .HasPrecision(18, 2);
-
-                    entity.Property(e => e.product_width)
-                          .HasPrecision(18, 2);
-
-                    entity.Property(e => e.product_weight)
-                          .HasPrecision(18, 2);
-
-                    entity.Property(e => e.product_quantity)
-                          .HasPrecision(18, 2);
-                });
+               
 
                 // Optionally, you can add similar configuration for other models
-                modelBuilder.Entity<services>(entity =>
+                modelBuilder.Entity<Service>(entity =>
                 {
-                    entity.Property(e => e.service_cost)
+                    entity.Property(e => e.ServiceCost)
                           .HasPrecision(18, 2); // Define precision for service_cost
                 });
                 modelBuilder.Entity<subcategoryimages_busregid>().ToTable("subcategoryimages_Busregids");

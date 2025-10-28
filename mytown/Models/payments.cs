@@ -4,26 +4,33 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
+    [Table("payments")]
     public class Payments
     {
         [Key]
-        public int PaymentId { get; set; } // Primary Key
+        [Column("payment_id")]
+        public int PaymentId { get; set; }
 
         [Required]
-        public int OrderId { get; set; } // Foreign Key - Orders
+        [Column("order_id")]
+        public int OrderId { get; set; }
 
-        [ForeignKey("OrderId")]
+        [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; }
 
         [Required]
-        public decimal AmountPaid { get; set; } // Amount Paid
+        [Column("amount_paid")]
+        public decimal AmountPaid { get; set; }
 
         [Required]
-        public string PaymentMethod { get; set; } // Payment Type (Card, UPI, etc.)
+        [Column("payment_method")]
+        public string PaymentMethod { get; set; }
 
-        public string PaymentStatus { get; set; } // Pending, Completed
+        [Column("payment_status")]
+        public string PaymentStatus { get; set; }
 
-        public DateTime PaymentDate { get; set; } // Date of Payment
+        [Column("payment_date")]
+        public DateTime PaymentDate { get; set; }
     }
 
 }

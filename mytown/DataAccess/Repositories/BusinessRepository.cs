@@ -129,7 +129,7 @@ namespace mytown.DataAccess.Repositories
         {
             var result = (from product in _context.products
                           join subCategory in _context.product_sub_categories
-                          on product.prod_subcat_id equals subCategory.ProdSubcatId
+                          on product.ProdSubcatId equals subCategory.ProdSubcatId
                           join subCatImage in _context.Subcategoryimages_Busregids
                           on new { product.BusRegId, ProdSubCatId = subCategory.ProdSubcatId }
                           equals new { subCatImage.BusRegId, ProdSubCatId = subCatImage.Prod_subcat_id }
@@ -155,10 +155,10 @@ namespace mytown.DataAccess.Repositories
 
      
         //get products for selected category
-        public IEnumerable<products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
+        public IEnumerable<Products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
         {
             return _context.products
-                           .Where(p => p.BusRegId == busRegId && p.prod_subcat_id == prodSubcatId)
+                           .Where(p => p.BusRegId == busRegId && p.ProdSubcatId == prodSubcatId)
                            .ToList();
         }
     }

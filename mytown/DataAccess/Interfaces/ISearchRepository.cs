@@ -6,7 +6,7 @@ namespace mytown.DataAccess.Interfaces
     public interface ISearchRepository
     {
         // Get list of products based on location and category/subcategory/product search
-        List<products> SearchBusinessesWithProducts(string locationQuery, string productQuery);
+        List<Products> SearchBusinessesWithProducts(string locationQuery, string productQuery);
 
         // Search for businesses by location and category/product
         Task<List<BusinessProfile>> SearchBusinessesAsync(string location, string categoryProduct);

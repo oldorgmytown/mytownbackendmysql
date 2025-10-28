@@ -29,7 +29,7 @@ namespace mytown.DataAccess.Repositories
             if (!cartItems.Any())
                 return 0;
 
-            decimal totalAmount = cartItems.Sum(c => c.product_price * c.prod_qty);
+            decimal totalAmount = cartItems.Sum(c => c.ProductPrice * c.ProdQty);
 
             var newOrder = new Order
             {
@@ -50,10 +50,10 @@ namespace mytown.DataAccess.Repositories
                 var orderDetail = new orderdetails
                 {
                     OrderId = newOrder.OrderId,
-                    ProductId = item.product_id,
+                    ProductId = item.ProductId,
                     StoreId = item.BusRegId,
-                    Quantity = item.prod_qty,
-                    Price = item.product_price
+                    Quantity = item.ProdQty,
+                    Price = item.ProductPrice
                 };
                 orderDetailsList.Add(orderDetail);
             }
@@ -78,7 +78,7 @@ namespace mytown.DataAccess.Repositories
                         OrderId = newOrder.OrderId,
                         OrderDetailId = orderDetail.OrderDetailId,
                         BranchId = shippingSelection.BranchId,
-                        Shipping_type = shippingSelection.ShippingType,
+                        ShippingType = shippingSelection.ShippingType,
                         EstimatedDays = 5, // can be dynamic later
                         Cost = shippingSelection.Cost,
                         TrackingId = "",
@@ -118,7 +118,7 @@ namespace mytown.DataAccess.Repositories
             // Step 1: Get all cart items for this shopper
             var cartItems = await (from cart in _context.addtocart
                                    join sku in _context.Sku_ProductVariants
-                                   on cart.sku_id equals sku.SkuId
+                                   on cart.SkuId equals sku.SkuId
                                    where cart.ShopperRegId == shopperRegId && cart.orderstatus == "Cart"
                                    select new
                                    {
@@ -130,7 +130,7 @@ namespace mytown.DataAccess.Repositories
                 return 0;
 
             // Step 2: Calculate total order amount based on SKU cost
-            decimal totalAmount = cartItems.Sum(c => (c.sku.Sku_Cost) * c.cart.prod_qty);
+            decimal totalAmount = cartItems.Sum(c => (c.sku.Sku_Cost) * c.cart.ProdQty);
 
             // Step 3: Create a new order
             var newOrder = new Order
@@ -149,10 +149,10 @@ namespace mytown.DataAccess.Repositories
             List<orderdetails> orderDetailsList = cartItems.Select(item => new orderdetails
             {
                 OrderId = newOrder.OrderId,
-                ProductId = item.cart.product_id,
-                sku_id = item.cart.sku_id,        // Include SKU ID
+                ProductId = item.cart.ProductId,
+                SkuId = item.cart.SkuId,        // Include SKU ID
                 StoreId = item.cart.BusRegId,
-                Quantity = item.cart.prod_qty,
+                Quantity = item.cart.ProdQty ,
                 Price = item.sku.Sku_Cost    //  Use SKU cost
             }).ToList();
 
@@ -185,7 +185,7 @@ namespace mytown.DataAccess.Repositories
                     OrderId = orderId,
                     OrderDetailId = orderDetail.OrderDetailId,
                     BranchId = shippingSelection.BranchId,
-                    Shipping_type = shippingSelection.ShippingType,
+                    ShippingType = shippingSelection.ShippingType,
                     EstimatedDays = 5,
                     Cost = shippingSelection.Cost,
                     TrackingId = "",

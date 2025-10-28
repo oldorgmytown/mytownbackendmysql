@@ -22,7 +22,7 @@ namespace mytown.Controllers
         }
 
         [HttpPost("add-to-cart")]
-        public async Task<IActionResult> AddToCart([FromBody] addtocart cartItem)
+        public async Task<IActionResult> AddToCart([FromBody] AddToCart cartItem)
         {
             if (cartItem == null)
                 return BadRequest("Invalid request data");

@@ -8,7 +8,7 @@ namespace mytown.DataAccess.Interfaces
     {
         Task<List<busprofilepreview>> GetBusinessProfilesByBusRegIdAsync(int busRegId);
 
-        IEnumerable<products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
+        IEnumerable<Products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
 
         Task<BusinessProfile> AddBusinessProfileAsync(BusinessProfile businessProfile);
 

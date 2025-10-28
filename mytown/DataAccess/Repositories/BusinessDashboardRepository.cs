@@ -55,7 +55,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var query = from od in _context.OrderDetails
                     join o in _context.Orders on od.OrderId equals o.OrderId
                     join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
-                    join p in _context.products on od.ProductId equals p.product_id
+                    join p in _context.products on od.ProductId equals p.ProductId
                     join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
                     from payment in payJoin.DefaultIfEmpty()
                     join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
@@ -68,8 +68,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                         OrderDate = o.OrderDate,
                         CustomerName = s.Username,
                         ShopperId = s.ShopperRegId,
-                        ProductId = p.product_id,
-                        ProductName = p.product_name,
+                        ProductId = p.ProductId,
+                        ProductName = p.ProductName,
                         Quantity = od.Quantity,
                         Amount = od.Quantity * od.Price,
                         PaymentStatus = payment != null ? payment.PaymentStatus : "Unpaid",
@@ -79,7 +79,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                         City = s.City,
                         State = s.State,
                         Country = s.Country,
-                        DeliveryType = shipping != null ? shipping.Shipping_type : "Standard",
+                        DeliveryType = shipping != null ? shipping.ShippingType : "Standard",
                         ShippingStatus = shipping != null ? shipping.ShippingStatus : "Not Shipped"
                     };
 
@@ -109,7 +109,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var rawQuery = from od in _context.OrderDetails
                        join o in _context.Orders on od.OrderId equals o.OrderId
                        join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
-                       join p in _context.products on od.ProductId equals p.product_id
+                       join p in _context.products on od.ProductId equals p.ProductId
                        join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
                        from payment in payJoin.DefaultIfEmpty()
                        join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
@@ -122,8 +122,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                            OrderDate = o.OrderDate,
                            CustomerName = s.Username,
                            ShopperId = s.ShopperRegId,
-                           ProductId = p.product_id,
-                           ProductName = p.product_name,
+                           ProductId = p.ProductId,
+                           ProductName = p.ProductName,
                            Quantity = od.Quantity,
                            Amount = od.Quantity * od.Price,
                            PaymentStatus = payment != null ? payment.PaymentStatus : "Unpaid",
@@ -133,7 +133,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                            City = s.City,
                            State = s.State,
                            Country = s.Country,
-                           DeliveryType = shipping != null ? shipping.Shipping_type : "Standard",
+                           DeliveryType = shipping != null ? shipping.ShippingType : "Standard",
                            ShippingStatus = shipping != null ? shipping.ShippingStatus : "Not Shipped",
 
                        };
@@ -260,60 +260,60 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
 
     // show products tab data
-    public async Task<List<ProductDto>> GetProductsWithPurchasedCountAsync(int busRegId, string searchText = null, string sortBy = "id", string sortDirection = "asc", int page = 1, int pageSize = 10)
-    {
-        var query = from p in _context.products
-                    where p.BusRegId == busRegId
-                    // Left join orderdetails on product id and store id
-                    join od in _context.OrderDetails.Where(od => od.StoreId == busRegId)
-                        on p.product_id equals od.ProductId into odGroup
-                    select new
-                    {
-                        Product = p,
-                        PurchasedCount = odGroup.Sum(x => (int?)x.Quantity) ?? 0
-                    };
+    //public async Task<List<ProductDto>> GetProductsWithPurchasedCountAsync(int busRegId, string searchText = null, string sortBy = "id", string sortDirection = "asc", int page = 1, int pageSize = 10)
+    //{
+    //    var query = from p in _context.products
+    //                where p.BusRegId == busRegId
+    //                // Left join orderdetails on product id and store id
+    //                join od in _context.OrderDetails.Where(od => od.StoreId == busRegId)
+    //                    on p.ProductId equals od.ProductId into odGroup
+    //                select new
+    //                {
+    //                    Product = p,
+    //                    PurchasedCount = odGroup.Sum(x => (int?)x.Quantity) ?? 0
+    //                };
 
-        // Apply search filter
-        if (!string.IsNullOrEmpty(searchText))
-        {
-            query = query.Where(x =>
-                x.Product.product_name.Contains(searchText) ||
-                x.Product.product_subject.Contains(searchText) ||
-                x.Product.product_id.ToString().Contains(searchText)
-            );
-        }
+    //    // Apply search filter
+    //    if (!string.IsNullOrEmpty(searchText))
+    //    {
+    //        query = query.Where(x =>
+    //            x.Product.product_name.Contains(searchText) ||
+    //            x.Product.product_subject.Contains(searchText) ||
+    //            x.Product.product_id.ToString().Contains(searchText)
+    //        );
+    //    }
 
-        // Sorting
-        bool isAsc = sortDirection.ToLower() == "asc";
-        query = sortBy?.ToLower() switch
-        {
-            "price" => isAsc ? query.OrderBy(x => x.Product.product_cost) : query.OrderByDescending(x => x.Product.product_cost),
-            "quantity" => isAsc ? query.OrderBy(x => x.Product.product_quantity) : query.OrderByDescending(x => x.Product.product_quantity),
-            "purchasedcount" => isAsc ? query.OrderBy(x => x.PurchasedCount) : query.OrderByDescending(x => x.PurchasedCount),
-            "name" => isAsc ? query.OrderBy(x => x.Product.product_name) : query.OrderByDescending(x => x.Product.product_name),
-            "id" => isAsc ? query.OrderBy(x => x.Product.product_id) : query.OrderByDescending(x => x.Product.product_id),
-            _ => query.OrderBy(x => x.Product.product_id)
-        };
+    //    // Sorting
+    //    bool isAsc = sortDirection.ToLower() == "asc";
+    //    query = sortBy?.ToLower() switch
+    //    {
+    //        "price" => isAsc ? query.OrderBy(x => x.Product.product_cost) : query.OrderByDescending(x => x.Product.product_cost),
+    //        "quantity" => isAsc ? query.OrderBy(x => x.Product.product_quantity) : query.OrderByDescending(x => x.Product.product_quantity),
+    //        "purchasedcount" => isAsc ? query.OrderBy(x => x.PurchasedCount) : query.OrderByDescending(x => x.PurchasedCount),
+    //        "name" => isAsc ? query.OrderBy(x => x.Product.product_name) : query.OrderByDescending(x => x.Product.product_name),
+    //        "id" => isAsc ? query.OrderBy(x => x.Product.product_id) : query.OrderByDescending(x => x.Product.product_id),
+    //        _ => query.OrderBy(x => x.Product.product_id)
+    //    };
 
-        // Pagination
-        int skip = (page - 1) * pageSize;
-        query = query.Skip(skip).Take(pageSize);
+    //    // Pagination
+    //    int skip = (page - 1) * pageSize;
+    //    query = query.Skip(skip).Take(pageSize);
 
-        // Project to DTO
-        var result = await query.Select(x => new ProductDto
-        {
-            ProductId = x.Product.product_id,
-            ProductType = x.Product.prod_subcat_id,
-            ProductName = x.Product.product_name,
-            ProductAmount = x.Product.product_cost??0,
-            Quantity = x.Product.product_quantity??0,
-            PurchasedCount = x.PurchasedCount,
-            ProductImage = x.Product.product_image,
-            // You can add Rating & Review here if you have that data
-        }).ToListAsync();
+    //    // Project to DTO
+    //    var result = await query.Select(x => new ProductDto
+    //    {
+    //        ProductId = x.Product.product_id,
+    //        ProductType = x.Product.prod_subcat_id,
+    //        ProductName = x.Product.product_name,
+    //        ProductAmount = x.Product.product_cost??0,
+    //        Quantity = x.Product.product_quantity??0,
+    //        PurchasedCount = x.PurchasedCount,
+    //        ProductImage = x.Product.product_image,
+    //        // You can add Rating & Review here if you have that data
+    //    }).ToListAsync();
 
-        return result;
-    }
+    //    return result;
+    //}
 
     //Show customer data analtics
 

@@ -388,7 +388,7 @@ namespace mytown.DataAccess.Repositories
             if (shopper == null)
                 return false;
 
-            shopper.status = newStatus;
+            shopper.Status = newStatus;
             await _context.SaveChangesAsync();
             return true;
         }

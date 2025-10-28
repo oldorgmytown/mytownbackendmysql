@@ -19,10 +19,10 @@ namespace mytown.DataAccess.Repositories
         }
 
         // API to get list of products based on location and category, subcategory and product search
-        public List<products> SearchBusinessesWithProducts(string locationQuery, string productQuery)
+        public List<Products> SearchBusinessesWithProducts(string locationQuery, string productQuery)
         {
             if (string.IsNullOrEmpty(productQuery))
-                return new List<products>();
+                return new List<Products>();
 
             List<int> filteredBusinesses = new List<int>();
 
@@ -41,7 +41,7 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
 
                 if (!filteredBusinesses.Any())
-                    return new List<products>();
+                    return new List<Products>();
             }
 
             var matchingCategories = _context.BusinessCategories
@@ -63,10 +63,10 @@ namespace mytown.DataAccess.Repositories
 
             productsQuery = productsQuery.Where(p =>
                 matchingCategories.Contains(p.BuscatId) ||
-                matchingSubCategories.Contains(p.prod_subcat_id) ||
-                p.product_name.Contains(productQuery) ||
-                p.product_subject.Contains(productQuery) ||
-                p.product_description.Contains(productQuery)
+                matchingSubCategories.Contains(p.ProdSubcatId) ||
+                p.ProductName.Contains(productQuery) ||
+                p.ProductSubject.Contains(productQuery) ||
+                p.ProductDescription.Contains(productQuery)
             );
 
             return productsQuery.ToList();
@@ -75,7 +75,7 @@ namespace mytown.DataAccess.Repositories
         // Search from location and product/category and get the matching store  details
         public async Task<List<BusinessProfile>> SearchBusinessesAsync(string location, string categoryProduct)
         {
-            var productResults = new List<products>();
+            var productResults = new List<Products>();
             var busRegIds = new List<int>();
             var businessesByLocation = new List<BusinessRegister>();
             var businessesByCategoryProduct = new List<BusinessRegister>();
@@ -89,7 +89,7 @@ namespace mytown.DataAccess.Repositories
                 if (subCategory != null)
                 {
                     productResults = await _context.products
-                        .Where(p => p.prod_subcat_id == subCategory.ProdSubcatId)
+                        .Where(p => p.ProdSubcatId == subCategory.ProdSubcatId)
                         .ToListAsync();
 
                     busRegIds.AddRange(productResults.Select(p => p.BusRegId).Distinct());
@@ -111,9 +111,9 @@ namespace mytown.DataAccess.Repositories
                     else
                     {
                         productResults = await _context.products
-                            .Where(p => p.product_name.Contains(categoryProduct) ||
-                                        p.product_subject.Contains(categoryProduct) ||
-                                        p.product_description.Contains(categoryProduct))
+                            .Where(p => p.ProductName.Contains(categoryProduct) ||
+                                        p.ProductSubject.Contains(categoryProduct) ||
+                                        p.ProductDescription.Contains(categoryProduct))
                             .ToListAsync();
 
                         busRegIds.AddRange(productResults.Select(p => p.BusRegId).Distinct());
@@ -185,7 +185,7 @@ namespace mytown.DataAccess.Repositories
         {
             BusinessProfile = bp,
             TotalPurchases = (from o in _context.OrderDetails
-                              join pr in _context.products on o.ProductId equals pr.product_id
+                              join pr in _context.products on o.ProductId equals pr.ProductId
                               where pr.BusRegId == bp.BusRegId
                               select (int?)o.Quantity).Sum() ?? 0
         };
@@ -220,7 +220,7 @@ namespace mytown.DataAccess.Repositories
                     .Select(sc => sc.ProdSubcatId);
 
                 businessIds = _context.products
-                    .Where(p => matchingSubcatIds.Contains(p.prod_subcat_id))
+                    .Where(p => matchingSubcatIds.Contains(p.ProdSubcatId))
                     .Select(p => p.BusRegId)
                     .Distinct();
             }
@@ -230,9 +230,9 @@ namespace mytown.DataAccess.Repositories
             {
                 businessIds = _context.products
                     .Where(p =>
-                        p.product_name.Contains(searchTerm) ||
-                        p.product_subject.Contains(searchTerm) ||
-                        p.product_description.Contains(searchTerm))
+                        p.ProductName.Contains(searchTerm) ||
+                        p.ProductSubject.Contains(searchTerm) ||
+                        p.ProductDescription.Contains(searchTerm))
                     .Select(p => p.BusRegId)
                     .Distinct();
             }
@@ -275,9 +275,9 @@ namespace mytown.DataAccess.Repositories
             // 7️⃣ Fetch products (filtered by businessIds)
             var products = _context.products
                 .Where(p => businessIdList.Contains(p.BusRegId) &&
-                    (p.product_name.Contains(searchTerm) ||
-                     p.product_subject.Contains(searchTerm) ||
-                     p.product_description.Contains(searchTerm) ||
+                    (p.ProductName.Contains(searchTerm) ||
+                     p.ProductSubject.Contains(searchTerm) ||
+                     p.ProductDescription.Contains(searchTerm) ||
                      p.Sku_ProductVariants.Any(v =>
                          v.Color.Contains(searchTerm) ||
                          (v.Size != null && v.Size.SizeName.Contains(searchTerm)))))
@@ -285,16 +285,16 @@ namespace mytown.DataAccess.Repositories
                     .ThenInclude(v => v.Images)
                 .Select(p => new ProdcVariantforShopperDto
                 {
-                    ProductId = p.product_id,
+                    ProductId = p.ProductId,
                     BusRegId = p.BusRegId,
                     BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
                   //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
-                    ProdcatId = p.prod_subcat_id,
-                  //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
-                    ProductName = p.product_name,
-                    ProductDescription = p.product_description,
-                    SupplierName = p.supplier_name,
+                    ProdcatId = p.ProdSubcatId,
+                    //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+                    SupplierName = p.SupplierName,
 
                     Variants = p.Sku_ProductVariants
                         .Select(v => new Sku_ProductVariantDto
@@ -370,7 +370,7 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
 
                 businessIds = _context.products
-                    .Where(p => matchingSubcatIds.Contains(p.prod_subcat_id))
+                    .Where(p => matchingSubcatIds.Contains(p.ProdSubcatId))
                     .Select(p => p.BusRegId)
                     .Distinct()
                     .ToList();
@@ -381,9 +381,9 @@ namespace mytown.DataAccess.Repositories
             {
                 businessIds = _context.products
                     .Where(p =>
-                        p.product_name.Contains(productSearchTerm) ||
-                        p.product_subject.Contains(productSearchTerm) ||
-                        p.product_description.Contains(productSearchTerm))
+                        p.ProductName.Contains(productSearchTerm) ||
+                        p.ProductSubject.Contains(productSearchTerm) ||
+                        p.ProductDescription.Contains(productSearchTerm))
                     .Select(p => p.BusRegId)
                     .Distinct()
                     .ToList();
@@ -407,9 +407,9 @@ namespace mytown.DataAccess.Repositories
             // 6. Get matching products
             var products = _context.products
                 .Where(p => finalBusinessIds.Contains(p.BusRegId) &&
-                    (p.product_name.Contains(productSearchTerm) ||
-                     p.product_subject.Contains(productSearchTerm) ||
-                     p.product_description.Contains(productSearchTerm) ||
+                    (p.ProductName.Contains(productSearchTerm) ||
+                     p.ProductSubject.Contains(productSearchTerm) ||
+                     p.ProductDescription.Contains(productSearchTerm) ||
                      p.Sku_ProductVariants.Any(v =>
                          v.Color.Contains(productSearchTerm) ||
                          (v.Size != null && v.Size.SizeName.Contains(productSearchTerm)))))
@@ -417,16 +417,16 @@ namespace mytown.DataAccess.Repositories
                     .ThenInclude(v => v.Images)
                 .Select(p => new ProdcVariantforShopperDto
                 {
-                    ProductId = p.product_id,
+                    ProductId = p.ProductId,
                     BusRegId = p.BusRegId,
                     BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
                     //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
-                    ProdcatId = p.prod_subcat_id,
+                    ProdcatId = p.ProdSubcatId,
                     //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
-                    ProductName = p.product_name,
-                    ProductDescription = p.product_description,
-                    SupplierName = p.supplier_name,
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductName,
+                    SupplierName = p.SupplierName,
 
                     Variants = p.Sku_ProductVariants
                         .Select(v => new Sku_ProductVariantDto
@@ -571,9 +571,9 @@ namespace mytown.DataAccess.Repositories
 
             var products = _context.products
                .Where(p => locationBusinessIds.Contains(p.BusRegId) &&
-                   (p.product_name.Contains(searchTerm) ||
-                    p.product_subject.Contains(searchTerm) ||
-                    p.product_description.Contains(searchTerm) ||
+                   (p.ProductName.Contains(searchTerm) ||
+                    p.ProductSubject.Contains(searchTerm) ||
+                    p.ProductDescription.Contains(searchTerm) ||
                     p.Sku_ProductVariants.Any(v =>
                         v.Color.Contains(searchTerm) ||
                         (v.Size != null && v.Size.SizeName.Contains(searchTerm)))))
@@ -581,16 +581,16 @@ namespace mytown.DataAccess.Repositories
                    .ThenInclude(v => v.Images)
                .Select(p => new ProdcVariantforShopperDto
                {
-                   ProductId = p.product_id,
+                   ProductId = p.ProductId,
                    BusRegId = p.BusRegId,
                    BusinessName = p.BusinessRegister.BusinessName,
                    BuscatId = p.BuscatId,
                    //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
-                   ProdcatId = p.prod_subcat_id,
+                   ProdcatId = p.ProdSubcatId,
                    //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
-                   ProductName = p.product_name,
-                   ProductDescription = p.product_description,
-                   SupplierName = p.supplier_name,
+                   ProductName = p.ProductName,
+                   ProductDescription = p.ProductDescription,
+                   SupplierName = p.SupplierName,
 
                    Variants = p.Sku_ProductVariants
                        .Select(v => new Sku_ProductVariantDto

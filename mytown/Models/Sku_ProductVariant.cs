@@ -59,13 +59,13 @@ namespace mytown.Models
 
         // Navigation properties
         [JsonIgnore]
-        public virtual products Product { get; set; }
+        public virtual Products Product { get; set; }
 
         public virtual ICollection<ProductImage>? Images { get; set; } = new List<ProductImage>();
 
 
         [ForeignKey("SizeId")]
-        public virtual Product_Sizes Size { get; set; }
+        public virtual ProductSize Size { get; set; }
     }
 }
 

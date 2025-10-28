@@ -146,10 +146,10 @@ namespace mytown.DataAccess.Repositories
             var shopper = await _context.ShopperRegisters
         .FirstOrDefaultAsync(s => s.Email.ToLower() == email.ToLower());
 
-            if (shopper == null || shopper.status == "Deactivated")
+            if (shopper == null || shopper.Status == "Deactivated")
                 return (false, null); // Treat as new
 
-            if (shopper.status == "Blocked")
+            if (shopper.Status == "Blocked")
                 return (true, "This email is blocked. Please contact support.");
 
             return (true, null); 
@@ -237,22 +237,22 @@ namespace mytown.DataAccess.Repositories
                     .ThenInclude(p => p.Design)
                 .Select(v => new ProdcVariantforShopperDto
                 {
-                    ProductId = v.Product.product_id,
+                    ProductId = v.Product.ProductId,
                     BusRegId = v.Product.BusRegId,
                     BusinessName = v.Product.BusinessRegister.BusinessName,
                     BuscatId = v.Product.BuscatId,
                   //  BuscatName = v.Product.BusinessRegister.BusinessCategoryName, // if you have it
-                    ProdcatId = v.Product.prod_subcat_id,
-                 //   ProdcatName = v.Product.ProductSubCategoryName, // if you have it
+                    ProdcatId = v.Product.ProdSubcatId,
+                    //   ProdcatName = v.Product.ProductSubCategoryName, // if you have it
                     ProductTypeId = v.Product.ProductTypeId,
-                    ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.prod_type_name : null,
+                    ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,
                     FabricId = v.Product.FabricId,
-                    FabricName = v.Product.Fabric != null ? v.Product.Fabric.fabric_name : null,
+                    FabricName = v.Product.Fabric != null ? v.Product.Fabric.FabricName : null,
                     DesignId = v.Product.DesignId,
-                    DesignName = v.Product.Design != null ? v.Product.Design.design_name : null,
-                    ProductName = v.Product.product_name,
-                    ProductDescription = v.Product.product_description,
-                    SupplierName = v.Product.supplier_name,
+                    DesignName = v.Product.Design != null ? v.Product.Design.DesignName : null,
+                    ProductName = v.Product.ProductName,
+                    ProductDescription = v.Product.ProductDescription,
+                    SupplierName = v.Product.SupplierName,
 
                     Variants = v.Product.Sku_ProductVariants.Select(s => new Sku_ProductVariantDto
                     {

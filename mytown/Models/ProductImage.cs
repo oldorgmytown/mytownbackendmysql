@@ -21,7 +21,7 @@ namespace mytown.Models
 
         public int SortOrder { get; set; }
 
-        public virtual products Product { get; set; }
+        public virtual Products Product { get; set; }
         public virtual Sku_ProductVariant? ProductVariant { get; set; }
     }
         

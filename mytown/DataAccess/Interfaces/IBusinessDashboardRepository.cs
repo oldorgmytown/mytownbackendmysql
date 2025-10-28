@@ -9,13 +9,13 @@ namespace mytown.DataAccess.Interfaces
         Task<List<BusinessDashboardDto>> GetStoreOrdersReport(int storeId);
         Task<LocationStatsDto> GetLocationCountsByStoreIdAsync(int storeId);
 
-        Task<List<ProductDto>> GetProductsWithPurchasedCountAsync(
-         int busRegId,
-         string searchText = null,
-         string sortBy = "id",
-         string sortDirection = "asc",
-         int page = 1,
-         int pageSize = 10);
+         //Task<List<ProductDto>> GetProductsWithPurchasedCountAsync(
+         //int busRegId,
+         //string searchText = null,
+         //string sortBy = "id",
+         //string sortDirection = "asc",
+         //int page = 1,
+         //int pageSize = 10);
 
         Task<CustomerAnalyticsDto> GetCustomerAnalyticsAsync(
          int storeId,

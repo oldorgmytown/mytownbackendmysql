@@ -7,7 +7,7 @@
         public IEnumerable<ProductType> ProductTypes { get; set; }
         public IEnumerable<Fabric> Fabrics { get; set; }
         public IEnumerable<Design> Designs { get; set; }
-        public List<Product_Sizes> Sizes { get; set; }
+        public List<ProductSize> Sizes { get; set; }
     }
 
 }

@@ -31,6 +31,6 @@ namespace mytown.DataAccess
       
         List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId);
        
-        IEnumerable<products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
+        IEnumerable<Products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
     }
 }

@@ -3,23 +3,29 @@ using System.ComponentModel.DataAnnotations;
 
 namespace mytown.Models
 {
+    [Table("shopper_product_recent_view")]
     public class ShopperProductRecentView
     {
         [Key]
-        public int RecentViewId { get; set; }
+        [Column("recent_view_id")]
+        public int RecentViewId { get; set; }  // Primary Key
 
         [ForeignKey("Shopper")]
-        public int ShopperId { get; set; }   // which shopper viewed
+        [Column("shopper_id")]
+        public int ShopperId { get; set; }     // Shopper who viewed
 
         [ForeignKey("Product")]
-        public int ProductId { get; set; }   // which product was viewed
+        [Column("product_id")]
+        public int ProductId { get; set; }     // Product viewed
 
-        public DateTime LastViewedAt { get; set; } = DateTime.UtcNow; // last viewed time
+        [Column("last_viewed_at")]
+        public DateTime LastViewedAt { get; set; } = DateTime.UtcNow; // Last viewed time
 
-        public int ViewCount { get; set; } = 1; // optional (track number of times viewed)
+        [Column("view_count")]
+        public int ViewCount { get; set; } = 1; // Number of times viewed
 
         // Navigation Properties
         public virtual ShopperRegister Shopper { get; set; }
-        public virtual products Product { get; set; }
+        public virtual Products Product { get; set; }
     }
 }

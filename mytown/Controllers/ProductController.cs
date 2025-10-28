@@ -29,22 +29,22 @@ namespace MyTown.Controllers
         [HttpPost("Add_Product")]
         public async Task<IActionResult> AddProduct([FromBody] ProductCreateDto dto)
         {
-            var entity = new products
+            var entity = new Products
             {
                 BusRegId = dto.BusRegId,
                 BuscatId = dto.BuscatId,
-                prod_subcat_id = dto.ProdSubcatId,
-                product_name = dto.ProductName,               
-                product_description = dto.ProductDescription,
+                ProdSubcatId = dto.ProdSubcatId,
+                ProductName = dto.ProductName,
+                ProductDescription = dto.ProductDescription,
                 ProductTypeId = dto.ProductTypeId,
                 FabricId = dto.FabricId,
                 DesignId = dto.DesignId,
-                supplier_name = dto.SupplierName
+                SupplierName = dto.SupplierName
             };
 
             var result = await _productRepo.AddProductAsync(entity);
 
-            return Ok(new { productId = result.product_id, message = "Product added successfully" });
+            return Ok(new { productId = result.ProductId, message = "Product added successfully" });
         }
 
 
@@ -94,7 +94,7 @@ namespace MyTown.Controllers
 
             return Ok(new
             {
-                productId = updatedProduct.product_id,
+                productId = updatedProduct.ProductId,
                 message = "Product updated successfully."
             });
         }
@@ -269,7 +269,7 @@ namespace MyTown.Controllers
         }
 
         [HttpGet("GetDiscountedProductsAsync")]
-        public async Task<ActionResult<products>> GetDiscountedProductsAsync()
+        public async Task<ActionResult<Products>> GetDiscountedProductsAsync()
         {
             try
             {

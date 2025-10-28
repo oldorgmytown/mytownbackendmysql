@@ -6,7 +6,7 @@ namespace mytown.DataAccess.Interfaces
 {
     public interface ICartRepository
     {
-        Task<addtocart> AddToCart(addtocart cartItem);
+        Task<AddToCart> AddToCart(AddToCart cartItem);
 
         Task<IEnumerable<CartItemDto>> GetCartItems(int shopperRegId);
 

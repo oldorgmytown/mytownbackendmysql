@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
     [Table("product_sizes")]
-    public class Product_Sizes
+    public class ProductSize
     {
         [Key]
         [Column("size_id")]
@@ -12,13 +14,14 @@ namespace mytown.Models
 
         [ForeignKey(nameof(SubCategory))]
         [Column("prod_subcat_id")]
-        public int prod_subcat_id { get; set; }  
+        [JsonPropertyName("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
 
         [Required]
         [StringLength(100)]
         [Column("size_name")]
+        [JsonPropertyName("size_name")]
         public string SizeName { get; set; }
-
 
         // ✅ New fields for dimensions
         [Column("length")]

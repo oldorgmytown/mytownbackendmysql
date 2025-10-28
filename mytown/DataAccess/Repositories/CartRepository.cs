@@ -15,12 +15,12 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<addtocart> AddToCart(addtocart cartItem)
+        public async Task<AddToCart> AddToCart(AddToCart cartItem)
         {
             var existingCartItem = await _context.addtocart
          .FirstOrDefaultAsync(c =>
-             c.product_id == cartItem.product_id &&
-             c.sku_id == cartItem.sku_id &&       // Include variant check
+             c.ProductId == cartItem.ProductId &&
+             c.SkuId == cartItem.SkuId &&       // Include variant check
              c.BusRegId == cartItem.BusRegId && // Check if the product is from the same store
              c.ShopperRegId == cartItem.ShopperRegId &&
              c.orderstatus == "cart"); // Only check active cart items
@@ -29,14 +29,14 @@ namespace mytown.DataAccess.Repositories
             if (existingCartItem != null)
             {
                 //Product exists, so increase quantity by 1
-                existingCartItem.prod_qty += 1;
+                existingCartItem.ProdQty += 1;
                 await _context.SaveChangesAsync();
                 return existingCartItem;
             }
             else
             {
                 //New product, insert into cart
-                cartItem.prod_qty = 1; // Ensure quantity starts at 1
+                cartItem.ProdQty = 1; // Ensure quantity starts at 1
                 _context.Add(cartItem);
                 await _context.SaveChangesAsync();
                 return cartItem;
@@ -52,13 +52,13 @@ namespace mytown.DataAccess.Repositories
         {
             var cartItems = await (from cart in _context.addtocart
                                    join product in _context.products
-            on cart.product_id equals product.product_id
+            on cart.ProductId equals product.ProductId
                                    join business in _context.BusinessProfiles
                                    on product.BusRegId equals business.BusRegId
                                    join sku in _context.Sku_ProductVariants
-                                   on product.product_id equals sku.ProductId into skuGroup
+                                   on product.ProductId equals sku.ProductId into skuGroup
                                    from skuVariant in skuGroup.DefaultIfEmpty()
-                                   join size in _context.Product_Sizes
+                                   join size in _context.ProductSizes
                                    on skuVariant.SizeId equals size.SizeId into sizeGroup
                                    from sizeDetail in sizeGroup.DefaultIfEmpty()
                                    where cart.ShopperRegId == shopperRegId && cart.orderstatus == "cart"
@@ -66,14 +66,14 @@ namespace mytown.DataAccess.Repositories
                                    {
                                        CartId = cart.CartId,
                                        ShopperRegId = cart.ShopperRegId,
-                                       prod_qty = cart.prod_qty,
+                                       prod_qty = cart.ProdQty,
                                        orderstatus = cart.orderstatus,
-                                       product_id = product.product_id,
-                                       product_name = product.product_name,
-                                       product_subject = product.product_subject,
-                                       product_description = product.product_description,
-                                       product_image = product.product_image,
-                                       product_cost =  product.product_cost ?? 0,  // Prefer SKU cost if available
+                                       product_id = product.ProductId,
+                                       product_name = product.ProductName,
+                                       product_subject = product.ProductSubject,
+                                       product_description = product.ProductDescription,
+                                      // product_image = skuVariant.Images,
+                                      // product_cost =  product.product_cost ?? 0,  // Prefer SKU cost if available
                                        StoreName = business.BusinessName,
                                        StoreLocation = business.BusinessLocation,
                                        StoreId = business.BusRegId,
@@ -112,9 +112,9 @@ namespace mytown.DataAccess.Repositories
                 return false; // Item not found
             }
 
-            if (cartItem.prod_qty > 1)
+            if (cartItem.ProdQty > 1)
             {
-                cartItem.prod_qty -= 1; // Decrease quantity by 1
+                cartItem.ProdQty -= 1; // Decrease quantity by 1
             }
             else
             {
@@ -134,7 +134,7 @@ namespace mytown.DataAccess.Repositories
                 return false; // Item not found
             }
 
-            cartItem.prod_qty += 1; // Increase quantity by 1
+            cartItem.ProdQty += 1; // Increase quantity by 1
 
             await _context.SaveChangesAsync();
             return true;
@@ -225,28 +225,28 @@ namespace mytown.DataAccess.Repositories
                 .Include(p => p.ProductType)
                 .Include(p => p.Fabric)
                 .Include(p => p.Design)
-                .FirstOrDefaultAsync(p => p.product_id == productId);
+                .FirstOrDefaultAsync(p => p.ProductId == productId);
 
             if (product == null)
                 return null;
 
             return new ProdcVariantforShopperDto
             {
-                ProductId = product.product_id,
+                ProductId = product.ProductId,
                 BusRegId = product.BusRegId,
                 BuscatId = product.BuscatId,
-                ProdcatId = product.prod_subcat_id,
+                ProdcatId = product.ProdSubcatId,
 
-                ProductName = product.product_name,
-                ProductDescription = product.product_description,
-                SupplierName = product.supplier_name,
+                ProductName = product.ProductName,
+                ProductDescription = product.ProductDescription,
+                SupplierName = product.SupplierName,
                 ProductTypeId = product.ProductTypeId,
                 FabricId = product.FabricId,
                 DesignId = product.DesignId,
 
-                ProductTypeName = product.ProductType != null ? product.ProductType.prod_type_name : null,
-                FabricName = product.Fabric != null ? product.Fabric.fabric_name : null,
-                DesignName = product.Design != null ? product.Design.design_name : null,
+                ProductTypeName = product.ProductType != null ? product.ProductType.ProdTypeName : null,
+                FabricName = product.Fabric != null ? product.Fabric.FabricName : null,
+                DesignName = product.Design != null ? product.Design.DesignName : null,
 
                 
                 BusinessName = product.BusinessRegister != null ? product.BusinessRegister.BusinessName : null,

@@ -1,16 +1,24 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
 
+    [Table("product_type")]
     public class ProductType
     {
         [Key]
-        public int prod_type_id { get; set; }
+        [Column("prod_type_id")]
+        [JsonPropertyName("prod_type_id")]
+        public int ProdTypeId { get; set; }
 
-        // Keep this column name the same as in `products`
-        public int prod_subcat_id { get; set; }
+        [Column("prod_subcat_id")]
+        [JsonPropertyName("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
 
-        public string prod_type_name { get; set; }
+        [Column("prod_type_name")]
+        [JsonPropertyName("prod_type_name")]
+        public string ProdTypeName { get; set; }
     }
 }

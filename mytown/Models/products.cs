@@ -5,81 +5,85 @@ using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
-    public class products
+    [Table("products")]
+    public class Products
     {
-        [Column("product_id")]
         [Key]
-        public int product_id {  get; set; }
+        [Column("product_id")]
+        [JsonPropertyName("product_id")]
+        public int ProductId { get; set; }
 
-        [ForeignKey("BusinessRegister")]
+        [ForeignKey(nameof(BusinessRegister))]
+        [Column("BusRegId")]
+        [JsonPropertyName("BusRegId")]
         public int BusRegId { get; set; }
 
+        [Column("BuscatId")]
+        [JsonPropertyName("BuscatId")]
         public int BuscatId { get; set; }
 
-        public int prod_subcat_id { get; set; }
+        [Column("prod_subcat_id")]
+        [JsonPropertyName("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string? product_name { get; set; }
+        [Column("product_name")]
+        [JsonPropertyName("product_name")]
+        public string? ProductName { get; set; }
 
-        
         [StringLength(100)]
-        public string? product_subject { get; set; }
+        [Column("product_subject")]
+        [JsonPropertyName("product_subject")]
+        public string? ProductSubject { get; set; }
 
         [Required]
         [StringLength(500)]
-        public string? product_description   { get; set; }
-        public string? product_image { get; set; }
-        public string? supplier_name { get; set; }
+        [Column("product_description")]
+        [JsonPropertyName("product_description")]
+        public string? ProductDescription { get; set; }
 
+        [Column("product_image")]
+        [JsonPropertyName("product_image")]
+        public string? ProductImage { get; set; }
+
+        [Column("supplier_name")]
+        [JsonPropertyName("supplier_name")]
+        public string? SupplierName { get; set; }
+
+        [Column("ProductTypeId")]
+        [JsonPropertyName("ProductTypeId")]
         public int? ProductTypeId { get; set; }
+
+        [Column("FabricId")]
+        [JsonPropertyName("FabricId")]
         public int? FabricId { get; set; }
+
+        [Column("DesignId")]
+        [JsonPropertyName("DesignId")]
         public int? DesignId { get; set; }
 
-        // --- NEW relationships you want on the Product itself ---
-        [ForeignKey("ProductTypeId")]
+        // Relationships
+        [ForeignKey(nameof(ProductTypeId))]
+        [JsonPropertyName("product_type")]
         public virtual ProductType? ProductType { get; set; }
 
-        [ForeignKey("FabricId")]
+        [ForeignKey(nameof(FabricId))]
+        [JsonPropertyName("fabric")]
         public virtual Fabric? Fabric { get; set; }
 
-        [ForeignKey("DesignId")]
+        [ForeignKey(nameof(DesignId))]
+        [JsonPropertyName("design")]
         public virtual Design? Design { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal? product_cost { get; set; }
-
-        [Range(0, double.MaxValue)]
-        public decimal? product_length { get; set; }
-
-        [Range(0, double.MaxValue)]
-        public decimal? product_width { get; set; }
-
-        [Range(0, double.MaxValue)]
-        public decimal? product_weight { get; set; }
-
-        [Range(0, double.MaxValue)]
-        public decimal? product_quantity { get; set; }
-        [Range(0, double.MaxValue)]
-        public decimal? product_height { get; set; }
-
-        [Range(0, 100)]
-        public decimal? discount { get; set; }   // nullable
-
-        [Range(0, double.MaxValue)]
-        public decimal? discount_price { get; set; }  // nullable
-
-        public string? color { get; set; }
-
-        public string? size { get; set; }
-
+      
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
 
+        [JsonPropertyName("images")]
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
-        public virtual ICollection<Sku_ProductVariant> Sku_ProductVariants { get; set; }
-        = new List<Sku_ProductVariant>();
 
-
+        [JsonPropertyName("sku_product_variants")]
+        public virtual ICollection<Sku_ProductVariant> Sku_ProductVariants { get; set; } = new List<Sku_ProductVariant>();
     }
 }
