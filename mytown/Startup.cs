@@ -33,7 +33,7 @@ public class Startup
         var connectionString = Configuration.GetConnectionString("mysqlConnection");
         Console.WriteLine($"EF Core Connection String: {connectionString}");
         services.AddDbContext<AppDbContext>(options =>
-            options.UseMySql(connectionString, ServerVersion.Parse("8.0.33-mysql")));
+           options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
     }
 
     // Consolidates all AddScoped registrations.
@@ -107,7 +107,7 @@ public class Startup
         app.UseStaticFiles();
 
         ConfigureSwagger(app, env, logger);
-        ApplyMigrations(app, logger);
+     //   ApplyMigrations(app, logger);
 
         app.UseRouting();
         app.UseCors("AllowFrontend");

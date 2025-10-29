@@ -3,6 +3,12 @@ using Serilog;
 
 try
 {
+
+    // Prevent ASP.NET from starting when running EF CLI commands
+    if (args.Contains("--ef"))
+    {
+        return;
+    }
     // Configure Serilog for both console and file logging.
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
@@ -14,6 +20,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Replace the default logging provider with Serilog.
+    Directory.CreateDirectory("logs");
     builder.Host.UseSerilog(); // Requires using Serilog.Extensions.Hosting
 
     // Load configuration files.
@@ -39,7 +46,7 @@ try
     Microsoft.Extensions.Logging.ILogger logger = app.Services.GetRequiredService<ILogger<Program>>();
 
     // Test the MySQL connection before starting the app.
-    TestMySQLConnection(builder.Configuration, logger);
+   // TestMySQLConnection(builder.Configuration, logger);
 
     // Configure the HTTP request pipeline via Startup.Configure.
     startup.Configure(app, builder.Environment, app.Services.GetRequiredService<ILogger<Startup>>());
