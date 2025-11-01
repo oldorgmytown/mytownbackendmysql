@@ -12,8 +12,8 @@ namespace mytown.Models
         [JsonPropertyName("prod_subcat_id")]
         public int ProdSubcatId { get; set; }
 
-        [Column("buscat_id")]
-        [JsonPropertyName("buscat_id")]
+        [Column("bus_cat_id")]
+        [JsonPropertyName("buscatId")]
         public int BuscatId { get; set; }
 
         [Required]

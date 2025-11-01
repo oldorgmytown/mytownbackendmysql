@@ -255,7 +255,7 @@ namespace MyTown.Controllers
                 // Check if no products were found
                 if (products == null || !products.Any())
                 {
-                    return NotFound("No products found.");
+                    return Ok(new List<object>());
                 }
 
                 // Return the list of products with a 200 OK status

@@ -1,211 +1,211 @@
-﻿//using Microsoft.AspNetCore.Mvc;
-//using System.Threading.Tasks;
-//using mytown.Models;
-//using static mytown.DataAccess.Repositories.UserRepository;
-//using Microsoft.AspNetCore.Cors;
-//using Microsoft.EntityFrameworkCore;
-//using System.Text.RegularExpressions;
-//using Microsoft.AspNetCore.Identity.Data;
-//using Newtonsoft.Json.Linq;
-//using System.Buffers.Text;
-//using Stripe;
-//using mytown.Services;
-//using mytown.DataAccess.Repositories;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
+using mytown.Models;
+using static mytown.DataAccess.Repositories.UserRepository;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity.Data;
+using Newtonsoft.Json.Linq;
+using System.Buffers.Text;
+using Stripe;
+using mytown.Services;
+using mytown.DataAccess.Repositories;
 
-//namespace mytown.Controllers
-//{
-//    [Route("api/[controller]")]
-//    [ApiController]
-//    [EnableCors("AllowFrontend")]
-//    public class UserController : ControllerBase
-//    {
-//        private readonly UserRepository _userRepository;
-        
-//        private readonly IWebHostEnvironment _env;
-//        private readonly string stripeSecretKey = "sk_test_51QtS7OFMWqb9scCuoOdpdCcEb7WultTBEDZMEF7MsjyvgbbdHsQalQyKXsDQaYKBFg4DAAQkL1VeGp6DfO6FZ0CW00hbxqjakt";
-//        private readonly IEmailService _emailService;
+namespace mytown.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    [EnableCors("AllowFrontend")]
+    public class UserController : ControllerBase
+    {
+        private readonly UserRepository _userRepository;
 
-//        public UserController(UserRepository userRepository, IWebHostEnvironment env, IEmailService emailService)
-//        {
-//            _userRepository = userRepository; // Inject UserRepository
-//            _env = env;  // Inject IWebHostEnvironment to get access to WebRootPath
-//            StripeConfiguration.ApiKey = stripeSecretKey;
-//            _emailService = emailService;
-//        }
+        private readonly IWebHostEnvironment _env;
+        private readonly string stripeSecretKey = "sk_test_51QtS7OFMWqb9scCuoOdpdCcEb7WultTBEDZMEF7MsjyvgbbdHsQalQyKXsDQaYKBFg4DAAQkL1VeGp6DfO6FZ0CW00hbxqjakt";
+        private readonly IEmailService _emailService;
 
-
-
-
-//        //[HttpPost("login")]
-//        //public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
-//        //{
-//        //    if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.Password))
-//        //    {
-//        //        return BadRequest(new { code = 400, message = "Invalid login request" });
-//        //    }
-
-//        //    var result = await _userRepository.LoginAsync(loginRequest.Email, loginRequest.Password);
-
-//        //    //if (result is string message)
-//        //    //{
-//        //    //    return message switch
-//        //    //    {
-//        //    //        "EmailNotFound" => NotFound(new { code = 404, message = "Email not registered" }),
-//        //    //        "WrongPassword" => Unauthorized(new { code = 401, message = "Incorrect password" }),
-//        //    //        "EmailNotVerified" => StatusCode(403, new { code = 403, message = "Please verify your email before login" }),
-//        //    //        _ => StatusCode(500, new { code = 500, message = "Unexpected login error" })
-//        //    //    };
-//        //    //}
-
-//        //    return Ok(result); // success
-//        //}
-
-//        [HttpPost("login")]
-//        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
-//        {
-//            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.Password))
-//            {
-//                return BadRequest(new { code = 400, message = "Invalid login request" });
-//            }
-
-//            try
-//            {
-//                var result = await _userRepository.LoginAsync(loginRequest.Email, loginRequest.Password);
-
-//                if (result == null)
-//                    return Unauthorized(new { code = 401, message = "Invalid credentials" });
-
-//                return Ok(result);
-//            }
-//            catch (Exception ex)
-//            {
-//                // Log full error for debugging
-//                Console.WriteLine($"Login error: {ex}");
-
-//                return StatusCode(500, new { code = 500, message = "An unexpected error occurred" });
-//            }
-//        }
-
-
-//        #region Forgotpassword
-
-//        [HttpPost("CheckEmail")]
-//        public IActionResult CheckEmail([FromBody] string email)
-//        {
-//            if (string.IsNullOrWhiteSpace(email))
-//                return BadRequest("Email is required.");
-
-//            if (_userRepository.EmailExists(email))
-//                return Ok(new { success = true });
-
-//            return NotFound("Email not registered.");
-//        }
-
-//        [HttpPost("ResetPassword")]
-//        public IActionResult ResetPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string confirmPassword)
-//        {
-//            if (newPassword != confirmPassword)
-//                return BadRequest("Passwords do not match.");
-
-//            bool result = _userRepository.ResetPassword(email, newPassword);
-//            if (result)
-//                return Ok("Password has been updated successfully.");
-
-//            return StatusCode(500, "Failed to reset password.");
-//        }
-
-//        #endregion
+        public UserController(UserRepository userRepository, IWebHostEnvironment env, IEmailService emailService)
+        {
+            _userRepository = userRepository; // Inject UserRepository
+            _env = env;  // Inject IWebHostEnvironment to get access to WebRootPath
+            StripeConfiguration.ApiKey = stripeSecretKey;
+            _emailService = emailService;
+        }
 
 
 
-//        //[HttpPost("register")]
-//        //public async Task<IActionResult> Register([FromBody] Registration regDetails)
-//        //{
-//        //    if (regDetails == null)
-//        //    {
-//        //        return BadRequest("Registration details cannot be null.");
-//        //    }
 
-//        //    // Check if the username or email already exists in the Registrations table
-//        //    if (await _userRepository.UserExists(regDetails))
-//        //    {
-//        //        return Conflict("Username or email already exists.");
-//        //    }
+        //        //[HttpPost("login")]
+        //        //public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        //        //{
+        //        //    if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.Password))
+        //        //    {
+        //        //        return BadRequest(new { code = 400, message = "Invalid login request" });
+        //        //    }
 
-//        //    // Add the new user to the database
-//        //    var addedUser = await _userRepository.AddUserAsync(regDetails);
+        //        //    var result = await _userRepository.LoginAsync(loginRequest.Email, loginRequest.Password);
 
-//        //    return CreatedAtAction(nameof(Register), new { id = addedUser.RegId }, addedUser);
-//        //}
+        //        //    //if (result is string message)
+        //        //    //{
+        //        //    //    return message switch
+        //        //    //    {
+        //        //    //        "EmailNotFound" => NotFound(new { code = 404, message = "Email not registered" }),
+        //        //    //        "WrongPassword" => Unauthorized(new { code = 401, message = "Incorrect password" }),
+        //        //    //        "EmailNotVerified" => StatusCode(403, new { code = 403, message = "Please verify your email before login" }),
+        //        //    //        _ => StatusCode(500, new { code = 500, message = "Unexpected login error" })
+        //        //    //    };
+        //        //    //}
 
-//        //[HttpPost("businessregister")]
-//        //public async Task<IActionResult> RegisterBusiness([FromBody] BusinessRegister businessDetails)
-//        //{
-//        //    if (businessDetails == null)
-//        //    {
-//        //        return BadRequest("Business registration details cannot be null.");
-//        //    }
+        //        //    return Ok(result); // success
+        //        //}
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
+        {
+            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.Password))
+            {
+                return BadRequest(new { code = 400, message = "Invalid login request" });
+            }
 
-//        //    // Check if the email already exists
-//        //    var existingBusiness = await _userRepository.GetBusinessByEmailAsync(businessDetails.BusEmail);
-//        //    if (existingBusiness != null)
-//        //    {
-//        //        return Conflict("A business with this email already exists.");
-//        //    }
-//        //    // Here, you might want to validate the businessDetails object further.
+            try
+            {
+                var result = await _userRepository.LoginAsync(loginRequest.Email, loginRequest.Password);
 
-//        //    // Add the new business registration with the associated RegId
-//        //    var addedBusiness = await _userRepository.AddBusinessRegisterAsync(businessDetails);
+                if (result == null)
+                    return Unauthorized(new { code = 401, message = "Invalid credentials" });
 
-//        //    return CreatedAtAction(nameof(RegisterBusiness), new { id = addedBusiness.BusRegId }, addedBusiness);
-//        //}
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Log full error for debugging
+                Console.WriteLine($"Login error: {ex}");
 
-
-//        #region business Profile
-
-
-//        [HttpPost("upload_profile_image")]
-//        public async Task<IActionResult> upload_profile_image(IFormFile file)
-//        {
-             
-
-//        //string _targetFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "UploadedFiles");
-//        string _targetFilePath = Path.Combine(_env.WebRootPath, "UploadedFiles");
+                return StatusCode(500, new { code = 500, message = "An unexpected error occurred" });
+            }
+        }
 
 
-//            // Ensure that the folder exists
-//            if (!Directory.Exists(_targetFilePath))
-//            {
-//                Directory.CreateDirectory(_targetFilePath);
-//            }
+        //        #region Forgotpassword
 
-//            if (file == null || file.Length == 0)
-//            {
-//                return BadRequest("No file uploaded.");
-//            }
+        //        [HttpPost("CheckEmail")]
+        //        public IActionResult CheckEmail([FromBody] string email)
+        //        {
+        //            if (string.IsNullOrWhiteSpace(email))
+        //                return BadRequest("Email is required.");
 
-//            // Generate a unique file name using timestamp
-//            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-//            var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
-//            var fileExtension = Path.GetExtension(file.FileName);
+        //            if (_userRepository.EmailExists(email))
+        //                return Ok(new { success = true });
 
-//            // Create a new file name with timestamp
-//            var newFileName = $"{fileNameWithoutExtension}_{timestamp}{fileExtension}";
+        //            return NotFound("Email not registered.");
+        //        }
 
-//            var filePath = Path.Combine(_targetFilePath, newFileName);
+        //        [HttpPost("ResetPassword")]
+        //        public IActionResult ResetPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string confirmPassword)
+        //        {
+        //            if (newPassword != confirmPassword)
+        //                return BadRequest("Passwords do not match.");
 
-//            // Save the file to the server
-//            using (var stream = new FileStream(filePath, FileMode.Create))
-//            {
-//                await file.CopyToAsync(stream);
-//            }
-//            var publicUrl = $"{Request.Scheme}://{Request.Host}/UploadedFiles/{newFileName}";
-//            return Ok(new { FileName = newFileName, Url = publicUrl });
-//            // Return the file path or any other necessary data
-//           // return Ok(new { FileName = newFileName, FilePath = filePath });
+        //            bool result = _userRepository.ResetPassword(email, newPassword);
+        //            if (result)
+        //                return Ok("Password has been updated successfully.");
 
-//        }
+        //            return StatusCode(500, "Failed to reset password.");
+        //        }
+
+        //        #endregion
+
+
+
+        //        //[HttpPost("register")]
+        //        //public async Task<IActionResult> Register([FromBody] Registration regDetails)
+        //        //{
+        //        //    if (regDetails == null)
+        //        //    {
+        //        //        return BadRequest("Registration details cannot be null.");
+        //        //    }
+
+        //        //    // Check if the username or email already exists in the Registrations table
+        //        //    if (await _userRepository.UserExists(regDetails))
+        //        //    {
+        //        //        return Conflict("Username or email already exists.");
+        //        //    }
+
+        //        //    // Add the new user to the database
+        //        //    var addedUser = await _userRepository.AddUserAsync(regDetails);
+
+        //        //    return CreatedAtAction(nameof(Register), new { id = addedUser.RegId }, addedUser);
+        //        //}
+
+        //        //[HttpPost("businessregister")]
+        //        //public async Task<IActionResult> RegisterBusiness([FromBody] BusinessRegister businessDetails)
+        //        //{
+        //        //    if (businessDetails == null)
+        //        //    {
+        //        //        return BadRequest("Business registration details cannot be null.");
+        //        //    }
+
+
+        //        //    // Check if the email already exists
+        //        //    var existingBusiness = await _userRepository.GetBusinessByEmailAsync(businessDetails.BusEmail);
+        //        //    if (existingBusiness != null)
+        //        //    {
+        //        //        return Conflict("A business with this email already exists.");
+        //        //    }
+        //        //    // Here, you might want to validate the businessDetails object further.
+
+        //        //    // Add the new business registration with the associated RegId
+        //        //    var addedBusiness = await _userRepository.AddBusinessRegisterAsync(businessDetails);
+
+        //        //    return CreatedAtAction(nameof(RegisterBusiness), new { id = addedBusiness.BusRegId }, addedBusiness);
+        //        //}
+
+
+        //        #region business Profile
+
+
+        [HttpPost("upload_profile_image")]
+public async Task<IActionResult> upload_profile_image(IFormFile file)
+{
+
+
+    //string _targetFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "UploadedFiles");
+    string _targetFilePath = Path.Combine(_env.WebRootPath, "UploadedFiles");
+
+
+    // Ensure that the folder exists
+    if (!Directory.Exists(_targetFilePath))
+    {
+        Directory.CreateDirectory(_targetFilePath);
+    }
+
+    if (file == null || file.Length == 0)
+    {
+        return BadRequest("No file uploaded.");
+    }
+
+    // Generate a unique file name using timestamp
+    var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
+    var fileExtension = Path.GetExtension(file.FileName);
+
+    // Create a new file name with timestamp
+    var newFileName = $"{fileNameWithoutExtension}_{timestamp}{fileExtension}";
+
+    var filePath = Path.Combine(_targetFilePath, newFileName);
+
+    // Save the file to the server
+    using (var stream = new FileStream(filePath, FileMode.Create))
+    {
+        await file.CopyToAsync(stream);
+    }
+    var publicUrl = $"{Request.Scheme}://{Request.Host}/UploadedFiles/{newFileName}";
+    return Ok(new { FileName = newFileName, Url = publicUrl });
+    // Return the file path or any other necessary data
+    // return Ok(new { FileName = newFileName, FilePath = filePath });
+
+}
 
 //        //get buisness store types
 
@@ -349,7 +349,7 @@
 //        {
 //            try
 //            {
-               
+
 
 //                // Use the repository to delete the product
 //                await _userRepository.DeleteProductAsync(productId);
@@ -434,7 +434,7 @@
 //        }
 
 
-       
+
 
 //        //get products for selected category and busregid on preview page
 //        [HttpGet("by-busreg-and-subcat")]
@@ -571,7 +571,7 @@
 //            return Ok(new { count });
 //        }
 
-      
+
 
 //        [HttpGet("getShopperRegistersPaginated")]
 //        public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
@@ -617,7 +617,7 @@
 
 //        #endregion
 
-       
+
 
 //        #region services
 //        [HttpPost("AddService")]
@@ -933,12 +933,12 @@
 //            return Ok(new { message = "Cart status updated successfully." });
 //        }
 //        #endregion 
-//    }
+    }
 
 
 
 
-//}
+}
 
 
 
