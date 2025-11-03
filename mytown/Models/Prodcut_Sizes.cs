@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -10,6 +10,7 @@ namespace mytown.Models
     {
         [Key]
         [Column("size_id")]
+        [JsonPropertyName("sizeId")]
         public int SizeId { get; set; }
 
         [ForeignKey(nameof(SubCategory))]
@@ -20,7 +21,7 @@ namespace mytown.Models
         [Required]
         [StringLength(100)]
         [Column("size_name")]
-        [JsonPropertyName("size_name")]
+        [JsonPropertyName("sizeName")]
         public string SizeName { get; set; }
 
         // ✅ New fields for dimensions
