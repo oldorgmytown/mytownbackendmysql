@@ -1,5 +1,9 @@
 ﻿using MySqlConnector;
 using Serilog;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+
 
 try
 {

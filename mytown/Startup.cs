@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Hosting.Server.Features;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using mytown.Controllers;
 using mytown.Controllers.Helpers;
 using mytown.DataAccess.Interfaces;
@@ -7,6 +9,7 @@ using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services;
+using System.Text;
 
 public class Startup
 {
@@ -59,6 +62,8 @@ public class Startup
         services.AddScoped<ICourierServiceRepository, CourierServiceRepository>();
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
+        services.AddScoped<ITokenService, TokenService>();
+
     }
 
     // Registers controllers and Swagger (for API documentation).
@@ -66,8 +71,42 @@ public class Startup
     {
         services.AddControllers();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+            {
+                Title = "MyTown API",
+                Version = "v1"
+            });
+
+            //  Add JWT Auth to Swagger
+            c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Description = "Enter JWT token like: **Bearer your_token_here**",
+                Name = "Authorization",
+                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
+            {
+                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+        });
     }
+
 
     // Configures the CORS policy.
     private void RegisterCors(IServiceCollection services)
@@ -92,12 +131,30 @@ public class Startup
     // Configures JWT Bearer authentication.
     private void RegisterAuthentication(IServiceCollection services)
     {
-        services.AddAuthentication("Bearer")
-            .AddJwtBearer(options =>
+        var key = Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]);
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                // Configure JWT token validation parameters here.
-            });
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = Configuration["Jwt:Issuer"],
+                ValidAudience = Configuration["Jwt:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(key)
+            };
+        });
+
+        services.AddAuthorization();
     }
+
 
     // Main pipeline configuration method; this also calls several helper methods.
     public void Configure(IApplicationBuilder app, IHostEnvironment env, ILogger<Startup> logger)

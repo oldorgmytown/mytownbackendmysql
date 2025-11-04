@@ -1,16 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
-using mytown.Models;
-using static mytown.DataAccess.Repositories.UserRepository;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.EntityFrameworkCore;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity.Data;
-using Newtonsoft.Json.Linq;
-using System.Buffers.Text;
-using Stripe;
-using mytown.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
+using mytown.Services;
+using Newtonsoft.Json.Linq;
+using Stripe;
+using System.Buffers.Text;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using static mytown.DataAccess.Repositories.UserRepository;
 
 namespace mytown.Controllers
 {
@@ -59,7 +60,7 @@ namespace mytown.Controllers
 
         //        //    return Ok(result); // success
         //        //}
-
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
@@ -75,7 +76,17 @@ namespace mytown.Controllers
                 if (result == null)
                     return Unauthorized(new { code = 401, message = "Invalid credentials" });
 
+
+                // Extract token from result
+                var token = result.GetType().GetProperty("token")?.GetValue(result, null)?.ToString();
+
+                if (string.IsNullOrEmpty(token))
+                    return StatusCode(500, "Token not generated");
+
+                //Return exactly same way as earlier, with token included
                 return Ok(result);
+
+                
             }
             catch (Exception ex)
             {
@@ -164,7 +175,7 @@ namespace mytown.Controllers
 
         //        #region business Profile
 
-
+        [Authorize]
         [HttpPost("upload_profile_image")]
 public async Task<IActionResult> upload_profile_image(IFormFile file)
 {
