@@ -1,16 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using BCrypt.Net;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using mytown.Controllers.Helpers;
+using mytown.DataAccess.Interfaces;
+using mytown.Models;
+using mytown.Models.DTO_s;
+using mytown.Services;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using mytown.Models;
-using mytown.Services;
-using BCrypt.Net;
 using System.Text.Json;
-using mytown.DataAccess.Interfaces;
-using mytown.Models.DTO_s;
-using mytown.Controllers.Helpers;
+using System.Threading.Tasks;
 
 
 namespace mytown.Controllers
@@ -45,68 +46,8 @@ namespace mytown.Controllers
         /// <summary>
         /// Registers a new shopper.
         /// </summary>
-        //[HttpPost("register")]
-        //public async Task<IActionResult> Register([FromBody] ShopperRegisterDto shopperRegisterDto)
-        //{
-        //    // Validate the registration model using the custom validator
-        //    List<string> validationErrors = _registrationValidator.Validate(shopperRegisterDto);
-        //    if (validationErrors.Count > 0)
-        //    {
-        //        _logger.LogWarning("Registration validation errors for {Email}: {Errors}", shopperRegisterDto.Email, validationErrors);
-        //        return BadRequest(new { errors = validationErrors });
-        //    }
-
-            //try
-            //{
-            //    // Hash the password from the DTO
-            //    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(shopperRegisterDto.Password);
-
-            //    // Create a new shopper registration instance with the hashed password
-            //    var newShopper = new ShopperRegister
-            //    {
-            //        Username = shopperRegisterDto.Username,
-            //        Email = shopperRegisterDto.Email,
-            //        Password = hashedPassword,
-            //        Address = shopperRegisterDto.Address,
-            //        Town = shopperRegisterDto.Town,
-            //        City = shopperRegisterDto.City,
-            //        State = shopperRegisterDto.State,
-            //        Country = shopperRegisterDto.Country,
-            //        PostalCode = shopperRegisterDto.PostalCode,
-            //        PhoneNumber = shopperRegisterDto.PhoneNumber,
-            //        PhotoName = shopperRegisterDto.PhotoName,
-            //        IsEmailVerified = false
-            //    };
-
-            //    // Attempt to register the shopper
-            //    var registeredShopper = await _shopperRepository.RegisterShopper(newShopper);
-            //    if (registeredShopper == null)
-            //    {
-            //        _logger.LogWarning("Registration failed: Email {Email} is already in use.", shopperRegisterDto.Email);
-            //        return Conflict(new { error = "This email address is already registered. Please try logging in or use a different email." });
-            //    }
-
-            //    // Generate an email verification token and retrieve the frontend base URL
-            //    var verificationRecord = await _shopperRepository.GenerateEmailVerification(shopperRegisterDto.Email);
-            //    string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-            //    if (string.IsNullOrWhiteSpace(frontendBaseUrl))
-            //    {
-            //        _logger.LogError("Frontend base URL is not configured.");
-            //        return StatusCode(500, new { message = "The application configuration is missing the frontend URL. Please contact support." });
-            //    }
-
-            //    // Build the verification link using the provided builder service
-            //    string verificationLink = _verificationLinkBuilder.BuildLink(frontendBaseUrl, verificationRecord.VerificationToken);
-            //    _logger.LogInformation("Generated verification link for {Email}: {VerificationLink}", shopperRegisterDto.Email, verificationLink);
-
-            //    // Send the verification email
-            //    await _emailService.SendVerificationEmail(shopperRegisterDto.Email, verificationLink);
-            //    _logger.LogInformation("Registration successful for {Email}. Verification email sent.", shopperRegisterDto.Email);
-
-            //    return Ok(new { message = "Registration successful! Please check your email for the verification link. Once verified, you can log in." });
-            //}
-
-            [HttpPost("register")]
+        [AllowAnonymous]
+        [HttpPost("register")]
             public async Task<IActionResult> Register([FromBody] ShopperRegisterDto shopperRegisterDto)
             {
                 List<string> validationErrors = _registrationValidator.Validate(shopperRegisterDto);
@@ -184,7 +125,8 @@ namespace mytown.Controllers
                 }
             }
 
-            [HttpGet("verify-shopper-email")]
+        [AllowAnonymous]
+        [HttpGet("verify-shopper-email")]
             public async Task<IActionResult> VerifyEmail([FromQuery] string token)
             {
                 try
@@ -230,10 +172,11 @@ namespace mytown.Controllers
         }
 
 
-            /// <summary>
-            //Resends the email verification link.
-                /// </summary>
-                [HttpPost("resend-verification")]
+        /// <summary>
+        //Resends the email verification link.
+        /// </summary>
+        [AllowAnonymous]
+        [HttpPost("resend-verification")]
                 public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)
         {
             try
@@ -282,7 +225,7 @@ namespace mytown.Controllers
         }
 
 
-
+        [Authorize]
         [HttpGet("GetTownsWithStoreCountByCountry/{country}")]
         public async Task<IActionResult> GetTownsWithStoreCountByCountry(string country)
         {
@@ -301,6 +244,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpGet("productsrecentlyviewedbyshopper/{shopperId}")]
         public async Task<IActionResult> GetRecentlyViewed(int shopperId, int days = 7, int limit = 10)
         {
@@ -310,7 +254,7 @@ namespace mytown.Controllers
 
 
         // Shopper Alternate Address
-
+        [Authorize]
         [HttpGet("GetShopperAltAddress")]
         public async Task<IActionResult> GetAddresses(int shopperRegId)
         {
@@ -319,6 +263,7 @@ namespace mytown.Controllers
         }
 
         // POST: api/shopper/AddAltShopperAddress
+        [Authorize]
         [HttpPost("AddAltShopperAddress")]
         public async Task<IActionResult> AddAddress([FromBody] ShopperAlternateAddressDto addressDto)
         {
@@ -362,6 +307,7 @@ namespace mytown.Controllers
         }
 
         // DELETE: api/shopper/DeleteShopperAltAddress/5
+        [Authorize]
         [HttpDelete("DeleteShopperAltAddress/{id}")]
         public async Task<IActionResult> DeleteAddress(int id)
         {

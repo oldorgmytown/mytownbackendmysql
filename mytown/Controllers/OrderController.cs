@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models.DTO_s;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [Route("api/shoppingcart/orders")]
     [ApiController]
     public class OrderController : ControllerBase

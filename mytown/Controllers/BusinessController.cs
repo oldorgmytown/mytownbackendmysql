@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
@@ -37,7 +38,7 @@ namespace mytown.Controllers
             _registrationValidator = registrationValidator;
             _verificationLinkBuilderbusiness = verificationLinkBuilderbusiness;
         }
-
+        [AllowAnonymous]
         [HttpPost("businessregister")]
         public async Task<IActionResult> RegisterBusiness([FromBody] BusinessRegisterDto businessRegisterDto)
         {
@@ -108,7 +109,7 @@ namespace mytown.Controllers
                 return StatusCode(500, new { error = "Something went wrong. Please try with new email." });
             }
         }
-
+        [AllowAnonymous]
         [HttpGet("verify-business-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
@@ -188,7 +189,7 @@ namespace mytown.Controllers
 
             return countryCurrencyMap.TryGetValue(country, out var currency) ? currency : "INR"; // default fallback
         }
-
+        [AllowAnonymous]
         [HttpPost("check-email")]
         public async Task<IActionResult> CheckBusinessEmail([FromBody] EmailCheckRequestDto request)
         {
@@ -221,7 +222,7 @@ namespace mytown.Controllers
             return Ok(new { message = "Email is valid and available." });
         }
 
-
+        [AllowAnonymous]
         [HttpPost("resend-business-verification")]
         public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)
         {
@@ -267,6 +268,7 @@ namespace mytown.Controllers
         }
 
         //get business owner home page with busregid
+        [Authorize]
         [HttpGet("businessregister/{busRegId}")]
         public async Task<IActionResult> GetBusinessById(int busRegId)
         {
@@ -288,7 +290,7 @@ namespace mytown.Controllers
             }
         }
 
-
+        [Authorize]
         [HttpGet("BusinessCategories")]
         public async Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories()
         {
@@ -296,6 +298,7 @@ namespace mytown.Controllers
             return Ok(categories);
         }
 
+        [Authorize]
         [HttpGet("BusinessSubCategoriesforStores")]
         public async Task<ActionResult<IEnumerable<BusinessCategory>>> BusinessSubCategoriesforStores(int buscatid)
         {
@@ -303,10 +306,10 @@ namespace mytown.Controllers
             return Ok(subcategories);
         }
 
-       
 
-     // Upload image to blob
 
+        // Upload image to blob
+        [Authorize]
         [HttpPost("upload_image")]
         public async Task<IActionResult> UploadImage(IFormFile file, string imageType)
         {

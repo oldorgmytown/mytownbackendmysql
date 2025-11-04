@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Services;
@@ -6,7 +7,7 @@ using static Microsoft.Extensions.Logging.EventSource.LoggingEventSource;
 
 namespace mytown.Controllers
 {
-
+    [Authorize]
     [Route("api/search")]
     [ApiController]
     public class SearchController: ControllerBase

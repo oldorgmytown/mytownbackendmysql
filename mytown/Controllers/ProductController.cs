@@ -1,14 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using mytown.Models;
+﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
-using mytown.Models.DTO_s;
-using Azure.Storage.Blobs;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
+using mytown.Models.DTO_s;
 using System;
 
 
 namespace MyTown.Controllers
 {
+    [Authorize]
     [Route("api/business/products")]
     [ApiController]
     public class ProductController : ControllerBase
@@ -25,7 +27,7 @@ namespace MyTown.Controllers
             _configuration = configuration;
         }
 
-
+        
         [HttpPost("Add_Product")]
         public async Task<IActionResult> AddProduct([FromBody] ProductCreateDto dto)
         {
@@ -37,8 +39,11 @@ namespace MyTown.Controllers
                 ProductName = dto.ProductName,
                 ProductDescription = dto.ProductDescription,
                 ProductTypeId = dto.ProductTypeId,
-                FabricId = dto.FabricId,
-                DesignId = dto.DesignId,
+
+                // Convert 0 to null for optional FK fields
+                FabricId = dto.FabricId == 0 ? null : dto.FabricId,
+                DesignId = dto.DesignId == 0 ? null : dto.DesignId,
+
                 SupplierName = dto.SupplierName
             };
 

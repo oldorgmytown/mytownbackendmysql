@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
@@ -6,6 +7,7 @@ using mytown.Models;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [Route("api/shoppingcart")]
     [ApiController]
     public class CartController : ControllerBase

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
@@ -8,6 +9,7 @@ using Stripe;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [Route("api/shoppingcart/payment")]
     [ApiController]
     public class PaymentController: ControllerBase

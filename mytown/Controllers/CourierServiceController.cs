@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
@@ -8,6 +9,7 @@ using System.Text.Json;
 
 using System.Threading.Tasks;
 
+[Authorize]
 [ApiController]
 [Route("api/courier")]
 public class CourierController : ControllerBase

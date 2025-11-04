@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
@@ -8,6 +9,7 @@ using MyTown.Controllers;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [Route("api/business/profile")]
     [ApiController]
     public class BusinessProfileController :ControllerBase

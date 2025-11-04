@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
@@ -6,6 +7,7 @@ using mytown.Services;
 
 namespace mytown.Controllers
 {
+    [AllowAnonymous]
     [ApiController]
     [Route("api/auth")]
     public class AuthController : ControllerBase

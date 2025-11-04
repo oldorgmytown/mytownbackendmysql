@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/businessdashboard")]
     public class BusinessDashboardController : ControllerBase
