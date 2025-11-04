@@ -1,16 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using mytown.Services;
 using Stripe;
 using Stripe.Climate;
-using System.Threading.Tasks;
-using static mytown.Models.busprofilepreview;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using mytown.Models.DTO_s;
+using System.Threading.Tasks;
+using static mytown.Models.busprofilepreview;
+using static Org.BouncyCastle.Math.EC.ECCurve;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -21,6 +23,8 @@ namespace mytown.DataAccess.Repositories
     public class UserRepository
     {
         private readonly AppDbContext _context;
+        private readonly ITokenService _tokenService;
+        private readonly IConfiguration _config;
         private string HashPassword(string password)
         {
             using (SHA256 sha256 = SHA256.Create())
@@ -32,9 +36,11 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public UserRepository(AppDbContext context)
+        public UserRepository(AppDbContext context, IConfiguration config, ITokenService tokenService)
         {
             _context = context;
+            _config = config;
+            _tokenService = tokenService;
         }
 
 
@@ -128,6 +134,127 @@ namespace mytown.DataAccess.Repositories
         //        //    return "EmailNotFound"; // ⬅ clearly mark email not found
         //        //}
 
+        //public async Task<object> LoginAsync(string email, string password)
+        //{
+        //    // 🔹 Business login
+        //    var businessUser = await _context.BusinessRegisters.FirstOrDefaultAsync(r => r.BusEmail == email);
+        //    if (businessUser != null)
+        //    {
+        //        if (BCrypt.Net.BCrypt.Verify(password, businessUser.Password))
+        //        {
+        //            var businessProfile = await _context.BusinessProfiles
+        //                .Where(bp => bp.BusRegId == businessUser.BusRegId)
+        //                .Select(bp => new
+        //                {
+        //                    bp.BusinessProfileId,
+        //                    bp.BusinessName,
+        //                    bp.BusinessLocation,
+        //                    bp.BusinessAbout,
+        //                    bp.BannerPath,
+        //                    bp.LogoPath,
+        //                    bp.ProfileStatus,
+        //                    // bp.bus_time,
+        //                    bp.BusCatId,
+        //                    bp.BusServId,
+        //                    //bp.Businessservice_name,
+        //                    //bp.Businesscategory_name,
+        //                    bp.ApprovedDate
+
+        //                })
+        //                .FirstOrDefaultAsync();
+
+        //            return new
+        //            {
+        //                userType = "Business",
+        //                user = new BusinessRegisterDto
+        //                {
+        //                    BusRegId = businessUser.BusRegId,
+        //                    BusinessUsername = businessUser.BusinessUsername,
+        //                    Businessname = businessUser.BusinessName,
+        //                    LicenseType = businessUser.LicenseType,
+        //                    Gstin = businessUser.Gstin,
+        //                    BusservId = businessUser.BusServId,
+        //                    BuscatId = businessUser.BusCatId,
+        //                    Town = businessUser.Town,
+        //                    BusMobileNo = businessUser.BusMobileNo,
+        //                    BusEmail = businessUser.BusEmail,
+        //                    Address1 = businessUser.Address1,
+        //                    Address2 = businessUser.Address2,
+        //                    businessCity = businessUser.BusinessCity,
+        //                    businessState = businessUser.BusinessState,
+        //                    businessCountry = businessUser.BusinessCountry,
+        //                    postalCode = businessUser.PostalCode,
+        //                    isEmailVerified = businessUser.IsEmailVerified,
+        //                    BusinessRegDate = businessUser.BusinessRegDate,
+        //                    ProfileStatus = businessProfile?.ProfileStatus ?? "Incomplete"
+        //                },
+        //                businessProfile = businessProfile // will be null if no profile exists
+        //            };
+        //        }
+
+        //        return null; // invalid password
+        //    }
+
+
+        //    // 🔹 Shopper login
+        //    var shopper = await _context.ShopperRegisters.FirstOrDefaultAsync(s => s.Email == email);
+        //    if (shopper != null)
+        //    {
+        //        if (BCrypt.Net.BCrypt.Verify(password, shopper.Password))
+        //        {
+        //            return new
+        //            {
+        //                userType = "Shopper",
+        //                shopper = new ShopperRegisterDto
+        //                {
+        //                    ShopperRegId = shopper.ShopperRegId,
+        //                    Username = shopper.Username,
+        //                    Email = shopper.Email,
+        //                    IsEmailVerified = shopper.IsEmailVerified,
+        //                    Address = shopper.Address,
+        //                    Town = shopper.Town,
+        //                    City = shopper.City,
+        //                    State = shopper.State,
+        //                    Country = shopper.Country,
+        //                    PostalCode = shopper.PostalCode,
+        //                    PhoneNumber = shopper.PhoneNumber,
+        //                    PhotoName = shopper.PhotoName,
+        //                    Status = shopper.Status,
+        //                    ShopperRegDate = shopper.ShopperRegDate
+        //                }
+        //            };
+        //        }
+        //        return null;
+        //    }
+
+        //    // 🔹 Courier login
+        //    var courier = await _context.CourierService.FirstOrDefaultAsync(c => c.CourierEmail == email);
+        //    if (courier != null)
+        //    {
+        //        if (BCrypt.Net.BCrypt.Verify(password, courier.Password))
+        //        {
+        //            return new
+        //            {
+        //                userType = "Courier",
+        //                courier = new CourierServiceDto
+        //                {
+        //                    CourierServiceName = courier.CourierServiceName,
+        //                    CourierContactName = courier.CourierContactName,
+        //                    CourierPhone = courier.CourierPhone,
+        //                    CourierEmail = courier.CourierEmail,
+        //                    IsLocal = courier.IsLocal,
+        //                    IsState = courier.IsState,
+        //                    IsNational = courier.IsNational,
+        //                    IsInternational = courier.IsInternational
+        //                }
+        //            };
+        //        }
+        //        return null;
+        //    }
+
+        //    return null; // email not found
+        //}
+
         public async Task<object> LoginAsync(string email, string password)
         {
             // 🔹 Business login
@@ -147,19 +274,19 @@ namespace mytown.DataAccess.Repositories
                             bp.BannerPath,
                             bp.LogoPath,
                             bp.ProfileStatus,
-                            // bp.bus_time,
                             bp.BusCatId,
                             bp.BusServId,
-                            //bp.Businessservice_name,
-                            //bp.Businesscategory_name,
                             bp.ApprovedDate
-
                         })
                         .FirstOrDefaultAsync();
+
+                    // ✅ Generate Token
+                    var token = _tokenService.GenerateToken(businessUser.BusRegId, businessUser.BusEmail, "Business");
 
                     return new
                     {
                         userType = "Business",
+                        token = token,   // ✅ Add token
                         user = new BusinessRegisterDto
                         {
                             BusRegId = businessUser.BusRegId,
@@ -182,13 +309,11 @@ namespace mytown.DataAccess.Repositories
                             BusinessRegDate = businessUser.BusinessRegDate,
                             ProfileStatus = businessProfile?.ProfileStatus ?? "Incomplete"
                         },
-                        businessProfile = businessProfile // will be null if no profile exists
+                        businessProfile = businessProfile
                     };
                 }
-
-                return null; // invalid password
+                return null;
             }
-
 
             // 🔹 Shopper login
             var shopper = await _context.ShopperRegisters.FirstOrDefaultAsync(s => s.Email == email);
@@ -196,9 +321,12 @@ namespace mytown.DataAccess.Repositories
             {
                 if (BCrypt.Net.BCrypt.Verify(password, shopper.Password))
                 {
+                    var token = _tokenService.GenerateToken(shopper.ShopperRegId, shopper.Email, "Shopper");
+
                     return new
                     {
                         userType = "Shopper",
+                        token = token, // ✅
                         shopper = new ShopperRegisterDto
                         {
                             ShopperRegId = shopper.ShopperRegId,
@@ -227,9 +355,12 @@ namespace mytown.DataAccess.Repositories
             {
                 if (BCrypt.Net.BCrypt.Verify(password, courier.Password))
                 {
+                    var token = _tokenService.GenerateToken(courier.CourierId, courier.CourierEmail, "Courier");
+
                     return new
                     {
                         userType = "Courier",
+                        token = token, // ✅
                         courier = new CourierServiceDto
                         {
                             CourierServiceName = courier.CourierServiceName,
@@ -246,8 +377,9 @@ namespace mytown.DataAccess.Repositories
                 return null;
             }
 
-            return null; // email not found
+            return null;
         }
+
 
 
 
