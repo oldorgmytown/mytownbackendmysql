@@ -58,6 +58,9 @@ namespace mytown.Models
 
             public DbSet<AdminComment> AdminComments { get; set; } //done
 
+            public DbSet<UserSession> UserSessions { get; set; }
+
+
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {

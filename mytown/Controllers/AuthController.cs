@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services;
+using System.Security.Claims;
 
 namespace mytown.Controllers
 {
@@ -59,7 +62,40 @@ namespace mytown.Controllers
             if (!result) return BadRequest("Invalid or expired token.");
             return Ok("Password reset successful.");
         }
-       
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var sessionId = User.FindFirst("sessionId")!.Value;
+            var userType = User.FindFirst(ClaimTypes.Role)!.Value;
+
+            var result = await _authRepo.LogoutAsync(userId, sessionId, userType);
+
+            if (!result)
+                return BadRequest(new { message = "Logout failed or session not found." });
+
+            return Ok(new { message = "Logged out successfully" });
+        }
+
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("sessions/revoke")]
+        public async Task<IActionResult> RevokeSession([FromBody] string sessionId)
+        {
+            if (string.IsNullOrWhiteSpace(sessionId))
+                return BadRequest("SessionId is required");
+
+            var result = await _authRepo.RevokeSessionAsync(sessionId);
+
+            if (!result)
+                return NotFound(new { message = "Session not found" });
+
+            return Ok(new { message = "Session revoked successfully" });
+        }
+
+
     }
 
 }

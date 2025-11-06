@@ -10,5 +10,11 @@ namespace mytown.DataAccess.Interfaces
         bool EmailExists(string email);
 
         PasswordResetRequest GetResetRequestByToken(string token);
+
+        Task<bool> LogoutAsync(int userId, string sessionId, string userType);
+
+        Task<UserSession?> GetSessionBySessionIdAsync(string sessionId);
+        Task<bool> RevokeSessionAsync(string sessionId);
+
     }
 }

@@ -9,6 +9,7 @@ using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services;
+using System.Security.Claims;
 using System.Text;
 
 public class Startup
@@ -150,10 +151,38 @@ public class Startup
                 ValidAudience = Configuration["Jwt:Audience"],
                 IssuerSigningKey = new SymmetricSecurityKey(key)
             };
+
+            // ✅ Validate Session GUID after token validation
+            options.Events = new JwtBearerEvents
+            {
+                OnTokenValidated = async context =>
+                {
+                    var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+
+                    var sessionId = context.Principal.FindFirst("sessionId")?.Value;
+                    var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var userType = context.Principal.FindFirst(ClaimTypes.Role)?.Value;
+
+                    if (string.IsNullOrEmpty(sessionId))
+                    {
+                        context.Fail("Invalid Session.");
+                        return;
+                    }
+
+                    var session = await db.UserSessions
+                        .FirstOrDefaultAsync(s => s.SessionGuid == sessionId && s.UserId == int.Parse(userId) && s.IsActive);
+
+                    if (session == null)
+                    {
+                        context.Fail("Session expired or logged in from another device.");
+                    }
+                }
+            };
         });
 
         services.AddAuthorization();
     }
+
 
 
     // Main pipeline configuration method; this also calls several helper methods.
