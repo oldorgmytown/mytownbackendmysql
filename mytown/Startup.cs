@@ -159,7 +159,7 @@ public class Startup
                 {
                     var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
 
-                    var sessionId = context.Principal.FindFirst("sessionId")?.Value;
+                    var sessionId = context.Principal.FindFirst("SessionGuid")?.Value;
                     var userId = context.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     var userType = context.Principal.FindFirst(ClaimTypes.Role)?.Value;
 

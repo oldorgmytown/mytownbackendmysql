@@ -16,10 +16,10 @@ public class TokenService : ITokenService
     }
     private readonly AppDbContext _context;
 
-    public TokenService(AppDbContext context)
-    {
-        _context = context;
-    }
+    //public TokenService(AppDbContext context)
+    //{
+    //    _context = context;
+    //}
 
     public string GenerateToken(int userId, string email, string role, string sessionId)
     {
@@ -28,7 +28,7 @@ public class TokenService : ITokenService
         new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
         new Claim(ClaimTypes.Email, email),
         new Claim(ClaimTypes.Role, role),
-        new Claim("SessionId", sessionId) 
+        new Claim("SessionGuid", sessionId) 
     };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
