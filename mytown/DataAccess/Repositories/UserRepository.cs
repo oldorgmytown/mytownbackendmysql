@@ -176,7 +176,7 @@ namespace mytown.DataAccess.Repositories
             {
                 if (BCrypt.Net.BCrypt.Verify(password, businessUser.Password))
                 {
-                    // ✅ Kill old session
+                    //  Kill old session
                     var oldSession = await _context.UserSessions
                         .Where(s => s.UserId == businessUser.BusRegId && s.UserType == "Business" && s.IsActive)
                         .FirstOrDefaultAsync();
@@ -187,7 +187,7 @@ namespace mytown.DataAccess.Repositories
                         _context.UserSessions.Update(oldSession);
                     }
 
-                    // ✅ Create new session
+                    //  Create new session
                     var newSession = new UserSession
                     {
                         UserId = businessUser.BusRegId,
@@ -200,7 +200,7 @@ namespace mytown.DataAccess.Repositories
                     _context.UserSessions.Add(newSession);
                     await _context.SaveChangesAsync();
 
-                    // ✅ Get profile
+                    //  Get profile
                     var businessProfile = await _context.BusinessProfiles
                         .Where(bp => bp.BusRegId == businessUser.BusRegId)
                         .Select(bp => new
@@ -218,7 +218,7 @@ namespace mytown.DataAccess.Repositories
                         })
                         .FirstOrDefaultAsync();
 
-                    // ✅ Token
+                    // Token
                     var token = _tokenService.GenerateToken(businessUser.BusRegId, businessUser.BusEmail, "Business", newSession.SessionGuid);
 
                     return new
