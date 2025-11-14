@@ -89,7 +89,7 @@ namespace mytown.Controllers
             return null;  // Return null if no valid currency is found
         }
         [HttpPost("create-payment-intent")]
-        public ActionResult CreatePaymentIntent([FromBody] PaymentRequest paymentRequest)
+        public ActionResult CreatePaymentIntent([FromBody] PaymentRequestDto paymentRequest)
         {
             try
             {

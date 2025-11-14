@@ -1,7 +1,8 @@
-﻿using MySqlConnector;
-using Serilog;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using MySqlConnector;
+using mytown.Filters;
+using Serilog;
 using System.Text;
 
 
@@ -34,9 +35,12 @@ try
         .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
         .AddEnvironmentVariables();
 
-    builder.Services.AddControllers()
-    .AddJsonOptions(x =>
-        x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ValidateModelAttribute>();
+    })
+ .AddJsonOptions(x =>
+     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
 
     // Initialize Startup and register all services.

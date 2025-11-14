@@ -167,6 +167,13 @@ public class CourierController : ControllerBase
     [HttpGet("GetBestCourier")]
     public async Task<IActionResult> GetBestCourier(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg)
     {
+        if (string.IsNullOrWhiteSpace(storeCity) ||
+      string.IsNullOrWhiteSpace(storeState) ||
+      string.IsNullOrWhiteSpace(storeCountry) ||
+      string.IsNullOrWhiteSpace(shopperCity))
+        {
+            return BadRequest("All location fields are required.");
+        }
         var result = await _courierrepo.GetBestCourierOptions(storeCity, storeState, storeCountry, shopperCity, productWeightKg);
 
         if (result == null || !result.Any())
@@ -178,7 +185,13 @@ public class CourierController : ControllerBase
     [HttpGet("AssignedOrdersByCourier")]
     public async Task<IActionResult> GetAssignedOrdersByCourier([FromQuery] int courierId)
     {
+        if (courierId <= 0)
+            return BadRequest("Invalid courier ID.");
+
         var orders = await _courierrepo.GetAssignedOrdersByCourierIdAsync(courierId);
+        if (orders == null || !orders.Any())
+            return NotFound("No assigned orders found for this courier.");
+
         return Ok(orders);
     }
 

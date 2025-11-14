@@ -65,6 +65,8 @@ namespace MyTown.Controllers
         [HttpGet("GetSizeMeasurements")]
         public async Task<IActionResult> GetMeasurementBySizeId(int sizeId)
         {
+            if (sizeId <= 0)
+                return BadRequest("Invalid sizeId. It must be greater than 0.");
             var result = await _productRepo.GetMeasurementBySizeIdAsync(sizeId);
 
             if (result == null)
@@ -77,6 +79,8 @@ namespace MyTown.Controllers
         [HttpGet("GetProductandVariantDetails/{productId}")]
         public async Task<ActionResult<ProdVariantdetailsDto>> GetProductandVariantDetails(int productId)
         {
+            if (productId <= 0)
+                return BadRequest("Invalid productId. It must be greater than 0.");
             var result = await _productRepo.GetProductandVariantAsync(productId);
             if (result == null)
                 return NotFound(new { message = "Product not found." });
@@ -189,6 +193,9 @@ namespace MyTown.Controllers
         [HttpDelete("deleteProduct")]
         public async Task<IActionResult> DeleteProductAsync(int productId)
         {
+            if (productId <= 0)
+                return BadRequest("Invalid productId. It must be greater than 0.");
+
             try
             {
                 
@@ -206,6 +213,8 @@ namespace MyTown.Controllers
         [HttpDelete("delete_ProductVariant")]
         public async Task<IActionResult> DeleteVariant(int productId, int sku_VariantId)
         {
+            if (productId <= 0 || sku_VariantId <= 0)
+                return BadRequest("Invalid productId or sku_VariantId.");
             try
             {
                 await _productRepo.DeleteProductVariantAsync(productId, sku_VariantId);

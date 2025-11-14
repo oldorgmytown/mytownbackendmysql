@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc;
 using mytown.DataAccess.Interfaces;
-using mytown.DataAccess.Repositories;
 using mytown.Models;
 
 namespace mytown.Controllers
@@ -13,155 +11,192 @@ namespace mytown.Controllers
     public class CartController : ControllerBase
     {
         private readonly ICartRepository _cartRepo;
-
         private readonly ILogger<CartController> _logger;
 
         public CartController(ICartRepository cartRepo,
-                                 ILogger<CartController> logger)
+                              ILogger<CartController> logger)
         {
             _cartRepo = cartRepo ?? throw new ArgumentNullException(nameof(cartRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
+        // ---------------------- ADD TO CART ----------------------
         [HttpPost("add-to-cart")]
         public async Task<IActionResult> AddToCart([FromBody] AddToCart cartItem)
         {
             if (cartItem == null)
-                return BadRequest("Invalid request data");
+                return BadRequest(new { code = 400, message = "Invalid request data" });
+
+            if (cartItem.ShopperRegId <= 0)
+                return BadRequest(new { code = 400, message = "Shopper ID is required." });
+
+            if (cartItem.ProductId <= 0)
+                return BadRequest(new { code = 400, message = "Product ID is required." });
+
+            if (cartItem.BusRegId <= 0)
+                return BadRequest(new { code = 400, message = "Store ID is required." });
 
             try
             {
                 var updatedCartItem = await _cartRepo.AddToCart(cartItem);
-                return Ok(updatedCartItem);
+
+                if (updatedCartItem == null)
+                    return BadRequest(new { code = 400, message = "Failed to add product to cart." });
+
+                return Ok(new { code = 200, data = updatedCartItem });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal Server Error: {ex.Message}");
+                return StatusCode(500, new { code = 500, message = $"Internal Server Error: {ex.Message}" });
             }
         }
 
-
-        //[HttpGet("GetCartItems/{shopperRegId}")]
-        //public async Task<ActionResult<IEnumerable<CartItemDto>>> GetCartItems(int shopperRegId)
-        //{
-        //    var cartItems = await _cartRepo.GetCartItems(shopperRegId);
-
-        //    if (cartItems == null || !cartItems.Any())
-        //    {
-        //        return NotFound("No items found in the cart.");
-        //    }
-
-        //    return Ok(cartItems);
-        //}
-
+        // ---------------------- GET CART ITEMS ----------------------
         [HttpGet("GetCartItems/{shopperRegId}")]
-        public async Task<ActionResult<IEnumerable<CartItemDto>>> GetCartItems(int shopperRegId)
+        public async Task<IActionResult> GetCartItems(int shopperRegId)
         {
             var cartItems = await _cartRepo.GetCartItems(shopperRegId);
 
-            // ✅ Always return 200 OK, even if no items found
-            return Ok(cartItems ?? new List<CartItemDto>());
+            return Ok(new
+            {
+                code = 200,
+                data = cartItems ?? new List<CartItemDto>()
+            });
         }
 
+        // ---------------------- INCREASE QTY ----------------------
         [HttpPut("IncreaseCartQty/{cartId}")]
         public async Task<IActionResult> IncreaseCartQty(int cartId)
         {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart ID." });
+
             var success = await _cartRepo.IncreaseCartItemQty(cartId);
 
             if (!success)
-            {
-                return NotFound("Cart item not found.");
-            }
+                return NotFound(new { code = 404, message = "Cart item not found." });
 
-            return Ok("Cart item quantity increased.");
+            return Ok(new { code = 200, message = "Cart item quantity increased." });
         }
+
+        // ---------------------- DECREASE QTY ----------------------
         [HttpPut("DecreaseCartQty/{cartId}")]
         public async Task<IActionResult> DecreaseCartQty(int cartId)
         {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart ID." });
+
             var success = await _cartRepo.DecreaseCartItemQty(cartId);
 
             if (!success)
-            {
-                return NotFound("Cart item not found.");
-            }
+                return NotFound(new { code = 404, message = "Cart item not found." });
 
-            return Ok("Cart item quantity decreased.");
+            return Ok(new { code = 200, message = "Cart item quantity decreased." });
         }
+
+        // ---------------------- REMOVE FROM CART ----------------------
         [HttpDelete("RemoveFromCart/{cartId}")]
         public async Task<IActionResult> RemoveFromCart(int cartId)
         {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart ID." });
+
             var success = await _cartRepo.RemoveFromCart(cartId);
 
             if (!success)
-            {
-                return NotFound("Cart item not found.");
-            }
+                return NotFound(new { code = 404, message = "Cart item not found." });
 
-            return Ok("Cart item removed successfully.");
+            return Ok(new { code = 200, message = "Cart item removed successfully." });
         }
 
+        // ---------------------- MOVE TO WISHLIST ----------------------
         [HttpPut("MoveToWishlist/{cartId}")]
         public async Task<IActionResult> MoveToWishlist(int cartId)
         {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart ID." });
+
             var result = await _cartRepo.MoveToWishlist(cartId);
-            if (result) return Ok(new { message = "Item moved to wishlist!" });
-            return NotFound(new { message = "Item not found!" });
+
+            if (!result)
+                return NotFound(new { code = 404, message = "Item not found!" });
+
+            return Ok(new { code = 200, message = "Item moved to wishlist!" });
         }
 
+        // ---------------------- MOVE BACK TO CART ----------------------
         [HttpPut("MoveBackToCart/{cartId}")]
         public async Task<IActionResult> MoveBackToCart(int cartId)
         {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart ID." });
+
             var result = await _cartRepo.MoveBackToCart(cartId);
-            if (result) return Ok(new { message = "Item moved back to cart!" });
-            return NotFound(new { message = "Item not found!" });
+
+            if (!result)
+                return NotFound(new { code = 404, message = "Item not found!" });
+
+            return Ok(new { code = 200, message = "Item moved back to cart!" });
         }
 
+        // ---------------------- UPDATE CART STATUS BY ORDER ----------------------
         [HttpPost("update-cart-status/{orderId}")]
         public async Task<IActionResult> UpdateCartStatus(int orderId)
         {
-            var result = await _cartRepo.UpdateCartStatusAsync(orderId);
-            if (!result)
-            {
-                return NotFound(new { message = "Order or Cart items not found." });
-            }
+            if (orderId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid Order ID." });
 
-            return Ok(new { message = "Cart status updated successfully." });
+            var result = await _cartRepo.UpdateCartStatusAsync(orderId);
+
+            if (!result)
+                return NotFound(new { code = 404, message = "Order or Cart items not found." });
+
+            return Ok(new { code = 200, message = "Cart status updated successfully." });
         }
 
+        // ---------------------- UPDATE CART STATUS BY SHOPPER ----------------------
         [HttpPost("update-cart-status-by-shopper/{shopperRegId}")]
         public async Task<IActionResult> UpdateCartStatusByShopper(int shopperRegId)
         {
-            var result = await _cartRepo.UpdateCartStatusByShopperAsync(shopperRegId);
-            if (!result)
-            {
-                return NotFound(new { message = "No cart items found for this shopper." });
-            }
+            if (shopperRegId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid Shopper ID." });
 
-            return Ok(new { message = "Cart status updated successfully." });
+            var result = await _cartRepo.UpdateCartStatusByShopperAsync(shopperRegId);
+
+            if (!result)
+                return NotFound(new { code = 404, message = "No cart items found for this shopper." });
+
+            return Ok(new { code = 200, message = "Cart status updated successfully." });
         }
 
+        // ---------------------- GET SHOPPER DETAILS ----------------------
         [HttpGet("GetShopperDetails/{shopperRegId}")]
         public async Task<IActionResult> GetShopperDetails(int shopperRegId)
         {
+            if (shopperRegId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid Shopper ID." });
+
             var shopper = await _cartRepo.GetShopperDetails(shopperRegId);
 
             if (shopper == null)
-            {
-                return Ok(new { message = "No Data" }); // Return message instead of 404
-            }
+                return Ok(new { code = 200, message = "No Data" });
 
-            return Ok(shopper);
+            return Ok(new { code = 200, data = shopper });
         }
-        // get product and varinat details for cart
 
+        // ---------------------- PRODUCT + VARIANT DETAILS ----------------------
         [HttpGet("GetProductVariantDetailsforCart/{productId}")]
         public async Task<IActionResult> GetProductVariantDetails(int productId)
         {
-            var productDetails = await _cartRepo.GetProductAndVariantforCartAsync(productId);
-            if (productDetails == null)
-                return NotFound(new { Message = "Product not found" });
+            if (productId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid Product ID." });
 
-            return Ok(productDetails);
+            var productDetails = await _cartRepo.GetProductAndVariantforCartAsync(productId);
+
+            if (productDetails == null)
+                return NotFound(new { code = 404, message = "Product not found" });
+
+            return Ok(new { code = 200, data = productDetails });
         }
     }
 }

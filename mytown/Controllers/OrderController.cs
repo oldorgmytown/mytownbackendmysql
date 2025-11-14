@@ -21,27 +21,11 @@ namespace mytown.Controllers
             _orderRepo = orderRepo ?? throw new ArgumentNullException(nameof(orderRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-        //[HttpPost("CreateOrder")]
-        //public async Task<IActionResult> CreateOrder([FromQuery] int shopperRegId, [FromQuery] string shippingType, [FromQuery] int branchid, [FromQuery] decimal cost)
-        // {
-        //     int orderId = await _orderRepo.CreateOrderAsync(shopperRegId, shippingType, branchid, cost);
-
-        //     if (orderId == 0)
-        //     {
-        //         return BadRequest("No items in cart to place an order.");
-        //     }
-
-        //     return Ok(new
-        //     {
-        //         Message = "Order placed successfully",
-        //         OrderId = orderId
-        //         // TrackingId = result.TrackingId
-        //     });
-        // }
+      
 
 
         [HttpPost("CreateOrders")]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestddto request)
         {
             var orderId = await _orderRepo.CreateOrderAsync(request.ShopperRegId, request.ShippingSelections);
 
@@ -55,6 +39,8 @@ namespace mytown.Controllers
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> CreateOrder([FromQuery] int shopperRegId)
         {
+            if (shopperRegId <= 0)
+                return BadRequest("Invalid shopper ID.");
             var orderId = await _orderRepo.CreateOrderAndOrderDetailsAsync(shopperRegId);
             if (orderId == 0)
                 return BadRequest("No items in cart.");
@@ -65,8 +51,23 @@ namespace mytown.Controllers
         [HttpPost("SaveShippingSelections")]
         public async Task<IActionResult> SaveShippingSelections([FromQuery] int orderId, [FromBody] List<StoreShippingSelection> selections)
         {
-            await _orderRepo.SaveShippingSelectionsAsync(orderId, selections);
-            return Ok(new { Message = "Shipping details saved successfully." });
+            try
+            {
+                if (orderId <= 0)
+                    return BadRequest("Invalid order ID.");
+
+                if (selections == null || !selections.Any())
+                    return BadRequest("No shipping selections provided.");
+
+                await _orderRepo.SaveShippingSelectionsAsync(orderId, selections);
+
+                return Ok(new { Message = "Shipping details saved successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log exception here
+                return StatusCode(500, new { Message = "Internal server error." });
+            }
         }
 
     }

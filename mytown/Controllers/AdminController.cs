@@ -109,6 +109,9 @@ namespace mytown.Controllers
             if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
 
+            if (busRegId <= 0)
+                return BadRequest("Invalid business registration ID.");
+
             var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status, commentDto.Comment);
 
             if (!updated)
@@ -209,6 +212,8 @@ namespace mytown.Controllers
         {
             if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
+            if (shopperId <= 0)
+                return BadRequest("Invalid Shopper registration ID.");
 
             var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(shopperId, status);
 

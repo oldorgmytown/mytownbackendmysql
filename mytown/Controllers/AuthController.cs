@@ -36,17 +36,22 @@ namespace mytown.Controllers
         [HttpPost("forgot-password")]
         public IActionResult ForgotPassword([FromBody] string email)
         {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email is required.");
+
             if (!_authRepo.EmailExists(email))
-                return NotFound(new { success = false, message = "Email not found" });
+                return NotFound("Email not found");
 
             _authRepo.SendResetEmail(email);
 
-            return Ok(new { success = true, message = "Reset link sent." });
+            return Ok("Reset link sent.");
         }
 
         [HttpGet("verify-reset-token")]
         public IActionResult VerifyResetToken([FromQuery] string token)
         {
+            if (string.IsNullOrWhiteSpace(token))
+                return BadRequest("Email is required.");
             var request = _authRepo.GetResetRequestByToken(token);
 
             if (request == null)
@@ -56,12 +61,31 @@ namespace mytown.Controllers
         }
 
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string confirmPassword)
+        public IActionResult ResetPassword(
+     [FromForm] string email,
+     [FromForm] string newPassword,
+     [FromForm] string confirmPassword)
         {
+            // 1️⃣ Validate inputs
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest("Email is required." );
+
+            if (string.IsNullOrWhiteSpace(newPassword) || string.IsNullOrWhiteSpace(confirmPassword))
+                return BadRequest("Password and Confirm Password are required." );
+
+            if (newPassword != confirmPassword)
+                return BadRequest("Passwords do not match.");
+
+            // 2️⃣ Call repo
             var result = _authRepo.ResetPassword(email, newPassword);
-            if (!result) return BadRequest("Invalid or expired token.");
+
+            // 3️⃣ Handle result
+            if (!result)
+                return BadRequest("Invalid or expired token.");
+
             return Ok("Password reset successful.");
         }
+
 
         [Authorize]
         [HttpPost("logout")]

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
+using mytown.Filters;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using MyTown.Controllers;
@@ -25,15 +26,15 @@ namespace mytown.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-
+        [ValidateModel]
         [HttpPost("addBusinessProfile")]
         public async Task<IActionResult> AddBusinessProfile(
      [FromForm] BusinessProfileCreateDto businessProfileDto,
      IFormFile? bannerFile,
      IFormFile? logoFile)
         {
-            if (businessProfileDto == null)
-                return BadRequest(new { message = "Invalid business profile data" });
+            //if (businessProfileDto == null)
+            //    return BadRequest(new { message = "Invalid business profile data" });
 
             try
             {

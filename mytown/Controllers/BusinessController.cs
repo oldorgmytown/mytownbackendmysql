@@ -314,7 +314,7 @@ namespace mytown.Controllers
         public async Task<IActionResult> UploadImage(IFormFile file, string imageType)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("No file uploaded.");
+                return BadRequest("File is required.");
 
             var containerName = _configuration["AzureBlobStorage:ContainerName"];
             var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
