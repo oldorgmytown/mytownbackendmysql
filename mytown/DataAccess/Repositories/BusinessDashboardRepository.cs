@@ -58,7 +58,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                     join p in _context.products on od.ProductId equals p.ProductId
                     join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
                     from payment in payJoin.DefaultIfEmpty()
-                    join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
+                    join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderId into sdJoin
                     from shipping in sdJoin.DefaultIfEmpty()
                     where od.StoreId == storeId && o.OrderStatus == "Paid"
                     select new BusinessDashboardDto
@@ -112,7 +112,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                        join p in _context.products on od.ProductId equals p.ProductId
                        join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
                        from payment in payJoin.DefaultIfEmpty()
-                       join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
+                       join sd in _context.ShippingDetails on od.OrderId equals sd.OrderId into sdJoin
                        from shipping in sdJoin.DefaultIfEmpty()
                        where od.StoreId == storeId && o.OrderStatus == "Paid"
                        select new BusinessDashboardDto

@@ -17,9 +17,16 @@ namespace mytown.Models
         [ForeignKey("OrderId")]
         public Order Order { get; set; }
 
-        [Required]
-        [Column("order_detail_id")]
-        public int OrderDetailId { get; set; } // Foreign Key - OrderDetails
+        [Column("store_order_id")]
+        public int StoreOrderId { get; set; }
+
+        [ForeignKey("StoreOrderId")]
+        public StoreOrder StoreOrder { get; set; }
+
+
+        //[Required]
+        //[Column("order_detail_id")]
+        //public int OrderDetailId { get; set; } // Foreign Key - OrderDetails
 
         [Required]
         [Column("branch_id")]

@@ -60,6 +60,7 @@ namespace mytown.Models
 
             public DbSet<UserSession> UserSessions { get; set; }
 
+            public DbSet<StoreOrder> StoreOrders { get; set; } 
 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)

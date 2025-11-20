@@ -180,7 +180,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
         {
             var result = await (from shipping in _context.ShippingDetails
-                                join orderDetail in _context.OrderDetails on shipping.OrderDetailId equals orderDetail.OrderDetailId
+                                join orderDetail in _context.OrderDetails on shipping.StoreOrderId equals orderDetail.StoreOrderId
                                 join product in _context.products on orderDetail.ProductId equals product.ProductId
                                 join order in _context.Orders on orderDetail.OrderId equals order.OrderId
                                 join shopper in _context.ShopperRegisters on order.ShopperRegId equals shopper.ShopperRegId
