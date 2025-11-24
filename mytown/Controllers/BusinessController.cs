@@ -23,13 +23,15 @@ namespace mytown.Controllers
         private readonly ILogger<BusinessController> _logger;
         private readonly IBusinessRegistrationValidator _registrationValidator;
         private readonly IVerificationLinkBuilderbusiness _verificationLinkBuilderbusiness;
+        private readonly ITokenService _tokenService;
 
         public BusinessController(IBusinessRepository businessRepository, 
             IEmailService emailService,
           IConfiguration configuration,
           ILogger<BusinessController> logger,
           IBusinessRegistrationValidator registrationValidator,
-          IVerificationLinkBuilderbusiness verificationLinkBuilderbusiness)
+          IVerificationLinkBuilderbusiness verificationLinkBuilderbusiness,
+          ITokenService tokenService)
         {
             _businessRepository = businessRepository;
             _emailService = emailService;
@@ -37,6 +39,7 @@ namespace mytown.Controllers
             _logger = logger;
             _registrationValidator = registrationValidator;
             _verificationLinkBuilderbusiness = verificationLinkBuilderbusiness;
+            _tokenService = tokenService;
         }
         [AllowAnonymous]
         [HttpPost("businessregister")]
@@ -162,9 +165,29 @@ namespace mytown.Controllers
 
                 await _businessRepository.CreateProfile(newProfile);
                 await _businessRepository.DeletePendingVerification(token);
-
                 _logger.LogInformation("Email verified and business registered for {Email}", newBusiness.BusEmail);
-                return Ok(new { message = "Your email is verified and your business account is created!", busRegId = newBusiness.BusRegId });
+                // ===========================
+                // ⭐ ADD TOKEN GENERATION HERE
+                // ===========================
+                var sessionId = Guid.NewGuid().ToString();
+
+                var jwtToken = _tokenService.GenerateToken(
+                    userId: newBusiness.BusRegId,
+                    email: newBusiness.BusEmail,
+                    role: "Business",
+                    sessionId: sessionId
+                );
+
+                return Ok(new
+                {
+                    message = "Your email is verified and your business account is created!",
+                    busRegId = newBusiness.BusRegId,
+                    token = jwtToken //  send token to frontend
+                });
+            
+
+               
+              //  return Ok(new { message = "Your email is verified and your business account is created!", busRegId = newBusiness.BusRegId });
             }
             catch (Exception ex)
             {

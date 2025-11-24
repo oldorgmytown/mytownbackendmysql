@@ -5,7 +5,7 @@ using mytown.Models.DTO_s;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+    
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -21,7 +21,7 @@ namespace mytown.Controllers
             _adminRepo = adminRepo ?? throw new ArgumentNullException(nameof(adminRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
+        [Authorize]
         [HttpGet("getBusinessRegistersPaginated")]
         public async Task<IActionResult> GetBusinessRegistersPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 2, string? search = null)
         {
@@ -41,6 +41,7 @@ namespace mytown.Controllers
             });
         }
 
+        [Authorize]
         // for stores with all profil status types
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
@@ -63,6 +64,7 @@ namespace mytown.Controllers
             });
         }
 
+        [Authorize]
         // for services with all profile status
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
@@ -84,7 +86,7 @@ namespace mytown.Controllers
                 });
             }
 
-
+        [Authorize]
         //Business Summary count for all profile status
         [HttpGet("Businessprofilestatuscounts")]
         public async Task<IActionResult> Businessprofilestatuscounts()
@@ -99,7 +101,7 @@ namespace mytown.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
-
+        [Authorize]
         [HttpPost("updateprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateProfileStatusByAdmin(
     [FromQuery] int busRegId,
@@ -178,6 +180,7 @@ namespace mytown.Controllers
             return Ok(new { count });
         }
 
+        [Authorize]
         // Shoppers Tab
         [HttpGet("getShopperRegistersPaginated")]
         public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
@@ -207,6 +210,7 @@ namespace mytown.Controllers
             });
         }
 
+        [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
         public async Task<IActionResult> updateshopperstatusbyadmin([FromQuery] int shopperId, [FromQuery] string status)
         {
@@ -230,6 +234,7 @@ namespace mytown.Controllers
             return Ok("Shopper status updated successfully.");
         }
 
+        [Authorize]
         [HttpGet("getCourierRegistersPaginated")]
         public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
         {
@@ -260,7 +265,7 @@ namespace mytown.Controllers
 
 
         //landing page
-
+        
         [HttpGet("business/completed-stores-in-locations")]
         public async Task<IActionResult> GetLocationsWithCompletedStores()
         {
