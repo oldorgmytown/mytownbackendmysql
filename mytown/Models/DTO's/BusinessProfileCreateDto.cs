@@ -15,8 +15,7 @@ namespace mytown.Models.DTO_s
         [StringLength(250, ErrorMessage = "Business location cannot exceed 250 characters.")]
         public string? BusinessLocation { get; set; }
 
-        [Required(ErrorMessage = "Business about/description is required.")]
-        [StringLength(500, ErrorMessage = "Business about section cannot exceed 500 characters.")]
+       
         public string? BusinessAbout { get; set; }
 
         [Required(ErrorMessage = "Business category ID is required.")]
