@@ -92,7 +92,7 @@ namespace mytown.Controllers
         public async Task<IActionResult> Logout()
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var sessionId = User.FindFirst("sessionId")!.Value;
+            var sessionId = User.FindFirst("SessionGuid")!.Value;
             var userType = User.FindFirst(ClaimTypes.Role)!.Value;
 
             var result = await _authRepo.LogoutAsync(userId, sessionId, userType);

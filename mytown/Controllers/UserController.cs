@@ -61,10 +61,12 @@ namespace mytown.Controllers
         //        //    return Ok(result); // success
         //        //}
         [AllowAnonymous]
-        [HttpPost("login")]
+        [HttpPost("login")]        
         public async Task<IActionResult> Login([FromBody] LoginRequest loginRequest)
         {
-            if (loginRequest == null || string.IsNullOrWhiteSpace(loginRequest.Email) || string.IsNullOrWhiteSpace(loginRequest.Password))
+            if (loginRequest == null ||
+                string.IsNullOrWhiteSpace(loginRequest.Email) ||
+                string.IsNullOrWhiteSpace(loginRequest.Password))
             {
                 return BadRequest(new { code = 400, message = "Invalid login request" });
             }
@@ -76,29 +78,47 @@ namespace mytown.Controllers
                 if (result == null)
                     return Unauthorized(new { code = 401, message = "Invalid credentials" });
 
-
-                // Extract token from result
+                // Extract token & sessionId
                 var token = result.GetType().GetProperty("token")?.GetValue(result, null)?.ToString();
+                var sessionId = result.GetType().GetProperty("sessionId")?.GetValue(result, null)?.ToString();
 
-                if (string.IsNullOrEmpty(token))
-                    return StatusCode(500, "Token not generated");
+                // Add to headers
+                Response.Headers["Authorization"] = "Bearer " + token;
+                Response.Headers["x-session-id"] = sessionId;
+                Response.Headers["Access-Control-Expose-Headers"] = "Authorization, x-session-id";
 
-                //Return exactly same way as earlier, with token included
-                return Ok(result);
+                // Build cleaned JSON without null fields
+                var response = new Dictionary<string, object>();
+                response["userType"] = result.GetType().GetProperty("userType")?.GetValue(result, null);
 
-                
+                // Include user object
+                var user = result.GetType().GetProperty("user")?.GetValue(result, null);
+                if (user != null) response["user"] = user;
+
+                // Include businessProfile
+                var businessProfile = result.GetType().GetProperty("businessProfile")?.GetValue(result, null);
+                if (businessProfile != null) response["businessProfile"] = businessProfile;
+
+                // Include shopper object only if exists
+                var shopper = result.GetType().GetProperty("shopper")?.GetValue(result, null);
+                if (shopper != null) response["shopper"] = shopper;
+
+                // Include courier object only if exists
+                var courier = result.GetType().GetProperty("courier")?.GetValue(result, null);
+                if (courier != null) response["courier"] = courier;
+
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                // Log full error for debugging
                 Console.WriteLine($"Login error: {ex}");
-
                 return StatusCode(500, new { code = 500, message = "An unexpected error occurred" });
             }
         }
 
 
-     
+
+
         //        #region business Profile
 
         [Authorize]
