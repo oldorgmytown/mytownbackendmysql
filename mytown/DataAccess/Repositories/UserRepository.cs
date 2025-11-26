@@ -170,6 +170,60 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<object> LoginAsync(string email, string password)
         {
+            // ---------------- ADMIN LOGIN ----------------
+            if (email == "admin@itismytown.com")
+            {
+                // You can store admin password in appsettings.json later
+                if (password == "admin123")
+                {
+                    // Kill old active sessions
+                    var oldSession = await _context.UserSessions
+                        .Where(s => s.UserId == 1 && s.UserType == "Admin" && s.IsActive)
+                        .FirstOrDefaultAsync();
+
+                    if (oldSession != null)
+                    {
+                        oldSession.IsActive = false;
+                        _context.UserSessions.Update(oldSession);
+                    }
+
+                    // Create new admin session
+                    var newSession = new UserSession
+                    {
+                        UserId = 1,   // static ID for admin
+                        UserType = "Admin",
+                        SessionGuid = Guid.NewGuid().ToString(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.UserSessions.Add(newSession);
+                    await _context.SaveChangesAsync();
+
+                    // Generate token for admin
+                    var token = _tokenService.GenerateToken(
+                        1,
+                        "admin@itismytown.com",
+                        "Admin",
+                        newSession.SessionGuid
+                    );
+
+                    return new
+                    {
+                        userType = "Admin",
+                        token,
+                        sessionId = newSession.SessionGuid,
+                        admin = new
+                        {
+                            AdminId = 1,
+                            Email = "admin@itismytown.com"
+                            
+                        }
+                    };
+                }
+                return null;
+            }
+
             // ---------------- BUSINESS LOGIN ----------------
             var businessUser = await _context.BusinessRegisters.FirstOrDefaultAsync(r => r.BusEmail == email);
             if (businessUser != null)
