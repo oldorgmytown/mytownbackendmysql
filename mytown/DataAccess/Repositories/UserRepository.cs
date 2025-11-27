@@ -213,11 +213,11 @@ namespace mytown.DataAccess.Repositories
                         userType = "Admin",
                         token,
                         sessionId = newSession.SessionGuid,
-                        admin = new
+                        user = new
                         {
                             AdminId = 1,
-                            Email = "admin@itismytown.com"
-                            
+                            Email = "admin@itismytown.com",
+                            Name = "Admin"
                         }
                     };
                 }
