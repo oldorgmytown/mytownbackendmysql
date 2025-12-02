@@ -158,8 +158,8 @@ namespace mytown.Controllers
                     ProfileStatus = "Incomplete",
                     BusinessName = newBusiness.BusinessName,
                     BusinessLocation = $"{newBusiness.Town}, {newBusiness.BusinessCity}, {newBusiness.BusinessState}, {newBusiness.BusinessCountry}",
-                    BusServId = newBusiness.BusServId,
-                    BusCatId = newBusiness.BusCatId
+                    //BusServId = newBusiness.BusServId,
+                    //BusCatId = newBusiness.BusCatId
                     // CreatedAt = DateTime.UtcNow
                 };
 
