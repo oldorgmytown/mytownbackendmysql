@@ -5,7 +5,7 @@ using mytown.Models;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+  //  [Authorize]
     [Route("api/search")]
     [ApiController]
     public class SearchController : ControllerBase
@@ -25,6 +25,7 @@ namespace mytown.Controllers
         }
 
         //search to get products data based on location and category/product
+        //1-12-25 (no products list)
         [HttpGet("search")]
         public IActionResult SearchBusinesses([FromQuery] string locationQuery, [FromQuery] string productQuery)
         {
@@ -74,45 +75,45 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = profiles });
         }
 
-        [HttpGet("searchproductandbusiness")]
-        public IActionResult SearchBusinessByCategoryOrProduct(
-            [FromQuery] string searchterm,
-            [FromQuery] string? location)
-        {
-            if (string.IsNullOrEmpty(searchterm))
-            {
-                return BadRequest(new { code = 400, message = "Search parameter is required." });
-            }
+        //[HttpGet("searchproductandbusiness")]
+        //public IActionResult SearchBusinessByCategoryOrProduct(
+        //    [FromQuery] string searchterm,
+        //    [FromQuery] string? location)
+        //{
+        //    if (string.IsNullOrEmpty(searchterm))
+        //    {
+        //        return BadRequest(new { code = 400, message = "Search parameter is required." });
+        //    }
 
-            var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm, location);
+        //    var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm, location);
 
-            if (results == null)
-            {
-                return NotFound(new { code = 404, message = "No businesses or products found matching the criteria." });
-            }
+        //    if (results == null)
+        //    {
+        //        return NotFound(new { code = 404, message = "No businesses or products found matching the criteria." });
+        //    }
 
-            return Ok(new { code = 200, data = results });
-        }
+        //    return Ok(new { code = 200, data = results });
+        //}
 
-        [HttpGet("SearchProfilesandProducts_ByProductAndLocation")]
-        public IActionResult SearchProfilesByProductAndLocation(
-            [FromQuery] string productSearchTerm,
-            [FromQuery] string locationSearchTerm)
-        {
-            if (string.IsNullOrWhiteSpace(productSearchTerm) || string.IsNullOrWhiteSpace(locationSearchTerm))
-            {
-                return BadRequest(new { code = 400, message = "Both product and location search terms are required." });
-            }
+        //[HttpGet("SearchProfilesandProducts_ByProductAndLocation")]
+        //public IActionResult SearchProfilesByProductAndLocation(
+        //    [FromQuery] string productSearchTerm,
+        //    [FromQuery] string locationSearchTerm)
+        //{
+        //    if (string.IsNullOrWhiteSpace(productSearchTerm) || string.IsNullOrWhiteSpace(locationSearchTerm))
+        //    {
+        //        return BadRequest(new { code = 400, message = "Both product and location search terms are required." });
+        //    }
 
-            var businessProfiles = _searchRepository.GetBusinessProfilesAndProductsByProductAndLocation(productSearchTerm, locationSearchTerm);
+        //    var businessProfiles = _searchRepository.GetBusinessProfilesAndProductsByProductAndLocation(productSearchTerm, locationSearchTerm);
 
-            if (businessProfiles == null)
-            {
-                return NotFound(new { code = 404, message = "No matching business profiles found." });
-            }
+        //    if (businessProfiles == null)
+        //    {
+        //        return NotFound(new { code = 404, message = "No matching business profiles found." });
+        //    }
 
-            return Ok(new { code = 200, data = businessProfiles });
-        }
+        //    return Ok(new { code = 200, data = businessProfiles });
+        //}
 
         [HttpGet("product-subcategories-by-location")]
         public async Task<IActionResult> GetProductSubCategoriesByLocation([FromQuery] string location)
@@ -141,5 +142,7 @@ namespace mytown.Controllers
 
             return Ok(new { code = 200, data = busCategories });
         }
+
+       
     }
 }
