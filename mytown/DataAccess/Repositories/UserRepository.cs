@@ -349,12 +349,12 @@ namespace mytown.DataAccess.Repositories
                         courier = new CourierServiceDto
                         {
                             CourierServiceName = courier.CourierServiceName,
-                            CourierContactName = courier.CourierContactName,
+                            CourierWebsite = courier.CourierWebsite,
                             CourierPhone = courier.CourierPhone,
                             CourierEmail = courier.CourierEmail,
-                            IsLocal = courier.IsLocal,
+                            IsLocal = courier.IsCity,
                             IsState = courier.IsState,
-                            IsNational = courier.IsNational,
+                            IsNational = courier.IsCountry,
                             IsInternational = courier.IsInternational
                         }
                     };

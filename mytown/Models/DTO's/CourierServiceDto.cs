@@ -4,7 +4,8 @@
     public class CourierServiceDto
     {
         public string CourierServiceName { get; set; }
-        public string CourierContactName { get; set; }
+       // public string CourierContactName { get; set; }
+        public string CourierWebsite { get; set; }
         public string CourierPhone { get; set; }
         public string CourierEmail { get; set; }
         public string Password { get; set; } // incoming plain text

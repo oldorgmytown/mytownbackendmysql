@@ -82,7 +82,8 @@ public class CourierController : ControllerBase
             var courier = new CourierService
             {
                 CourierServiceName = courierDto.CourierServiceName,
-                CourierContactName = courierDto.CourierContactName,
+                // CourierContactName = courierDto.CourierContactName,
+                CourierWebsite = courierDto.CourierWebsite,
                 CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
                 Password = hashedPassword,
@@ -90,9 +91,9 @@ public class CourierController : ControllerBase
                 RegisteredDate = DateTime.UtcNow,
 
                 // Service types (multi-selection checkboxes)
-                IsLocal = courierDto.IsLocal,
+                IsCity = courierDto.IsLocal,
                 IsState = courierDto.IsState,
-                IsNational = courierDto.IsNational,
+                IsCountry = courierDto.IsNational,
                 IsInternational = courierDto.IsInternational
             };
 
@@ -124,7 +125,7 @@ public class CourierController : ControllerBase
             var courier = new CourierService
             {
                 CourierServiceName = courierDto.CourierServiceName,
-                CourierContactName = courierDto.CourierContactName,
+                CourierWebsite = courierDto.CourierWebsite,
                 CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
                 Password = hashedPassword,
@@ -132,9 +133,9 @@ public class CourierController : ControllerBase
                 RegisteredDate = DateTime.UtcNow,
 
                 // Service types (multi-selection checkboxes)
-                IsLocal = courierDto.IsLocal,
+                IsCity = courierDto.IsLocal,
                 IsState = courierDto.IsState,
-                IsNational = courierDto.IsNational,
+                IsCountry = courierDto.IsNational,
                 IsInternational = courierDto.IsInternational
             };
 
