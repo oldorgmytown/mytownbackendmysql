@@ -5,7 +5,7 @@ using mytown.Models;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/search")]
     [ApiController]
     public class SearchController : ControllerBase
@@ -141,5 +141,42 @@ namespace mytown.Controllers
 
             return Ok(new { code = 200, data = busCategories });
         }
+
+
+        //2-12-25  Search only profiles latest
+
+        [HttpGet("searchstoresonly")]
+        public IActionResult SearchStores([FromQuery] string? searchTerm, [FromQuery] string? location)
+        {
+            var stores = _searchRepository.GetBusinessProfilesByFilters(searchTerm, location);
+
+            return Ok(new
+            {
+                stores,
+                storeCount = stores.Count
+            });
+        }
+
+        [HttpGet("Searhcategoriesfilter")]
+        public async Task<IActionResult> GetCategories(string? product, string? location)
+        {
+            IEnumerable<BusinessCategory> categories;
+
+            if (!string.IsNullOrWhiteSpace(location) &&
+                string.IsNullOrWhiteSpace(product))
+            {
+                // ONLY LOCATION GIVEN
+                categories = await _searchRepository.GetBusinessCategoriesByLocationAsync(location);
+            }
+            else
+            {
+                // ONLY PRODUCT OR BOTH PRODUCT + LOCATION
+                categories = await _searchRepository.GetBusinessCategoriesByProductAsync(product!);
+            }
+
+            return Ok(categories);
+        }
+
+
     }
 }

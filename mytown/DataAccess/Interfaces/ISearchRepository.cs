@@ -24,5 +24,9 @@ namespace mytown.DataAccess.Interfaces
         Task<IEnumerable<ProductSubCategory>> GetProductSubCategoriesByLocationAsync(string location);
 
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location);
+
+        //2-12-25  search stores only
+        List<BusinessProfile> GetBusinessProfilesByFilters(string? searchTerm, string? locationQuery);
+        Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName);
     }
 }
