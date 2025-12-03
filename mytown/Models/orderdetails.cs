@@ -21,6 +21,13 @@ namespace mytown.Models
         public virtual Order Order { get; set; }
 
         [Required]
+        [Column("store_order_id")]
+        public int StoreOrderId { get; set; }
+
+        [ForeignKey("StoreOrderId")]
+        public StoreOrder StoreOrder { get; set; }
+
+        [Required]
         [Column("product_id")]
         public int ProductId { get; set; } // Foreign Key - Products
 
