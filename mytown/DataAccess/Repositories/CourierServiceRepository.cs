@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using mytown.Controllers.Helpers;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
@@ -45,6 +46,237 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
             return courier;
         }
+
+        //Upload CVS file for courier branches
+
+        //public async Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file)
+        //{
+        //    var result = new List<CourierBranchCsvRowDto>();
+
+        //    using var stream = new StreamReader(file.OpenReadStream());
+
+        //    int rowNumber = 0;
+
+        //    while (!stream.EndOfStream)
+        //    {
+        //        string line = await stream.ReadLineAsync();
+        //        rowNumber++;
+
+        //        if (rowNumber == 1) continue; // Skip header
+
+        //        var cols = line.Split(',');
+
+        //        var dto = new CourierBranchCsvRowDto
+        //        {
+        //            RowNumber = rowNumber,
+        //            CourierServiceName = cols[0],
+        //            Country = cols[1],
+        //            State = cols[2],
+        //            City = cols[3],
+        //            Town = cols[4],
+        //            BranchAddress = cols[5],
+        //            BranchPhoneNumber = cols[6],
+        //            BranchEmailId = cols[7],
+        //            BranchContactPerson = cols[8],
+        //            Destinations = cols[9],
+        //            ShippingMode = cols[10],
+        //            DistanceRange = cols[11],
+        //            WeightRange = cols[12],
+        //            Charges = decimal.TryParse(cols[13], out var p) ? p : 0
+        //        };
+
+        //        bool valid =
+        //            // Required fields
+        //            !string.IsNullOrWhiteSpace(dto.CourierServiceName) &&
+        //            !string.IsNullOrWhiteSpace(dto.Country) &&
+        //            !string.IsNullOrWhiteSpace(dto.State) &&
+        //            !string.IsNullOrWhiteSpace(dto.City) &&
+        //            !string.IsNullOrWhiteSpace(dto.Town) &&
+        //            !string.IsNullOrWhiteSpace(dto.BranchAddress) &&
+        //            !string.IsNullOrWhiteSpace(dto.ShippingMode) &&
+        //            !string.IsNullOrWhiteSpace(dto.WeightRange) &&
+        //            !string.IsNullOrWhiteSpace(dto.DistanceRange) &&
+
+        //            // Email
+        //            CsvValidationHelper.IsValidEmail(dto.BranchEmailId) &&
+
+        //            // Phone
+        //            CsvValidationHelper.IsValidPhone(dto.BranchPhoneNumber) &&
+
+        //            // Destinations comma-separate check
+        //            CsvValidationHelper.IsCommaSeparatedList(dto.Destinations) &&
+
+        //            // Shipping mode (optional)
+        //            (dto.ShippingMode.ToLower() == "air" ||
+        //             dto.ShippingMode.ToLower() == "surface") &&
+
+        //            // Charges
+        //            dto.Charges > 0;
+
+        //        dto.IsValid = valid;
+        //        result.Add(dto);
+        //    }
+
+        //    return result;
+        //}
+
+        public async Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file)
+        {
+            var result = new List<CourierBranchCsvRowDto>();
+
+using var stream = new StreamReader(file.OpenReadStream());
+
+            int rowNumber = 0;
+
+            while (!stream.EndOfStream)
+            {
+                string line = await stream.ReadLineAsync();
+                rowNumber++;
+
+                if (rowNumber == 1)
+                    continue; // Skip header
+
+                // --- STEP 1: Split ---
+                var raw = line.Split(',').ToList();
+
+                // --- STEP 2: Fix destinations column if commas exist ---
+                if (raw.Count > 14)
+                {
+                    // Expected 14 columns. Anything extra belongs to Destinations.
+                    var destinationPieces = raw.Skip(9).Take(raw.Count - 13).ToList();
+
+                    // Merge into one proper destinations field
+                    raw[9] = string.Join(", ", destinationPieces);
+
+                    // Fix remaining columns (ShippingMode, DistanceRange, WeightRange, Charges)
+                    int total = raw.Count;
+                    raw[10] = raw[total - 4];
+                    raw[11] = raw[total - 3];
+                    raw[12] = raw[total - 2];
+                    raw[13] = raw[total - 1];
+
+                    // Trim list back to 14 fields
+                    raw = raw.Take(14).ToList();
+                }
+
+                var cols = raw.ToArray();
+
+                // --- STEP 3: Map to DTO ---
+                var dto = new CourierBranchCsvRowDto
+                {
+                    RowNumber = rowNumber,
+                    CourierServiceName = cols[0]?.Trim(),
+                    Country = cols[1]?.Trim(),
+                    State = cols[2]?.Trim(),
+                    City = cols[3]?.Trim(),
+                    Town = cols[4]?.Trim(),
+                    BranchAddress = cols[5]?.Trim(),
+                    BranchPhoneNumber = cols[6]?.Trim(),
+                    BranchEmailId = cols[7]?.Trim(),
+                    BranchContactPerson = cols[8]?.Trim(),
+                    Destinations = cols[9]?.Trim(),
+                    ShippingMode = cols[10]?.Trim(),
+                    DistanceRange = cols[11]?.Trim(),
+                    WeightRange = cols[12]?.Trim(),
+                    Charges = decimal.TryParse(cols[13], out var p) ? p : 0
+                };
+
+                // --- STEP 4: Validation ---
+                bool valid =
+                    !string.IsNullOrWhiteSpace(dto.CourierServiceName) &&
+                    !string.IsNullOrWhiteSpace(dto.Country) &&
+                    !string.IsNullOrWhiteSpace(dto.State) &&
+                    !string.IsNullOrWhiteSpace(dto.City) &&
+                    !string.IsNullOrWhiteSpace(dto.Town) &&
+                    !string.IsNullOrWhiteSpace(dto.BranchAddress) &&
+                    !string.IsNullOrWhiteSpace(dto.ShippingMode) &&
+                    !string.IsNullOrWhiteSpace(dto.WeightRange) &&
+                    !string.IsNullOrWhiteSpace(dto.DistanceRange) &&
+                    CsvValidationHelper.IsValidEmail(dto.BranchEmailId) &&
+                    CsvValidationHelper.IsValidPhone(dto.BranchPhoneNumber) &&
+                    CsvValidationHelper.IsCommaSeparatedList(dto.Destinations) &&
+                    (dto.ShippingMode.Equals("air", StringComparison.OrdinalIgnoreCase) ||
+                     dto.ShippingMode.Equals("surface", StringComparison.OrdinalIgnoreCase)) &&
+                    dto.Charges > 0;
+
+                dto.IsValid = valid;
+                result.Add(dto);
+            }
+
+            return result;
+
+
+}
+
+
+
+        public async Task<bool> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
+        {
+            if (rows == null || !rows.Any())
+                throw new Exception("No data received.");
+
+            //  Check validity
+            if (rows.Any(r => !r.IsValid))
+                throw new Exception("Some rows are invalid. Please fix them before saving.");
+
+            // Check duplicates in DB BEFORE saving
+            foreach (var r in rows)
+            {
+                bool exists = await _context.CourierBranches.AnyAsync(cb =>
+                    cb.CourierServiceName == r.CourierServiceName &&
+                    cb.Country == r.Country &&
+                    cb.State == r.State &&
+                    cb.City == r.City &&
+                    cb.Town == r.Town &&
+                    cb.BranchAddress == r.BranchAddress &&
+                    cb.BranchPhoneNumber == r.BranchPhoneNumber &&
+                    cb.BranchEmailId == r.BranchEmailId &&
+                    cb.BranchContactPerson == r.BranchContactPerson &&
+                    cb.ShippingMode == r.ShippingMode &&
+                    cb.DistanceRange == r.DistanceRange &&
+                    cb.WeightRange == r.WeightRange
+                );
+
+                if (exists)
+                    throw new Exception("Duplicate rows found in database. Please remove duplicates and reupload.");
+            }
+
+            // Convert DTO → Entity
+            var entities = rows.Select(r => new CourierBranch
+            {
+                CourierServiceName = r.CourierServiceName,
+                Country = r.Country,
+                State = r.State,
+                City = r.City,
+                Town = r.Town,
+                BranchAddress = r.BranchAddress,
+                BranchPhoneNumber = r.BranchPhoneNumber,
+                BranchEmailId = r.BranchEmailId,
+                BranchContactPerson = r.BranchContactPerson,
+                Destinations = r.Destinations,
+                ShippingMode = r.ShippingMode,
+                DistanceRange = r.DistanceRange,
+                WeightRange = r.WeightRange,
+                Charges = r.Charges
+            }).ToList();
+
+            // 4️⃣ Save Everything OR Nothing
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                await _context.CourierBranches.AddRangeAsync(entities);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
 
         //     public async Task<List<CourierBranch>> GetBestCourierOptions(BusinessRegister business, ShopperRegister shopper, decimal productWeightKg)
         //{

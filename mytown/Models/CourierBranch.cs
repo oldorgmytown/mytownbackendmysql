@@ -16,7 +16,7 @@ namespace mytown.Models
         public int CourierId { get; set; }
 
         [Column("courier_name", TypeName = "varchar(255)")]
-        public string CourierName { get; set; } // Optional: for display purposes only
+        public string CourierServiceName { get; set; } // Optional: for display purposes only
 
         [Required]
         [Column("country", TypeName = "varchar(100)")]

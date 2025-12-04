@@ -9,7 +9,7 @@ using System.Text.Json;
 
 using System.Threading.Tasks;
 
-[Authorize]
+
 [ApiController]
 [Route("api/courier")]
 public class CourierController : ControllerBase
@@ -82,7 +82,7 @@ public class CourierController : ControllerBase
             var courier = new CourierService
             {
                 CourierServiceName = courierDto.CourierServiceName,
-                CourierContactName = courierDto.CourierContactName,
+                CourierWebsiteName = courierDto.CourierWebsiteName,
                 CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
                 Password = hashedPassword,
@@ -124,7 +124,7 @@ public class CourierController : ControllerBase
             var courier = new CourierService
             {
                 CourierServiceName = courierDto.CourierServiceName,
-                CourierContactName = courierDto.CourierContactName,
+                CourierWebsiteName = courierDto.CourierWebsiteName,
                 CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
                 Password = hashedPassword,
@@ -150,6 +150,61 @@ public class CourierController : ControllerBase
         }
     }
 
+
+    //Upload CVS file for branch locations ..chekc for valid data and preview
+
+    [HttpPost("courierBranchUpload-preview")]
+    public async Task<IActionResult> UploadCourierCsv(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("File missing");
+
+        var preview = await _courierrepo.ParseAndValidateCsv(file);
+
+        return Ok(preview);
+    }
+
+    //save to db
+    [HttpPost("save-courier-branches")]
+    public async Task<IActionResult> SaveCourierBranches([FromBody] List<CourierBranchCsvRowDto> rows)
+    {
+        if (rows == null || !rows.Any())
+            return BadRequest(new { message = "No rows received." });
+
+        // 1. Backend double-checks validity
+        var invalidRows = rows
+            .Where(r => !r.IsValid)
+            .Select(r => r.RowNumber)
+            .ToList();
+
+        if (invalidRows.Any())
+        {
+            // Backend rejects the upload
+            return BadRequest(new
+            {
+                message = "Some rows are invalid. Please upload a file where all rows are valid.",
+                invalidRows = invalidRows
+            });
+        }
+
+        try
+        {
+            // 2. All rows valid → Save to DB
+            await _courierrepo.SaveCourierBranchesAsync(rows);
+
+            return Ok(new
+            {
+                message = "All rows saved successfully."
+            });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+
+
     //[HttpGet("GetBestCouriers")]
     //public async Task<IActionResult> GetBestCouriers(int busRegId, int shopperId, decimal productWeightKg)
     //{
@@ -163,7 +218,7 @@ public class CourierController : ControllerBase
     //    return Ok(bestCouriers);
     //}
 
-   
+    [Authorize]
     [HttpGet("GetBestCourier")]
     public async Task<IActionResult> GetBestCourier(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg)
     {
@@ -182,6 +237,7 @@ public class CourierController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize]
     [HttpGet("AssignedOrdersByCourier")]
     public async Task<IActionResult> GetAssignedOrdersByCourier([FromQuery] int courierId)
     {

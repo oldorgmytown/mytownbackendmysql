@@ -16,8 +16,8 @@ namespace mytown.Models
         public string CourierServiceName { get; set; }
 
         [Required]
-        [Column("courier_contact_name", TypeName = "varchar(255)")]
-        public string CourierContactName { get; set; }
+        [Column("courier_website_name", TypeName = "varchar(255)")]
+        public string CourierWebsiteName { get; set; }
 
         [StringLength(15)]
         [Column("courier_phone", TypeName = "varchar(15)")]

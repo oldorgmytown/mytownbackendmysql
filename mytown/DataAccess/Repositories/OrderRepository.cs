@@ -247,7 +247,7 @@ namespace mytown.DataAccess.Repositories
                 .Where(cb => cb.BranchId == branchId)
                 .Select(cb => new
                 {
-                    cb.CourierName,
+                    cb.CourierServiceName,
                     cb.CourierId,
                     CourierEmail = cb.CourierService.CourierEmail
                 })
@@ -257,7 +257,7 @@ namespace mytown.DataAccess.Repositories
             {
                 await _emailService.SendEmailToCourierAsync(
                     courierInfo.CourierEmail,
-                    courierInfo.CourierName,
+                    courierInfo.CourierServiceName,
                     shippingDetailId
                 );
             }

@@ -403,7 +403,7 @@ namespace mytown.DataAccess.Repositories
                         courier = new CourierServiceDto
                         {
                             CourierServiceName = courier.CourierServiceName,
-                            CourierContactName = courier.CourierContactName,
+                            CourierWebsiteName = courier.CourierWebsiteName,
                             CourierPhone = courier.CourierPhone,
                             CourierEmail = courier.CourierEmail,
                             IsLocal = courier.IsLocal,
