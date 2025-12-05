@@ -19,6 +19,12 @@
         public decimal Charges { get; set; }
 
         public bool IsValid { get; set; }
+
+
+        // INTERNAL USE ONLY
+        public int CourierId { get; set; }
+        public int? EstimateDays { get; set; }
+
     }
 
 }

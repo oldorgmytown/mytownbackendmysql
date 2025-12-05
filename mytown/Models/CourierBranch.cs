@@ -15,7 +15,7 @@ namespace mytown.Models
         [Column("courier_id")]
         public int CourierId { get; set; }
 
-        [Column("courier_name", TypeName = "varchar(255)")]
+        [Column("courier_service_name", TypeName = "varchar(255)")]
         public string CourierServiceName { get; set; } // Optional: for display purposes only
 
         [Required]
@@ -60,6 +60,10 @@ namespace mytown.Models
 
         [Column("distance_range", TypeName = "varchar(100)")]
         public string DistanceRange { get; set; }
+
+        [Column("estimate_days", TypeName = "int")]
+        public int? EstimateDays { get; set; }   // nullable, because CSV may not have value
+
 
         // 🔗 Navigation property
         public CourierService CourierService { get; set; }
