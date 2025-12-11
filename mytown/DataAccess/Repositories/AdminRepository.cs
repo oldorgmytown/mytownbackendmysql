@@ -3,7 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
-using mytown.Services;
+using mytown.Services.Interfaces;
 using MyTown.Models;
 
 namespace mytown.DataAccess.Repositories

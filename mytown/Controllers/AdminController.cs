@@ -1,26 +1,26 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess.Interfaces;
+using mytown.Services.Interfaces;
 using mytown.Models.DTO_s;
 
 namespace mytown.Controllers
 {
-    
+
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase
     {
 
-        private readonly IAdminRepository _adminRepo;
-
+        private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
 
-        public AdminController(IAdminRepository adminRepo,
-                                 ILogger<AdminController> logger)
+        public AdminController(IAdminService adminService,
+                               ILogger<AdminController> logger)
         {
-            _adminRepo = adminRepo ?? throw new ArgumentNullException(nameof(adminRepo));
+            _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
+
         [Authorize]
         [HttpGet("getBusinessRegistersPaginated")]
         public async Task<IActionResult> GetBusinessRegistersPaginated([FromQuery] int page = 1, [FromQuery] int pageSize = 2, string? search = null)
@@ -30,7 +30,7 @@ namespace mytown.Controllers
                 return BadRequest(new { message = "Invalid pagination parameters." });
             }
 
-            var (records, totalRecords) = await _adminRepo.GetBusinessRegistersPaginatedAsync(page, pageSize,search);
+            var (records, totalRecords) = await _adminService.GetBusinessRegistersPaginatedAsync(page, pageSize, search);
 
             return Ok(new
             {
@@ -42,7 +42,6 @@ namespace mytown.Controllers
         }
 
         [Authorize]
-        // for stores with all profil status types
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
             [FromQuery] string status,
@@ -53,7 +52,7 @@ namespace mytown.Controllers
             if (page < 1 || pageSize < 1)
                 return BadRequest(new { message = "Invalid pagination parameters." });
 
-            var (records, totalRecords) = await _adminRepo.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize, search);
+            var (records, totalRecords) = await _adminService.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize, search);
 
             return Ok(new
             {
@@ -65,48 +64,47 @@ namespace mytown.Controllers
         }
 
         [Authorize]
-        // for services with all profile status
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
          [FromQuery] string status,
          [FromQuery] int page = 1,
          [FromQuery] int pageSize = 10)
+        {
+            if (page < 1 || pageSize < 1)
+                return BadRequest(new { message = "Invalid pagination parameters." });
+
+            var (records, totalRecords) = await _adminService.GetBusinessesservicesByStatusPaginatedAsync(status, page, pageSize);
+
+            return Ok(new
             {
-                if (page < 1 || pageSize < 1)
-                    return BadRequest(new { message = "Invalid pagination parameters." });
-
-                var (records, totalRecords) = await _adminRepo.GetBusinessesservicesByStatusPaginated(status, page, pageSize);
-
-                return Ok(new
-                {
-                    data = records,
-                    totalRecords,
-                    currentPage = page,
-                    pageSize
-                });
-            }
+                data = records,
+                totalRecords,
+                currentPage = page,
+                pageSize
+            });
+        }
 
         [Authorize]
-        //Business Summary count for all profile status
         [HttpGet("Businessprofilestatuscounts")]
         public async Task<IActionResult> Businessprofilestatuscounts()
         {
             try
             {
-                var result = await _adminRepo.Businessprofilestatuscounts();
-                return Ok(result); 
+                var result = await _adminService.BusinessprofilestatuscountsAsync();
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
         [Authorize]
         [HttpPost("updateprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateProfileStatusByAdmin(
-    [FromQuery] int busRegId,
-    [FromQuery] string status,
-    [FromBody] AdminProfileUpdateDto commentDto)
+            [FromQuery] int busRegId,
+            [FromQuery] string status,
+            [FromBody] AdminProfileUpdateDto commentDto)
         {
             if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
@@ -114,7 +112,7 @@ namespace mytown.Controllers
             if (busRegId <= 0)
                 return BadRequest("Invalid business registration ID.");
 
-            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(busRegId, status, commentDto.Comment);
+            var updated = await _adminService.UpdateProfileStatusbyAdminAsync(busRegId, status, commentDto.Comment);
 
             if (!updated)
                 return NotFound($"No business profile found with BusRegId {busRegId}.");
@@ -126,35 +124,31 @@ namespace mytown.Controllers
         [HttpGet("GetDashboardCounts")]
         public async Task<IActionResult> GetDashboardCounts()
         {
-            var counts = await _adminRepo.GetDashboardCountsAsync();
+            var counts = await _adminService.GetDashboardCountsAsync();
             return Ok(counts);
         }
 
-        // Add API to get unique counts for cities, states, and countries
         [HttpGet("GetUniqueCounts")]
         public async Task<IActionResult> GetUniqueCounts()
         {
             try
             {
-                // Get unique counts from the repository
-                var (uniqueTowns,uniqueCities, uniqueStates, uniqueCountries) = await _adminRepo.GetUniqueCountsAsync();
+                var (uniqueTowns, uniqueCities, uniqueStates, uniqueCountries) = await _adminService.GetUniqueCountsAsync();
 
-                // Return the result
                 return Ok(new
                 {
                     message = "Unique counts retrieved successfully",
                     data = new
                     {
-                        uniqueTowns = uniqueTowns,
-                        uniqueCities = uniqueCities,
-                        uniqueStates = uniqueStates,
-                        uniqueCountries = uniqueCountries
+                        uniqueTowns,
+                        uniqueCities,
+                        uniqueStates,
+                        uniqueCountries
                     }
                 });
             }
             catch (Exception ex)
             {
-                // If there's an error, return a 500 status code
                 return StatusCode(500, new { message = "Error retrieving unique counts", error = ex.Message });
             }
         }
@@ -162,45 +156,36 @@ namespace mytown.Controllers
         [HttpGet("getBusinessRegisterCount")]
         public async Task<IActionResult> GetBusinessRegisterCount()
         {
-            var count = await _adminRepo.GetBusinessRegisterCountAsync();
+            var count = await _adminService.GetBusinessRegisterCountAsync();
             return Ok(new { count });
         }
 
         [HttpGet("getShoppersRegisterCount")]
-        public async Task<IActionResult> getShoppersRegisterCount()
+        public async Task<IActionResult> GetShoppersRegisterCount()
         {
-            var count = await _adminRepo.GetShoppersRegisterCountAsync();
+            var count = await _adminService.GetShoppersRegisterCountAsync();
             return Ok(new { count });
         }
 
         [HttpGet("getCourierRegisterCount")]
-        public async Task<IActionResult> getCourierRegisterCount()
+        public async Task<IActionResult> GetCourierRegisterCount()
         {
-            var count = await _adminRepo.GetCourierserviceCountAsync();
+            var count = await _adminService.GetCourierRegisterCountAsync();
             return Ok(new { count });
         }
 
         [Authorize]
-        // Shoppers Tab
         [HttpGet("getShopperRegistersPaginated")]
         public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
         {
-            // Validate page and pageSize
             if (page <= 0 || pageSize <= 0)
-            {
                 return BadRequest(new { message = "Page and page size must be greater than 0." });
-            }
 
-            // Call the repository method to fetch paginated shopper registers
-            var (shopperRegisters, totalRecords) = await _adminRepo.GetShopperRegistersPaginatedAsync(page, pageSize);
+            var (shopperRegisters, totalRecords) = await _adminService.GetShopperRegistersPaginatedAsync(page, pageSize);
 
-            // Check if there are any records
             if (shopperRegisters == null || !shopperRegisters.Any())
-            {
                 return Ok(new { data = new List<object>(), message = "No shopper registers found.", totalRecords = 0 });
-            }
 
-            // Return the paginated list of shoppers as JSON
             return Ok(new
             {
                 data = shopperRegisters,
@@ -212,24 +197,17 @@ namespace mytown.Controllers
 
         [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
-        public async Task<IActionResult> updateshopperstatusbyadmin([FromQuery] int shopperId, [FromQuery] string status)
+        public async Task<IActionResult> UpdateShopperStatusByAdmin([FromQuery] int shopperId, [FromQuery] string status)
         {
             if (string.IsNullOrEmpty(status))
                 return BadRequest("Status is required.");
             if (shopperId <= 0)
                 return BadRequest("Invalid Shopper registration ID.");
 
-            var updated = await _adminRepo.UpdateProfileStatusbyAdminAsync(shopperId, status);
+            var updated = await _adminService.UpdateShopperStatusByAdminAsync(shopperId, status);
 
             if (!updated)
                 return NotFound($"No Shopper found with Id {shopperId}.");
-            // Fetch shopper details (e.g., email)
-            var shopper = await _adminRepo.GetShopperByIdAsync(shopperId);
-            if (shopper != null && !string.IsNullOrEmpty(shopper.Email))
-            {
-                // Send status update email
-               // await _emailService.SendStatusUpdateEmail(shopper.Email, shopper.FullName, status);
-            }
 
             return Ok("Shopper status updated successfully.");
         }
@@ -238,22 +216,14 @@ namespace mytown.Controllers
         [HttpGet("getCourierRegistersPaginated")]
         public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
         {
-            // Validate page and pageSize
             if (page <= 0 || pageSize <= 0)
-            {
                 return BadRequest(new { message = "Page and page size must be greater than 0." });
-            }
 
-            // Call the repository method to fetch paginated shopper registers
-            var (courierRegisters, totalRecords) = await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize);
+            var (courierRegisters, totalRecords) = await _adminService.GetCourierRegistersPaginatedAsync(page, pageSize);
 
-            // Check if there are any records
             if (courierRegisters == null || !courierRegisters.Any())
-            {
                 return Ok(new { data = new List<object>(), message = "No courier registers found.", totalRecords = 0 });
-            }
 
-            // Return the paginated list of shoppers as JSON
             return Ok(new
             {
                 data = courierRegisters,
@@ -263,16 +233,12 @@ namespace mytown.Controllers
             });
         }
 
-
-        //landing page
-        
         [HttpGet("business/completed-stores-in-locations")]
         public async Task<IActionResult> GetLocationsWithCompletedStores()
         {
-            var data = await _adminRepo.GetLocationsWithCompletedStoresAsync();
+            var data = await _adminService.GetLocationsWithCompletedStoresAsync();
             return Ok(data);
         }
-
 
     }
 }

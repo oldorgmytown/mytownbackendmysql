@@ -8,9 +8,13 @@ using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
-using mytown.Services;
+using Stripe.Climate;
 using System.Security.Claims;
 using System.Text;
+using mytown.Services.Interfaces;
+using mytown.Services.Implementations;
+
+
 
 public class Startup
 {
@@ -64,6 +68,21 @@ public class Startup
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
         services.AddScoped<ITokenService, TokenService>();
+
+
+        services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+        services.AddScoped<IBusinessProfileService, BusinessProfileService>();
+        //services.AddScoped<IShopperService, ShopperService>();
+        //services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IOrderService, mytown.Services.Implementations.OrderService>();
+        //services.AddScoped<IPaymentService, PaymentService>();
+        //services.AddScoped<ICartService, CartService>();
+        //services.AddScoped<ISearchService, SearchService>();
+        //services.AddScoped<ICourierService, CourierService>();
+        //services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
+
 
     }
 
@@ -279,3 +298,4 @@ public class Startup
         }
     }
 }
+
