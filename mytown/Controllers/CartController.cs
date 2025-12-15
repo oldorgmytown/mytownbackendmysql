@@ -1,22 +1,23 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/shoppingcart")]
     [ApiController]
     public class CartController : ControllerBase
     {
-        private readonly ICartRepository _cartRepo;
+        private readonly ICartService _cartService;
         private readonly ILogger<CartController> _logger;
 
-        public CartController(ICartRepository cartRepo,
+        public CartController(ICartService cartService,
                               ILogger<CartController> logger)
         {
-            _cartRepo = cartRepo ?? throw new ArgumentNullException(nameof(cartRepo));
+            _cartService = cartService ?? throw new ArgumentNullException(nameof(cartService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -38,7 +39,7 @@ namespace mytown.Controllers
 
             try
             {
-                var updatedCartItem = await _cartRepo.AddToCart(cartItem);
+                var updatedCartItem = await _cartService.AddToCart(cartItem);
 
                 if (updatedCartItem == null)
                     return BadRequest(new { code = 400, message = "Failed to add product to cart." });
@@ -47,6 +48,7 @@ namespace mytown.Controllers
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "AddToCart failed");
                 return StatusCode(500, new { code = 500, message = $"Internal Server Error: {ex.Message}" });
             }
         }
@@ -55,7 +57,7 @@ namespace mytown.Controllers
         [HttpGet("GetCartItems/{shopperRegId}")]
         public async Task<IActionResult> GetCartItems(int shopperRegId)
         {
-            var cartItems = await _cartRepo.GetCartItems(shopperRegId);
+            var cartItems = await _cartService.GetCartItems(shopperRegId);
 
             return Ok(new
             {
@@ -71,7 +73,7 @@ namespace mytown.Controllers
             if (cartId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid cart ID." });
 
-            var success = await _cartRepo.IncreaseCartItemQty(cartId);
+            var success = await _cartService.IncreaseCartItemQty(cartId);
 
             if (!success)
                 return NotFound(new { code = 404, message = "Cart item not found." });
@@ -86,7 +88,7 @@ namespace mytown.Controllers
             if (cartId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid cart ID." });
 
-            var success = await _cartRepo.DecreaseCartItemQty(cartId);
+            var success = await _cartService.DecreaseCartItemQty(cartId);
 
             if (!success)
                 return NotFound(new { code = 404, message = "Cart item not found." });
@@ -101,7 +103,7 @@ namespace mytown.Controllers
             if (cartId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid cart ID." });
 
-            var success = await _cartRepo.RemoveFromCart(cartId);
+            var success = await _cartService.RemoveFromCart(cartId);
 
             if (!success)
                 return NotFound(new { code = 404, message = "Cart item not found." });
@@ -116,7 +118,7 @@ namespace mytown.Controllers
             if (cartId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid cart ID." });
 
-            var result = await _cartRepo.MoveToWishlist(cartId);
+            var result = await _cartService.MoveToWishlist(cartId);
 
             if (!result)
                 return NotFound(new { code = 404, message = "Item not found!" });
@@ -131,7 +133,7 @@ namespace mytown.Controllers
             if (cartId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid cart ID." });
 
-            var result = await _cartRepo.MoveBackToCart(cartId);
+            var result = await _cartService.MoveBackToCart(cartId);
 
             if (!result)
                 return NotFound(new { code = 404, message = "Item not found!" });
@@ -146,7 +148,7 @@ namespace mytown.Controllers
             if (orderId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid Order ID." });
 
-            var result = await _cartRepo.UpdateCartStatusAsync(orderId);
+            var result = await _cartService.UpdateCartStatusAsync(orderId);
 
             if (!result)
                 return NotFound(new { code = 404, message = "Order or Cart items not found." });
@@ -161,7 +163,7 @@ namespace mytown.Controllers
             if (shopperRegId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid Shopper ID." });
 
-            var result = await _cartRepo.UpdateCartStatusByShopperAsync(shopperRegId);
+            var result = await _cartService.UpdateCartStatusByShopperAsync(shopperRegId);
 
             if (!result)
                 return NotFound(new { code = 404, message = "No cart items found for this shopper." });
@@ -176,7 +178,7 @@ namespace mytown.Controllers
             if (shopperRegId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid Shopper ID." });
 
-            var shopper = await _cartRepo.GetShopperDetails(shopperRegId);
+            var shopper = await _cartService.GetShopperDetails(shopperRegId);
 
             if (shopper == null)
                 return Ok(new { code = 200, message = "No Data" });
@@ -191,7 +193,7 @@ namespace mytown.Controllers
             if (productId <= 0)
                 return BadRequest(new { code = 400, message = "Invalid Product ID." });
 
-            var productDetails = await _cartRepo.GetProductAndVariantforCartAsync(productId);
+            var productDetails = await _cartService.GetProductAndVariantforCartAsync(productId);
 
             if (productDetails == null)
                 return NotFound(new { code = 404, message = "Product not found" });

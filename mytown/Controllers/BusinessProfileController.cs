@@ -1,160 +1,78 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using mytown.DataAccess;
-using mytown.DataAccess.Interfaces;
-using mytown.Filters;
 using mytown.Models;
 using mytown.Models.DTO_s;
-using MyTown.Controllers;
+using mytown.Services.Interfaces;
+using mytown.Services.Implementations;
+using System.Threading.Tasks;
+
+
 
 namespace mytown.Controllers
 {
     [Authorize]
     [Route("api/business/profile")]
     [ApiController]
-    public class BusinessProfileController :ControllerBase
+  public class BusinessProfileController : ControllerBase
+{
+    private readonly IBusinessProfileService _service;
+
+    public BusinessProfileController(IBusinessProfileService service)
     {
-        private readonly IBusinessProfileRepository _businessprofileRepo;
-       
-        private readonly ILogger<BusinessProfileController> _logger;
+        _service = service;
+    }
 
-        public BusinessProfileController(IBusinessProfileRepository businessprofileRepo,
-                                 ILogger<BusinessProfileController> logger)
-        {
-            _businessprofileRepo = businessprofileRepo ?? throw new ArgumentNullException(nameof(businessprofileRepo));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
-        [ValidateModel]
+        // ------------------- ADD BUSINESS PROFILE -------------------
         [HttpPost("addBusinessProfile")]
         public async Task<IActionResult> AddBusinessProfile(
-     [FromForm] BusinessProfileCreateDto businessProfileDto,
-     IFormFile? bannerFile,
-     IFormFile? logoFile)
+            [FromForm] BusinessProfileCreateDto businessProfileDto,
+            IFormFile? bannerFile,
+            IFormFile? logoFile)
         {
-            //if (businessProfileDto == null)
-            //    return BadRequest(new { message = "Invalid business profile data" });
-
-            try
-            {
-                string? bannerPath = null;
-                string? logoPath = null;
-
-                // Upload banner if provided
-                if (bannerFile != null)
-                    bannerPath = await _businessprofileRepo.UploadToBlobAsync(bannerFile, "banner");
-
-                // Upload logo if provided
-                if (logoFile != null)
-                    logoPath = await _businessprofileRepo.UploadToBlobAsync(logoFile, "logo");
-
-                // Map DTO → Entity
-                var entity = new BusinessProfile
-                {
-                    BusRegId = businessProfileDto.BusRegId,
-                    BusinessName = businessProfileDto.BusinessUsername,
-                    BusinessLocation = businessProfileDto.BusinessLocation,
-                    BusinessAbout = businessProfileDto.BusinessAbout,
-                    ProfileStatus = businessProfileDto.ProfileStatus,
-                    BusCatId = businessProfileDto.Buscatid ?? 0,
-                    //bus_time = businessProfileDto.BusTime,
-                    //Businessservice_name = businessProfileDto.BusinessServiceName,
-                    //Businesscategory_name = businessProfileDto.BusinessCategoryName,
-                    BannerPath = bannerPath, // new banner (if any)
-                    LogoPath = logoPath      // new logo (if any)
-                };
-
-                // Repository handles both Add and Update
-                var savedBusinessProfile = await _businessprofileRepo.AddBusinessProfileAsync(entity);
-
-                return Ok(new
-                {
-                    message = savedBusinessProfile.BusinessProfileId == 0
-                                ? "Business profile added successfully"
-                                : "Business profile updated successfully",
-                    data = savedBusinessProfile
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = "An error occurred while saving the business profile",
-                    error = ex.Message
-                });
-            }
+            return await _service.AddBusinessProfile(businessProfileDto, bannerFile, logoFile);
         }
 
-
-
-        //    [HttpPost("addBusinessProfile")]
-        //public async Task<IActionResult> AddBusinessProfile([FromBody] businessprofile businessProfile)
-        //{
-        //    if (businessProfile == null)
-        //    {
-        //        return BadRequest(new { message = "Invalid business profile data" });
-        //    }
-
-        //    try
-        //    {
-        //        // Add the business profile and get the saved object
-        //        var savedBusinessProfile = await _businessprofileRepo.AddBusinessProfileAsync(businessProfile);
-
-        //        // Return the saved business profile along with a success message
-        //        return Ok(new
-        //        {
-        //            message = "Business profile added successfully",
-        //            data = savedBusinessProfile
-        //        });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return StatusCode(500, new { message = "An error occurred while adding the business profile", error = ex.Message });
-        //    }
-        //}
-
+        // ------------------- UPDATE BANNER -------------------
         [HttpPut("update-banner/{busRegId}")]
         public async Task<IActionResult> UpdateBannerPath(int busRegId, [FromBody] UpdateBannerRequest request)
         {
             if (request == null || string.IsNullOrEmpty(request.BannerPath))
                 return BadRequest("Banner path cannot be empty");
 
-            bool isUpdated = await _businessprofileRepo.UpdateBannerPathAsync(busRegId, request.BannerPath);
-
-            if (!isUpdated)
+            var updated = await _service.UpdateBannerPathAsync(busRegId, request.BannerPath);
+            if (!updated)
                 return NotFound($"Business profile with BusRegId {busRegId} not found.");
 
             return Ok(new { message = "Banner path updated successfully" });
         }
 
+        // ------------------- UPDATE LOGO -------------------
         [HttpPut("update-logo/{busRegId}")]
         public async Task<IActionResult> UpdateLogoPath(int busRegId, [FromBody] UpdateLogoRequest request)
         {
             if (request == null || string.IsNullOrEmpty(request.LogoPath))
                 return BadRequest("Logo path cannot be empty");
 
-            bool isUpdated = await _businessprofileRepo.UpdateLogoPathAsync(busRegId, request.LogoPath);
-
-            if (!isUpdated)
+            var updated = await _service.UpdateLogoPathAsync(busRegId, request.LogoPath);
+            if (!updated)
                 return NotFound($"Business profile with BusRegId {busRegId} not found.");
 
             return Ok(new { message = "Logo path updated successfully" });
         }
 
+        // ------------------- GET ALL SUBCATEGORIES -------------------
         [HttpGet("GetAllProductsubcategories")]
         public async Task<IActionResult> GetAllProductsubcategories()
         {
-            var subCategories = await _businessprofileRepo.GetAllSubCategoriesAsync();
+            var subCategories = await _service.GetAllSubCategoriesAsync();
             return Ok(subCategories);
         }
 
-        //get product category details like type, fabric,design on add product form
-
+        // ------------------- GET SUBCATEGORY DETAILS -------------------
         [HttpGet("GetSubcatdetails_onaddproductform")]
-        public async Task<ActionResult<ProductDetailsDto>> GetBySubCategory(int subcatId)
+        public async Task<IActionResult> GetBySubCategory(int subcatId)
         {
-            var result = await _businessprofileRepo.GetDetailsBySubCategoryAsync(subcatId);
+            var result = await _service.GetDetailsBySubCategoryAsync(subcatId);
 
             if ((result.ProductTypes == null || !result.ProductTypes.Any()) &&
                 (result.Fabrics == null || !result.Fabrics.Any()) &&
@@ -166,86 +84,65 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-
-        //get sub categories of each business
+        // ------------------- GET SUBCATEGORIES FOR BUSINESS -------------------
         [HttpGet("GetProductCategoriesbybusregid")]
         public IActionResult GetProductSubCategories(int busRegId)
         {
-            var subCategories = _businessprofileRepo.GetProductSubCategoriesByBusRegId(busRegId);
+            var subCategories = _service.GetProductSubCategoriesByBusRegId(busRegId);
 
             if (subCategories == null || !subCategories.Any())
-            {
                 return NotFound(new { message = "No subcategories found for the given BusRegId." });
-            }
 
             return Ok(subCategories);
         }
 
+        // ------------------- GET ALL BUSINESS PROFILES -------------------
         [HttpGet("getBusinessProfiles")]
-        public async Task<IActionResult> getBusinessProfiles()
+        public async Task<IActionResult> GetBusinessProfiles()
         {
-            var profiles = await _businessprofileRepo.GetAllBusinessProfilesAsync();
+            var profiles = await _service.GetAllBusinessProfilesAsync();
             return Ok(profiles);
         }
-        //get profile details using busregid
+
+        // ------------------- GET BUSINESS PROFILES BY BUSREGID -------------------
         [HttpGet("getBusinessProfilesByBusRegId")]
         public async Task<IActionResult> GetBusinessProfilesByBusRegId(int busRegId)
         {
-            try
-            {
-                var businessProfiles = await _businessprofileRepo.GetBusinessProfilesByBusRegIdAsync(busRegId);
+            var profiles = await _service.GetBusinessProfilesByBusRegIdAsync(busRegId);
 
-                if (businessProfiles == null || !businessProfiles.Any())
-                {
-                    return NotFound(new { message = "No business profiles found for the given BusRegId" });
-                }
+            if (profiles == null || !profiles.Any())
+                return NotFound(new { message = "No business profiles found for the given BusRegId" });
 
-                return Ok(new
-                {
-                    message = "Business profiles retrieved successfully",
-                    data = businessProfiles
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { message = "An error occurred while retrieving business profiles", error = ex.Message });
-            }
+            return Ok(new { message = "Business profiles retrieved successfully", data = profiles });
         }
 
-        //get products for selected category and busregid on preview page
+        // ------------------- GET PRODUCTS BY BUSREGID & SUBCATID -------------------
         [HttpGet("by-busreg-and-subcat")]
         public IActionResult GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
         {
-            var products = _businessprofileRepo.GetProductsByBusRegIdAndSubcatId(busRegId, prodSubcatId);
+            var products = _service.GetProductsByBusRegIdAndSubcatId(busRegId, prodSubcatId);
             if (products == null || !products.Any())
-            {
                 return NotFound("No products found for the given criteria.");
-            }
 
             return Ok(products);
         }
 
-        //get stores with discounted products
-
-       
-
+        // ------------------- GET BUSINESS PROFILES WITH DISCOUNTED PRODUCTS -------------------
         [HttpGet("BusinessprofileswithDiscountproducts")]
         public async Task<IActionResult> GetStoresWithDiscountedProducts()
         {
-            var result = await _businessprofileRepo.GetBusinessProfilesWithDiscountedProductsAsync();
-
+            var result = await _service.GetBusinessProfilesWithDiscountedProductsAsync();
             if (result == null || !result.Any())
                 return NotFound("No business profiles with discounted products found.");
 
             return Ok(result);
         }
 
-        //get unique countries registerd profile on mytown
-
+        // ------------------- GET UNIQUE COUNTRIES -------------------
         [HttpGet("uniquecountries")]
         public async Task<IActionResult> GetUniqueCountries()
         {
-            var countries = await _businessprofileRepo.GetUniqueCountriesAsync();
+            var countries = await _service.GetUniqueCountriesAsync();
             return Ok(countries);
         }
     }

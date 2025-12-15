@@ -2,7 +2,7 @@
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
-using mytown.Services;
+using mytown.Services.Interfaces;
 
 namespace mytown.DataAccess.Repositories
 {

@@ -174,7 +174,7 @@ using var stream = new StreamReader(file.OpenReadStream());
                     BranchPhoneNumber = cols[6]?.Trim(),
                     BranchEmailId = cols[7]?.Trim(),
                     BranchContactPerson = cols[8]?.Trim(),
-                    Destinations = cols[9]?.Trim(),
+                    Destinations = cols[9]?.Trim().Trim('"'),
                     ShippingMode = cols[10]?.Trim(),
                     DistanceRange = cols[11]?.Trim(),
                     WeightRange = cols[12]?.Trim(),
@@ -215,15 +215,26 @@ using var stream = new StreamReader(file.OpenReadStream());
             if (rows == null || !rows.Any())
                 throw new Exception("No data received.");
 
-            //  Check validity
             if (rows.Any(r => !r.IsValid))
                 throw new Exception("Some rows are invalid. Please fix them before saving.");
 
-            // Check duplicates in DB BEFORE saving
+            // 1️⃣ Find CourierId for every row using CourierServiceName
+            foreach (var r in rows)
+            {
+                var service = await _context.CourierService
+                    .FirstOrDefaultAsync(s => s.CourierServiceName == r.CourierServiceName);
+
+                if (service == null)
+                    throw new Exception($"Courier service '{r.CourierServiceName}' does not exist. Please create courier service first.");
+
+                r.CourierId = service.CourierId;
+            }
+
+            // 2️⃣ Check duplicates in DB
             foreach (var r in rows)
             {
                 bool exists = await _context.CourierBranches.AnyAsync(cb =>
-                    cb.CourierServiceName == r.CourierServiceName &&
+                    cb.CourierId == r.CourierId &&               // IMPORTANT
                     cb.Country == r.Country &&
                     cb.State == r.State &&
                     cb.City == r.City &&
@@ -241,9 +252,10 @@ using var stream = new StreamReader(file.OpenReadStream());
                     throw new Exception("Duplicate rows found in database. Please remove duplicates and reupload.");
             }
 
-            // Convert DTO → Entity
+            // 3️⃣ Convert and save
             var entities = rows.Select(r => new CourierBranch
             {
+                CourierId = r.CourierId,                // REQUIRED ✔
                 CourierServiceName = r.CourierServiceName,
                 Country = r.Country,
                 State = r.State,
@@ -257,10 +269,11 @@ using var stream = new StreamReader(file.OpenReadStream());
                 ShippingMode = r.ShippingMode,
                 DistanceRange = r.DistanceRange,
                 WeightRange = r.WeightRange,
-                Charges = r.Charges
+                Charges = r.Charges,
+                EstimateDays = r.EstimateDays,
+
             }).ToList();
 
-            // 4️⃣ Save Everything OR Nothing
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
@@ -270,10 +283,10 @@ using var stream = new StreamReader(file.OpenReadStream());
                 await transaction.CommitAsync();
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw;
+                throw new Exception("SAVE ERROR: " + ex.Message);
             }
         }
 
