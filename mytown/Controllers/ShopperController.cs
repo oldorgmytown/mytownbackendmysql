@@ -1,18 +1,9 @@
-﻿using BCrypt.Net;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using mytown.Controllers.Helpers;
-using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
-using mytown.Services;
-using System;
-using System.Collections.Generic;
-using System.Text.Json;
-using System.Threading.Tasks;
-
+using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
@@ -20,303 +11,154 @@ namespace mytown.Controllers
     [ApiController]
     public class ShopperController : ControllerBase
     {
-        private readonly IShopperRepository _shopperRepository;
-        private readonly IEmailService _emailService;
-        private readonly IConfiguration _configuration;
+        private readonly IShopperService _shopperService;
         private readonly ILogger<ShopperController> _logger;
-        private readonly IShopperRegistrationValidator _registrationValidator;
-        private readonly IVerificationLinkBuilder _verificationLinkBuilder;
 
         public ShopperController(
-            IShopperRepository shopperRepository,
-            IEmailService emailService,
-            IConfiguration configuration,
-            ILogger<ShopperController> logger,
-            IShopperRegistrationValidator registrationValidator,
-            IVerificationLinkBuilder verificationLinkBuilder)
+            IShopperService shopperService,
+            ILogger<ShopperController> logger)
         {
-            _shopperRepository = shopperRepository;
-            _emailService = emailService;
-            _configuration = configuration;
+            _shopperService = shopperService;
             _logger = logger;
-            _registrationValidator = registrationValidator;
-            _verificationLinkBuilder = verificationLinkBuilder;
         }
 
-        /// <summary>
-        /// Registers a new shopper.
-        /// </summary>
+        // ---------------- REGISTER ----------------
         [AllowAnonymous]
         [HttpPost("register")]
-            public async Task<IActionResult> Register([FromBody] ShopperRegisterDto shopperRegisterDto)
-            {
-                List<string> validationErrors = _registrationValidator.Validate(shopperRegisterDto);
-                if (validationErrors.Count > 0)
-                {
-                    _logger.LogWarning("Validation failed for {Email}: {Errors}", shopperRegisterDto.Email, validationErrors);
-                    return BadRequest(new { errors = validationErrors });
-                }
-
-                try
-                {
-                (bool isTaken, string statusMessage) = await _shopperRepository.IsEmailTaken(shopperRegisterDto.Email);
-
-                if (statusMessage != null)
-                {
-                    return StatusCode(StatusCodes.Status403Forbidden, new { error = statusMessage });
-                }
-
-                if (isTaken)
-                {
-                    return Conflict(new { error = "This email is already registered. Try logging in instead." });
-                }
-
-
-                // Generate verification token and save to pending table
-                string verificationToken = Guid.NewGuid().ToString();
-                DateTime expiry = DateTime.UtcNow.AddHours(24);
-                string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-                string verificationLink = _verificationLinkBuilder.BuildLink(frontendBaseUrl, verificationToken);
-
-                // Serialize the registration DTO
-                string jsonPayload = JsonSerializer.Serialize(shopperRegisterDto);
-
-                // Save to PendingVerification table
-                var pending = new PendingVerification
-                {
-                    Email = shopperRegisterDto.Email,
-                    Token = verificationToken,
-                    ExpiryDate = expiry,
-                    JsonPayload = jsonPayload
-                };
-                await _shopperRepository.SavePendingVerification(pending);
-
-                // Send verification email
-                await _emailService.SendVerificationEmail(shopperRegisterDto.Email, verificationLink);
-
-                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(shopperRegisterDto.Password);
-
-                //var newShopper = new ShopperRegister
-                //{
-                //    Username = shopperRegisterDto.Username,
-                //    Email = shopperRegisterDto.Email,
-                //    Password = hashedPassword,
-                //    Address = shopperRegisterDto.Address,
-                //    Town = shopperRegisterDto.Town,
-                //    City = shopperRegisterDto.City,
-                //    State = shopperRegisterDto.State,
-                //    Country = shopperRegisterDto.Country,
-                //    PostalCode = shopperRegisterDto.PostalCode,
-                //    PhoneNumber = shopperRegisterDto.PhoneNumber,
-                //    PhotoName = shopperRegisterDto.PhotoName,
-                //    IsEmailVerified = true,
-                //     ShopperRegDate = DateTime.UtcNow
-                //};
-
-                //await _shopperRepository.RegisterShopper(newShopper);
-
-                _logger.LogInformation("Verification email sent to {Email}", shopperRegisterDto.Email);
-                    return Ok(new { message = "Verification email sent! Please check your inbox to complete registration." });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error during registration for {Email}", shopperRegisterDto.Email);
-                    return StatusCode(500, new { error = "Something went wrong. Please try again later." });
-                }
-            }
-
-        [AllowAnonymous]
-        [HttpGet("verify-shopper-email")]
-            public async Task<IActionResult> VerifyEmail([FromQuery] string token)
-            {
-                try
-                {
-                    var pending = await _shopperRepository.FindPendingVerificationByToken(token);
-                    if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
-                    {
-                        return BadRequest(new { error = "Invalid or expired verification link." });
-                    }
-
-                    // Deserialize DTO
-                    var shopperDto = JsonSerializer.Deserialize<ShopperRegisterDto>(pending.JsonPayload);
-                    var hashedPassword = BCrypt.Net.BCrypt.HashPassword(shopperDto.Password);
-
-                    var newShopper = new ShopperRegister
-                    {
-                        Username = shopperDto.Username,
-                        Email = shopperDto.Email,
-                        Password = hashedPassword,
-                        Address = shopperDto.Address,
-                        Town = shopperDto.Town,
-                        City = shopperDto.City,
-                        State = shopperDto.State,
-                        Country = shopperDto.Country,
-                        PostalCode = shopperDto.PostalCode,
-                        PhoneNumber = shopperDto.PhoneNumber,
-                        PhotoName = shopperDto.PhotoName,
-                        IsEmailVerified = true,
-                        Status = "Active"
-                    };
-
-                    await _shopperRepository.RegisterShopper(newShopper);
-                    await _shopperRepository.DeletePendingVerification(token); // clean up
-
-                    _logger.LogInformation("Email verified and shopper registered for {Email}", newShopper.Email);
-                    return Ok(new { message = "Your email is verified and your account has been created!", shopperRegId = newShopper.ShopperRegId });
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error verifying token: {Token}", token);
-                    return StatusCode(500, new { error = "Could not verify email. Please try again later." });
-                }
-        }
-
-
-        /// <summary>
-        //Resends the email verification link.
-        /// </summary>
-        [AllowAnonymous]
-        [HttpPost("resend-verification")]
-                public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)
+        public async Task<IActionResult> Register([FromBody] ShopperRegisterDto dto)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(model.Email))
+                var result = await _shopperService.RegisterShopperAsync(dto);
+
+                if (!result.success)
+                    return BadRequest(new { error = result.message });
+
+                return Ok(new
                 {
-                    _logger.LogWarning("Resend verification requested without email.");
-                    return BadRequest(new { error = "Email is required." });
-                }
-
-                var existingVerification = await _shopperRepository.FindPendingVerificationByEmail(model.Email);
-                if (existingVerification == null)
-                {
-                    return NotFound(new { error = "No pending verification found. Please register again." });
-                }
-
-
-                //string email = existingVerification.Email;
-                //_logger.LogInformation("Resend verification requested for {Email} (old token: {Token})", email, token);
-
-                // Remove old and create new
-                await _shopperRepository.RemoveVerification(existingVerification);
-
-                string token = Guid.NewGuid().ToString();
-                DateTime expiry = DateTime.UtcNow.AddHours(24);
-                var newVerification = new PendingVerification
-                {
-                    Email = model.Email,
-                    Token = token,
-                    ExpiryDate = expiry,
-                    // JsonPayload = existingVerification.JsonPayload
-                };
-                await _shopperRepository.SavePendingVerification(newVerification);
-
-                string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-                string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
-                await _emailService.SendVerificationEmail(model.Email, link);
-
-                return Ok(new { message = $"New verification email sent to {model.Email}" });
+                    message = result.message
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Resend verification failed for {Email}", model.Email);
+                _logger.LogError(ex, "Error registering shopper {Email}", dto.Email);
                 return StatusCode(500, new { error = "Something went wrong. Please try again." });
             }
         }
 
+        // ---------------- VERIFY EMAIL ----------------
+        [AllowAnonymous]
+        [HttpGet("verify-shopper-email")]
+        public async Task<IActionResult> VerifyEmail([FromQuery] string token)
+        {
+            try
+            {
+                var result = await _shopperService.VerifyEmailAsync(token);
 
-        [Authorize]
+                if (!result.success)
+                    return BadRequest(new { error = result.message });
+
+                return Ok(new
+                {
+                    message = result.message,
+                    shopperRegId = result.shopperRegId
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Email verification failed for token {Token}", token);
+                return StatusCode(500, new { error = "Could not verify email." });
+            }
+        }
+
+        // ---------------- RESEND VERIFICATION ----------------
+        [AllowAnonymous]
+        [HttpPost("resend-verification")]
+        public async Task<IActionResult> ResendVerification([FromBody] ResendemailVerificationDTO model)
+        {
+            try
+            {
+                var result = await _shopperService.ResendVerificationEmailAsync(model.Email);
+
+                if (!result.success)
+                    return BadRequest(new { error = result.message });
+
+                return Ok(new { message = result.message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Resend verification failed for {Email}", model.Email);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
+
+        // ---------------- TOWNS WITH STORE COUNT ----------------
+        
         [HttpGet("GetTownsWithStoreCountByCountry/{country}")]
         public async Task<IActionResult> GetTownsWithStoreCountByCountry(string country)
         {
-            if (string.IsNullOrEmpty(country))
-            {
+            if (string.IsNullOrWhiteSpace(country))
                 return BadRequest("Country is required.");
-            }
 
-            var result = await _shopperRepository.GetTownsWithStoreCountByCountryAsync(country);
+            var result = await _shopperService.GetTownsWithStoreCountByCountryAsync(country);
 
             if (result == null || !result.Any())
-            {
                 return NotFound($"No towns found for country '{country}'.");
-            }
 
             return Ok(result);
         }
 
+        // ---------------- RECENTLY VIEWED PRODUCTS ----------------
         [Authorize]
         [HttpGet("productsrecentlyviewedbyshopper/{shopperId}")]
-        public async Task<IActionResult> GetRecentlyViewed(int shopperId, int days = 7, int limit = 10)
+        public async Task<IActionResult> GetRecentlyViewed(
+            int shopperId,
+            int days = 7,
+            int limit = 10)
         {
-            var products = await _shopperRepository.GetRecentlyViewedProductsAsync(shopperId, days, limit);
+            var products = await _shopperService
+                .GetRecentlyViewedProductsAsync(shopperId, days, limit);
+
             return Ok(products);
         }
 
-
-        // Shopper Alternate Address
+        // ---------------- ALTERNATE ADDRESSES ----------------
         [Authorize]
         [HttpGet("GetShopperAltAddress")]
         public async Task<IActionResult> GetAddresses(int shopperRegId)
         {
-            var addresses = await _shopperRepository.GetAddressesByShopperIdAsync(shopperRegId);
+            var addresses = await _shopperService.GetAddressesAsync(shopperRegId);
             return Ok(addresses);
         }
 
-        // POST: api/shopper/AddAltShopperAddress
         [Authorize]
         [HttpPost("AddAltShopperAddress")]
-        public async Task<IActionResult> AddAddress([FromBody] ShopperAlternateAddressDto addressDto)
+        public async Task<IActionResult> AddAddress([FromBody] ShopperAlternateAddressDto dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Map DTO to entity
-            var address = new ShopperAlternateAddress
-            {
-                ShopperRegId = addressDto.ShopperRegId,
-                AltName = addressDto.AltName,
-                AltPhoneNumber = addressDto.AltPhoneNumber,
-                AltAddress = addressDto.AltAddress,
-                AltTown = addressDto.AltTown,
-                AltCity = addressDto.AltCity,
-                AltState = addressDto.AltState,
-                AltCountry = addressDto.AltCountry,
-                AltPostalCode = addressDto.AltPostalCode,
-                DeliveryNotes = addressDto.DeliveryNotes
-            };
+            var result = await _shopperService.AddAddressAsync(dto);
 
-            var newAddress = await _shopperRepository.AddAddressAsync(address);
-
-            // Map entity back to DTO for response
-            var resultDto = new ShopperAlternateAddressDto
-            {
-                AltAddressId = newAddress.AltAddressId,
-                ShopperRegId = address.ShopperRegId,
-                AltName = newAddress.AltName,
-                AltPhoneNumber = newAddress.AltPhoneNumber,
-                AltAddress = newAddress.AltAddress,
-                AltTown = newAddress.AltTown,
-                AltCity = newAddress.AltCity,
-                AltState = newAddress.AltState,
-                AltCountry = newAddress.AltCountry,
-                AltPostalCode = newAddress.AltPostalCode,
-                DeliveryNotes = newAddress.DeliveryNotes
-            };
-
-            return CreatedAtAction(nameof(GetAddresses), new { shopperRegId = resultDto.AltAddressId }, resultDto);
+            return CreatedAtAction(
+                nameof(GetAddresses),
+                new { shopperRegId = result.ShopperRegId },
+                result);
         }
 
-        // DELETE: api/shopper/DeleteShopperAltAddress/5
         [Authorize]
         [HttpDelete("DeleteShopperAltAddress/{id}")]
         public async Task<IActionResult> DeleteAddress(int id)
         {
-            var deleted = await _shopperRepository.DeleteAddressAsync(id);
+            var deleted = await _shopperService.DeleteAddressAsync(id);
+
             if (!deleted)
                 return NotFound(new { message = $"Alternate address with ID {id} not found." });
 
-            return Ok(new { message = $"Alternate address with ID {id} has been successfully deleted." });
+            return Ok(new
+            {
+                message = $"Alternate address with ID {id} has been successfully deleted."
+            });
         }
-    
     }
-    }
+}

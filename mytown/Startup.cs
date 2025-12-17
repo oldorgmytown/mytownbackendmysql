@@ -47,7 +47,7 @@ public class Startup
     // Consolidates all AddScoped registrations.
     private void RegisterApplicationServices(IServiceCollection services)
     {
-        services.AddScoped<UserRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IShopperRegistrationValidator, ShopperRegistrationValidator>();
@@ -55,7 +55,7 @@ public class Startup
         services.AddScoped<IVerificationLinkBuilderbusiness,VerificationLinkBuilderbusiness>();
         services.AddScoped<mytown.DataAccess.IBusinessRepository, BusinessRepository>();
         services.AddScoped<IBusinessRegistrationValidator, BusinessRegistrationValidator>();
-       // services.AddScoped<ISearchRepository, SearchRepository>();
+      
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
@@ -67,20 +67,21 @@ public class Startup
         services.AddScoped<ICourierServiceRepository, CourierServiceRepository>();
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
+       
         services.AddScoped<ITokenService, TokenService>();
-
-
+        services.AddScoped<IFileService, mytown.Services.FileService>();
+        services.AddScoped<IUserService, mytown.Services.UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
         services.AddScoped<IBusinessProfileService, BusinessProfileService>();
-        //services.AddScoped<IShopperService, ShopperService>();
-        //services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IShopperService, ShopperService>();
+        services.AddScoped<IProductService, mytown.Services.Implementations.ProductService>();
         services.AddScoped<IOrderService, mytown.Services.Implementations.OrderService>();
-        //services.AddScoped<IPaymentService, PaymentService>();
-        //services.AddScoped<ICartService, CartService>();
-        //services.AddScoped<ISearchService, SearchService>();
-        //services.AddScoped<ICourierService, CourierService>();
+        services.AddScoped<IPaymentService, PaymentService>();
+        services.AddScoped<ICartService, CartService>();
+        services.AddScoped<ISearchService, mytown.Services.SearchService>();
+        services.AddScoped<ICourierServiceHandler, mytown.Services.Implementations.CourierServiceHandler>();
         //services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
 
 

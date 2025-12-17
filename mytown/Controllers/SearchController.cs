@@ -1,182 +1,118 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess.Interfaces;
+﻿using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
+using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-   // [Authorize]
     [Route("api/search")]
     [ApiController]
     public class SearchController : ControllerBase
     {
-        private readonly ISearchRepository _searchRepository;
+        private readonly ISearchService _searchService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<SearchController> _logger;
 
         public SearchController(
-            ISearchRepository searchRepository,
+            ISearchService searchService,
             IConfiguration configuration,
             ILogger<SearchController> logger)
         {
-            _searchRepository = searchRepository ?? throw new ArgumentNullException(nameof(searchRepository));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _searchService = searchService;
+            _configuration = configuration;
+            _logger = logger;
         }
 
-        //search to get products data based on location and category/product
         [HttpGet("search")]
         public IActionResult SearchBusinesses([FromQuery] string locationQuery, [FromQuery] string productQuery)
         {
-            var filteredProducts = _searchRepository.SearchBusinessesWithProducts(locationQuery, productQuery);
+            var result = _searchService.SearchBusinessesWithProducts(locationQuery, productQuery);
 
-            if (filteredProducts.Count == 0)
+            if (!result.Any())
                 return NotFound(new { code = 404, message = "No products found matching your criteria." });
 
-            return Ok(new { code = 200, data = filteredProducts });
+            return Ok(new { code = 200, data = result });
         }
 
-        //search to get business stores data based on location and category/product
         [HttpGet("searchstore")]
-        public async Task<IActionResult> SearchBusinessstores([FromQuery] string location, [FromQuery] string categoryProduct)
+        public async Task<IActionResult> SearchBusinessstores(string location, string categoryProduct)
         {
             if (string.IsNullOrEmpty(location) && string.IsNullOrEmpty(categoryProduct))
-            {
-                return BadRequest(new { code = 400, message = "At least one search term (location or category/product) must be provided." });
-            }
+                return BadRequest(new { code = 400, message = "At least one search term is required." });
 
-            var searchResults = await _searchRepository.SearchBusinessesAsync(location, categoryProduct);
+            var result = await _searchService.SearchBusinessesAsync(location, categoryProduct);
 
-            if (searchResults.Count == 0)
-            {
+            if (!result.Any())
                 return NotFound(new { code = 404, message = "No matching business profiles found." });
-            }
 
-            return Ok(new { code = 200, data = searchResults });
+            return Ok(new { code = 200, data = result });
         }
 
-        //get profile based on location search 
         [HttpGet("searchbylocation")]
-        public ActionResult<List<BusinessProfile>> GetBusinessProfilesByLocation([FromQuery] string location)
+        public IActionResult GetBusinessProfilesByLocation(string location)
         {
-            if (string.IsNullOrEmpty(location))
-            {
-                return BadRequest(new { code = 400, message = "Location is required." });
-            }
+            var profiles = _searchService.GetBusinessProfilesByLocation(location);
 
-            var profiles = _searchRepository.GetBusinessProfilesByLocation(location);
-
-            if (profiles == null || profiles.Count == 0)
-            {
+            if (!profiles.Any())
                 return NotFound(new { code = 404, message = "No matching business profiles found." });
-            }
 
             return Ok(new { code = 200, data = profiles });
         }
 
         [HttpGet("searchproductandbusiness")]
-        public IActionResult SearchBusinessByCategoryOrProduct(
-            [FromQuery] string searchterm,
-            [FromQuery] string? location)
+        public IActionResult SearchBusinessByCategoryOrProduct(string searchterm, string? location)
         {
-            if (string.IsNullOrEmpty(searchterm))
-            {
-                return BadRequest(new { code = 400, message = "Search parameter is required." });
-            }
+            var result = _searchService.GetBusinessProfilesAndProductsBySearchTerm(searchterm, location);
 
-            var results = _searchRepository.GetBusinessProfilesAndProductsBySearchTerm(searchterm, location);
-
-            if (results == null)
-            {
-                return NotFound(new { code = 404, message = "No businesses or products found matching the criteria." });
-            }
-
-            return Ok(new { code = 200, data = results });
+            return Ok(new { code = 200, data = result });
         }
 
         [HttpGet("SearchProfilesandProducts_ByProductAndLocation")]
-        public IActionResult SearchProfilesByProductAndLocation(
-            [FromQuery] string productSearchTerm,
-            [FromQuery] string locationSearchTerm)
+        public IActionResult SearchProfilesByProductAndLocation(string productSearchTerm, string locationSearchTerm)
         {
-            if (string.IsNullOrWhiteSpace(productSearchTerm) || string.IsNullOrWhiteSpace(locationSearchTerm))
-            {
-                return BadRequest(new { code = 400, message = "Both product and location search terms are required." });
-            }
+            var result = _searchService
+                .GetBusinessProfilesAndProductsByProductAndLocation(productSearchTerm, locationSearchTerm);
 
-            var businessProfiles = _searchRepository.GetBusinessProfilesAndProductsByProductAndLocation(productSearchTerm, locationSearchTerm);
-
-            if (businessProfiles == null)
-            {
-                return NotFound(new { code = 404, message = "No matching business profiles found." });
-            }
-
-            return Ok(new { code = 200, data = businessProfiles });
+            return Ok(new { code = 200, data = result });
         }
 
         [HttpGet("product-subcategories-by-location")]
-        public async Task<IActionResult> GetProductSubCategoriesByLocation([FromQuery] string location)
+        public async Task<IActionResult> GetProductSubCategoriesByLocation(string location)
         {
-            if (string.IsNullOrWhiteSpace(location))
-                return BadRequest(new { code = 400, message = "Location cannot be empty." });
+            var result = await _searchService.GetProductSubCategoriesByLocationAsync(location);
 
-            var subCategories = await _searchRepository.GetProductSubCategoriesByLocationAsync(location);
+            if (!result.Any())
+                return NotFound(new { code = 404, message = "No product subcategories found." });
 
-            if (!subCategories.Any())
-                return NotFound(new { code = 404, message = "No product subcategories found for the given location." });
-
-            return Ok(new { code = 200, data = subCategories });
+            return Ok(new { code = 200, data = result });
         }
 
         [HttpGet("business-categories-by-location")]
-        public async Task<IActionResult> GetBusinessCategoriesByLocation([FromQuery] string location)
+        public async Task<IActionResult> GetBusinessCategoriesByLocation(string location)
         {
-            if (string.IsNullOrWhiteSpace(location))
-                return BadRequest(new { code = 400, message = "Location cannot be empty." });
+            var result = await _searchService.GetBusinessCategoriesByLocationAsync(location);
 
-            var busCategories = await _searchRepository.GetBusinessCategoriesByLocationAsync(location);
+            if (!result.Any())
+                return NotFound(new { code = 404, message = "No business categories found." });
 
-            if (!busCategories.Any())
-                return NotFound(new { code = 404, message = "No business categories found for the given location." });
-
-            return Ok(new { code = 200, data = busCategories });
+            return Ok(new { code = 200, data = result });
         }
 
-
-        //2-12-25  Search only profiles latest
-
         [HttpGet("searchstoresonly")]
-        public IActionResult SearchStores([FromQuery] string? searchTerm, [FromQuery] string? location)
+        public IActionResult SearchStores(string? searchTerm, string? location)
         {
-            var stores = _searchRepository.GetBusinessProfilesByFilters(searchTerm, location);
+            var stores = _searchService.GetBusinessProfilesByFilters(searchTerm, location);
 
-            return Ok(new
-            {
-                stores,
-                storeCount = stores.Count
-            });
+            return Ok(new { stores, storeCount = stores.Count });
         }
 
         [HttpGet("Searhcategoriesfilter")]
         public async Task<IActionResult> GetCategories(string? product, string? location)
         {
-            IEnumerable<BusinessCategory> categories;
+            var result = !string.IsNullOrWhiteSpace(location) && string.IsNullOrWhiteSpace(product)
+                ? await _searchService.GetBusinessCategoriesByLocationAsync(location)
+                : await _searchService.GetBusinessCategoriesByProductAsync(product!);
 
-            if (!string.IsNullOrWhiteSpace(location) &&
-                string.IsNullOrWhiteSpace(product))
-            {
-                // ONLY LOCATION GIVEN
-                categories = await _searchRepository.GetBusinessCategoriesByLocationAsync(location);
-            }
-            else
-            {
-                // ONLY PRODUCT OR BOTH PRODUCT + LOCATION
-                categories = await _searchRepository.GetBusinessCategoriesByProductAsync(product!);
-            }
-
-            return Ok(categories);
+            return Ok(result);
         }
-
-
     }
 }
