@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
-using mytown.Services;
+using mytown.Services.Interfaces;
 using Stripe;
 using Stripe.Climate;
 using System.Security.Cryptography;
@@ -13,14 +13,11 @@ using System.Threading.Tasks;
 using static mytown.Models.busprofilepreview;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using mytown.DataAccess.Interfaces;
 
 namespace mytown.DataAccess.Repositories
 {
-    public interface IUserRepository
-    {
-        Task<(int uniqueCities, int uniqueStates, int uniqueCountries)> GetUniqueCountsAsync();
-    }
-    public class UserRepository
+    public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
         private readonly ITokenService _tokenService;

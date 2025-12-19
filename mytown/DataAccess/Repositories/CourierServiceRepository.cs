@@ -124,8 +124,7 @@ namespace mytown.DataAccess.Repositories
         {
             var result = new List<CourierBranchCsvRowDto>();
 
-using var stream = new StreamReader(file.OpenReadStream());
-
+            using var stream = new StreamReader(file.OpenReadStream());
             int rowNumber = 0;
 
             while (!stream.EndOfStream)
@@ -140,23 +139,21 @@ using var stream = new StreamReader(file.OpenReadStream());
                 var raw = line.Split(',').ToList();
 
                 // --- STEP 2: Fix destinations column if commas exist ---
-                if (raw.Count > 14)
+                if (raw.Count > 15) // ⬅️ 15 columns expected
                 {
-                    // Expected 14 columns. Anything extra belongs to Destinations.
-                    var destinationPieces = raw.Skip(9).Take(raw.Count - 13).ToList();
-
-                    // Merge into one proper destinations field
+                    // Everything extra belongs to Destinations
+                    var destinationPieces = raw.Skip(9).Take(raw.Count - 14).ToList();
                     raw[9] = string.Join(", ", destinationPieces);
 
-                    // Fix remaining columns (ShippingMode, DistanceRange, WeightRange, Charges)
                     int total = raw.Count;
-                    raw[10] = raw[total - 4];
-                    raw[11] = raw[total - 3];
-                    raw[12] = raw[total - 2];
-                    raw[13] = raw[total - 1];
 
-                    // Trim list back to 14 fields
-                    raw = raw.Take(14).ToList();
+                    raw[10] = raw[total - 5]; // ShippingMode
+                    raw[11] = raw[total - 4]; // DistanceRange
+                    raw[12] = raw[total - 3]; // WeightRange
+                    raw[13] = raw[total - 2]; // Charges
+                    raw[14] = raw[total - 1]; // EstimateDays
+
+                    raw = raw.Take(15).ToList();
                 }
 
                 var cols = raw.ToArray();
@@ -178,7 +175,12 @@ using var stream = new StreamReader(file.OpenReadStream());
                     ShippingMode = cols[10]?.Trim(),
                     DistanceRange = cols[11]?.Trim(),
                     WeightRange = cols[12]?.Trim(),
-                    Charges = decimal.TryParse(cols[13], out var p) ? p : 0
+
+                    Charges = decimal.TryParse(cols[13], out var p) ? p : 0,
+
+                    // ✅ NEW (EstimateDays LAST)
+                    EstimateDaysRaw = cols[14]?.Trim(),
+                    EstimateDays = CsvValidationHelper.ExtractMaxDays(cols[14])
                 };
 
                 // --- STEP 4: Validation ---
@@ -197,16 +199,15 @@ using var stream = new StreamReader(file.OpenReadStream());
                     CsvValidationHelper.IsCommaSeparatedList(dto.Destinations) &&
                     (dto.ShippingMode.Equals("air", StringComparison.OrdinalIgnoreCase) ||
                      dto.ShippingMode.Equals("surface", StringComparison.OrdinalIgnoreCase)) &&
-                    dto.Charges > 0;
+                    dto.Charges > 0 &&
+                    dto.EstimateDays > 0;   // ✅ IMPORTANT
 
                 dto.IsValid = valid;
                 result.Add(dto);
             }
 
             return result;
-
-
-}
+        }
 
 
 
@@ -422,36 +423,36 @@ using var stream = new StreamReader(file.OpenReadStream());
         //    return courier;
         //}
 
-        public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
-        {
-            var result = await (from shipping in _context.ShippingDetails
-                                join orderDetail in _context.OrderDetails on shipping.OrderDetailId equals orderDetail.OrderDetailId
-                                join product in _context.products on orderDetail.ProductId equals product.ProductId
-                                join order in _context.Orders on orderDetail.OrderId equals order.OrderId
-                                join shopper in _context.ShopperRegisters on order.ShopperRegId equals shopper.ShopperRegId
-                                join store in _context.BusinessRegisters on orderDetail.StoreId equals store.BusRegId
-                                join branch in _context.CourierBranches on shipping.BranchId equals branch.BranchId
-                                where branch.CourierId == courierId
-                                select new AssignedOrderDto
-                                {
-                                    ShippingDetailId = shipping.ShippingDetailId,
-                                    OrderId = order.OrderId,
-                                    CustomerName = shopper.Username,
-                                    CustomerPhoneNumber = shopper.PhoneNumber,
-                                    ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
-                                    StoreName = store.BusinessName,
-                                    ProductName = product.ProductName,
-                                   // ProductWeight = product.product_weight??0,
-                                    Quantity = orderDetail.Quantity,
-                                    ShippingType = shipping.ShippingType,
-                                    ShippingStatus = shipping.ShippingStatus,
-                                    Cost = shipping.Cost,
-                                    TrackingId = shipping.TrackingId,
-                                    EstimatedDeliveryDate = order.OrderDate.AddDays(shipping.EstimatedDays)
-                                }).ToListAsync();
+        //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
+        //{
+        //    var result = await (from shipping in _context.ShippingDetails
+        //                        join orderDetail in _context.OrderDetails on shipping.OrderDetailId equals orderDetail.OrderDetailId
+        //                        join product in _context.products on orderDetail.ProductId equals product.ProductId
+        //                        join order in _context.Orders on orderDetail.OrderId equals order.OrderId
+        //                        join shopper in _context.ShopperRegisters on order.ShopperRegId equals shopper.ShopperRegId
+        //                        join store in _context.BusinessRegisters on orderDetail.StoreId equals store.BusRegId
+        //                        join branch in _context.CourierBranches on shipping.BranchId equals branch.BranchId
+        //                        where branch.CourierId == courierId
+        //                        select new AssignedOrderDto
+        //                        {
+        //                            ShippingDetailId = shipping.ShippingDetailId,
+        //                            OrderId = order.OrderId,
+        //                            CustomerName = shopper.Username,
+        //                            CustomerPhoneNumber = shopper.PhoneNumber,
+        //                            ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
+        //                            StoreName = store.BusinessName,
+        //                            ProductName = product.ProductName,
+        //                           // ProductWeight = product.product_weight??0,
+        //                            Quantity = orderDetail.Quantity,
+        //                            ShippingType = shipping.ShippingType,
+        //                            ShippingStatus = shipping.ShippingStatus,
+        //                            Cost = shipping.Cost,
+        //                            TrackingId = shipping.TrackingId,
+        //                            EstimatedDeliveryDate = order.OrderDate.AddDays(shipping.EstimatedDays)
+        //                        }).ToListAsync();
 
-            return result;
-        }
+        //    return result;
+        //}
 
     }
 }

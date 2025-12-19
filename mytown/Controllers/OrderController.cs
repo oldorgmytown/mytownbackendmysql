@@ -23,8 +23,10 @@ namespace mytown.Controllers
         [HttpPost("CreateOrders")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestddto request)
         {
-            var orderId = await _service.CreateOrderAsync(request.ShopperRegId, request.ShippingSelections);
-
+            // var orderId = await _service.CreateOrderAsync(request.ShopperRegId, request.ShippingSelections);
+            var orderId = await _service.CreateOrderAsync(request.ShopperRegId, request.SelectedAltAddressId, request.ShippingSelections);
+     
+ 
             if (orderId == 0)
                 return BadRequest("No items in cart.");
 
@@ -67,6 +69,18 @@ namespace mytown.Controllers
                 _logger.LogError(ex, "SaveShippingSelections failed");
                 return StatusCode(500, new { Message = "Internal server error." });
             }
+        }
+
+
+        [HttpGet("Orderconfirmation")]
+        public async Task<IActionResult> GetOrderConfirmation(int orderId)
+        {
+            var result = await _service.GetOrderConfirmationAsync(orderId);
+
+            if (result == null)
+                return NotFound("Order not found");
+
+            return Ok(result);
         }
     }
 }

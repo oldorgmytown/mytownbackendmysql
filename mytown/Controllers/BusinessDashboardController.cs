@@ -22,27 +22,27 @@ namespace mytown.Controllers
             _dashboardRepository = dashboardRepository;
         }
 
-        [HttpGet("orders/{storeId}")]
-        public async Task<ActionResult<List<BusinessDashboardDto>>> GetStoreOrdersReport(int storeId)
-        {
-            var result = await _dashboardRepository.GetStoreOrdersReport(storeId);
-            if (result == null || result.Count == 0)
-                return NotFound("No orders found for this store.");
+        //[HttpGet("orders/{storeId}")]
+        //public async Task<ActionResult<List<BusinessDashboardDto>>> GetStoreOrdersReport(int storeId)
+        //{
+        //    var result = await _dashboardRepository.GetStoreOrdersReport(storeId);
+        //    if (result == null || result.Count == 0)
+        //        return NotFound("No orders found for this store.");
 
-            return Ok(result);
-        }
-        //sales report with sort and search
+        //    return Ok(result);
+        //}
+        ////sales report with sort and search
 
-        [HttpGet("orders-report")]
-        public async Task<IActionResult> GetStoreOrdersReportsortsearch(
-    int storeId,
-    string? search = null,
-    string? sortBy = null,
-    bool descending = false)
-        {
-            var report = await _dashboardRepository.GetStoreOrdersReportsortsearch(storeId, search, sortBy, descending);
-            return Ok(report);
-        }
+    //    [HttpGet("orders-report")]
+    //    public async Task<IActionResult> GetStoreOrdersReportsortsearch(
+    //int storeId,
+    //string? search = null,
+    //string? sortBy = null,
+    //bool descending = false)
+    //    {
+    //        var report = await _dashboardRepository.GetStoreOrdersReportsortsearch(storeId, search, sortBy, descending);
+    //        return Ok(report);
+    //    }
 
 
         // GET api/businessdashboard/locationcounts/{storeId}

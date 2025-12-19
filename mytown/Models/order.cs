@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using mytown.Models.DTO_s;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
@@ -16,6 +17,14 @@ namespace mytown.Models
 
         [ForeignKey("ShopperRegId")]
         public ShopperRegister ShopperRegister { get; set; }
+
+        // Selected delivery address
+        [Column("selected_alt_address_id")]
+        public int? SelectedAltAddressId { get; set; }
+
+        // Optional navigation (recommended)
+        [ForeignKey("SelectedAltAddressId")]
+        public ShopperAlternateAddress? SelectedAlternateAddress { get; set; }
 
         [Required]
         [Column("total_amount")]

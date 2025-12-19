@@ -6,7 +6,7 @@ namespace mytown.DataAccess.Interfaces
     {
        // Task<List<mytown.Models.Order>> GetAllOrdersForStoreAsync(int storeId);
         Task<SalesReportDTO> GetSalesReportByStoreId(int storeId);
-        Task<List<BusinessDashboardDto>> GetStoreOrdersReport(int storeId);
+       // Task<List<BusinessDashboardDto>> GetStoreOrdersReport(int storeId);
         Task<LocationStatsDto> GetLocationCountsByStoreIdAsync(int storeId);
 
          //Task<List<ProductDto>> GetProductsWithPurchasedCountAsync(
@@ -24,11 +24,11 @@ namespace mytown.DataAccess.Interfaces
          bool descending = false);
 
         // order sales history with search and sort
-        Task<List<BusinessDashboardDto>> GetStoreOrdersReportsortsearch(
-       int storeId,
-       string? search = null,
-       string? sortBy = null,
-       bool descending = false);
+       // Task<List<BusinessDashboardDto>> GetStoreOrdersReportsortsearch(
+       //int storeId,
+       //string? search = null,
+       //string? sortBy = null,
+       //bool descending = false);
 
     }
 }

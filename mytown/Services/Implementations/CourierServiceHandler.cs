@@ -153,9 +153,9 @@ namespace mytown.Services.Implementations
             return await _repo.GetBestCourierOptions(storeCity, storeState, storeCountry, shopperCity, productWeightKg);
         }
 
-        public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
-        {
-            return await _repo.GetAssignedOrdersByCourierIdAsync(courierId);
-        }
+        //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
+        //{
+        //    return await _repo.GetAssignedOrdersByCourierIdAsync(courierId);
+        //}
     }
 }

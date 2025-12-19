@@ -10,4 +10,7 @@ public class CreateOrderRequestddto
     [Required(ErrorMessage = "ShippingSelections are required.")]
     [MinLength(1, ErrorMessage = "At least one store shipping selection is required.")]
     public List<StoreShippingSelection> ShippingSelections { get; set; }
+
+    public int? SelectedAltAddressId { get; set; }
+    // null = default address
 }

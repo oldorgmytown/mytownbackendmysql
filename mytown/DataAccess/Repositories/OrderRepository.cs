@@ -20,7 +20,117 @@ namespace mytown.DataAccess.Repositories
             _emailService = emailService;
         }
 
-        public async Task<int> CreateOrderAsync(int shopperRegId, List<StoreShippingSelection> shippingSelections)
+        //public async Task<int> CreateOrderAsync(int shopperRegId, List<StoreShippingSelection> shippingSelections)
+        //{
+        //    // 1️⃣ Get Cart Items
+        //    var cartItems = await _context.addtocart
+        //        .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "Cart")
+        //        .ToListAsync();
+
+        //    if (!cartItems.Any())
+        //        return 0;
+
+        //    // 2️⃣ Create Order
+        //    decimal totalAmount = cartItems.Sum(c => c.ProductPrice * c.ProdQty);
+
+        //    var newOrder = new Order
+        //    {
+        //        ShopperRegId = shopperRegId,
+        //        TotalAmount = totalAmount,
+        //        ShippingType = "Multiple",
+        //        OrderStatus = "Pending",
+        //        OrderDate = DateTime.UtcNow
+        //    };
+
+        //    _context.Orders.Add(newOrder);
+        //    await _context.SaveChangesAsync();
+
+        //    // 3️⃣ Create StoreOrders (One per Store)
+        //    var groupedStores = cartItems.GroupBy(c => c.BusRegId); // store = BusRegId
+        //    var storeOrders = new List<StoreOrder>();
+
+        //    foreach (var group in groupedStores)
+        //    {
+        //        var storeOrder = new StoreOrder
+        //        {
+        //            OrderId = newOrder.OrderId,
+        //            StoreId = group.Key,
+        //            StoreTotalAmount = group.Sum(x => x.ProductPrice * x.ProdQty),
+        //            Storeorder_Status = "Pending"
+        //        };
+
+        //        storeOrders.Add(storeOrder);
+        //    }
+
+        //    _context.StoreOrders.AddRange(storeOrders);
+        //    await _context.SaveChangesAsync();
+
+        //    // Create a lookup for StoreOrderId per StoreId
+        //    var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => s.StoreOrderId);
+
+        //    // 4️⃣ Create OrderDetails (attach StoreOrderId)
+        //    var orderDetailsList = cartItems.Select(item => new orderdetails
+        //    {
+        //        OrderId = newOrder.OrderId,
+        //        ProductId = item.ProductId,
+        //        StoreId = item.BusRegId,
+        //        Quantity = item.ProdQty,
+        //        Price = item.ProductPrice,
+        //        StoreOrderId = storeOrderMap[item.BusRegId]  
+        //    }).ToList();
+
+        //    _context.OrderDetails.AddRange(orderDetailsList);
+        //    await _context.SaveChangesAsync();
+
+        //    // 5️⃣ Create ShippingDetails (one per store)
+        //    // 5️⃣ Create ShippingDetails (one per store)
+        //    var shippingList = new List<ShippingDetails>();
+
+        //    foreach (var storeOrder in storeOrders)
+        //    {
+        //        var shippingSelection = shippingSelections
+        //            .FirstOrDefault(s => s.StoreId == storeOrder.StoreId);
+
+        //        if (shippingSelection == null)
+        //            continue; // or throw exception if required
+
+        //        // 🔹 Fetch courier branch
+        //        var branch = await _context.CourierBranches
+        //            .FirstOrDefaultAsync(b => b.BranchId == shippingSelection.BranchId);
+
+        //        if (branch == null)
+        //            throw new Exception($"Courier branch not found for BranchId {shippingSelection.BranchId}");
+
+        //        var shipping = new ShippingDetails
+        //        {
+        //            OrderId = newOrder.OrderId,
+        //            StoreOrderId = storeOrder.StoreOrderId,
+        //            BranchId = branch.BranchId,
+        //            ShippingType = shippingSelection.ShippingType,
+
+        //            // ✅ Get estimated days from CourierBranch
+        //            EstimatedDays = branch.EstimateDays ?? 0,
+
+        //            Cost = branch.Charges,
+        //            TrackingId = "",
+        //            ShippingStatus = "Ready to Ship"
+        //        };
+
+        //        shippingList.Add(shipping);
+        //    }
+
+        //    _context.ShippingDetails.AddRange(shippingList);
+        //    await _context.SaveChangesAsync();
+
+
+        //    return newOrder.OrderId;
+        //}
+
+
+        public async Task<int> CreateOrderAsync(
+    int shopperRegId,
+    int? selectedAltAddressId,
+    List<StoreShippingSelection> shippingSelections)
         {
             // 1️⃣ Get Cart Items
             var cartItems = await _context.addtocart
@@ -36,6 +146,10 @@ namespace mytown.DataAccess.Repositories
             var newOrder = new Order
             {
                 ShopperRegId = shopperRegId,
+
+                // ✅ NEW: save selected delivery address
+                SelectedAltAddressId = selectedAltAddressId,
+
                 TotalAmount = totalAmount,
                 ShippingType = "Multiple",
                 OrderStatus = "Pending",
@@ -46,29 +160,30 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
 
             // 3️⃣ Create StoreOrders (One per Store)
-            var groupedStores = cartItems.GroupBy(c => c.BusRegId); // store = BusRegId
+            var groupedStores = cartItems.GroupBy(c => c.BusRegId);
             var storeOrders = new List<StoreOrder>();
 
             foreach (var group in groupedStores)
             {
-                var storeOrder = new StoreOrder
+                storeOrders.Add(new StoreOrder
                 {
                     OrderId = newOrder.OrderId,
                     StoreId = group.Key,
                     StoreTotalAmount = group.Sum(x => x.ProductPrice * x.ProdQty),
                     Storeorder_Status = "Pending"
-                };
-
-                storeOrders.Add(storeOrder);
+                });
             }
 
             _context.StoreOrders.AddRange(storeOrders);
             await _context.SaveChangesAsync();
 
             // Create a lookup for StoreOrderId per StoreId
-            var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => s.StoreOrderId);
+            var storeOrderMap = storeOrders.ToDictionary(
+                s => s.StoreId,
+                s => s.StoreOrderId
+            );
 
-            // 4️⃣ Create OrderDetails (attach StoreOrderId)
+            // 4️⃣ Create OrderDetails
             var orderDetailsList = cartItems.Select(item => new orderdetails
             {
                 OrderId = newOrder.OrderId,
@@ -76,7 +191,7 @@ namespace mytown.DataAccess.Repositories
                 StoreId = item.BusRegId,
                 Quantity = item.ProdQty,
                 Price = item.ProductPrice,
-                StoreOrderId = storeOrderMap[item.BusRegId]  // 🔥 Now correctly linked
+                StoreOrderId = storeOrderMap[item.BusRegId]
             }).ToList();
 
             _context.OrderDetails.AddRange(orderDetailsList);
@@ -91,16 +206,22 @@ namespace mytown.DataAccess.Repositories
                     .FirstOrDefault(s => s.StoreId == storeOrder.StoreId);
 
                 if (shippingSelection == null)
-                    continue; // or throw error if mandatory
+                    continue;
+
+                var branch = await _context.CourierBranches
+                    .FirstOrDefaultAsync(b => b.BranchId == shippingSelection.BranchId);
+
+                if (branch == null)
+                    throw new Exception($"Courier branch not found for BranchId {shippingSelection.BranchId}");
 
                 var shipping = new ShippingDetails
                 {
                     OrderId = newOrder.OrderId,
                     StoreOrderId = storeOrder.StoreOrderId,
-                    BranchId = shippingSelection.BranchId,
+                    BranchId = branch.BranchId,
                     ShippingType = shippingSelection.ShippingType,
-                    EstimatedDays = 5,
-                    Cost = shippingSelection.Cost,
+                    EstimatedDays = branch.EstimateDays ?? 0,
+                    Cost = branch.Charges,
                     TrackingId = "",
                     ShippingStatus = "Ready to Ship"
                 };
@@ -193,9 +314,57 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public async Task SaveShippingSelectionsAsync(int orderId, List<StoreShippingSelection> selections)
+        //public async Task SaveShippingSelectionsAsync(int orderId, List<StoreShippingSelection> selections)
+        //{
+        //    // Load store orders for this order
+        //    var storeOrders = await _context.StoreOrders
+        //        .Where(s => s.OrderId == orderId)
+        //        .ToListAsync();
+
+        //    if (!storeOrders.Any())
+        //        throw new Exception("No store orders found for this order.");
+
+        //    var shippingList = new List<ShippingDetails>();
+
+        //    foreach (var storeOrder in storeOrders)
+        //    {
+        //        // Find the shipping selection for the store
+        //        var selection = selections.FirstOrDefault(s => s.StoreId == storeOrder.StoreId);
+
+        //        if (selection == null)
+        //            throw new Exception($"No shipping selection found for store ID {storeOrder.StoreId}");
+
+        //        // Create one shipping entry for each store
+        //        var shipping = new ShippingDetails
+        //        {
+        //            OrderId = orderId,
+        //            StoreOrderId = storeOrder.StoreOrderId,
+        //            BranchId = selection.BranchId,
+        //            ShippingType = selection.ShippingType,
+        //            EstimatedDays = 5,
+        //            Cost = selection.Cost,
+        //            TrackingId = "",                     // empty for now
+        //            ShippingStatus = "Ready to Ship"
+        //        };
+
+        //        shippingList.Add(shipping);
+        //    }
+
+        //    _context.ShippingDetails.AddRange(shippingList);
+        //    await _context.SaveChangesAsync();
+
+        //    // Send one email per store order
+        //    foreach (var shippingDetail in shippingList)
+        //    {
+        //        await SendEmailToCourier(shippingDetail.BranchId, shippingDetail.ShippingDetailId);
+        //    }
+        //}
+
+        public async Task SaveShippingSelectionsAsync(
+    int orderId,
+    List<StoreShippingSelection> selections)
         {
-            // Load store orders for this order
+            // 1️⃣ Load store orders
             var storeOrders = await _context.StoreOrders
                 .Where(s => s.OrderId == orderId)
                 .ToListAsync();
@@ -203,42 +372,65 @@ namespace mytown.DataAccess.Repositories
             if (!storeOrders.Any())
                 throw new Exception("No store orders found for this order.");
 
+            // 2️⃣ Get order date once
+            var orderDate = await _context.Orders
+                .Where(o => o.OrderId == orderId)
+                .Select(o => o.OrderDate)
+                .FirstAsync();
+
             var shippingList = new List<ShippingDetails>();
 
             foreach (var storeOrder in storeOrders)
             {
-                // Find the shipping selection for the store
-                var selection = selections.FirstOrDefault(s => s.StoreId == storeOrder.StoreId);
+                // 3️⃣ Find selection for store
+                var selection = selections
+                    .FirstOrDefault(s => s.StoreId == storeOrder.StoreId);
 
                 if (selection == null)
                     throw new Exception($"No shipping selection found for store ID {storeOrder.StoreId}");
 
-                // Create one shipping entry for each store
+                // 4️⃣ Fetch courier branch from DB 
+                var branch = await _context.CourierBranches
+                    .FirstOrDefaultAsync(b => b.BranchId == selection.BranchId);
+
+                if (branch == null)
+                    throw new Exception("Invalid courier branch selected.");
+
+                if (!branch.EstimateDays.HasValue)
+                    throw new Exception("Estimated delivery days not configured for this courier.");
+
+                // 5️⃣ Create shipping record (PER STORE)
                 var shipping = new ShippingDetails
                 {
                     OrderId = orderId,
                     StoreOrderId = storeOrder.StoreOrderId,
-                    BranchId = selection.BranchId,
-                    ShippingType = selection.ShippingType,
-                    EstimatedDays = 5,
-                    Cost = selection.Cost,
-                    TrackingId = "",                     // empty for now
+                    BranchId = branch.BranchId,
+
+                    ShippingType = selection.ShippingType,   // or branch.ShippingMode
+                    EstimatedDays = branch.EstimateDays.Value,
+                   // EstimatedDeliveryDate = orderDate.AddDays(branch.EstimateDays.Value),
+
+                    Cost = branch.Charges,
+
+                    TrackingId = null,
                     ShippingStatus = "Ready to Ship"
                 };
 
                 shippingList.Add(shipping);
             }
 
+            // 6️⃣ Save all shipping records
             _context.ShippingDetails.AddRange(shippingList);
             await _context.SaveChangesAsync();
 
-            // Send one email per store order
+            // 7️⃣ Notify courier (one email per store)
             foreach (var shippingDetail in shippingList)
             {
-                await SendEmailToCourier(shippingDetail.BranchId, shippingDetail.ShippingDetailId);
+                await SendEmailToCourier(
+                    shippingDetail.BranchId,
+                    shippingDetail.ShippingDetailId);
             }
         }
-
 
 
         private async Task SendEmailToCourier(int branchId, int shippingDetailId)
@@ -263,6 +455,93 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
+
+        public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
+        {
+            // 1️⃣ Get Order basic info (including selected address)
+            var order = await _context.Orders
+                .Where(o => o.OrderId == orderId)
+                .Select(o => new
+                {
+                    o.OrderId,
+                    o.OrderDate,
+                    o.TotalAmount,
+                    o.ShopperRegId,
+                    o.SelectedAltAddressId
+                })
+                .FirstOrDefaultAsync();
+
+            if (order == null)
+                return null;
+
+            // 2️⃣ Resolve delivery address
+            string deliveryAddress;
+
+            if (order.SelectedAltAddressId.HasValue)
+            {
+                // 🔹 Alternate Address
+                deliveryAddress = await _context.ShopperAlternateAddresses
+                    .Where(a => a.AltAddressId == order.SelectedAltAddressId.Value)
+                    .Select(a =>
+                        a.AltName + ", " +
+                        a.AltAddress + ", " +
+                        a.AltTown + ", " +
+                        a.AltCity + ", " +
+                        a.AltState + ", " +
+                        a.AltCountry +
+                        (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
+                    )
+                    .FirstOrDefaultAsync();
+            }
+            else
+            {
+                // 🔹 Default Address
+                deliveryAddress = await _context.ShopperRegisters
+                    .Where(s => s.ShopperRegId == order.ShopperRegId)
+                    .Select(s =>
+                        s.Address + ", " +
+                        s.Town + ", " +
+                        s.City + ", " +
+                        s.State + ", " +
+                        s.Country +
+                        (s.PostalCode != null ? " - " + s.PostalCode : "")
+                    )
+                    .FirstOrDefaultAsync();
+            }
+
+            // 3️⃣ Store + Shipping details
+            var storeData = await (
+                from so in _context.StoreOrders
+                join sd in _context.ShippingDetails
+                    on so.StoreOrderId equals sd.StoreOrderId
+                join b in _context.BusinessRegisters
+                    on so.StoreId equals b.BusRegId
+                where so.OrderId == orderId
+                select new StoreOrderConfirmationDto
+                {
+                    StoreOrderId = so.StoreOrderId,
+                    StoreId = so.StoreId,
+                    StoreName = b.BusinessName,
+
+                    ShippingType = sd.ShippingType,
+                    EstimatedDays = sd.EstimatedDays,
+                    EstimatedDeliveryDate =
+                        order.OrderDate.AddDays(sd.EstimatedDays),
+
+                    ShippingStatus = sd.ShippingStatus
+                }
+            ).ToListAsync();
+
+            // 4️⃣ Final response
+            return new OrderConfirmationDto
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                TotalAmount = order.TotalAmount,
+                DeliveryAddress = deliveryAddress,
+                Stores = storeData
+            };
+        }
 
     }
 }

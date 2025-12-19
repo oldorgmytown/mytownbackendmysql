@@ -24,7 +24,7 @@ namespace mytown.Services.Interfaces
         Task<List<BestcourierinfoDto>> GetBestCourierOptionsAsync(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg);
 
        
-        Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
+       // Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
 
        
         Task<bool> IsCourierEmailTakenAsync(string email);

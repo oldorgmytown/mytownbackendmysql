@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
@@ -7,53 +8,60 @@ namespace mytown.Models
     public class ShippingDetails
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("shipping_detail_id")]
-        public int ShippingDetailId { get; set; } // Primary Key
+        public int ShippingDetailId { get; set; }
 
+        // 🔗 Parent Order
         [Required]
         [Column("order_id")]
         public int OrderId { get; set; }
 
-        [ForeignKey("OrderId")]
+        [ForeignKey(nameof(OrderId))]
         public Order Order { get; set; }
 
-        [Required]
-        [Column("order_detail_id")]
-        public int OrderDetailId { get; set; } // Foreign Key - OrderDetails
-
+        // 🔗 Store-wise shipping (ONE shipment per store)
         [Required]
         [Column("store_order_id")]
         public int StoreOrderId { get; set; }
 
-        [ForeignKey("StoreOrderId")]
+        [ForeignKey(nameof(StoreOrderId))]
         public StoreOrder StoreOrder { get; set; }
 
+        // 🔗 Selected courier branch
         [Required]
         [Column("branch_id")]
         public int BranchId { get; set; }
 
-        [ForeignKey("BranchId")]
+        [ForeignKey(nameof(BranchId))]
         public CourierBranch CourierBranch { get; set; }
 
+        // Courier / Shipping type
         [Required]
-        [Column("shipping_type")]
-        public string ShippingType { get; set; } // e.g., Courier A, Courier B
+        [Column("shipping_type", TypeName = "varchar(100)")]
+        public string ShippingType { get; set; }   // e.g. DTDC, BlueDart
 
+        // Delivery estimate
         [Required]
         [Column("estimated_days")]
-        public int EstimatedDays { get; set; } // Estimated Days for Delivery
+        public int EstimatedDays { get; set; }
 
+        // Strongly recommended
+        //[Required]
+        //[Column("estimated_delivery_date")]
+        //public DateTime EstimatedDeliveryDate { get; set; }
+
+        // Cost charged for this store shipment
         [Required]
-        [Column("cost")]
-        public decimal Cost { get; set; } // Shipping Cost
+        [Column("cost", TypeName = "decimal(10,2)")]
+        public decimal Cost { get; set; }
 
-        [Column("tracking_id")]
-        public string TrackingId { get; set; } // Unique Tracking ID
+        // Courier tracking
+        [Column("tracking_id", TypeName = "varchar(100)")]
+        public string TrackingId { get; set; }
 
-        [Column("shipping_status")]
+        // Shipping lifecycle
+        [Column("shipping_status", TypeName = "varchar(50)")]
         public string ShippingStatus { get; set; } = "Not Shipped";
     }
-
-
-
 }

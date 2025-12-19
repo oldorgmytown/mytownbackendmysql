@@ -23,6 +23,8 @@
 
         // INTERNAL USE ONLY
         public int CourierId { get; set; }
+
+        public string EstimateDaysRaw { get; set; }
         public int? EstimateDays { get; set; }
 
     }

@@ -146,17 +146,17 @@ public class CourierController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize]
-    [HttpGet("AssignedOrdersByCourier")]
-    public async Task<IActionResult> GetAssignedOrdersByCourier([FromQuery] int courierId)
-    {
-        if (courierId <= 0)
-            return BadRequest("Invalid courier ID.");
+    //[Authorize]
+    //[HttpGet("AssignedOrdersByCourier")]
+    //public async Task<IActionResult> GetAssignedOrdersByCourier([FromQuery] int courierId)
+    //{
+    //    if (courierId <= 0)
+    //        return BadRequest("Invalid courier ID.");
 
-        var orders = await _courierService.GetAssignedOrdersByCourierIdAsync(courierId);
-        if (orders == null || !orders.Any())
-            return NotFound("No assigned orders found for this courier.");
+    //    var orders = await _courierService.GetAssignedOrdersByCourierIdAsync(courierId);
+    //    if (orders == null || !orders.Any())
+    //        return NotFound("No assigned orders found for this courier.");
 
-        return Ok(orders);
-    }
+    //    return Ok(orders);
+    //}
 }

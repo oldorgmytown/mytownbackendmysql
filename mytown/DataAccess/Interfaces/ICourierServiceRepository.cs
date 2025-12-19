@@ -22,7 +22,7 @@ public interface ICourierServiceRepository
    // Task <List<BestcourierinfoDto>> GetBestCourierOptions(BusinessRegister business, ShopperRegister shopper, decimal productWeightKg);
 
     Task<List<BestcourierinfoDto>> GetBestCourierOptions(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg);
-    Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
+ //   Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
 
 }
 
