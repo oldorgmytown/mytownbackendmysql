@@ -267,10 +267,13 @@ namespace mytown.Controllers
         // ================== CATEGORIES ===================
         [Authorize]
         [HttpGet("BusinessCategories")]
-        public async Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories()
+        public async Task<ActionResult> GetBusinessCategories()
         {
-            return Ok(await _businessService.GetBusinessCategories());
+            var categories = await _businessService.GetBusinessCategories();
+
+            return Ok(new { value = categories });
         }
+
 
         [Authorize]
         [HttpGet("BusinessSubCategoriesforStores")]
