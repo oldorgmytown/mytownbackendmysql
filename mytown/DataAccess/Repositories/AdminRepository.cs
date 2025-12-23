@@ -431,7 +431,7 @@ namespace mytown.DataAccess.Repositories
         {
             // 1. Get all pending profiles from DB
             var pendingProfiles = await _context.BusinessProfiles
-                .Where(bp => bp.ProfileStatus.ToLower() == "incomplete")
+                .Where(bp => bp.ProfileStatus.ToLower() == "approved")
                 .ToListAsync(); // Materialize here!
 
             // 2. Group and process in memory
@@ -459,6 +459,49 @@ namespace mytown.DataAccess.Repositories
 
             return result;
         }
+
+        //public async Task<List<LocationStoresDto>> GetLocationsWithCompletedStoresAsync()
+        //{
+        //    // 1️⃣ Fetch approved profiles (safe filtering)
+        //    var approvedProfiles = await _context.BusinessProfiles
+        //        .Where(bp =>
+        //            bp.ProfileStatus != null &&
+        //            bp.ProfileStatus.Trim().ToLower() == "approved" &&
+        //            !string.IsNullOrWhiteSpace(bp.BusinessLocation))
+        //        .ToListAsync();
+
+        //    // 2️⃣ Group by normalized location
+        //    var result = approvedProfiles
+        //        .GroupBy(bp =>
+        //            string.Join(",",
+        //                bp.BusinessLocation
+        //                  .Split(',')
+        //                  .Select(x => x.Trim().ToLower())
+        //            )
+        //        )
+        //        .Where(g => g.Count() >= 1)
+        //        .Select(g =>
+        //        {
+        //            var parts = g.Key.Split(',');
+
+        //            var town = parts.ElementAtOrDefault(0);
+        //            var city = parts.ElementAtOrDefault(1);
+        //            var country = parts.LastOrDefault();
+
+        //            return new LocationStoresDto
+        //            {
+        //                Location = string.Join(", ",
+        //                    new[] { town, city, country }
+        //                    .Where(x => !string.IsNullOrWhiteSpace(x))
+        //                    .Select(x => char.ToUpper(x[0]) + x.Substring(1))
+        //                ),
+        //                Stores = g.ToList()
+        //            };
+        //        })
+        //        .ToList();
+
+        //    return result;
+        //}
 
 
     }
