@@ -5,7 +5,7 @@ using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+  //  [Authorize]
     [Route("api/shoppingcart/orders")]
     [ApiController]
     public class OrderController : ControllerBase

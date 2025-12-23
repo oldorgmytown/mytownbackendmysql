@@ -1,12 +1,14 @@
-﻿namespace mytown.Services.Interfaces
+﻿using mytown.Models.DTO_s;
+
+namespace mytown.Services.Interfaces
 {
     public interface IEmailService
     {
         Task SendVerificationEmail(string email, string verificationLink);
         Task SendPasswordResetEmail(string email, string resetLink);
-        Task SendBusinessnotification(string email, string businessname, int orderId);
+        Task SendBusinessnotificationforOrderCnf(string email, string businessname,OrderConfirmationDto orderdto, StoreOrderConfirmationDto storedto);
 
-        Task SendShopperNotification(string email, string shopperName, int orderId, decimal amountPaid);
+        Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto);
         
 
         Task SendEmailToCourierAsync(string email, string courierName, int shippingDetailId);

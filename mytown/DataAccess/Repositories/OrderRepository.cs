@@ -458,7 +458,7 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
-            // 1️⃣ Get Order basic info (including selected address)
+            // 1️⃣ Order + Shopper basic details + PaymentMethod from Payments table
             var order = await _context.Orders
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new
@@ -467,7 +467,18 @@ namespace mytown.DataAccess.Repositories
                     o.OrderDate,
                     o.TotalAmount,
                     o.ShopperRegId,
-                    o.SelectedAltAddressId
+                    o.SelectedAltAddressId,
+
+                    ShopperName = o.ShopperRegister.Username,
+                    ShopperEmail = o.ShopperRegister.Email,
+                    ShopperPhone = o.ShopperRegister.PhoneNumber,
+
+                    // ✅ Get PaymentMethod from Payments table
+                    PaymentMethod = _context.Payments
+                        .Where(p => p.OrderId == o.OrderId)
+                        .OrderByDescending(p => p.PaymentDate) // latest payment
+                        .Select(p => p.PaymentMethod)
+                        .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
 
@@ -479,7 +490,6 @@ namespace mytown.DataAccess.Repositories
 
             if (order.SelectedAltAddressId.HasValue)
             {
-                // 🔹 Alternate Address
                 deliveryAddress = await _context.ShopperAlternateAddresses
                     .Where(a => a.AltAddressId == order.SelectedAltAddressId.Value)
                     .Select(a =>
@@ -495,7 +505,6 @@ namespace mytown.DataAccess.Repositories
             }
             else
             {
-                // 🔹 Default Address
                 deliveryAddress = await _context.ShopperRegisters
                     .Where(s => s.ShopperRegId == order.ShopperRegId)
                     .Select(s =>
@@ -509,8 +518,8 @@ namespace mytown.DataAccess.Repositories
                     .FirstOrDefaultAsync();
             }
 
-            // 3️⃣ Store + Shipping details
-            var storeData = await (
+            // 3️⃣ Store + Shipping + Business Email
+            var stores = await (
                 from so in _context.StoreOrders
                 join sd in _context.ShippingDetails
                     on so.StoreOrderId equals sd.StoreOrderId
@@ -522,26 +531,56 @@ namespace mytown.DataAccess.Repositories
                     StoreOrderId = so.StoreOrderId,
                     StoreId = so.StoreId,
                     StoreName = b.BusinessName,
+                    BusinessEmail = b.BusEmail,
 
                     ShippingType = sd.ShippingType,
+                    ShippingAmount = sd.Cost,
                     EstimatedDays = sd.EstimatedDays,
-                    EstimatedDeliveryDate =
-                        order.OrderDate.AddDays(sd.EstimatedDays),
-
+                    EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
                     ShippingStatus = sd.ShippingStatus
                 }
             ).ToListAsync();
 
-            // 4️⃣ Final response
+            // 4️⃣ Items per store + totals
+            foreach (var store in stores)
+            {
+                var items = await (
+                    from oi in _context.OrderDetails
+                    join p in _context.products
+                        on oi.ProductId equals p.ProductId
+                    where oi.StoreOrderId == store.StoreOrderId
+                    select new OrderItemDto
+                    {
+                        ProductName = p.ProductName,
+                        Quantity = oi.Quantity,
+                        Price = oi.Price
+                    }
+                ).ToListAsync();
+
+                store.Items = items;
+                store.StoreItemsTotal = items.Sum(i => i.Price * i.Quantity);
+            }
+
+            // 5️⃣ Final DTO
             return new OrderConfirmationDto
             {
                 OrderId = order.OrderId,
                 OrderDate = order.OrderDate,
                 TotalAmount = order.TotalAmount,
+
+                ShopperRegId = order.ShopperRegId,
+                ShopperName = order.ShopperName,
+                ShopperEmail = order.ShopperEmail,
+                ShopperPhone = order.ShopperPhone,
+
+                PaymentMethod = order.PaymentMethod,
                 DeliveryAddress = deliveryAddress,
-                Stores = storeData
+
+                Stores = stores
             };
         }
+
+
 
     }
 }

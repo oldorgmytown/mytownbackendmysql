@@ -35,16 +35,16 @@ namespace mytown.Controllers
 
             var payment = _paymentService.AddPayment(model.OrderId, model.AmountPaid, model.PaymentMethod);
 
-            // STORE DETAILS
-            var storeDetails = _paymentService.GetStoreDetailsByOrderId(model.OrderId);
+            //// STORE DETAILS
+            //var storeDetails = _paymentService.GetStoreDetailsByOrderId(model.OrderId);
 
-            foreach (var store in storeDetails)
-            {
-                if (!string.IsNullOrEmpty(store.BusEmail))
-                {
-                    await _emailService.SendBusinessnotification(store.BusEmail, store.Businessname, model.OrderId);
-                }
-            }
+            //foreach (var store in storeDetails)
+            //{
+            //    if (!string.IsNullOrEmpty(store.BusEmail))
+            //    {
+            //        await _emailService.SendBusinessnotification(store.BusEmail, store.Businessname, model.OrderId);
+            //    }
+            //}
 
             // SHIPPING DETAILS
             var shippingDetails = _paymentService.GetShippingDetailsByOrderId(model.OrderId);
@@ -54,18 +54,18 @@ namespace mytown.Controllers
                 await _paymentService.SendCourierEmailAsync(shipping.BranchId, shipping.ShippingDetailId);
             }
 
-            // SHOPPER DETAILS
-            var shopper = _paymentService.GetShopperDetailsByOrderId(model.OrderId);
+            //// SHOPPER DETAILS
+            //var shopper = _paymentService.GetShopperDetailsByOrderId(model.OrderId);
 
-            if (shopper != null && !string.IsNullOrEmpty(shopper.Email))
-            {
-                await _emailService.SendShopperNotification(
-                    shopper.Email,
-                    shopper.Username,
-                    model.OrderId,
-                    model.AmountPaid
-                );
-            }
+            //if (shopper != null && !string.IsNullOrEmpty(shopper.Email))
+            //{
+            //    await _emailService.SendShopperNotification(
+            //        shopper.Email,
+            //        shopper.Username,
+            //        model.OrderId,
+            //        model.AmountPaid
+            //    );
+            //}
 
             return Ok(new { message = "Payment successful!", paymentId = payment.PaymentId });
         }

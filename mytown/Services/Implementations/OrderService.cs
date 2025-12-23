@@ -1,4 +1,5 @@
-﻿using mytown.DataAccess.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -8,10 +9,12 @@ namespace mytown.Services.Implementations
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _repo;
+        private readonly IEmailService _EmailService;
 
-        public OrderService(IOrderRepository repo)
+        public OrderService(IOrderRepository repo, IEmailService emailService)
         {
             _repo = repo;
+            _EmailService = emailService;
         }
 
         //public Task<int> CreateOrderAsync(int shopperRegId, List<StoreShippingSelection> selections)
@@ -36,12 +39,46 @@ namespace mytown.Services.Implementations
             => _repo.SaveShippingSelectionsAsync(orderId, selections);
 
 
+        //public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
+        //{
+        //    return await _repo.GetOrderConfirmationAsync(orderId);
+        //}
+
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
-            return await _repo.GetOrderConfirmationAsync(orderId);
+            // 1️⃣ Get everything from repository
+            var orderConfirmation = await _repo.GetOrderConfirmationAsync(orderId);
+
+            if (orderConfirmation == null)
+                return null;
+
+            // 2️⃣ Send email using data already present in DTO
+            if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+            {
+                await _EmailService.SendShopperNotification(
+                    orderConfirmation.ShopperEmail,
+                    orderConfirmation.ShopperName,
+                    orderConfirmation
+                );
+            }
+
+            foreach (var store in orderConfirmation.Stores)
+            {
+                if (!string.IsNullOrEmpty(store.BusinessEmail))
+                {
+                    await _EmailService.SendBusinessnotificationforOrderCnf(
+                        store.BusinessEmail,
+                        store.StoreName,
+                        orderConfirmation,
+                        store
+                    );
+                }
+            }
+            // 3️⃣ Return DTO to controller
+            return orderConfirmation;
         }
 
-       
+
     }
 }
 

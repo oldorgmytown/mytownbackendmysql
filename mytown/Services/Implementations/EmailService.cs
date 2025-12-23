@@ -8,6 +8,7 @@ using System.Linq;
 using DnsClient;
 using Microsoft.EntityFrameworkCore;
 using mytown.Services.Interfaces;
+using mytown.Models.DTO_s;
 
 public class EmailService : IEmailService
 {
@@ -176,7 +177,8 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendBusinessnotification(string email, string businessname, int orderId)
+    public async Task SendBusinessnotificationforOrderCnf(string email, string businessname, OrderConfirmationDto orderdto, StoreOrderConfirmationDto storedto)
+
     {
         if (!await DomainHasMX(email))
             throw new Exception("The email domain is not valid (no MX records found).");
@@ -201,7 +203,7 @@ public class EmailService : IEmailService
 
     <p>
       We are writing to confirm that payment has been successfully completed for an order placed through our online platform.
-      Kindly proceed with processing and shipping the product for the order ID <strong>{orderId}</strong>.
+      Kindly proceed with processing and shipping the product for the order ID <strong></strong>.
       Check for the order details in your business portal.
     </p>
 
@@ -233,7 +235,7 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendShopperNotification(string email, string shopperName, int orderId, decimal amountPaid)
+    public async Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto)
     {
         if (!await DomainHasMX(email))
             throw new Exception("The email domain is not valid (no MX records found).");
@@ -259,13 +261,13 @@ public class EmailService : IEmailService
 
     <p>
       We are delighted to inform you that your payment for 
-      <strong>Order ID #{orderId}</strong> has been successfully processed.
+      <strong>Order ID #</strong> has been successfully processed.
     </p>
 
     <p>
       <strong>Payment Details:</strong><br />
-      Amount Paid: <strong>₹{amountPaid:F2}</strong><br />
-      Payment Date: <strong>{DateTime.Now:dd MMM yyyy, hh:mm tt}</strong>
+      Amount Paid: <strong>₹</strong><br />
+      Payment Date: <strong></strong>
     </p>
 
     <p>
