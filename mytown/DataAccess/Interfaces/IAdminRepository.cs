@@ -31,6 +31,10 @@ namespace mytown.DataAccess.Interfaces
 
         //landing page
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStoresAsync();
+
+        Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_DapperAsync();
+        Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_EFAsync();
+        Task TestConnectionAsync();
     }
 }
 

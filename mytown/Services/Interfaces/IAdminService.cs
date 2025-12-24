@@ -18,5 +18,8 @@ namespace mytown.Services.Interfaces
         Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status);
         Task<(IEnumerable<object> Records, int TotalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize);
         Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync();
+        Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_DapperAsync();
+        Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_EFAsync();
+        Task TestConnectionAsync();
     }
 }

@@ -33,6 +33,7 @@ public class Startup
         RegisterControllersAndSwagger(services);
         RegisterCors(services);
         RegisterAuthentication(services);
+        services.AddMemoryCache();
     }
 
     // Registers the database (EF Core with MySQL).

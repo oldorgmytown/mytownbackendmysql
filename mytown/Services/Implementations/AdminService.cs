@@ -1,4 +1,6 @@
 ﻿using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
+using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
 namespace mytown.Services.Implementations
@@ -88,5 +90,26 @@ namespace mytown.Services.Implementations
         {
             return await _adminRepo.GetLocationsWithCompletedStoresAsync();
         }
+
+        public async Task<List<LocationStoresDto>>
+        GetLocationsWithCompletedStores_DapperAsync()
+        {
+            return await _adminRepo
+                .GetLocationsWithCompletedStores_DapperAsync();
+        }
+
+        public async Task<List<LocationStoresDto>>
+            GetLocationsWithCompletedStores_EFAsync()
+        {
+            return await _adminRepo
+                .GetLocationsWithCompletedStores_EFAsync();
+        }
+
+        public async Task TestConnectionAsync()
+        {
+            await _adminRepo.TestConnectionAsync();
+        }
+
+
     }
 }

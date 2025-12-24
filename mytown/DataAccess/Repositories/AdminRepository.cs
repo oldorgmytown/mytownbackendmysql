@@ -1,10 +1,17 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Dapper;   
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using MySqlConnector;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
 using MyTown.Models;
+using System.Data;
+using System.Diagnostics;
+//using MySql.Data.MySqlClient; 
+
 
 namespace mytown.DataAccess.Repositories
 {
@@ -12,13 +19,21 @@ namespace mytown.DataAccess.Repositories
     {
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
+        private readonly string _connectionString;
+        private readonly IMemoryCache _cache;
+        //private readonly AppDbContext _context;
 
-        public AdminRepository(AppDbContext context, IEmailService emailservice)
+        public AdminRepository(AppDbContext context, IEmailService emailservice, IConfiguration config,IMemoryCache cache)
         {
             _context = context;
             _emailService = emailservice;
+            _connectionString = config.GetConnectionString("mysqlConnection");
+            _cache = cache;
         }
 
+        
+
+      
         //ADMIN PANEL
 
         //to get all business profiles with status
@@ -460,48 +475,149 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
-        //public async Task<List<LocationStoresDto>> GetLocationsWithCompletedStoresAsync()
-        //{
-        //    // 1️⃣ Fetch approved profiles (safe filtering)
-        //    var approvedProfiles = await _context.BusinessProfiles
-        //        .Where(bp =>
-        //            bp.ProfileStatus != null &&
-        //            bp.ProfileStatus.Trim().ToLower() == "approved" &&
-        //            !string.IsNullOrWhiteSpace(bp.BusinessLocation))
-        //        .ToListAsync();
+        public async Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_EFAsync()
+        {
+            if (_cache.TryGetValue("dashboardLocations", out List<LocationStoresDto> cachedData))
+                return cachedData;
 
-        //    // 2️⃣ Group by normalized location
-        //    var result = approvedProfiles
-        //        .GroupBy(bp =>
-        //            string.Join(",",
-        //                bp.BusinessLocation
-        //                  .Split(',')
-        //                  .Select(x => x.Trim().ToLower())
-        //            )
-        //        )
-        //        .Where(g => g.Count() >= 1)
-        //        .Select(g =>
-        //        {
-        //            var parts = g.Key.Split(',');
+            var sw = Stopwatch.StartNew();
 
-        //            var town = parts.ElementAtOrDefault(0);
-        //            var city = parts.ElementAtOrDefault(1);
-        //            var country = parts.LastOrDefault();
+            var profiles = await _context.BusinessProfiles
+                .AsNoTracking()
+                .Where(bp => bp.ProfileStatus == "approved" && bp.BusinessLocation != null)
+                .Select(bp => new
+                {
+                    bp.BusinessProfileId,
+                    bp.BusRegId,
+                    bp.BusinessName,
+                    bp.BusinessLocation,
+                    bp.BannerPath,
+                    bp.LogoPath
+                })
+                .ToListAsync();
 
-        //            return new LocationStoresDto
-        //            {
-        //                Location = string.Join(", ",
-        //                    new[] { town, city, country }
-        //                    .Where(x => !string.IsNullOrWhiteSpace(x))
-        //                    .Select(x => char.ToUpper(x[0]) + x.Substring(1))
-        //                ),
-        //                Stores = g.ToList()
-        //            };
-        //        })
-        //        .ToList();
+            var result = profiles
+                .GroupBy(bp => bp.BusinessLocation.Trim())
+                .Where(g => g.Count() >= 3)
+                .Select(g =>
+                {
+                    var parts = g.Key.Split(',').Select(p => p.Trim()).ToArray();
+                    var town = parts.Length > 0 ? parts[0] : "";
+                    var city = parts.Length > 1 ? parts[1] : "";
+                    var country = parts.Length > 3 ? parts[3] : "";
 
-        //    return result;
-        //}
+                    return new LocationStoresDto
+                    {
+                        Location = string.Join(", ", new[] { town, city, country }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                        Stores = g.Select(x => new BusinessProfile
+                        {
+                            BusinessProfileId = x.BusinessProfileId,
+                            BusRegId = x.BusRegId,
+                            BusinessName = x.BusinessName,
+                            BusinessLocation = x.BusinessLocation,
+                            BannerPath = x.BannerPath,
+                            LogoPath = x.LogoPath
+                        }).ToList()
+                    };
+                })
+                .ToList();
+
+            sw.Stop();
+            Console.WriteLine($"EF execution time (repo): {sw.ElapsedMilliseconds} ms");
+
+            // Cache the result for 5 minutes
+            _cache.Set("dashboardLocations", result, TimeSpan.FromMinutes(5));
+
+            return result;
+        }
+
+        private IDbConnection CreateConnection()
+        {
+            return new MySqlConnection(_connectionString);
+        }
+
+        public async Task TestConnectionAsync()
+        {
+            using var conn = new MySqlConnection(_connectionString);
+            await conn.OpenAsync(); // will throw if connection fails
+        }
+
+
+        public async Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_DapperAsync()
+        {
+            const string cacheKey = "dapper_locations_completed";
+
+            // 1️⃣ Return from cache if exists
+            if (_cache.TryGetValue(cacheKey, out List<LocationStoresDto> cached))
+                return cached;
+
+            var sql = @"
+        SELECT 
+            business_profile_id AS BusinessProfileId,
+            bus_reg_id AS BusRegId,
+            business_name AS BusinessName,
+            business_location AS BusinessLocation,
+            banner_path AS BannerPath,
+            logo_path AS LogoPath
+        FROM business_profiles
+        WHERE profile_status = 'approved'
+          AND business_location IS NOT NULL;
+    ";
+
+            using var connection = CreateConnection();
+
+            var rows = (await connection
+                .QueryAsync<LocationStoreFlatDto>(sql))
+                .ToList();
+
+            var result = rows
+                .GroupBy(r => r.BusinessLocation?.Trim())
+                .Where(g => g.Count() >= 3)
+                .Select(g =>
+                {
+                    var parts = g.Key?
+                        .Split(',')
+                        .Select(p => p.Trim())
+                        .ToArray() ?? Array.Empty<string>();
+
+                    var town = parts.ElementAtOrDefault(0) ?? "";
+                    var city = parts.ElementAtOrDefault(1) ?? "";
+                    var country = parts.LastOrDefault() ?? "";
+
+                    return new LocationStoresDto
+                    {
+                        Location = string.Join(", ",
+                            new[] { town, city, country }
+                                .Where(x => !string.IsNullOrWhiteSpace(x))),
+
+                        Stores = g.Select(r => new BusinessProfile
+                        {
+                            BusinessProfileId = r.BusinessProfileId,
+                            BusRegId = r.BusRegId,
+                            BusinessName = r.BusinessName,
+                            BusinessLocation = r.BusinessLocation,
+                            BannerPath = r.BannerPath,
+                            LogoPath = r.LogoPath
+                        }).ToList()
+                    };
+                })
+                .ToList();
+
+            // 2️⃣ Cache result
+            _cache.Set(
+                cacheKey,
+                result,
+                new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10),
+                    SlidingExpiration = TimeSpan.FromMinutes(3)
+                });
+
+            return result;
+        }
+
+
+
 
 
     }

@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using mytown.Services.Interfaces;
+using MySqlConnector;
 using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
+using System.Diagnostics;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace mytown.Controllers
 {
@@ -13,12 +16,14 @@ namespace mytown.Controllers
 
         private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
+      //  private readonly string _connectionString;
 
         public AdminController(IAdminService adminService,
                                ILogger<AdminController> logger)
         {
             _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+           // _connectionString = config.GetConnectionString("DefaultConnection");
         }
 
         [Authorize]
@@ -239,6 +244,53 @@ namespace mytown.Controllers
             var data = await _adminService.GetLocationsWithCompletedStoresAsync();
             return Ok(data);
         }
+
+
+        [HttpGet("locations/dapper")]
+        public async Task<IActionResult> GetLocations_Dapper()
+        {
+            var sw = Stopwatch.StartNew();
+
+            var data = await _adminService.GetLocationsWithCompletedStores_DapperAsync();
+
+            sw.Stop();
+
+            return Ok(new
+            {
+                executionTimeMs = sw.ElapsedMilliseconds,
+                data = data
+            });
+        }
+
+        [HttpGet("locations/ef")]
+        public async Task<IActionResult> GetLocations_EF()
+        {
+            var sw = Stopwatch.StartNew();
+
+            var data = await _adminService.GetLocationsWithCompletedStores_EFAsync();
+
+            sw.Stop();
+
+            return Ok(new
+            {
+                executionTimeMs = sw.ElapsedMilliseconds,
+                data = data
+            });
+        }
+        [HttpGet("db-test")]
+        public async Task<IActionResult> DbTest()
+        {
+            try
+            {
+                await _adminService.TestConnectionAsync();
+                return Ok("DB Connected");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Connection failed: {ex.Message}");
+            }
+        }
+
 
     }
 }
