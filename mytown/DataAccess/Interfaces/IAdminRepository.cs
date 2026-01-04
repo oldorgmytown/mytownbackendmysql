@@ -16,8 +16,14 @@ namespace mytown.DataAccess.Interfaces
         Task<Dictionary<string, Dictionary<string, int>>> Businessprofilestatuscounts();
 
         Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comments = null);
-        
-            Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
+
+        //Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
+        Task<(List<ShopperRegister> records, int totalCount)>
+       GetShoppersByStatusAsync(string status, int page, int pageSize);
+
+        //Shopper Summary on Admin panel
+        Task<ShopperStatsDto> GetActiveShopperStatsAsync();
+
         Task<bool> UpdateShopperStatusAsync(int shopperId, string newStatus);
         Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
 
@@ -29,6 +35,9 @@ namespace mytown.DataAccess.Interfaces
         Task<int> GetCourierserviceCountAsync();
         Task<(IEnumerable<CourierService> records, int totalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize);
 
+
+        // shopper tab
+        Task<bool> DeactivateShopperAsync(int shopperRegId);
         //landing page
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStoresAsync();
 

@@ -1,4 +1,5 @@
-﻿using mytown.Models.DTO_s;
+﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
 {
@@ -13,8 +14,18 @@ namespace mytown.Services.Interfaces
         Task<(int uniqueTowns, int uniqueCities, int uniqueStates, int uniqueCountries)> GetUniqueCountsAsync();
         Task<int> GetBusinessRegisterCountAsync();
         Task<int> GetShoppersRegisterCountAsync();
+        Task<(List<ShopperRegister> records, int totalCount)>
+    GetShoppersByStatusAsync(string status, int page, int pageSize);
+        //Decativate shopper account
+        Task<bool> DeactivateShopperAsync(int shopperRegId);
+
+        // Shopper Summary on Admin panel
+        Task<ShopperStatsDto> GetActiveShopperStatsAsync();
+
+
+
         Task<int> GetCourierRegisterCountAsync();
-        Task<(IEnumerable<object> Records, int TotalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
+       // Task<(IEnumerable<object> Records, int TotalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
         Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status);
         Task<(IEnumerable<object> Records, int TotalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize);
         Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync();

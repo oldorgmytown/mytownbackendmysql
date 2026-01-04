@@ -179,26 +179,52 @@ namespace mytown.Controllers
             return Ok(new { count });
         }
 
-        [Authorize]
-        [HttpGet("getShopperRegistersPaginated")]
-        public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
+        //[Authorize]
+        //[HttpGet("getShopperRegistersPaginated")]
+        //public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
+        //{
+        //    if (page <= 0 || pageSize <= 0)
+        //        return BadRequest(new { message = "Page and page size must be greater than 0." });
+
+        //    var (shopperRegisters, totalRecords) = await _adminService.GetShopperRegistersPaginatedAsync(page, pageSize);
+
+        //    if (shopperRegisters == null || !shopperRegisters.Any())
+        //        return Ok(new { data = new List<object>(), message = "No shopper registers found.", totalRecords = 0 });
+
+        //    return Ok(new
+        //    {
+        //        data = shopperRegisters,
+        //        totalRecords,
+        //        currentPage = page,
+        //        pageSize
+        //    });
+        //}
+
+        [HttpGet("shoppersonAdminpanel")]
+        public async Task<IActionResult> GetShoppers(
+    string status = "active",
+    int page = 1,
+    int pageSize = 10)
         {
-            if (page <= 0 || pageSize <= 0)
-                return BadRequest(new { message = "Page and page size must be greater than 0." });
-
-            var (shopperRegisters, totalRecords) = await _adminService.GetShopperRegistersPaginatedAsync(page, pageSize);
-
-            if (shopperRegisters == null || !shopperRegisters.Any())
-                return Ok(new { data = new List<object>(), message = "No shopper registers found.", totalRecords = 0 });
+            var (records, totalCount) =
+                await _adminService.GetShoppersByStatusAsync(status, page, pageSize);
 
             return Ok(new
             {
-                data = shopperRegisters,
-                totalRecords,
-                currentPage = page,
-                pageSize
+                data = records,
+                totalCount
             });
         }
+
+        //Shopper summary on admin panel
+
+        [HttpGet("shopper_statsonAdminPanel")]
+        public async Task<IActionResult> GetShopperStats()
+        {
+            var stats = await _adminService.GetActiveShopperStatsAsync();
+            return Ok(stats);
+        }
+
 
         [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
@@ -215,6 +241,17 @@ namespace mytown.Controllers
                 return NotFound($"No Shopper found with Id {shopperId}.");
 
             return Ok("Shopper status updated successfully.");
+        }
+
+        [HttpPut("deactivateShopper")]
+        public async Task<IActionResult> DeactivateShopper(int shopperRegId)
+        {
+            var result = await _adminService.DeactivateShopperAsync(shopperRegId);
+
+            if (!result)
+                return NotFound("Shopper not found");
+
+            return Ok(new { message = "Shopper account deactivated successfully" });
         }
 
         [Authorize]

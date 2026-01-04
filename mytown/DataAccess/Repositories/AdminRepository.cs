@@ -353,6 +353,7 @@ namespace mytown.DataAccess.Repositories
                 .CountAsync();
 
             // Fetch unique states from both tables
+            // Fetch unique states from both tables
             var uniqueStates = await _context.BusinessRegisters
                 .Select(b => b.BusinessState)
                 .Where(state => !string.IsNullOrEmpty(state))
@@ -387,16 +388,67 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Shoppers tab
-        public async Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize)
+        public async Task<(List<ShopperRegister> records, int totalCount)>
+      GetShoppersByStatusAsync(string status, int page, int pageSize)
         {
-            var totalRecords = await _context.ShopperRegisters.CountAsync();
-            var records = await _context.ShopperRegisters
+            var query = _context.ShopperRegisters.AsQueryable();
+
+            if (status == "active")
+            {
+                query = query.Where(s => s.Status == null || s.Status != "Deactivated");
+            }
+            else if (status == "deactivated")
+            {
+                query = query.Where(s => s.Status == "Deactivated");
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var records = await query
+                .OrderByDescending(s => s.ShopperRegId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            return (records, totalRecords);
+            return (records, totalCount);
         }
+
+
+        //Shopper summary on Admin panel
+
+        public async Task<ShopperStatsDto> GetActiveShopperStatsAsync()
+        {
+            var activeShoppers = _context.ShopperRegisters
+                .Where(s => s.Status == null || s.Status != "Deactivated");
+
+            var result = new ShopperStatsDto
+            {
+                TotalActiveShoppers = await activeShoppers.CountAsync(),
+
+                TotalTowns = await activeShoppers
+                    .Select(s => s.Town)
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalCities = await activeShoppers
+                    .Select(s => s.City)
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalStates = await activeShoppers
+                    .Select(s => s.State)
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalCountries = await activeShoppers
+                    .Select(s => s.Country)
+                    .Distinct()
+                    .CountAsync()
+            };
+
+            return result;
+        }
+
         public async Task<bool> UpdateShopperStatusAsync(int shopperId, string newStatus)
         {
             var shopper = await _context.ShopperRegisters.FindAsync(shopperId);
@@ -420,6 +472,20 @@ namespace mytown.DataAccess.Repositories
             // Count the rows in the BusinessRegister table
             int count = await _context.ShopperRegisters.CountAsync();
             return count;
+        }
+
+        public async Task<bool> DeactivateShopperAsync(int shopperRegId)
+        {
+            var shopper = await _context.ShopperRegisters
+                .FirstOrDefaultAsync(s => s.ShopperRegId == shopperRegId);
+
+            if (shopper == null)
+                return false;
+
+            shopper.Status = "Deactivated";
+
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<int> GetCourierserviceCountAsync()

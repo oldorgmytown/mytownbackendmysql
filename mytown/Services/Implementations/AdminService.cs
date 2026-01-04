@@ -1,5 +1,6 @@
 ﻿using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -8,10 +9,12 @@ namespace mytown.Services.Implementations
     public class AdminService : IAdminService
     {
         private readonly IAdminRepository _adminRepo;
+        private readonly IEmailService _emailService;
 
-        public AdminService(IAdminRepository adminRepo)
+        public AdminService(IAdminRepository adminRepo, IEmailService emailService)
         {
             _adminRepo = adminRepo;
+            _emailService = emailService;
         }
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
@@ -68,16 +71,41 @@ namespace mytown.Services.Implementations
             return await _adminRepo.GetCourierserviceCountAsync();
         }
 
-        public async Task<(IEnumerable<object> Records, int TotalRecords)>
-            GetShopperRegistersPaginatedAsync(int page, int pageSize)
+        public Task<(List<ShopperRegister>, int)>
+    GetShoppersByStatusAsync(string status, int page, int pageSize)
         {
-            return await _adminRepo.GetShopperRegistersPaginatedAsync(page, pageSize);
+            return _adminRepo.GetShoppersByStatusAsync(status, page, pageSize);
+        }
+
+        // get shopper stats on admin panel
+        public async Task<ShopperStatsDto> GetActiveShopperStatsAsync()
+        {
+            return await _adminRepo.GetActiveShopperStatsAsync();
         }
 
         public async Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status)
         {
             // Keeping your existing repository call — NO change to repo method
             return await _adminRepo.UpdateProfileStatusbyAdminAsync(shopperId, status);
+        }
+        public async Task<bool> DeactivateShopperAsync(int shopperRegId)
+        {
+            var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
+
+            if (shopper == null)
+                return false;
+
+            var result = await _adminRepo.DeactivateShopperAsync(shopperRegId);
+
+            if (result)
+            {
+                await _emailService.SendShopperDeactivationEmailAsync(
+                    shopper.Email,
+                    shopper.Username
+                );
+            }
+
+            return result;
         }
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
