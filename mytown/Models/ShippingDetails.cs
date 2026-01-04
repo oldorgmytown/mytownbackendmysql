@@ -48,8 +48,8 @@ namespace mytown.Models
 
         // Strongly recommended
         //[Required]
-        //[Column("estimated_delivery_date")]
-        //public DateTime EstimatedDeliveryDate { get; set; }
+        [Column("delivered_date")]
+        public DateTime DeliveredDate { get; set; }
 
         // Cost charged for this store shipment
         [Required]
@@ -63,5 +63,9 @@ namespace mytown.Models
         // Shipping lifecycle
         [Column("shipping_status", TypeName = "varchar(50)")]
         public string ShippingStatus { get; set; } = "Not Shipped";
+
+        [Column("delivery_address", TypeName = "text")]
+        public string DeliveryAddress { get; set; }
+
     }
 }

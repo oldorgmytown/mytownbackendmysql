@@ -16,5 +16,9 @@ namespace mytown.Services.Interfaces
         //send email notification to business owner for approval or rejection of profile
 
         Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status);
+
+        Task SendShopperDeactivationEmailAsync(string email, string shopperName);
+       
+
     }       
 }

@@ -12,6 +12,7 @@
         public string ShopperPhone { get; set; } = string.Empty;
 
         public string DeliveryAddress { get; set; } = string.Empty;
+
         public string PaymentMethod { get; set; } = string.Empty;
 
         //  Always initialize collections
@@ -33,6 +34,8 @@
         public int EstimatedDays { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
         public string ShippingStatus { get; set; } = string.Empty;
+
+    
 
         //  Store-wise totals (important for business email)
         public decimal StoreItemsTotal { get; set; }

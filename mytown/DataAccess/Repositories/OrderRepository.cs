@@ -126,11 +126,10 @@ namespace mytown.DataAccess.Repositories
         //    return newOrder.OrderId;
         //}
 
-
         public async Task<int> CreateOrderAsync(
-    int shopperRegId,
-    int? selectedAltAddressId,
-    List<StoreShippingSelection> shippingSelections)
+            int shopperRegId,
+            int? selectedAltAddressId,
+            List<StoreShippingSelection> shippingSelections)
         {
             // 1️⃣ Get Cart Items
             var cartItems = await _context.addtocart
@@ -146,10 +145,7 @@ namespace mytown.DataAccess.Repositories
             var newOrder = new Order
             {
                 ShopperRegId = shopperRegId,
-
-                // ✅ NEW: save selected delivery address
                 SelectedAltAddressId = selectedAltAddressId,
-
                 TotalAmount = totalAmount,
                 ShippingType = "Multiple",
                 OrderStatus = "Pending",
@@ -159,7 +155,40 @@ namespace mytown.DataAccess.Repositories
             _context.Orders.Add(newOrder);
             await _context.SaveChangesAsync();
 
-            // 3️⃣ Create StoreOrders (One per Store)
+            // 🔹 Resolve delivery address ONCE (THIS IS THE KEY PART)
+            string deliveryAddress;
+
+            if (selectedAltAddressId.HasValue)
+            {
+                deliveryAddress = await _context.ShopperAlternateAddresses
+                    .Where(a => a.AltAddressId == selectedAltAddressId.Value)
+                    .Select(a =>
+                        a.AltName + ", " +
+                        a.AltAddress + ", " +
+                        a.AltTown + ", " +
+                        a.AltCity + ", " +
+                        a.AltState + ", " +
+                        a.AltCountry +
+                        (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
+                    )
+                    .FirstOrDefaultAsync();
+            }
+            else
+            {
+                deliveryAddress = await _context.ShopperRegisters
+                    .Where(s => s.ShopperRegId == shopperRegId)
+                    .Select(s =>
+                        s.Address + ", " +
+                        s.Town + ", " +
+                        s.City + ", " +
+                        s.State + ", " +
+                        s.Country +
+                        (s.PostalCode != null ? " - " + s.PostalCode : "")
+                    )
+                    .FirstOrDefaultAsync();
+            }
+
+            // 3️⃣ Create StoreOrders
             var groupedStores = cartItems.GroupBy(c => c.BusRegId);
             var storeOrders = new List<StoreOrder>();
 
@@ -177,7 +206,6 @@ namespace mytown.DataAccess.Repositories
             _context.StoreOrders.AddRange(storeOrders);
             await _context.SaveChangesAsync();
 
-            // Create a lookup for StoreOrderId per StoreId
             var storeOrderMap = storeOrders.ToDictionary(
                 s => s.StoreId,
                 s => s.StoreOrderId
@@ -197,7 +225,7 @@ namespace mytown.DataAccess.Repositories
             _context.OrderDetails.AddRange(orderDetailsList);
             await _context.SaveChangesAsync();
 
-            // 5️⃣ Create ShippingDetails (one per store)
+            // 5️⃣ Create ShippingDetails (WITH DELIVERY ADDRESS STORED)
             var shippingList = new List<ShippingDetails>();
 
             foreach (var storeOrder in storeOrders)
@@ -223,7 +251,10 @@ namespace mytown.DataAccess.Repositories
                     EstimatedDays = branch.EstimateDays ?? 0,
                     Cost = branch.Charges,
                     TrackingId = "",
-                    ShippingStatus = "Ready to Ship"
+                    ShippingStatus = "In Progress",
+
+                    //  THIS IS WHAT YOU ASKED FOR
+                    DeliveryAddress = deliveryAddress
                 };
 
                 shippingList.Add(shipping);
@@ -234,6 +265,7 @@ namespace mytown.DataAccess.Repositories
 
             return newOrder.OrderId;
         }
+
 
         public async Task<int> CreateOrderAndOrderDetailsAsync(int shopperRegId)
         {
@@ -413,7 +445,7 @@ namespace mytown.DataAccess.Repositories
                     Cost = branch.Charges,
 
                     TrackingId = null,
-                    ShippingStatus = "Ready to Ship"
+                    ShippingStatus = "In Progress"
                 };
 
                 shippingList.Add(shipping);
@@ -455,10 +487,9 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
-
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
-            // 1️⃣ Order + Shopper basic details + PaymentMethod from Payments table
+            // 1️⃣ Order + Shopper basic details + PaymentMethod
             var order = await _context.Orders
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new
@@ -467,16 +498,15 @@ namespace mytown.DataAccess.Repositories
                     o.OrderDate,
                     o.TotalAmount,
                     o.ShopperRegId,
-                    o.SelectedAltAddressId,
 
                     ShopperName = o.ShopperRegister.Username,
                     ShopperEmail = o.ShopperRegister.Email,
                     ShopperPhone = o.ShopperRegister.PhoneNumber,
 
-                    // ✅ Get PaymentMethod from Payments table
+                    // ✅ PaymentMethod from Payments table
                     PaymentMethod = _context.Payments
                         .Where(p => p.OrderId == o.OrderId)
-                        .OrderByDescending(p => p.PaymentDate) // latest payment
+                        .OrderByDescending(p => p.PaymentDate)
                         .Select(p => p.PaymentMethod)
                         .FirstOrDefault()
                 })
@@ -485,40 +515,7 @@ namespace mytown.DataAccess.Repositories
             if (order == null)
                 return null;
 
-            // 2️⃣ Resolve delivery address
-            string deliveryAddress;
-
-            if (order.SelectedAltAddressId.HasValue)
-            {
-                deliveryAddress = await _context.ShopperAlternateAddresses
-                    .Where(a => a.AltAddressId == order.SelectedAltAddressId.Value)
-                    .Select(a =>
-                        a.AltName + ", " +
-                        a.AltAddress + ", " +
-                        a.AltTown + ", " +
-                        a.AltCity + ", " +
-                        a.AltState + ", " +
-                        a.AltCountry +
-                        (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
-                    )
-                    .FirstOrDefaultAsync();
-            }
-            else
-            {
-                deliveryAddress = await _context.ShopperRegisters
-                    .Where(s => s.ShopperRegId == order.ShopperRegId)
-                    .Select(s =>
-                        s.Address + ", " +
-                        s.Town + ", " +
-                        s.City + ", " +
-                        s.State + ", " +
-                        s.Country +
-                        (s.PostalCode != null ? " - " + s.PostalCode : "")
-                    )
-                    .FirstOrDefaultAsync();
-            }
-
-            // 3️⃣ Store + Shipping + Business Email
+            // 2️⃣ Store + Shipping + Business Email + DeliveryAddress
             var stores = await (
                 from so in _context.StoreOrders
                 join sd in _context.ShippingDetails
@@ -541,7 +538,13 @@ namespace mytown.DataAccess.Repositories
                 }
             ).ToListAsync();
 
-            // 4️⃣ Items per store + totals
+            // ✅ Get DeliveryAddress from ShippingDetails (any one store is enough)
+            var deliveryAddress = await _context.ShippingDetails
+                .Where(sd => sd.OrderId == orderId)
+                .Select(sd => sd.DeliveryAddress)
+                .FirstOrDefaultAsync();
+
+            // 3️⃣ Items per store + totals
             foreach (var store in stores)
             {
                 var items = await (
@@ -561,7 +564,7 @@ namespace mytown.DataAccess.Repositories
                 store.StoreItemsTotal = items.Sum(i => i.Price * i.Quantity);
             }
 
-            // 5️⃣ Final DTO
+            // 4️⃣ Final DTO
             return new OrderConfirmationDto
             {
                 OrderId = order.OrderId,

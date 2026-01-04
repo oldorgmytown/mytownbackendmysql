@@ -468,4 +468,67 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task SendShopperDeactivationEmailAsync(string email, string shopperName)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Your Account Has Been Deactivated",
+                    IsBodyHtml = true,
+                    Body = $@"
+<html>
+  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
+
+    <h3 style='color:#000;'>Account Deactivation Notice</h3>
+
+    <p>Dear <strong>{shopperName}</strong>,</p>
+
+    <p>
+      We would like to inform you that your shopper account has been
+      <strong>deactivated</strong> by the administrator.
+    </p>
+
+    <p>
+      As a result, you will no longer be able to place orders or access your account.
+    </p>
+
+    <p>
+      If you believe this action was taken in error or if you require further clarification,
+      please contact our support team.
+    </p>
+
+    <p style='margin-top: 30px;'>
+      Best regards,<br />
+      <strong style='color:#004481;'>MyTown Support Team</strong><br />
+      <em>Customer Care</em>
+    </p>
+
+  </body>
+</html>"
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending shopper deactivation email: {ex.Message}");
+            throw new Exception("Failed to send shopper deactivation email.");
+        }
+    }
+
+
+
 }
