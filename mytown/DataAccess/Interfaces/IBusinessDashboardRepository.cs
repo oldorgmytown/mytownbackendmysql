@@ -24,11 +24,23 @@ namespace mytown.DataAccess.Interfaces
          bool descending = false);
 
         // order sales history with search and sort
-       // Task<List<BusinessDashboardDto>> GetStoreOrdersReportsortsearch(
-       //int storeId,
-       //string? search = null,
-       //string? sortBy = null,
-       //bool descending = false);
+        // Task<List<BusinessDashboardDto>> GetStoreOrdersReportsortsearch(
+        //int storeId,
+        //string? search = null,
+        //string? sortBy = null,
+        //bool descending = false);
+
+
+        Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId);
+        Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId);
+        Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId);
+        Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId);
+
+        // Products tab
+
+        Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(int storeId);
+
+
 
     }
 }

@@ -741,6 +741,108 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
         }
 
+
+        //    public List<BusinessProfile> GetBusinessProfilesByFilters(
+        //string? searchTerm,
+        //string? locationQuery)
+        //    {
+        //        // --------------------------------------------
+        //        // 0️⃣ START with APPROVED business IDs ONLY
+        //        // --------------------------------------------
+        //        IQueryable<int> approvedBusinessIds = _context.BusinessProfiles
+        //            .Where(bp => bp.ProfileStatus == "Approved")
+        //            .Select(bp => bp.BusRegId);
+
+        //        IQueryable<int> businessIds = approvedBusinessIds;
+
+        //        // --------------------------------------------
+        //        // 1️⃣ PRODUCT / CATEGORY / SKU SEARCH
+        //        // --------------------------------------------
+        //        if (!string.IsNullOrWhiteSpace(searchTerm))
+        //        {
+        //            searchTerm = searchTerm.Trim();
+
+        //            // 🔹 Category match
+        //            var matchingCatIds = _context.BusinessCategories
+        //                .Where(c => c.BusinessCategoryName.Contains(searchTerm))
+        //                .Select(c => c.BusCatId);
+
+        //            var productCategoryMatches = _context.products
+        //                .Where(p =>
+        //                    businessIds.Contains(p.BusRegId) &&
+        //                    matchingCatIds.Contains(p.BuscatId))
+        //                .Select(p => p.BusRegId);
+
+        //            // 🔹 Subcategory match
+        //            var matchingSubcatIds = _context.product_sub_categories
+        //                .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
+        //                .Select(sc => sc.ProdSubcatId);
+
+        //            var productSubcategoryMatches = _context.products
+        //                .Where(p =>
+        //                    businessIds.Contains(p.BusRegId) &&
+        //                    matchingSubcatIds.Contains(p.ProdSubcatId))
+        //                .Select(p => p.BusRegId);
+
+        //            // 🔹 Product text search
+        //            var productTextMatches = _context.products
+        //                .Where(p =>
+        //                    businessIds.Contains(p.BusRegId) &&
+        //                    (p.ProductName.Contains(searchTerm) ||
+        //                     p.ProductSubject.Contains(searchTerm) ||
+        //                     p.ProductDescription.Contains(searchTerm)))
+        //                .Select(p => p.BusRegId);
+
+        //            // 🔹 SKU variant search
+        //            var skuMatches = _context.Sku_ProductVariants
+        //                .Include(v => v.Product)
+        //                .Where(v =>
+        //                    businessIds.Contains(v.Product.BusRegId) &&
+        //                    (v.Color.Contains(searchTerm) ||
+        //                     (v.Size != null && v.Size.SizeName.Contains(searchTerm))))
+        //                .Select(v => v.Product.BusRegId);
+
+        //            businessIds =
+        //                productCategoryMatches
+        //                .Union(productSubcategoryMatches)
+        //                .Union(productTextMatches)
+        //                .Union(skuMatches)
+        //                .Distinct();
+        //        }
+
+        //        // --------------------------------------------
+        //        // 2️⃣ LOCATION FILTER
+        //        // --------------------------------------------
+        //        if (!string.IsNullOrWhiteSpace(locationQuery))
+        //        {
+        //            locationQuery = locationQuery.Trim();
+
+        //            var locationMatches = _context.BusinessRegisters
+        //                .Where(b =>
+        //                    businessIds.Contains(b.BusRegId) &&
+        //                    (
+        //                        (b.Town != null && b.Town.Contains(locationQuery)) ||
+        //                        (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
+        //                        (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
+        //                        (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
+        //                        (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
+        //                        (b.Address2 != null && b.Address2.Contains(locationQuery))
+        //                    ))
+        //                .Select(b => b.BusRegId);
+
+        //            businessIds = locationMatches;
+        //        }
+
+        //        // --------------------------------------------
+        //        // 3️⃣ FINAL APPROVED BUSINESS PROFILES
+        //        // --------------------------------------------
+        //        return _context.BusinessProfiles
+        //            .Where(bp =>
+        //                bp.ProfileStatus == "Approved" &&
+        //                businessIds.Contains(bp.BusRegId))
+        //            .ToList();
+        //    }
+
         public async Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName)
         {
             if (string.IsNullOrWhiteSpace(productName))

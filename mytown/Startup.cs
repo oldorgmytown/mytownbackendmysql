@@ -68,7 +68,8 @@ public class Startup
         services.AddScoped<ICourierServiceRepository, CourierServiceRepository>();
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
-       
+        services.AddScoped<IShopperDashboardRepository, ShopperDashboardRepository>();
+
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IFileService, mytown.Services.FileService>();
         services.AddScoped<IUserService, mytown.Services.UserService>();
@@ -83,8 +84,8 @@ public class Startup
         services.AddScoped<ICartService, CartService>();
         services.AddScoped<ISearchService, mytown.Services.SearchService>();
         services.AddScoped<ICourierServiceHandler, mytown.Services.Implementations.CourierServiceHandler>();
-        //services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
-
+        services.AddScoped<IBusinessDashboardService, BusinessDashboardService>();
+        services.AddScoped<IShopperDashboardService, ShopperDashboardService>();
 
     }
 

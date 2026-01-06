@@ -49,7 +49,7 @@ namespace mytown.Models
         // Strongly recommended
         //[Required]
         [Column("delivered_date")]
-        public DateTime DeliveredDate { get; set; }
+        public DateTime? DeliveredDate { get; set; }
 
         // Cost charged for this store shipment
         [Required]

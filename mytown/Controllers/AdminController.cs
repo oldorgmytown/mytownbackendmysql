@@ -8,7 +8,7 @@ using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace mytown.Controllers
 {
-
+    [Authorize]
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase

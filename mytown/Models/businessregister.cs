@@ -99,5 +99,8 @@ namespace MyTown.Models
 
         // Navigation property
         public virtual BusinessProfile? BusinessProfile { get; set; }
+
+        [ForeignKey(nameof(BusCatId))]
+        public virtual BusinessCategory BusinessCategory { get; set; }
     }
 }

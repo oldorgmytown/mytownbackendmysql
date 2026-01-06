@@ -1,7 +1,8 @@
-﻿using mytown.DataAccess.Interfaces;
-using mytown.Models.mytown.DataAccess;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Models.mytown.DataAccess;
 
 
 public class BusinessDashboardRepository : IBusinessDashboardRepository
@@ -430,6 +431,161 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     }
 
 
+    //latest 05-01-26 Orders - new, pending,in progress, complete
+
+    private class StoreOrderJoin
+    {
+        public StoreOrder StoreOrder { get; set; }
+        public Order Order { get; set; }
+        public ShippingDetails Shipping { get; set; }
+    }
+    private IQueryable<StoreOrderJoin> BaseQuery()
+    {
+        return from so in _context.StoreOrders
+               join o in _context.Orders on so.OrderId equals o.OrderId
+               join sd in _context.ShippingDetails
+                    on so.StoreOrderId equals sd.StoreOrderId
+                    into shipping
+               from sd in shipping.DefaultIfEmpty()
+               select new StoreOrderJoin
+               {
+                   StoreOrder = so,
+                   Order = o,
+                   Shipping = sd
+               };
+    }
+
+    //New Orders
+
+    public async Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId)
+    {
+        var today = DateTime.Today;
+
+        return await BaseQuery()
+            .Where(x =>
+                x.StoreOrder.StoreId == storeId &&
+                x.Order.OrderDate >= today &&
+                x.Order.OrderDate < today.AddDays(1) &&
+                x.Order.OrderStatus == "In Progress")
+            .Select(x => new BusinessOrderListDto
+            {
+                StoreOrderId = x.StoreOrder.StoreOrderId,
+                Status = "New",
+                EstimatedDeliveryDate =
+                    x.Shipping != null
+                        ? x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
+                        : null
+            })
+            .ToListAsync();
+    }
+    // pending orders
+
+    public async Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId)
+    {
+        var today = DateTime.Today;
+
+        return await BaseQuery()
+            .Where(x =>
+                x.StoreOrder.StoreId == storeId &&
+                x.Order.OrderDate < today &&
+                x.Order.OrderStatus == "In Progress")
+            .Select(x => new BusinessOrderListDto
+            {
+                StoreOrderId = x.StoreOrder.StoreOrderId,
+                Status = "Pending",
+                EstimatedDeliveryDate =
+                    x.Shipping != null
+                        ? x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
+                        : null
+            })
+            .ToListAsync();
+    }
+
+
+    // In progress / Shipped
+
+    public async Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId)
+    {
+        return await BaseQuery()
+            .Where(x =>
+                x.StoreOrder.StoreId == storeId &&
+                x.Shipping != null &&
+                x.Shipping.ShippingStatus == "Shipped")
+            .Select(x => new BusinessOrderListDto
+            {
+                StoreOrderId = x.StoreOrder.StoreOrderId,
+                Status = "Shipped",
+                EstimatedDeliveryDate =
+                    x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
+            })
+            .ToListAsync();
+    }
+
+    // Completed orders
+
+    public async Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId)
+    {
+        return await BaseQuery()
+            .Where(x =>
+                x.StoreOrder.StoreId == storeId &&
+                x.Shipping != null &&
+                x.Shipping.ShippingStatus == "Delivered")
+            .Select(x => new BusinessOrderListDto
+            {
+                StoreOrderId = x.StoreOrder.StoreOrderId,
+                Status = "Delivered",
+                DeliveredDate = x.Shipping.DeliveredDate
+            })
+            .ToListAsync();
+    }
+
+    public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(int storeId)
+    {
+        return await _context.products
+            .Where(p => p.BusRegId == storeId)
+            .Select(p => new BusinessProductDashboardDto
+            {
+                ProductId = p.ProductId,
+                ProductName = p.ProductName,
+
+                CategoryName = p.BusinessRegister.BusinessCategory.BusinessCategoryName,
+                ProductType = p.ProductType != null ? p.ProductType.ProdTypeName : null,
+
+
+                Fabric = p.Fabric != null ? p.Fabric.FabricName : null,
+                Design = p.Design != null ? p.Design.DesignName : null,
+
+                Supplier = p.SupplierName,
+                ProductDescription = p.ProductDescription,
+
+                //  Price = minimum SKU price
+                ProductAmount = p.Sku_ProductVariants.Min(v => v.DiscountPrice ?? v.Sku_Cost),
+
+                //  Stock = total qty of all variants
+                InStock = p.Sku_ProductVariants.Sum(v => (int)v.Quantity),
+
+                Discount = p.Sku_ProductVariants.Max(v => v.Discount),
+
+                //  Purchased count
+                NoOfPurchased = _context.OrderDetails
+                    .Where(od => od.ProductId == p.ProductId)
+                    .Sum(od => od.Quantity),
+
+                //  Image priority logic
+                ProductImage =
+                    p.Sku_ProductVariants
+                        .SelectMany(v => v.Images)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault()
+                    ??
+                    p.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault()
+            })
+            .ToListAsync();
+    }
 
 }
 
