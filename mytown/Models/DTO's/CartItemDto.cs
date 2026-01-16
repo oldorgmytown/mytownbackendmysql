@@ -17,6 +17,8 @@
 
     public int StoreId { get; set; }
 
+    public string? StoreLogo { get; set; }
+
     // SKU / Variant Info
     public string? Color { get; set; }
     public int SizeId { get; set; }
