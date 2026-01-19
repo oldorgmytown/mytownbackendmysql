@@ -127,21 +127,17 @@ public class CourierController : ControllerBase
     }
 
     [Authorize]
-    [HttpGet("GetBestCourier")]
-    public async Task<IActionResult> GetBestCourier(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg)
+    [HttpPost("GetBestCourier")]
+    public async Task<IActionResult> GetBestCourier([FromBody] StoreCourierRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(storeCity) ||
-            string.IsNullOrWhiteSpace(storeState) ||
-            string.IsNullOrWhiteSpace(storeCountry) ||
-            string.IsNullOrWhiteSpace(shopperCity))
-        {
-            return BadRequest("All location fields are required.");
-        }
+        if (request.StoreIds == null || !request.StoreIds.Any())
+            return BadRequest("StoreIds are required.");
 
-        var result = await _courierService.GetBestCourierOptionsAsync(storeCity, storeState, storeCountry, shopperCity, productWeightKg);
+        var result = await _courierService
+            .GetBestCourierOptionsByStoresAsync(request.ShopperId, request.StoreIds);
 
-        if (result == null || !result.Any())
-            return NotFound("No suitable courier options found.");
+        if (!result.Any())
+            return NotFound("No courier options found.");
 
         return Ok(result);
     }

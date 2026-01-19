@@ -313,6 +313,7 @@ namespace mytown.DataAccess.Repositories
         {
             return await _context.ShopperAlternateAddresses
                 .Where(a => a.AltAddressId == id)
+
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
@@ -331,46 +332,52 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress address)
         {
-            var existingAddress = await _context.ShopperAlternateAddresses
-         .FirstOrDefaultAsync(a => a.AltAddressId == address.AltAddressId);
+            ShopperAlternateAddress entity;
 
-            if (existingAddress == null)
+            if (address.AltAddressId > 0)
             {
-                // Add new record
-                _context.ShopperAlternateAddresses.Add(address);
+                // ✅ Edit existing address (with ownership check)
+                entity = await _context.ShopperAlternateAddresses
+                    .FirstOrDefaultAsync(a =>
+                        a.AltAddressId == address.AltAddressId &&
+                        a.ShopperRegId == address.ShopperRegId)
+                    ?? throw new Exception("Address not found or unauthorized");
+
+                entity.AltName = address.AltName;
+                entity.AltPhoneNumber = address.AltPhoneNumber;
+                entity.AltAddress = address.AltAddress;
+                entity.AltTown = address.AltTown;
+                entity.AltCity = address.AltCity;
+                entity.AltState = address.AltState;
+                entity.AltCountry = address.AltCountry;
+                entity.AltPostalCode = address.AltPostalCode;
+                entity.DeliveryNotes = address.DeliveryNotes;
             }
             else
             {
-                // Update existing record
-                existingAddress.AltName = address.AltName;
-                existingAddress.AltPhoneNumber = address.AltPhoneNumber;
-                existingAddress.AltAddress = address.AltAddress;
-                existingAddress.AltTown = address.AltTown;
-                existingAddress.AltCity = address.AltCity;
-                existingAddress.AltState = address.AltState;
-                existingAddress.AltCountry = address.AltCountry;
-                existingAddress.AltPostalCode = address.AltPostalCode;
-                existingAddress.DeliveryNotes = address.DeliveryNotes;
-
-                _context.ShopperAlternateAddresses.Update(existingAddress);
+                // ✅ Add new address
+                entity = address;
+                _context.ShopperAlternateAddresses.Add(entity);
             }
 
             await _context.SaveChangesAsync();
 
             return new ShopperAlternateAddressDto
             {
-                AltAddressId = address.AltAddressId,
-                AltName = address.AltName,
-                AltPhoneNumber = address.AltPhoneNumber,
-                AltAddress = address.AltAddress,
-                AltTown = address.AltTown,
-                AltCity = address.AltCity,
-                AltState = address.AltState,
-                AltCountry = address.AltCountry,
-                AltPostalCode = address.AltPostalCode,
-                DeliveryNotes = address.DeliveryNotes
+                AltAddressId = entity.AltAddressId,   // ✅ always correct
+                ShopperRegId = entity.ShopperRegId,
+                AltName = entity.AltName,
+                AltPhoneNumber = entity.AltPhoneNumber,
+                AltAddress = entity.AltAddress,
+                AltTown = entity.AltTown,
+                AltCity = entity.AltCity,
+                AltState = entity.AltState,
+                AltCountry = entity.AltCountry,
+                AltPostalCode = entity.AltPostalCode,
+                DeliveryNotes = entity.DeliveryNotes
             };
         }
+
 
         public async Task<bool> DeleteAddressAsync(int id)
         {

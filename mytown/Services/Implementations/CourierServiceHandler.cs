@@ -1,9 +1,10 @@
-﻿using mytown.Services.Interfaces;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
 using System.Text.Json;
-using Microsoft.AspNetCore.Http;
 
 namespace mytown.Services.Implementations
 {
@@ -148,10 +149,51 @@ namespace mytown.Services.Implementations
             return await _repo.SaveCourierBranchesAsync(rows);
         }
 
-        public async Task<List<BestcourierinfoDto>> GetBestCourierOptionsAsync(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg)
+        public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
+     int shopperId,
+     List<int> storeIds)
         {
-            return await _repo.GetBestCourierOptions(storeCity, storeState, storeCountry, shopperCity, productWeightKg);
+            var shopper = await _repo.GetShopperByIdAsync(shopperId)
+                ?? throw new Exception("Shopper not found");
+
+            var stores = await _repo.GetStoresByIdsAsync(storeIds);
+            var storeWeights = await _repo.GetStoreWeightsAsync(shopperId, storeIds);
+
+            var results = new List<StoreCourierResultDto>();
+
+            foreach (var storeId in storeIds)
+            {
+                if (!stores.TryGetValue(storeId, out var store))
+                    continue;
+
+                var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
+                    ? weight
+                    : 0;
+
+                var allCourierOptions = await _repo.GetBestCourierOptions(
+                    store.BusinessCity,
+                    store.BusinessState,
+                    store.BusinessCountry,
+                    shopper.City,
+                    totalWeight
+                );
+
+                var cheapestCourier = allCourierOptions
+                    .OrderBy(c => c.Cost)
+                    .Take(1)
+                    .ToList();
+
+                results.Add(new StoreCourierResultDto
+                {
+                    StoreId = storeId,
+                    TotalWeightKg = totalWeight,
+                    CourierOptions = cheapestCourier
+                });
+            }
+
+            return results;
         }
+
 
         //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
         //{

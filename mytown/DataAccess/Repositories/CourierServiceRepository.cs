@@ -4,6 +4,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -413,6 +414,41 @@ namespace mytown.DataAccess.Repositories
             if (parts.Length != 2) return 0;
             var max = parts[1].ToLower().Replace("km", "").Trim();
             return int.TryParse(max, out var result) ? result : 0;
+        }
+        public async Task<ShopperRegister?> GetShopperByIdAsync(int shopperId)
+        {
+            return await _context.ShopperRegisters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ShopperRegId == shopperId);
+        }
+
+        public async Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds)
+        {
+            return await _context.BusinessRegisters
+                .Where(b => storeIds.Contains(b.BusRegId))
+                .AsNoTracking()
+                .ToDictionaryAsync(b => b.BusRegId);
+        }
+
+        public async Task<Dictionary<int, decimal>> GetStoreWeightsAsync(
+     int shopperId,
+     List<int> storeIds)
+        {
+            return await (
+                from cart in _context.addtocart
+                join sku in _context.Sku_ProductVariants
+                    on cart.SkuId equals sku.SkuId
+                where cart.ShopperRegId == shopperId
+                      && storeIds.Contains(cart.BusRegId)
+                      && cart.orderstatus == "cart"
+                group new { cart, sku } by cart.BusRegId into g
+                select new
+                {
+                    StoreId = g.Key,
+                    TotalWeight = g.Sum(x =>
+                        (x.sku.Weight ?? 0) * x.cart.ProdQty)
+                }
+            ).ToDictionaryAsync(x => x.StoreId, x => x.TotalWeight);
         }
 
 

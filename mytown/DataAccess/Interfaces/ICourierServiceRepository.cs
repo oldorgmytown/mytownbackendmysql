@@ -1,6 +1,7 @@
-﻿using System.Threading.Tasks;
-using mytown.Models;
+﻿using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
+using System.Threading.Tasks;
 
 public interface ICourierServiceRepository
 {
@@ -22,7 +23,12 @@ public interface ICourierServiceRepository
    // Task <List<BestcourierinfoDto>> GetBestCourierOptions(BusinessRegister business, ShopperRegister shopper, decimal productWeightKg);
 
     Task<List<BestcourierinfoDto>> GetBestCourierOptions(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg);
- //   Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
+    //   Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
+
+    Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
+    Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds);
+    Task<Dictionary<int, decimal>> GetStoreWeightsAsync(int shopperId, List<int> storeIds);
+
 
 }
 

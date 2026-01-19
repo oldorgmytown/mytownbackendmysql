@@ -48,6 +48,84 @@ namespace mytown.DataAccess.Repositories
 
 
         // Get all cart items for a specific user
+        //public async Task<IEnumerable<CartItemDto>> GetCartItems(int shopperRegId)
+        //{
+        //    var cartItems = await (
+        //        from cart in _context.addtocart
+
+        //        join product in _context.products
+        //            on cart.ProductId equals product.ProductId
+
+        //        // 🔹 Store Profile (for logo)
+        //        join storeProfile in _context.BusinessProfiles
+        //            on product.BusRegId equals storeProfile.BusRegId
+
+        //        // 🔹 SKU
+        //        join sku in _context.Sku_ProductVariants
+        //            on cart.SkuId equals sku.SkuId into skuGroup
+        //        from skuVariant in skuGroup.DefaultIfEmpty()
+
+        //            // 🔹 Size
+        //        join size in _context.ProductSizes
+        //            on skuVariant.SizeId equals size.SizeId into sizeGroup
+        //        from sizeDetail in sizeGroup.DefaultIfEmpty()
+
+        //            // 🔹 SKU Image (SortOrder = 1)
+        //        join skuImg in _context.ProductImages
+        //            .Where(i => i.SortOrder == 1)
+        //            on skuVariant.SkuId equals skuImg.SkuId into skuImgGroup
+        //        from skuImage in skuImgGroup.DefaultIfEmpty()
+
+        //            // 🔹 Product Image fallback
+        //        join prodImg in _context.ProductImages
+        //            .Where(i => i.SortOrder == 1 && i.SkuId == null)
+        //            on product.ProductId equals prodImg.ProductId into prodImgGroup
+        //        from productImage in prodImgGroup.DefaultIfEmpty()
+
+        //        where cart.ShopperRegId == shopperRegId
+        //              && cart.orderstatus == "cart"
+
+        //        select new CartItemDto
+        //        {
+        //            CartId = cart.CartId,
+        //            ShopperRegId = cart.ShopperRegId,
+        //            prod_qty = cart.ProdQty,
+        //            orderstatus = cart.orderstatus,
+
+        //            product_id = product.ProductId,
+        //            product_name = product.ProductName,
+        //            product_subject = product.ProductSubject,
+        //            product_description = product.ProductDescription,
+
+        //            // ✅ Image priority: SKU → Product
+        //            product_image = skuImage.FileName ?? productImage.FileName,
+
+        //            // ✅ Price from SKU
+        //            product_cost = skuVariant.Sku_Cost,
+
+        //            StoreId = storeProfile.BusRegId,
+        //            StoreName = storeProfile.BusinessName,
+        //            StoreLocation = storeProfile.BusinessLocation,
+
+        //            // ✅ NEW: Store logo
+        //            StoreLogo = storeProfile.LogoPath,
+
+        //            Color = skuVariant.Color,
+        //            SizeId = skuVariant.SizeId ?? 0,
+        //            SizeName = sizeDetail.SizeName,
+        //            Sku_Cost = skuVariant.Sku_Cost,
+        //            Discount = skuVariant.Discount,
+        //            DiscountPrice = skuVariant.DiscountPrice
+        //        }
+        //    ).ToListAsync();
+
+        //    return cartItems;
+        //}
+
+
+
+        // Remove an item from cart
+
         public async Task<IEnumerable<CartItemDto>> GetCartItems(int shopperRegId)
         {
             var cartItems = await (
@@ -56,31 +134,15 @@ namespace mytown.DataAccess.Repositories
                 join product in _context.products
                     on cart.ProductId equals product.ProductId
 
-                // 🔹 Store Profile (for logo)
                 join storeProfile in _context.BusinessProfiles
                     on product.BusRegId equals storeProfile.BusRegId
 
-                // 🔹 SKU
                 join sku in _context.Sku_ProductVariants
-                    on cart.SkuId equals sku.SkuId into skuGroup
-                from skuVariant in skuGroup.DefaultIfEmpty()
+                    on cart.SkuId equals sku.SkuId
 
-                    // 🔹 Size
                 join size in _context.ProductSizes
-                    on skuVariant.SizeId equals size.SizeId into sizeGroup
+                    on sku.SizeId equals size.SizeId into sizeGroup
                 from sizeDetail in sizeGroup.DefaultIfEmpty()
-
-                    // 🔹 SKU Image (SortOrder = 1)
-                join skuImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1)
-                    on skuVariant.SkuId equals skuImg.SkuId into skuImgGroup
-                from skuImage in skuImgGroup.DefaultIfEmpty()
-
-                    // 🔹 Product Image fallback
-                join prodImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1 && i.SkuId == null)
-                    on product.ProductId equals prodImg.ProductId into prodImgGroup
-                from productImage in prodImgGroup.DefaultIfEmpty()
 
                 where cart.ShopperRegId == shopperRegId
                       && cart.orderstatus == "cart"
@@ -97,34 +159,33 @@ namespace mytown.DataAccess.Repositories
                     product_subject = product.ProductSubject,
                     product_description = product.ProductDescription,
 
-                    // ✅ Image priority: SKU → Product
-                    product_image = skuImage.FileName ?? productImage.FileName,
+                    product_image =
+                    _context.ProductImages
+                        .Where(i =>
+                            (i.SkuId == sku.SkuId || i.ProductId == product.ProductId)
+                            && i.SortOrder == 1)
+                        .OrderByDescending(i => i.SkuId != null)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault()!,
 
-                    // ✅ Price from SKU
-                    product_cost = skuVariant.Sku_Cost,
+                    // SKU-specific data
+                    product_cost = sku.Sku_Cost,
+                    Color = sku.Color,
+                    SizeId = sku.SizeId ?? 0,
+                    SizeName = sizeDetail.SizeName,
+                    Discount = sku.Discount,
+                    DiscountPrice = sku.DiscountPrice,
 
                     StoreId = storeProfile.BusRegId,
                     StoreName = storeProfile.BusinessName,
                     StoreLocation = storeProfile.BusinessLocation,
-
-                    // ✅ NEW: Store logo
-                    StoreLogo = storeProfile.LogoPath,
-
-                    Color = skuVariant.Color,
-                    SizeId = skuVariant.SizeId ?? 0,
-                    SizeName = sizeDetail.SizeName,
-                    Sku_Cost = skuVariant.Sku_Cost,
-                    Discount = skuVariant.Discount,
-                    DiscountPrice = skuVariant.DiscountPrice
+                    StoreLogo = storeProfile.LogoPath
                 }
             ).ToListAsync();
 
             return cartItems;
         }
 
-
-
-        // Remove an item from cart
         public async Task<bool> RemoveFromCart(int cartId)
         {
             var cartItem = await _context.addtocart.FindAsync(cartId);
