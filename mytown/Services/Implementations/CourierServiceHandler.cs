@@ -150,8 +150,8 @@ namespace mytown.Services.Implementations
         }
 
         public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
-     int shopperId,
-     List<int> storeIds)
+      int shopperId,
+      List<int> storeIds)
         {
             var shopper = await _repo.GetShopperByIdAsync(shopperId)
                 ?? throw new Exception("Shopper not found");
@@ -178,21 +178,37 @@ namespace mytown.Services.Implementations
                     totalWeight
                 );
 
-                var cheapestCourier = allCourierOptions
+                // ✅ Cheapest Surface option
+                var cheapestSurface = allCourierOptions
+                    .Where(c => c.ShippingMode.Equals("Surface", StringComparison.OrdinalIgnoreCase))
                     .OrderBy(c => c.Cost)
-                    .Take(1)
-                    .ToList();
+                    .FirstOrDefault();
+
+                // ✅ Fastest Air option
+                var fastestAir = allCourierOptions
+                    .Where(c => c.ShippingMode.Equals("Air", StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(c => c.MaxDeliveryDays) // <-- fastest delivery
+                    .FirstOrDefault();
+
+                var selectedCouriers = new List<BestcourierinfoDto>();
+
+                if (cheapestSurface != null)
+                    selectedCouriers.Add(cheapestSurface);
+
+                if (fastestAir != null)
+                    selectedCouriers.Add(fastestAir);
 
                 results.Add(new StoreCourierResultDto
                 {
                     StoreId = storeId,
                     TotalWeightKg = totalWeight,
-                    CourierOptions = cheapestCourier
+                    CourierOptions = selectedCouriers
                 });
             }
 
             return results;
         }
+
 
 
         //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)

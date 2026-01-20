@@ -355,35 +355,59 @@ namespace mytown.DataAccess.Repositories
         //    }
         //}
 
-        public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg)
+        public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
+      string storeCity,
+      string storeState,
+      string storeCountry,
+      string shopperCity,
+      decimal productWeightKg)
         {
             try
             {
                 var courierList = await _context.CourierBranches
-                    .Where(cb => cb.City.ToLower() == storeCity.ToLower() &&
-                                 cb.State.ToLower() == storeState.ToLower() &&
-                                 cb.Country.ToLower() == storeCountry.ToLower() &&
-                                 !string.IsNullOrEmpty(cb.Destinations))
+                    .Where(cb =>
+                        cb.City.ToLower() == storeCity.ToLower() &&
+                        cb.State.ToLower() == storeState.ToLower() &&
+                        cb.Country.ToLower() == storeCountry.ToLower() &&
+                        !string.IsNullOrEmpty(cb.Destinations))
                     .AsNoTracking()
                     .ToListAsync();
 
                 var matchingCouriers = courierList
                     .Where(cb =>
-                        cb.Destinations.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(dest => dest.Trim().ToLower())
-                            .Contains(shopperCity.ToLower()));
+                        cb.Destinations
+                          .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                          .Select(dest => dest.Trim().ToLower())
+                          .Contains(shopperCity.ToLower()));
 
                 var bestCourierOptions = matchingCouriers
-                    .Select(cb => new BestcourierinfoDto
-                    { BranchId  = cb.BranchId,
-                        ShippingMode = cb.ShippingMode,
-                        Cost = cb.Charges,
-                        MaxWeight = ExtractMaxWeight(cb.WeightRange),
-                        MaxDistance = ExtractMaxDistance(cb.DistanceRange)
+                    .Select(cb =>
+                    {
+                        var maxWeight = ExtractMaxWeight(cb.WeightRange);
+                        var maxDays = GetMaxDeliveryDays(cb.ShippingMode);
+
+                        return new BestcourierinfoDto
+                        {
+                            BranchId = cb.BranchId,
+                            ShippingMode = cb.ShippingMode,
+                            Cost = cb.Charges,
+                            MaxWeight = maxWeight,
+                            MaxDistance = ExtractMaxDistance(cb.DistanceRange),
+
+                            // ✅ Delivery info
+                            MaxDeliveryDays = maxDays,
+                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
+                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+                        };
                     })
+                    // ✅ Weight check
                     .Where(x => x.MaxWeight >= productWeightKg)
+
+                    // ✅ One best option per ShippingMode
                     .GroupBy(x => x.ShippingMode.ToLower())
                     .Select(g => g.OrderBy(x => x.Cost).First())
+
+                    // ✅ FIX: convert to List
                     .ToList();
 
                 return bestCourierOptions;
@@ -395,6 +419,7 @@ namespace mytown.DataAccess.Repositories
                 return new List<BestcourierinfoDto>();
             }
         }
+
 
 
 
@@ -415,6 +440,34 @@ namespace mytown.DataAccess.Repositories
             var max = parts[1].ToLower().Replace("km", "").Trim();
             return int.TryParse(max, out var result) ? result : 0;
         }
+
+        private string GetDeliveryRangeText(int maxDays)
+        {
+            if (maxDays <= 1) return "1 day";
+            if (maxDays == 2) return "1–2 days";
+            if (maxDays == 3) return "2–3 days";
+            if (maxDays == 4) return "3–4 days";
+            if (maxDays == 5) return "3–5 days";
+            return "5–7 days";
+        }
+        private int GetMaxDeliveryDays(string shippingMode)
+        {
+            return shippingMode.ToLower() switch
+            {
+                "air" => 2,
+                "surface" => 5,
+                _ => 7
+            };
+        }
+
+        private string GetEstimatedDeliveryDate(int maxDays)
+        {
+            var deliveryDate = DateTime.Today.AddDays(maxDays);
+            return deliveryDate.ToString("MMM dd, yyyy"); // Jan 22, 2026
+        }
+
+
+
         public async Task<ShopperRegister?> GetShopperByIdAsync(int shopperId)
         {
             return await _context.ShopperRegisters
