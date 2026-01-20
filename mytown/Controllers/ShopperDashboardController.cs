@@ -51,6 +51,21 @@ namespace mytown.Controllers
             return Ok(data);
         }
 
+        [HttpDelete("removefrom_wishlist")]
+        public async Task<IActionResult> RemoveFromWishlist(int cartId)
+        {
+            if (cartId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid cart id" });
+
+            var removed = await _shopperdashboardService.RemoveFromWishlistAsync(cartId);
+
+            if (!removed)
+                return NotFound(new { code = 404, message = "Wishlist item not found" });
+
+            return Ok(new { code = 200, message = "Item removed from wishlist" });
+        }
+
+
 
         [HttpGet("shopperDBorder-summary")]
         public async Task<IActionResult> GetOrderSummary(int shopperRegId)
@@ -86,6 +101,48 @@ namespace mytown.Controllers
 
             return Ok(shopper);
         }
+
+        [HttpPut("Updateshopperprofile")]
+        public async Task<IActionResult> UpdateShopperDetails(
+    [FromBody] UpdateShopperDetailsDto dto)
+        {
+            if (dto == null || dto.ShopperRegId <= 0)
+                return BadRequest("Invalid data");
+
+            var updated = await _shopperdashboardService
+                .UpdateShopperDetailsAsync(dto);
+
+            if (!updated)
+                return NotFound("Shopper not found");
+
+            return Ok(new
+            {
+                code = 200,
+                message = "Profile updated successfully"
+            });
+        }
+
+        //[HttpPut("update_Shopperpassword")]
+        //public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordDto dto)
+        //{
+        //    try
+        //    {
+        //        var result = await _shopperdashboardService.UpdatePasswordAsync(dto);
+
+        //        if (!result)
+        //            return BadRequest(new { message = "Password update failed" });
+
+        //        return Ok(new { message = "Password updated successfully" });
+        //    }
+        //    catch (UnauthorizedAccessException ex)
+        //    {
+        //        return Unauthorized(new { message = ex.Message });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { message = ex.Message });
+        //    }
+        //}
 
     }
 }

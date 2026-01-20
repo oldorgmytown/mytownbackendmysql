@@ -38,7 +38,7 @@ namespace mytown.DataAccess.Repositories
             return await query.ToListAsync();
         }
 
-        public async Task<ShopperOrderDetailsDto> GetShopperOrderDetailsAsync(int storeOrderId)
+        public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(int storeOrderId)
         {
             var orderData = await (
                 from so in _context.StoreOrders
@@ -59,7 +59,6 @@ namespace mytown.DataAccess.Repositories
                     o.ShippingType,
                     sd.Cost,
                     sd.EstimatedDays,
-                    sd.ShippingStatus,
                     sd.TrackingId,
                     sd.DeliveryAddress
                 }
@@ -68,20 +67,41 @@ namespace mytown.DataAccess.Repositories
             if (orderData == null)
                 return null;
 
+            // ✅ PRODUCTS WITH PRICE + QTY + IMAGE
             var products = await (
                 from od in _context.OrderDetails
                 join pr in _context.products on od.ProductId equals pr.ProductId
+
+                // SKU image (highest priority)
+                join skuImg in _context.ProductImages
+                    .Where(i => i.SortOrder == 1)
+                    on od.SkuId equals skuImg.SkuId into skuImages
+                from skuImg in skuImages.DefaultIfEmpty()
+
+                    // Product image fallback
+                join prodImg in _context.ProductImages
+                    .Where(i => i.SortOrder == 1)
+                    on pr.ProductId equals prodImg.ProductId into prodImages
+                from prodImg in prodImages.DefaultIfEmpty()
+
                 where od.StoreOrderId == storeOrderId
+
                 select new OrderProductItemDto
                 {
                     ProductId = pr.ProductId,
-                    ProductName = pr.ProductName
+                    ProductName = pr.ProductName!,
+                    SkuId = od.SkuId,
+
+                    UnitPrice = od.Price,
+                    Quantity = od.Quantity,
+
+                    ProductImage = skuImg != null
+                        ? skuImg.FileName
+                        : prodImg != null
+                            ? prodImg.FileName
+                            : null
                 }
             ).ToListAsync();
-
-            var productAmount = await _context.OrderDetails
-                .Where(x => x.StoreOrderId == storeOrderId)
-                .SumAsync(x => x.Price * x.Quantity);
 
             return new ShopperOrderDetailsDto
             {
@@ -96,7 +116,8 @@ namespace mytown.DataAccess.Repositories
 
                 Products = products,
 
-                ProductAmount = productAmount,
+                // ✅ Accurate product total
+                ProductAmount = products.Sum(p => p.UnitPrice * p.Quantity),
                 CourierAmount = orderData.Cost,
 
                 ShippingMethod = orderData.ShippingType,
@@ -105,9 +126,10 @@ namespace mytown.DataAccess.Repositories
                 CourierService = orderData.ShippingType,
                 TrackingId = orderData.TrackingId,
 
-                ShippingAddress = orderData.DeliveryAddress // plug your logic here
+                ShippingAddress = orderData.DeliveryAddress
             };
         }
+
 
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(int shopperRegId)
         {
@@ -173,24 +195,56 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId)
         {
-            return await _context.OrderDetails
-                .Where(od =>
-                    od.Order.ShopperRegId == shopperId &&
-                    od.Order.OrderStatus == "Wishlist")
-                .Select(od => new WishlistItemDto
+            return await (
+                from c in _context.addtocart
+                join p in _context.products on c.ProductId equals p.ProductId
+                join s in _context.BusinessRegisters on c.BusRegId equals s.BusRegId
+
+                // 🔹 SKU image (SortOrder = 1)
+                join skuImg in _context.ProductImages
+                    .Where(i => i.SortOrder == 1)
+                    on c.SkuId equals skuImg.SkuId into skuImgJoin
+                from skuImg in skuImgJoin.DefaultIfEmpty()
+
+                    // 🔹 Product image fallback
+                join prodImg in _context.ProductImages
+                    .Where(i => i.SortOrder == 1 && i.SkuId == null)
+                    on p.ProductId equals prodImg.ProductId into prodImgJoin
+                from prodImg in prodImgJoin.DefaultIfEmpty()
+
+                where c.ShopperRegId == shopperId
+                      && c.orderstatus == "wishlist"
+
+                orderby c.CartId descending   // acts as AddedOn
+                select new WishlistItemDto
                 {
-                    ProductId = od.ProductId,
-                    ProductName = od.Product.ProductName,
-                    VariantImageUrl = od.Product.ProductImage,
-                    Price = od.Price,
-                    StoreId = od.StoreId,
-                    StoreName = od.Store.BusinessName,
-                    
-                })
-                .OrderByDescending(x => x.AddedOn)
-                .ToListAsync();
+                    CartId = c.CartId,                 // 🔑 IMPORTANT for remove/move
+                    ProductId = p.ProductId,
+                    ProductName = p.ProductName,
+                    VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
+                    Price = c.ProductPrice,
+                    StoreId = s.BusRegId,
+                    StoreName = s.BusinessName
+                }
+            ).ToListAsync();
         }
 
+
+        //Remove from wishlist
+
+       
+        public async Task<bool> RemoveFromWishlistAsync(int cartId)
+        {
+            var item = await _context.addtocart
+                .FirstOrDefaultAsync(x => x.CartId == cartId && x.orderstatus == "wishlist");
+
+            if (item == null)
+                return false;
+
+            _context.addtocart.Remove(item);
+            await _context.SaveChangesAsync();
+            return true;
+        }
 
         // 1️⃣ Wishlist (Saved items) count
         public async Task<int> GetWishlistCountAsync(int shopperRegId)
@@ -274,6 +328,44 @@ namespace mytown.DataAccess.Repositories
                 })
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> UpdateShopperDetailsAsync(UpdateShopperDetailsDto dto)
+        {
+            var shopper = await _context.ShopperRegisters
+                .FirstOrDefaultAsync(s => s.ShopperRegId == dto.ShopperRegId);
+
+            if (shopper == null)
+                return false;
+
+            // ✅ Update ONLY edited fields
+            if (!string.IsNullOrWhiteSpace(dto.Username))
+                shopper.Username = dto.Username;
+
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                shopper.PhoneNumber = dto.PhoneNumber;
+
+            if (dto.Address != null)
+                shopper.Address = dto.Address;
+
+            if (dto.Town != null)
+                shopper.Town = dto.Town;
+
+            if (dto.City != null)
+                shopper.City = dto.City;
+
+            if (dto.State != null)
+                shopper.State = dto.State;
+
+            if (dto.Country != null)
+                shopper.Country = dto.Country;
+
+            if (dto.PostalCode != null)
+                shopper.PostalCode = dto.PostalCode;
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
 
     }
 }
