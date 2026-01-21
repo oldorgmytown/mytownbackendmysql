@@ -1,5 +1,8 @@
-﻿using mytown.DataAccess.Interfaces;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -33,7 +36,12 @@ namespace mytown.Services.Implementations
         {
             return await _shopperdashboardRepository.GetWishlistAsync(shopperId);
         }
-
+        //remove fom wishlist
+        public async Task<bool> RemoveFromWishlistAsync(int cartId)
+        {
+            return await _shopperdashboardRepository.RemoveFromWishlistAsync(cartId);
+        }
+       
         public async Task<ShopperOrderSummaryDto> GetShopperOrderSummaryAsync(int shopperRegId)
         {
             var wishlistCount = await _shopperdashboardRepository.GetWishlistCountAsync(shopperRegId);
@@ -59,7 +67,36 @@ namespace mytown.Services.Implementations
         {
             return await _shopperdashboardRepository.GetShopperDetailsAsync(shopperRegId);
         }
+        public async Task<bool> UpdateShopperDetailsAsync(UpdateShopperDetailsDto dto)
+        {
+            return await _shopperdashboardRepository.UpdateShopperDetailsAsync(dto);
+        }
+        //public async Task<bool> UpdatePasswordAsync(ShopperRegister shopper)
+        //{
+        //    _shopperdashboardRepository.ShopperRegisters.Update(shopper);
+        //    return await _shopperdashboardRepository.SaveChangesAsync() > 0;
+        //}
+        //public async Task<bool> UpdatePasswordAsync(UpdatePasswordDto dto)
+        //{
+        //    var shopper = await _shopperdashboardRepository.GetByIdAsync(dto.ShopperRegId);
+        //    if (shopper == null)
+        //        throw new Exception("Shopper not found");
 
+        //    // 🔐 Verify current password
+        //    var verifyResult = _passwordHasher.VerifyHashedPassword(
+        //        shopper,
+        //        shopper.PasswordHash,
+        //        dto.CurrentPassword
+        //    );
+
+        //    if (verifyResult == PasswordVerificationResult.Failed)
+        //        throw new UnauthorizedAccessException("Current password is incorrect");
+
+        //    // 🔐 Hash new password
+        //    shopper.PasswordHash = _passwordHasher.HashPassword(shopper, dto.NewPassword);
+
+        //    return await _shopperRepository.UpdatePasswordAsync(shopper);
+        //}
     }
 }
 
