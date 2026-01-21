@@ -65,7 +65,7 @@ namespace mytown.Models
         public string ShippingStatus { get; set; } = "Not Shipped";
 
         [Column("delivery_address", TypeName = "text")]
-        public string DeliveryAddress { get; set; }
+        public string DeliveryAddress { get; set; } // new
 
     }
 }
