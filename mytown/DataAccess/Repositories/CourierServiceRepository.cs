@@ -356,15 +356,15 @@ namespace mytown.DataAccess.Repositories
         //}
 
         public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
-      string storeCity,
-      string storeState,
-      string storeCountry,
-      string shopperCity,
-      decimal productWeightKg)
+         string storeCity,
+         string storeState,
+         string storeCountry,
+         string shopperCity,
+         decimal productWeightKg)
         {
             try
             {
-                var courierList = await _context.CourierBranches
+                var courierBranches = await _context.CourierBranches
                     .Where(cb =>
                         cb.City.ToLower() == storeCity.ToLower() &&
                         cb.State.ToLower() == storeState.ToLower() &&
@@ -373,11 +373,11 @@ namespace mytown.DataAccess.Repositories
                     .AsNoTracking()
                     .ToListAsync();
 
-                var matchingCouriers = courierList
+                var matchingCouriers = courierBranches
                     .Where(cb =>
                         cb.Destinations
                           .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                          .Select(dest => dest.Trim().ToLower())
+                          .Select(d => d.Trim().ToLower())
                           .Contains(shopperCity.ToLower()));
 
                 var bestCourierOptions = matchingCouriers
@@ -386,39 +386,42 @@ namespace mytown.DataAccess.Repositories
                         var maxWeight = ExtractMaxWeight(cb.WeightRange);
                         var maxDays = GetMaxDeliveryDays(cb.ShippingMode);
 
-                        return new BestcourierinfoDto
+                        return new
                         {
-                            BranchId = cb.BranchId,
-                            ShippingMode = cb.ShippingMode,
-                            Cost = cb.Charges,
-                            MaxWeight = maxWeight,
-                            MaxDistance = ExtractMaxDistance(cb.DistanceRange),
+                            Dto = new BestcourierinfoDto
+                            {
+                                BranchId = cb.BranchId,
+                                ShippingMode = cb.ShippingMode,
+                                Cost = cb.Charges,
 
-                            // ✅ Delivery info
-                            MaxDeliveryDays = maxDays,
-                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
-                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+                                // ✅ Delivery info for frontend
+                                MaxDeliveryDays = maxDays,
+                                DeliveryDaysRange = GetDeliveryRangeText(maxDays),
+                                EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+                            },
+                            MaxWeight = maxWeight
                         };
                     })
-                    // ✅ Weight check
+
+                    // ✅ Filter invalid couriers
                     .Where(x => x.MaxWeight >= productWeightKg)
 
                     // ✅ One best option per ShippingMode
-                    .GroupBy(x => x.ShippingMode.ToLower())
-                    .Select(g => g.OrderBy(x => x.Cost).First())
+                    .GroupBy(x => x.Dto.ShippingMode.ToLower())
+                    .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
 
-                    // ✅ FIX: convert to List
                     .ToList();
 
                 return bestCourierOptions;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in CourierRepository.GetBestCourierOptions: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
                 return new List<BestcourierinfoDto>();
             }
         }
+
 
 
 
@@ -431,6 +434,8 @@ namespace mytown.DataAccess.Repositories
             var max = parts[1].ToLower().Replace("kg", "").Trim();
             return decimal.TryParse(max, out var result) ? result : 0;
         }
+
+
 
         private int ExtractMaxDistance(string distanceRange)
         {
