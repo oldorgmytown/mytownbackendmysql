@@ -5,8 +5,8 @@
         public int BranchId { get; set; }
         public string ShippingMode { get; set; }
         public decimal Cost { get; set; }
-        public decimal MaxWeight { get; set; }
-        public int MaxDistance { get; set; }
+        //public decimal MaxWeight { get; set; }
+        //public int MaxDistance { get; set; }
 
         // ✅ NEW
         public int MaxDeliveryDays { get; set; }
