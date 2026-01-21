@@ -18,38 +18,32 @@ namespace mytown.DataAccess.Repositories
             _emailService = emailService;
 
         }
-
-        public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
+        public async Task<Order> GetOrderWithShippingDetailsAsync(int orderId)
         {
-            // Check if the order exists
-            var order = _context.Orders.FirstOrDefault(o => o.OrderId == orderId);
-            if (order == null)
-            {
-                throw new Exception("Order not found.");
-            }
+            return await _context.Orders
+                .Include(o => o.ShippingDetails)
+                .Include(o => o.OrderDetails)
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+        }
 
-            // Create new payment entry
+        public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId)
+        {
             var payment = new Payments
             {
                 OrderId = orderId,
                 AmountPaid = amountPaid,
                 PaymentMethod = paymentMethod,
-                PaymentStatus = "Completed", 
+                StripePaymentIntentId = stripePaymentIntentId,
+                PaymentStatus = "Paid",
                 PaymentDate = DateTime.UtcNow
             };
 
             _context.Payments.Add(payment);
             _context.SaveChanges();
 
-            // Update order status to "Paid"
-            order.OrderStatus = "Paid";
-            _context.Orders.Update(order);
-            _context.SaveChanges();
-
-           
-
             return payment;
         }
+
 
         public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {

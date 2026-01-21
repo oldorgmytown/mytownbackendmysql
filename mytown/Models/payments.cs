@@ -31,6 +31,10 @@ namespace mytown.Models
 
         [Column("payment_date")]
         public DateTime PaymentDate { get; set; }
+
+        [Column("stripe_payment_intent_id")]
+        public string StripePaymentIntentId { get; set; }
+
     }
 
 }
