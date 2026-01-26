@@ -20,6 +20,8 @@
     public string? StoreLogo { get; set; }
 
     // SKU / Variant Info
+
+    public int Sku_Id { get; set; }
     public string? Color { get; set; }
     public int SizeId { get; set; }
     public string? SizeName { get; set; }

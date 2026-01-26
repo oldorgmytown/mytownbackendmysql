@@ -17,32 +17,35 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<AddToCart> AddToCart(AddToCart cartItem)
         {
-            var existingCartItem = await _context.addtocart
-         .FirstOrDefaultAsync(c =>
-             c.ProductId == cartItem.ProductId &&
-             c.SkuId == cartItem.SkuId &&       // Include variant check
-             c.BusRegId == cartItem.BusRegId && // Check if the product is from the same store
-             c.ShopperRegId == cartItem.ShopperRegId &&
-             c.orderstatus == "cart"); // Only check active cart items
+            // Safety: if frontend sends 0 or negative
+            if (cartItem.ProdQty <= 0)
+                cartItem.ProdQty = 1;
 
+            var existingCartItem = await _context.addtocart
+                .FirstOrDefaultAsync(c =>
+                    c.ProductId == cartItem.ProductId &&
+                    c.SkuId == cartItem.SkuId &&
+                    c.BusRegId == cartItem.BusRegId &&
+                    c.ShopperRegId == cartItem.ShopperRegId &&
+                    c.orderstatus == "cart");
 
             if (existingCartItem != null)
             {
-                //Product exists, so increase quantity by 1
-                existingCartItem.ProdQty += 1;
+                //  Add the quantity sent from frontend
+                existingCartItem.ProdQty += cartItem.ProdQty;
+
                 await _context.SaveChangesAsync();
                 return existingCartItem;
             }
             else
             {
-                //New product, insert into cart
-                cartItem.ProdQty = 1; // Ensure quantity starts at 1
-                _context.Add(cartItem);
+                //  Keep frontend quantity
+                _context.addtocart.Add(cartItem);
                 await _context.SaveChangesAsync();
                 return cartItem;
-                //}
             }
         }
+
 
 
 
@@ -169,6 +172,7 @@ namespace mytown.DataAccess.Repositories
                         .FirstOrDefault()!,
 
                     // SKU-specific data
+                    Sku_Id = sku.SkuId,
                     product_cost = sku.Sku_Cost,
                     Color = sku.Color,
                     SizeId = sku.SizeId ?? 0,
