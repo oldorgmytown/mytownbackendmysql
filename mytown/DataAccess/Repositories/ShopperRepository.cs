@@ -381,10 +381,13 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<bool> DeleteAddressAsync(int id)
         {
-            var address = await _context.ShopperAlternateAddresses.FindAsync(id);
+            var address = await _context.ShopperAlternateAddresses
+      .FirstOrDefaultAsync(a => a.AltAddressId == id &&!a.IsDeleted);
+           // var address = await _context.ShopperAlternateAddresses.FindAsync(id);
             if (address == null) return false;
 
-            _context.ShopperAlternateAddresses.Remove(address);
+           // _context.ShopperAlternateAddresses.Remove(address);
+            address.IsDeleted = true; //soft delete
             await _context.SaveChangesAsync();
             return true;
         }

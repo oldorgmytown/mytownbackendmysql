@@ -50,6 +50,10 @@ namespace mytown.Models.DTO_s
         [Column("delivery_notes")]
         public string? DeliveryNotes { get; set; }
 
+        [Column("is_deleted")]
+        public bool IsDeleted { get; set; } = false;
+
+
         public ShopperRegister? ShopperRegister { get; set; }
     }
 }
