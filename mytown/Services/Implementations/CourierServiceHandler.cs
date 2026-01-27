@@ -4,6 +4,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using System.Globalization;
 using System.Text.Json;
 
 namespace mytown.Services.Implementations
@@ -197,6 +198,21 @@ namespace mytown.Services.Implementations
 
                 if (fastestAir != null)
                     selectedCouriers.Add(fastestAir);
+
+                // ✅ HARD-CODED P2P OPTION
+                var p2pCost = Math.Max(100, totalWeight * 80); // min ₹100
+
+                selectedCouriers.Add(new BestcourierinfoDto
+                {
+                    BranchId = 0, // not from courier_branch table
+                    ShippingMode = "P2P",
+                    Cost = p2pCost,
+                    MaxDeliveryDays = 1,
+                    DeliveryDaysRange = "Same day / Next day",
+                    EstimatedDeliveryDate = DateTime.UtcNow
+        .ToString("MMM dd, yyyy", CultureInfo.InvariantCulture)
+                });
+
 
                 results.Add(new StoreCourierResultDto
                 {
