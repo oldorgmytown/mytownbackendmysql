@@ -539,7 +539,101 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .ToListAsync();
     }
 
-    public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(int storeId)
+
+    // Show storeorderid detailsor orders on dashboard
+
+    public async Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId)
+    {
+        // 🔹 Get order + shopper + store + shipping info
+        var orderData = await (
+            from so in _context.StoreOrders
+            join o in _context.Orders on so.OrderId equals o.OrderId
+            join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+            join p in _context.Payments on o.OrderId equals p.OrderId
+            join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
+            join sh in _context.ShopperRegisters on o.ShopperRegId equals sh.ShopperRegId
+            where so.StoreOrderId == storeOrderId
+            select new
+            {
+                so.StoreOrderId,
+                o.OrderDate,
+                p.PaymentId,
+                o.ShopperRegId,
+                ShopperName = sh.Username,
+                ShopperPhone = sh.PhoneNumber,
+                so.StoreId,
+                StoreName = s.BusinessName,
+                StoreTown = s.Town,
+                o.ShippingType,
+                sd.DeliveryAddress,
+                sd.EstimatedDays,
+                sd.CourierBranch,
+                sd.TrackingId
+            }
+        ).FirstOrDefaultAsync();
+
+        if (orderData == null)
+            return null;
+
+        // 🔹 Get products with image (SKU image preferred)
+        var products = await (
+            from od in _context.OrderDetails
+            join pr in _context.products on od.ProductId equals pr.ProductId
+            join sku in _context.Sku_ProductVariants on od.SkuId equals sku.SkuId into skuJoin
+            from sku in skuJoin.DefaultIfEmpty()
+
+            join skuImg in _context.ProductImages
+                .Where(i => i.SortOrder == 1)
+                on sku.SkuId equals skuImg.SkuId into skuImgJoin
+            from skuImg in skuImgJoin.DefaultIfEmpty()
+
+            join prodImg in _context.ProductImages
+                .Where(i => i.SortOrder == 1 && i.SkuId == null)
+                on pr.ProductId equals prodImg.ProductId into prodImgJoin
+            from prodImg in prodImgJoin.DefaultIfEmpty()
+
+            where od.StoreOrderId == storeOrderId
+            select new BusinessOrderProductDto
+            {
+                ProductId = pr.ProductId,
+                ProductName = pr.ProductName,
+                Quantity = od.Quantity,
+                UnitPrice = od.Price,
+                Amount = od.Price * od.Quantity,
+                ProductImage = skuImg.FileName ?? prodImg.FileName
+            }
+        ).ToListAsync();
+
+        var productAmount = products.Sum(p => p.Amount);
+
+        // 🔹 Combine everything in a single DTO
+        return new BusinessOrderDetailsDto
+        {
+            StoreOrderId = orderData.StoreOrderId,
+            OrderDate = orderData.OrderDate,
+            TransactionId = orderData.PaymentId,
+            ShopperId = orderData.ShopperRegId,
+            ShopperName = orderData.ShopperName,
+            ShopperPhone = orderData.ShopperPhone,
+
+            StoreId = orderData.StoreId,
+            StoreName = orderData.StoreName,
+            StoreTown = orderData.StoreTown,
+
+            Products = products,
+            ProductAmount = productAmount,
+
+            ShippingMethod = orderData.ShippingType,
+            ShippingAddress = orderData.DeliveryAddress,
+            EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
+         //   CourierService = orderData.CourierBranch,
+            TrackingId = orderData.TrackingId
+        };
+    }
+
+
+
+public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(int storeId)
     {
         return await _context.products
             .Where(p => p.BusRegId == storeId)
@@ -584,6 +678,247 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                         .Select(i => i.FileName)
                         .FirstOrDefault()
             })
+            .ToListAsync();
+    }
+
+
+
+    private IQueryable<StoreOrder> GetDeliveredPaidOrders(int storeId)
+    {
+        var query =
+            from so in _context.StoreOrders
+            join o in _context.Orders
+                on so.OrderId equals o.OrderId
+            join p in _context.Payments
+                on o.OrderId equals p.OrderId
+            join sd in _context.ShippingDetails
+                on so.StoreOrderId equals sd.StoreOrderId
+            where so.StoreId == storeId
+                  && p.PaymentStatus == "Paid"
+                  && sd.ShippingStatus == "Delivered"
+            select so;
+
+        return query;
+    }
+
+    // Daily Sales
+    public async Task<BusinessSalesSummaryDto> GetDailySalesAsync(
+    int storeId, DateTime date, string currency)
+    {
+        var query = GetDeliveredPaidOrders(storeId)
+            .Where(so => so.Order.OrderDate.Date == date.Date);
+
+        return new BusinessSalesSummaryDto
+        {
+            TotalOrders = await query.CountAsync(),
+            TotalRevenue = await query.SumAsync(x => x.StoreTotalAmount),
+            Currency = currency
+        };
+    }
+
+    //Monthly sales
+
+    public async Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(
+    int storeId, int year, int month, string currency)
+    {
+        var query = GetDeliveredPaidOrders(storeId)
+            .Where(so =>
+                so.Order.OrderDate.Year == year &&
+                so.Order.OrderDate.Month == month);
+
+        return new BusinessSalesSummaryDto
+        {
+            TotalOrders = await query.CountAsync(),
+            TotalRevenue = await query.SumAsync(x => x.StoreTotalAmount),
+            Currency = currency
+        };
+    }
+
+    //yearly sales
+
+    public async Task<BusinessSalesSummaryDto> GetYearlySalesAsync(
+    int storeId, int year, string currency)
+    {
+        var query = GetDeliveredPaidOrders(storeId)
+            .Where(so => so.Order.OrderDate.Year == year);
+
+        return new BusinessSalesSummaryDto
+        {
+            TotalOrders = await query.CountAsync(),
+            TotalRevenue = await query.SumAsync(x => x.StoreTotalAmount),
+            Currency = currency
+        };
+    }
+
+    //custom calenederdates
+    public async Task<BusinessSalesSummaryDto> GetSalesByDateRangeAsync(
+    int storeId, DateTime from, DateTime to, string currency)
+    {
+        var query = GetDeliveredPaidOrders(storeId)
+            .Where(so =>
+                so.Order.OrderDate >= from &&
+                so.Order.OrderDate <= to);
+
+        return new BusinessSalesSummaryDto
+        {
+            TotalOrders = await query.CountAsync(),
+            TotalRevenue = await query.SumAsync(x => x.StoreTotalAmount),
+            Currency = currency
+        };
+    }
+
+    // Salestab_ store transaction details
+
+    public async Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(int storeId)
+    {
+        var result = await (
+            from so in _context.StoreOrders
+            join o in _context.Orders on so.OrderId equals o.OrderId
+            join p in _context.Payments on o.OrderId equals p.OrderId
+            join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
+            where so.StoreId == storeId
+                  && p.PaymentStatus == "Paid"
+            orderby p.PaymentDate descending
+            select new Salestab_storeTransactionsDto
+            {
+                TransactionId = p.PaymentId,
+                PaymentDate = p.PaymentDate,
+                ShopperId = s.ShopperRegId,
+                
+                Amount = p.AmountPaid,
+                PaymentStatus = p.PaymentStatus
+            }
+        ).ToListAsync();
+
+        return result;
+    }
+
+    // get product variant details
+
+    public async Task<List<Sku_ProductVariantDto>> GetVariantsByProductIdAsync(int productId)
+    {
+        return await _context.Sku_ProductVariants
+            .Where(v => v.ProductId == productId)
+            .Select(v => new Sku_ProductVariantDto
+            {
+                SkuId_Productvariant = v.SkuId,
+                Color = v.Color,
+                SizeName = v.Size != null ? v.Size.SizeName : null,
+
+                Sku_Cost = v.Sku_Cost,
+                DiscountPrice = v.DiscountPrice,
+                Quantity = v.Quantity,
+
+                Length = v.Length,
+                Width = v.Width,
+                Height = v.Height,
+                Weight = v.Weight,
+                Images = v.Images
+    .Where(i => i.SortOrder == 1)
+    .Select(i => new ProductImageDto
+    {
+       // ImageId = i.ImageId,
+        FileName = i.FileName,
+        SortOrder = i.SortOrder
+    })
+    .ToList()
+            })
+            .ToListAsync();
+    }
+
+    //notifications to business dashboard
+
+    public async Task<List<BusinessDBNotifications>> GetNotificationsAsync(
+    int busRegId, bool onlyUnread)
+    {
+        var query = _context.BusinessDBNotifications
+            .Where(n => n.BusRegId == busRegId);
+
+        if (onlyUnread)
+            query = query.Where(n => !n.IsRead);
+
+        return await query
+            .OrderByDescending(n => n.CreatedDate)
+            .ToListAsync();
+    }
+
+    public async Task MarkAllAsReadAsync(int busRegId)
+    {
+        var unreadNotifications = await _context.BusinessDBNotifications
+            .Where(n => n.BusRegId == busRegId && !n.IsRead)
+            .ToListAsync();
+
+        foreach (var n in unreadNotifications)
+            n.IsRead = true;
+
+        await _context.SaveChangesAsync();
+    }
+
+    // country wise sales
+    public async Task<List<CountrySalesDto>> GetCountryWiseSalesAsync(int storeId)
+    {
+        var result =
+            from so in _context.StoreOrders
+            join o in _context.Orders
+                on so.OrderId equals o.OrderId
+            join p in _context.Payments
+                on o.OrderId equals p.OrderId
+            join s in _context.ShopperRegisters
+                on o.ShopperRegId equals s.ShopperRegId
+            where so.StoreId == storeId
+                  && p.PaymentStatus == "Paid"
+            group new { o, p } by s.Country into g
+            select new CountrySalesDto
+            {
+                Country = g.Key,
+                TotalOrders = g
+                    .Select(x => x.o.OrderId)
+                    .Distinct()
+                    .Count(),
+                TotalSales = g.Sum(x => x.p.AmountPaid)
+            };
+
+        return await result
+            .OrderByDescending(x => x.TotalSales)
+            .ToListAsync();
+    }
+
+    // product wise sales - top 5
+
+    public async Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount)
+    {
+        var query =
+            from so in _context.StoreOrders
+            join o in _context.Orders
+                on so.OrderId equals o.OrderId
+            join p in _context.Payments
+                on o.OrderId equals p.OrderId
+            join sd in _context.ShippingDetails
+                on so.StoreOrderId equals sd.StoreOrderId
+            join od in _context.OrderDetails
+                on so.StoreOrderId equals od.StoreOrderId
+            join pr in _context.products
+                on od.ProductId equals pr.ProductId
+            where so.StoreId == storeId
+                  && p.PaymentStatus == "Paid"
+                  && sd.ShippingStatus == "Delivered"
+            group new { od, pr } by new
+            {
+                pr.ProductId,
+                pr.ProductName
+            }
+            into g
+            select new ProductSalesDto
+            {
+                ProductId = g.Key.ProductId,
+                ProductName = g.Key.ProductName,
+                TotalQuantitySold = g.Sum(x => x.od.Quantity),
+                TotalRevenue = g.Sum(x => x.od.Quantity * x.od.Price)
+            };
+
+        return await query
+            .OrderByDescending(x => x.TotalQuantitySold)
+            .Take(topCount)
             .ToListAsync();
     }
 

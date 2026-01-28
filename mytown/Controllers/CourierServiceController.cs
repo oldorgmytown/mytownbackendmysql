@@ -129,7 +129,7 @@ namespace mytown.Controllers
             }
         }
 
-        [Authorize]
+       // [Authorize]
         [HttpPost("GetBestCourier")]
         public async Task<IActionResult> GetBestCourier([FromBody] StoreCourierRequestDto request)
         {
@@ -158,5 +158,7 @@ namespace mytown.Controllers
 
         //    return Ok(orders);
         //}
+
+       
     }
 }

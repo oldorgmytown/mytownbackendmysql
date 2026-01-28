@@ -1,4 +1,5 @@
-﻿using mytown.Models.DTO_s;
+﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -36,11 +37,31 @@ namespace mytown.DataAccess.Interfaces
         Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId);
         Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId);
 
+        // show details of orders -- click on storeorderid
+
+        Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId);
+
         // Products tab
 
         Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(int storeId);
+        // get variant deatils
+        Task<List<Sku_ProductVariantDto>> GetVariantsByProductIdAsync(int productId);
 
+        //Business notifications
+        Task<List<BusinessDBNotifications>> GetNotificationsAsync(int busRegId, bool onlyUnread);
 
+        Task MarkAllAsReadAsync(int busRegId);
+
+        //sales tab
+
+        Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(int storeId);
+
+        //country wise sales
+        Task<List<CountrySalesDto>> GetCountryWiseSalesAsync(int storeId);
+
+        //product wise sales
+
+        Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount);
 
     }
 }

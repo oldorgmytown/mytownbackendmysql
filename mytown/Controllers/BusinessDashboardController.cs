@@ -116,14 +116,85 @@ namespace mytown.Controllers
         public async Task<IActionResult> GetCompletedOrders(int storeId)
             => Ok(await _dasboardservice.GetCompletedOrdersAsync(storeId));
 
+        //OrderDeatils for storeorderid
+
+
+        [HttpGet("order-details_Storeorderid")]
+        public async Task<IActionResult> GetOrderDetails(int storeOrderId)
+        {
+            var details = await _dasboardservice.GetBusinessOrderDetailsAsync(storeOrderId);
+
+            if (details == null)
+                return NotFound(new { message = "Order not found" });
+
+            return Ok(details);
+        }
+
         [HttpGet("Productsonstore")]
         public async Task<IActionResult> GetProducts(int storeId)
         {
             var result = await _dasboardservice.GetProductsAsync(storeId);
             return Ok(result);
         }
+
+
+        [HttpGet("productvariantsdeatils")]
+        public async Task<IActionResult> GetVariants(int productId)
+        {
+            var variants = await _dasboardservice.GetVariantsByProductIdAsync(productId);
+
+            if (variants == null || variants.Count == 0)
+                return NotFound("No variants found for this product");
+
+            return Ok(variants);
+        }
+
+        [HttpGet("notifications")]
+        public async Task<IActionResult> GetNotifications(
+    int busRegId,
+    [FromQuery] bool onlyUnread = false)
+        {
+            var result = await _dasboardservice.GetNotificationsAsync(busRegId, onlyUnread);
+            return Ok(result);
+        }
+
+        [HttpPut("notifications_mark-read")]
+        public async Task<IActionResult> MarkNotificationsAsRead(int busRegId)
+        {
+            await _dasboardservice.MarkAllAsReadAsync(busRegId);
+            return Ok(new { message = "Notifications marked as read" });
+        }
+
+        //sales tab - Store Transaction details
+
+        [HttpGet("salestab_storetransactions")]
+        public async Task<IActionResult> GetStoreTransactions(int storeId)
+        {
+            var data = await _dasboardservice.GetStoreTransactionsAsync(storeId);
+            return Ok(data);
+        }
+
+        //countrywise_sales
+        [HttpGet("Businessdb_country-sales")]
+        public async Task<IActionResult> GetCountryWiseSales(int storeId)
+        {
+            var data = await _dasboardservice.GetCountryWiseSalesAsync(storeId);
+            return Ok(data);
+        }
+
+        //product wise sales - top5
+
+        [HttpGet("businessdb_top-productsSales")]
+        public async Task<IActionResult> GetTopProducts(
+    int storeId,
+    int top = 5)
+        {
+            var result = await _dasboardservice.GetTopProductsAsync(storeId, top);
+            return Ok(result);
+        }
+
     }
 
-  
 
-    }
+
+}

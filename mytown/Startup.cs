@@ -69,7 +69,7 @@ public class Startup
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
         services.AddScoped<IShopperDashboardRepository, ShopperDashboardRepository>();
-        services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>();
+        services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>(); //latest
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IFileService, mytown.Services.FileService>();

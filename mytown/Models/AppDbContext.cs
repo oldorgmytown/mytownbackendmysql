@@ -3,6 +3,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using MyTown.Models;
 using System.Text.RegularExpressions;
+using static mytown.Models.BusinessDBNotifications;
 
 
 namespace mytown.Models
@@ -61,6 +62,9 @@ namespace mytown.Models
             public DbSet<UserSession> UserSessions { get; set; }
 
             public DbSet<StoreOrder> StoreOrders { get; set; } //done
+
+            public DbSet<BusinessDBNotifications> BusinessDBNotifications { get; set; }
+            public DbSet<CourierDBNotifications> CourierDBNotifications { get; set; }
 
 
 

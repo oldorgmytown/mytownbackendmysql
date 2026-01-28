@@ -30,7 +30,9 @@ namespace mytown.Services.Interfaces
 
         Task<bool> IsCourierEmailTakenAsync(string email);
 
-      
+       
+
+
     }
 }
 

@@ -219,6 +219,22 @@ namespace mytown.DataAccess.Repositories
             }
             await _context.SaveChangesAsync();
 
+            // 🔔 CREATE NOTIFICATION ONLY FOR APPROVED STATUS
+            if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
+            {
+                var notification = new BusinessDBNotifications
+                {
+                    BusRegId = busRegId,
+                    Title = "Business Profile Approved",
+                    Message = "Your business profile has been approved by the admin.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _context.BusinessDBNotifications.AddAsync(notification);
+                await _context.SaveChangesAsync();
+            }
+
             // Now capture the business details
             var business = profile.BusinessRegister;
             if (business != null)
