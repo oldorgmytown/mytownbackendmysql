@@ -96,5 +96,58 @@ namespace mytown.Services.Implementations
         {
             return _paymentRepo.GetShopperDetailsByOrderId(orderId);
         }
+
+
+        public async Task ProcessPostPaymentAsync(int orderId)
+        {
+            var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
+
+            // ✅ ONE notification/email per StoreOrder
+            var storeWiseShipments = shippingDetails
+                .GroupBy(s => s.StoreOrderId)
+                .Select(g => g.First()) // representative row
+                .ToList();
+
+            foreach (var shipping in storeWiseShipments)
+            {
+                // 📧 1 email per store
+                await SendCourierEmailAsync(
+                    shipping.BranchId,
+                    shipping.StoreOrderId   // IMPORTANT: store-level
+                );
+
+                // 🔔 1 notification per store
+                var courierId = await _paymentRepo
+                    .GetCourierIdByBranchIdAsync(shipping.BranchId);
+
+                await AddCourierNotificationAsync(
+                    courierId: courierId,
+                    branchId: shipping.BranchId,
+                    title: "New Order Assigned",
+                    message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+                );
+            }
+        }
+
+        public async Task AddCourierNotificationAsync(
+    int courierId,
+    int branchId,
+    string title,
+    string message)
+        {
+            var notification = new CourierDBNotifications
+            {
+                CourierId = courierId,
+                BranchId = branchId,
+                Title = title,
+                Message = message,
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _paymentRepo.AddCourierNotificationAsync(notification);
+            await _paymentRepo.SaveChangesAsync();
+        }
+
     }
 }

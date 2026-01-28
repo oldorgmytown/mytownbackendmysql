@@ -321,8 +321,13 @@ public class EmailService : IEmailService
         }
     }
 
-    //send notification to courier
-    public async Task SendEmailToCourierAsync(string email, string courierName, int shippingDetailId)
+    // 📧 Send notification email to courier (ONE email per StoreOrder)
+    public async Task SendEmailToCourierAsync(
+        string email,
+        string courierName,
+        int storeOrderId,
+        string storeName,
+        List<(string ProductName, int Quantity)> products)
     {
         if (!await DomainHasMX(email))
             throw new Exception("The email domain is not valid (no MX records found).");
@@ -335,37 +340,47 @@ public class EmailService : IEmailService
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
+                // 🧾 Build product list HTML
+                var productHtml = string.Join("", products.Select(p =>
+                    $"<li>{p.ProductName} × {p.Quantity}</li>"
+                ));
+
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail),
-                    Subject = "New Shipment Notification",
+                    Subject = "New Store Shipment Assigned",
                     Body = $@"
 <html>
   <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
-    <h3 style='color: #000;'>Shipping Notification – Assigned to Your Branch</h3>
+    
+    <h3 style='color: #000;'>📦 New Store Shipment Assigned</h3>
+
     <p>Hello <strong>{courierName}</strong>,</p>
 
     <p>
-      A new shipment task has been assigned to your branch. Please prepare for dispatch using the information below.
+      A new shipment has been assigned to your branch. Below are the shipment details:
     </p>
 
     <p>
-      <strong>Shipping ID:</strong> {shippingDetailId}<br />
+      <strong>Store Order ID:</strong> {storeOrderId}<br />
+      <strong>Store Name:</strong> {storeName}<br />
       <strong>Assigned Date:</strong> {DateTime.Now:dd-MMM-yyyy hh:mm tt}
     </p>
 
-    <p>
-      Kindly login to your courier portal and update the status as soon as the parcel is dispatched.
-      Ensure timely pickup and delivery to meet our service standards.
-    </p>
+    <h4>Products to Ship:</h4>
+    <ul>
+      {productHtml}
+    </ul>
 
-    <p>If you have any questions or face any issues, please contact the operations team.</p>
+    <p>
+      Please arrange pickup and update the shipment status in the courier portal.
+    </p>
 
     <p style='margin-top: 30px;'>
       Best regards,<br />
-      <strong style='color: #004481;'>ItIsMyTown Logistics</strong><br />
-      <em>[Contact Details]</em>
+      <strong style='color: #004481;'>ItIsMyTown Logistics</strong>
     </p>
+
   </body>
 </html>",
                     IsBodyHtml = true
@@ -378,9 +393,10 @@ public class EmailService : IEmailService
         catch (Exception ex)
         {
             Console.WriteLine($"Error sending courier email: {ex.Message}");
-            throw new Exception("Failed to send courier shipping notification email.");
+            throw new Exception("Failed to send courier shipment email.");
         }
     }
+
 
     //Admin Approval or Rejection of submitted business profile
 

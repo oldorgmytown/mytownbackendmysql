@@ -11,14 +11,22 @@ namespace mytown.Services.Interfaces
         Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto);
         
 
-        Task SendEmailToCourierAsync(string email, string courierName, int shippingDetailId);
+       // Task SendEmailToCourierAsync(string email, string courierName, int shippingDetailId);
 
         //send email notification to business owner for approval or rejection of profile
 
         Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status);
 
         Task SendShopperDeactivationEmailAsync(string email, string shopperName);
-       
 
-    }       
+        Task SendEmailToCourierAsync(
+         string email,
+         string courierName,
+         int storeOrderId,
+         string storeName,
+         List<(string ProductName, int Quantity)> products);
+
+
+
+    }
 }

@@ -18,9 +18,20 @@ namespace mytown.Services.Interfaces
 
         List<ShippingDetails> GetShippingDetailsByOrderId(int orderId);
 
-        Task SendCourierEmailAsync(int branchId, int shippingDetailId);
+        // POST PAYMENT (EMAIL + NOTIFY)
+        // ================================
+        Task ProcessPostPaymentAsync(int orderId);
+
+        Task SendCourierEmailAsync(int branchId, int storeOrderId);
 
         ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);
+
+        Task AddCourierNotificationAsync(
+    int courierId,
+    int branchId,
+    string title,
+    string message);
+       
 
     }
 }

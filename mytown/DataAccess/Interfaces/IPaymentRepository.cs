@@ -11,9 +11,21 @@ namespace mytown.DataAccess.Interfaces
         List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId);
         List<ShippingDetails> GetShippingDetailsByOrderId(int orderId);
 
-        Task SendEmailToCourier(int branchId, int shippingDetailId);
+        Task SendEmailToCourier(int branchId, int storeOrderId);
 
         ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);
+
+        // 📦 Products under store order
+        List<(string ProductName, int Quantity)> GetProductsByStoreOrderId(int storeOrderId);
+
+        // 🚚 Courier mapping
+        Task<int> GetCourierIdByBranchIdAsync(int branchId);
+
+        // 🔔 Notifications
+        Task AddCourierNotificationAsync(CourierDBNotifications notification);
+
+        // 💾 Save
+        Task SaveChangesAsync();
 
 
     }

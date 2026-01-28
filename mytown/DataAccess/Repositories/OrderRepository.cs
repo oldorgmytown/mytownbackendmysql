@@ -211,6 +211,20 @@ namespace mytown.DataAccess.Repositories
                 s => s.StoreOrderId
             );
 
+
+            // 3️⃣🔔 Create Notifications for each Store
+            var notifications = storeOrders.Select(so => new BusinessDBNotifications
+            {
+                BusRegId = so.StoreId,
+                Title = "New Order Received",
+                Message = $"Order #{newOrder.OrderId} has been placed",
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow
+            }).ToList();
+
+            _context.BusinessDBNotifications.AddRange(notifications);
+            await _context.SaveChangesAsync();
+
             // 4️⃣ Create OrderDetails
             var orderDetailsList = cartItems.Select(item => new orderdetails
             {
@@ -455,37 +469,37 @@ namespace mytown.DataAccess.Repositories
             _context.ShippingDetails.AddRange(shippingList);
             await _context.SaveChangesAsync();
 
-            // 7️⃣ Notify courier (one email per store)
-            foreach (var shippingDetail in shippingList)
-            {
-                await SendEmailToCourier(
-                    shippingDetail.BranchId,
-                    shippingDetail.ShippingDetailId);
-            }
+            //// 7️⃣ Notify courier (one email per store)
+            //foreach (var shippingDetail in shippingList)
+            //{
+            //    await SendEmailToCourier(
+            //        shippingDetail.BranchId,
+            //        shippingDetail.ShippingDetailId);
+            //}
         }
 
 
-        private async Task SendEmailToCourier(int branchId, int shippingDetailId)
-        {
-            var courierInfo = await _context.CourierBranches
-                .Where(cb => cb.BranchId == branchId)
-                .Select(cb => new
-                {
-                    cb.CourierServiceName,
-                    cb.CourierId,
-                    CourierEmail = cb.CourierService.CourierEmail
-                })
-                .FirstOrDefaultAsync();
+        //private async Task SendEmailToCourier(int branchId, int shippingDetailId)
+        //{
+        //    var courierInfo = await _context.CourierBranches
+        //        .Where(cb => cb.BranchId == branchId)
+        //        .Select(cb => new
+        //        {
+        //            cb.CourierServiceName,
+        //            cb.CourierId,
+        //            CourierEmail = cb.CourierService.CourierEmail
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if (courierInfo != null && !string.IsNullOrEmpty(courierInfo.CourierEmail))
-            {
-                await _emailService.SendEmailToCourierAsync(
-                    courierInfo.CourierEmail,
-                    courierInfo.CourierServiceName,
-                    shippingDetailId
-                );
-            }
-        }
+        //    if (courierInfo != null && !string.IsNullOrEmpty(courierInfo.CourierEmail))
+        //    {
+        //        await _emailService.SendEmailToCourierAsync(
+        //            courierInfo.CourierEmail,
+        //            courierInfo.CourierServiceName,
+        //            shippingDetailId
+        //        );
+        //    }
+        //}
 
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
