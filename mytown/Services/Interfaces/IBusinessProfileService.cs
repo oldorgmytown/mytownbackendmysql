@@ -15,7 +15,7 @@ namespace mytown.Services.Interfaces
             IFormFile? bannerFile,
             IFormFile? logoFile);
 
-        Task<string> UploadProfileImageAsync(IFormFile file, string ImageType);
+        Task<string> UploadProfileImageAsync(IFormFile file, string ImageType); //Business logo n banner upload to blob
         Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath);
         Task<bool> UpdateLogoPathAsync(int busRegId, string logoPath);
 

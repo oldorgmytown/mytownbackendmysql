@@ -62,6 +62,17 @@ namespace mytown.Services.Implementations
         }
 
         // ------------------- UPDATE LOGO / BANNER -------------------
+
+        public async Task<string> UploadProfileImageAsync(IFormFile file, string ImageType)
+        {
+            if (file == null || file.Length == 0)
+                throw new Exception("No file uploaded");
+
+            // image type is decided here
+           // const string imageType = "profile";
+
+            return await _repo.UploadToBlobAsync(file, ImageType);
+        }
         public Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath)
             => _repo.UpdateBannerPathAsync(busRegId, bannerPath);
 
