@@ -77,14 +77,19 @@ namespace mytown.Services.Implementations
                     CourierWebsiteName = courierDto.CourierWebsiteName,
                     CourierPhone = courierDto.CourierPhone,
                     CourierEmail = courierDto.CourierEmail,
+
+                    // 🔐 Security
                     Password = hashed,
                     IsEmailVerified = true,
                     RegisteredDate = DateTime.UtcNow,
-                    IsLocal = courierDto.IsLocal,
+
+                 
+
+                    IsCity = courierDto.IsCity,
                     IsState = courierDto.IsState,
-                    IsNational = courierDto.IsNational,
-                    IsInternational = courierDto.IsInternational
+                  
                 };
+
 
                 var created = await _repo.RegisterCourier(courier);
                 return created;
@@ -119,14 +124,19 @@ namespace mytown.Services.Implementations
                 CourierWebsiteName = courierDto.CourierWebsiteName,
                 CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
+
+                // 🔐 Security
                 Password = hashed,
                 IsEmailVerified = true,
                 RegisteredDate = DateTime.UtcNow,
-                IsLocal = courierDto.IsLocal,
+
+                // 🚚 Coverage flags (updated)
+                IsCity = courierDto.IsCity,
                 IsState = courierDto.IsState,
-                IsNational = courierDto.IsNational,
-                IsInternational = courierDto.IsInternational
+
+              
             };
+
 
             var created = await _repo.RegisterCourier(courier);
             await _repo.DeletePendingCourierVerification(token);
@@ -194,10 +204,12 @@ namespace mytown.Services.Implementations
                 var selectedCouriers = new List<BestcourierinfoDto>();
 
                 if (cheapestSurface != null)
-                    selectedCouriers.Add(cheapestSurface);
+                    cheapestSurface.ShippingMode = "Standard Delivery";
+                selectedCouriers.Add(cheapestSurface);
 
                 if (fastestAir != null)
-                    selectedCouriers.Add(fastestAir);
+                    fastestAir.ShippingMode = "Express Delivery";
+                selectedCouriers.Add(fastestAir);
 
                 // ✅ HARD-CODED P2P OPTION
                 var p2pCost = Math.Max(100, totalWeight * 80); // min ₹100

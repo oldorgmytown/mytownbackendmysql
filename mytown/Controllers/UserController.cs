@@ -46,7 +46,7 @@ namespace mytown.Controllers
             return Ok(response);
         }
 
-        [Authorize]
+       [Authorize]
         [HttpPost("upload_profile_image")]
         public async Task<IActionResult> UploadProfileImage(IFormFile file)
         {

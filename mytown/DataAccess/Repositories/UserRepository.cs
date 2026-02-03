@@ -397,18 +397,31 @@ namespace mytown.DataAccess.Repositories
                         userType = "Courier",
                         token,
                         sessionId = newSession.SessionGuid,
-                        courier = new CourierServiceDto
+                        courierDto = new CourierServiceDto
                         {
                             CourierServiceName = courier.CourierServiceName,
                             CourierWebsiteName = courier.CourierWebsiteName,
-                            CourierPhone = courier.CourierPhone,
                             CourierEmail = courier.CourierEmail,
-                            IsLocal = courier.IsLocal,
+                            CourierPhone = courier.CourierPhone,
+
+                            // 📍 Main Office Location
+                            Address = courier.Address,
+                            Town = courier.Town,
+                            City = courier.City,
+                            State = courier.State,
+                            Country = courier.Country,
+                            PostalCode = courier.PostalCode,
+
+                            // 🚚 Service Coverage
+                            IsCity = courier.IsCity,
                             IsState = courier.IsState,
-                            IsNational = courier.IsNational,
-                            IsInternational = courier.IsInternational
+
+                            // 🔐 Auth (only during registration)
+                            Password = courier.Password
                         }
-                    };
+                           // ConfirmPassword = courier.ConfirmPassword
+                        };
+
                 }
                 return null;
             }
