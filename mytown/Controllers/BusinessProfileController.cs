@@ -35,12 +35,12 @@ namespace mytown.Controllers
         //--------------Update to Blob-------------
 
         [HttpPost("upload_Business_Images_toBlob")]
-        public async Task<IActionResult> UploadProfileImage(IFormFile file)
+        public async Task<IActionResult> UploadProfileImage(IFormFile file, string ImageType)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
 
-            var result = await _service.UploadProfileImageAsync(file);
+            var result = await _service.UploadProfileImageAsync(file, ImageType);
 
             // return string directly (frontend unchanged)
             return Ok(result);
