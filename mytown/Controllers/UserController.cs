@@ -50,7 +50,13 @@ namespace mytown.Controllers
         [HttpPost("upload_profile_image")]
         public async Task<IActionResult> UploadProfileImage(IFormFile file)
         {
-            var result = await _fileService.UploadProfileImageAsync(file, Request);
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            // Service returns string (image name)
+            var result = await _fileService.UploadProfileImageAsync(file);
+
+            // return directly 
             return Ok(result);
         }
     }

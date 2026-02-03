@@ -32,6 +32,20 @@ namespace mytown.Controllers
             return await _service.AddBusinessProfile(businessProfileDto, bannerFile, logoFile);
         }
 
+        //--------------Update to Blob-------------
+
+        [HttpPost("upload_Business_Images_toBlob")]
+        public async Task<IActionResult> UploadProfileImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            var result = await _service.UploadProfileImageAsync(file);
+
+            // return string directly (frontend unchanged)
+            return Ok(result);
+        }
+
         // ------------------- UPDATE BANNER -------------------
         [HttpPut("update-banner/{busRegId}")]
         public async Task<IActionResult> UpdateBannerPath(int busRegId, [FromBody] UpdateBannerRequest request)

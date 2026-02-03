@@ -2,6 +2,6 @@
 {
     public interface IFileService
     {
-        Task<object> UploadProfileImageAsync(IFormFile file, HttpRequest request);
+        Task<string> UploadProfileImageAsync(IFormFile file);
     }
 }
