@@ -204,12 +204,16 @@ namespace mytown.Services.Implementations
                 var selectedCouriers = new List<BestcourierinfoDto>();
 
                 if (cheapestSurface != null)
+                {
                     cheapestSurface.ShippingMode = "Standard Delivery";
-                selectedCouriers.Add(cheapestSurface);
+                    selectedCouriers.Add(cheapestSurface);
+                }
 
                 if (fastestAir != null)
+                {
                     fastestAir.ShippingMode = "Express Delivery";
-                selectedCouriers.Add(fastestAir);
+                    selectedCouriers.Add(fastestAir);
+                }
 
                 // ✅ HARD-CODED P2P OPTION
                 var p2pCost = Math.Max(100, totalWeight * 80); // min ₹100
