@@ -43,6 +43,7 @@ namespace mytown.Models
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
             public DbSet<CourierBranch> CourierBranches { get; set; } //DONE
 
+           
             public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; } //done
             public DbSet<ProductImage> ProductImages { get; set; } //done
 
@@ -65,6 +66,8 @@ namespace mytown.Models
 
             public DbSet<BusinessDBNotifications> BusinessDBNotifications { get; set; }
             public DbSet<CourierDBNotifications> CourierDBNotifications { get; set; }
+
+            public DbSet<CourierBranchService> CourierBranchServices { get; set; }
 
 
 

@@ -33,7 +33,7 @@ namespace mytown.Models
         [Column("town", TypeName = "varchar(100)")]
         public string Town { get; set; }
 
-        [Column("branch_address", TypeName = "varchar(255)")]
+        [Column("address", TypeName = "varchar(255)")]
         public string BranchAddress { get; set; }
 
         [Column("branch_phone_number", TypeName = "varchar(20)")]
@@ -45,28 +45,37 @@ namespace mytown.Models
         [Column("branch_contact_person", TypeName = "varchar(100)")]
         public string BranchContactPerson { get; set; }
 
-        [Column("destinations", TypeName = "varchar(255)")]
-        public string Destinations { get; set; } // To be normalized later
 
-        [Required]
-        [Column("shipping_mode", TypeName = "varchar(50)")]
-        public string ShippingMode { get; set; } // Air / Surface
+        // 🔐 Branch login (for future)
+        [Column("password_hash", TypeName = "varchar(255)")]
+        public string PasswordHash { get; set; } = "Branch@123";
 
-        [Column("charges", TypeName = "decimal(10,2)")]
-        public decimal Charges { get; set; }
+        [Column("is_active")]
+        public bool IsActive { get; set; } = true;
 
-        [Column("weight_range", TypeName = "varchar(100)")]
-        public string WeightRange { get; set; }
+        //[Column("destinations", TypeName = "varchar(255)")]
+        //public string Destinations { get; set; } // To be normalized later
 
-        [Column("distance_range", TypeName = "varchar(100)")]
-        public string DistanceRange { get; set; }
+        //[Required]
+        //[Column("shipping_mode", TypeName = "varchar(50)")]
+        //public string ShippingMode { get; set; } // Air / Surface
 
-        [Column("estimate_days", TypeName = "int")]
-        public int? EstimateDays { get; set; }   // nullable, because CSV may not have value
+        //[Column("charges", TypeName = "decimal(10,2)")]
+        //public decimal Charges { get; set; }
+
+        //[Column("weight_range", TypeName = "varchar(100)")]
+        //public string WeightRange { get; set; }
+
+        //[Column("distance_range", TypeName = "varchar(100)")]
+        //public string DistanceRange { get; set; }
+
+        //[Column("estimate_days", TypeName = "int")]
+        //public int? EstimateDays { get; set; }   // nullable, because CSV may not have value
 
 
         // 🔗 Navigation property
         public CourierService CourierService { get; set; }
+        public ICollection<CourierBranchService> Services { get; set; }
     }
 }
 

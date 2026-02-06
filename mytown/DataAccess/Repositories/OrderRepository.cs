@@ -6,6 +6,7 @@ using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
 using Stripe;
+using static System.Collections.Specialized.BitVector32;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -256,14 +257,22 @@ namespace mytown.DataAccess.Repositories
                 if (branch == null)
                     throw new Exception($"Courier branch not found for BranchId {shippingSelection.BranchId}");
 
+                // ✅ FETCH SERVICE (THIS IS THE FIX)
+                var service = await _context.CourierBranchServices
+                    .FirstOrDefaultAsync(s =>
+                        s.BranchId == shippingSelection.BranchId &&
+                        s.ShippingMode == shippingSelection.ShippingType);
+
+                if (service == null)
+                    throw new Exception("Courier service configuration not found.");
                 var shipping = new ShippingDetails
                 {
                     OrderId = newOrder.OrderId,
                     StoreOrderId = storeOrder.StoreOrderId,
                     BranchId = branch.BranchId,
                     ShippingType = shippingSelection.ShippingType,
-                    EstimatedDays = branch.EstimateDays ?? 0,
-                    Cost = branch.Charges,
+                    EstimatedDays = service.EstimateDays ?? 0,
+                    Cost = service.Charges,
                     TrackingId = "",
                     ShippingStatus = "In Progress",
 
@@ -442,7 +451,16 @@ namespace mytown.DataAccess.Repositories
                 if (branch == null)
                     throw new Exception("Invalid courier branch selected.");
 
-                if (!branch.EstimateDays.HasValue)
+                // ✅ FETCH SERVICE (THIS IS THE FIX)
+                var service = await _context.CourierBranchServices
+                    .FirstOrDefaultAsync(s =>
+                        s.BranchId == selection.BranchId &&
+                        s.ShippingMode == selection.ShippingType);
+
+                if (service == null)
+                    throw new Exception("Courier service configuration not found.");
+
+                if (!service.EstimateDays.HasValue)
                     throw new Exception("Estimated delivery days not configured for this courier.");
 
                 // 5️⃣ Create shipping record (PER STORE)
@@ -453,10 +471,10 @@ namespace mytown.DataAccess.Repositories
                     BranchId = branch.BranchId,
 
                     ShippingType = selection.ShippingType,   // or branch.ShippingMode
-                    EstimatedDays = branch.EstimateDays.Value,
+                    EstimatedDays = service.EstimateDays.Value,
                    // EstimatedDeliveryDate = orderDate.AddDays(branch.EstimateDays.Value),
 
-                    Cost = branch.Charges,
+                    Cost = service.Charges,
 
                     TrackingId = null,
                     ShippingStatus = "In Progress"
