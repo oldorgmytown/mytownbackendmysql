@@ -2,6 +2,6 @@
 {
     public interface IUserRepository
     {
-        Task<object?> LoginAsync(string email, string password);
+        Task<object?> LoginAsyncwithRole(string email, string password, string role);
     }
 }

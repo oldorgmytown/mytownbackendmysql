@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Repositories;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Newtonsoft.Json.Linq;
 using Stripe;
@@ -31,22 +32,28 @@ namespace mytown.Controllers
 
         [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
         {
             var (response, token, sessionId) =
-                await _userService.LoginAsync(request.Email, request.Password);
+                await _userService.LoginAsync(
+                    request.Email,
+                    request.Password,
+                    request.Role
+                );
 
             if (response == null)
                 return Unauthorized(new { message = "Invalid credentials" });
 
             Response.Headers["Authorization"] = $"Bearer {token}";
             Response.Headers["x-session-id"] = sessionId;
-            Response.Headers["Access-Control-Expose-Headers"] = "Authorization, x-session-id";
+            Response.Headers["Access-Control-Expose-Headers"] =
+                "Authorization, x-session-id";
 
             return Ok(response);
         }
 
-       [Authorize]
+
+        [Authorize]
         [HttpPost("upload_profile_image")]
         public async Task<IActionResult> UploadProfileImage(IFormFile file)
         {
