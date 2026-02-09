@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+//latest table
 namespace mytown.Models
 {
     [Table("courier_branch_service")]

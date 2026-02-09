@@ -41,7 +41,7 @@ namespace mytown.Models
             public DbSet<ShippingDetails> ShippingDetails { get; set; } //done
             public DbSet<CourierService> CourierService { get; set; } //DONE
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
-            public DbSet<CourierBranch> CourierBranches { get; set; } //DONE
+            public DbSet<CourierBranch> CourierBranches { get; set; } //modified table
 
            
             public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; } //done
@@ -67,7 +67,7 @@ namespace mytown.Models
             public DbSet<BusinessDBNotifications> BusinessDBNotifications { get; set; }
             public DbSet<CourierDBNotifications> CourierDBNotifications { get; set; }
 
-            public DbSet<CourierBranchService> CourierBranchServices { get; set; }
+            public DbSet<CourierBranchService> CourierBranchServices { get; set; } // latest table
 
 
 
