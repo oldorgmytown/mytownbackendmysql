@@ -113,7 +113,7 @@ namespace mytown.Controllers
             if (model == null || model.OrderId <= 0 || string.IsNullOrEmpty(model.PaymentMethod) || string.IsNullOrEmpty(model.StripePaymentIntentId))
                 return BadRequest("Invalid payment details.");
 
-            var payment = _paymentService.AddPayment(model.OrderId, model.StripePaymentIntentId, model.PaymentMethod);
+            var payment = await _paymentService.AddPaymentAsync(model.OrderId, model.StripePaymentIntentId, model.PaymentMethod);
 
 
             // 2️⃣ One loop = one store
@@ -135,6 +135,23 @@ namespace mytown.Controllers
             //}
 
             return Ok(new { message = "Payment successful!", paymentId = payment.PaymentId });
+        }
+
+        [HttpGet("stripe-test")]
+        public async Task<IActionResult> TestStripe()
+        {
+            var service = new PaymentIntentService();
+            var intent = await service.CreateAsync(new PaymentIntentCreateOptions
+            {
+                Amount = 100, // ₹1.00
+                Currency = "inr"
+            });
+
+            return Ok(new
+            {
+                intent.Id,
+                intent.Status
+            });
         }
 
     }

@@ -4,7 +4,7 @@ namespace mytown.DataAccess.Interfaces
 {
     public interface IPaymentRepository
     {
-        Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId);
+        Task<Payments> AddPaymentAsync(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId);
 
         Task<Order> GetOrderWithShippingDetailsAsync(int orderId);
         //  Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod);

@@ -27,7 +27,7 @@ namespace mytown.DataAccess.Repositories
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
         }
 
-        public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId)
+        public async Task<Payments> AddPaymentAsync(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId)
         {
             var payment = new Payments
             {
@@ -40,7 +40,7 @@ namespace mytown.DataAccess.Repositories
             };
 
             _context.Payments.Add(payment);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return payment;
         }

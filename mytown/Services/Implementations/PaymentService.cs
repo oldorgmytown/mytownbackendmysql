@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Stripe;
+using Stripe.Climate;
 
 namespace mytown.Services.Implementations
 {
@@ -54,21 +55,36 @@ namespace mytown.Services.Implementations
             };
         }
 
-        public Payments AddPayment(int orderId, string stripePaymentIntentId, string paymentMethod)
+        public async Task<Payments> AddPaymentAsync(
+     int orderId,
+     string stripePaymentIntentId,
+     string paymentMethod)
         {
-            var order = _paymentRepo.GetOrderWithShippingDetailsAsync(orderId).Result;
+            var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
             if (order == null)
                 throw new Exception("Order not found");
 
+            // verify stripe payment first (important)
+            //var service = new PaymentIntentService();
+            //var intent = await service.GetAsync(stripePaymentIntentId);
+
+            //if (intent.Status != "succeeded")
+            //    throw new Exception("Payment not completed");
+
             decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 
-            var payment = _paymentRepo.AddPayment(orderId, totalAmount, paymentMethod, stripePaymentIntentId);
+            var payment = await _paymentRepo.AddPaymentAsync(
+                orderId,
+                totalAmount,
+                paymentMethod,
+                stripePaymentIntentId
+            );
 
-            // Mark order as paid
             order.OrderStatus = "Paid";
 
             return payment;
         }
+
 
 
 
@@ -119,6 +135,15 @@ namespace mytown.Services.Implementations
                 // 🔔 1 notification per store
                 var courierId = await _paymentRepo
                     .GetCourierIdByBranchIdAsync(shipping.BranchId);
+
+                //// 📧 SEND EMAIL TO COURIER (once per store order)
+                //await SendReadytoShipforCourier(
+                //    courierId.CourierEmail,
+                //    courierInfo.CourierServiceName,
+                //    storeOrderInfo.StoreOrderId,
+                //    storeOrderInfo.StoreName,
+                //    products
+                //);
 
                 await AddCourierNotificationAsync(
                     courierId: courierId,
