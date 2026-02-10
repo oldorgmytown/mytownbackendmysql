@@ -159,7 +159,7 @@ namespace mytown.DataAccess.Repositories
             // 🔹 Resolve delivery address ONCE (THIS IS THE KEY PART)
             string deliveryAddress;
 
-            if (selectedAltAddressId.HasValue)
+            if (selectedAltAddressId.HasValue && selectedAltAddressId.Value > 0)
             {
                 deliveryAddress = await _context.ShopperAlternateAddresses
                     .Where(a => a.AltAddressId == selectedAltAddressId.Value)
