@@ -737,7 +737,8 @@ namespace mytown.DataAccess.Repositories
             var finalIds = businessIds.Distinct().ToList();
 
             return _context.BusinessProfiles
-                .Where(bp => finalIds.Contains(bp.BusRegId))
+                .Where(bp => finalIds.Contains(bp.BusRegId)
+                 && bp.ProfileStatus == "Approved")
                 .ToList();
         }
 
