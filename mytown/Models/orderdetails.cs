@@ -38,6 +38,7 @@ namespace mytown.Models
         [JsonPropertyName("sku_id")]
         public int SkuId { get; set; }
 
+        [ForeignKey("SkuId")]
         public Sku_ProductVariant Variant { get; set; }
 
         [Required]

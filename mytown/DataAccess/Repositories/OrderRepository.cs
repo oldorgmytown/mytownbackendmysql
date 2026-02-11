@@ -141,7 +141,15 @@ namespace mytown.DataAccess.Repositories
                 return 0;
 
             // 2️⃣ Create Order
+                     
+
             decimal totalAmount = cartItems.Sum(c => c.ProductPrice * c.ProdQty);
+
+            // Normalize alternate address id
+            if (selectedAltAddressId.HasValue && selectedAltAddressId.Value <= 0)
+            {
+                selectedAltAddressId = null;
+            }
 
             var newOrder = new Order
             {
@@ -158,8 +166,9 @@ namespace mytown.DataAccess.Repositories
 
             // 🔹 Resolve delivery address ONCE (THIS IS THE KEY PART)
             string deliveryAddress;
+           
 
-            if (selectedAltAddressId.HasValue && selectedAltAddressId.Value > 0)
+            if (selectedAltAddressId.HasValue)
             {
                 deliveryAddress = await _context.ShopperAlternateAddresses
                     .Where(a => a.AltAddressId == selectedAltAddressId.Value)
@@ -193,14 +202,20 @@ namespace mytown.DataAccess.Repositories
             var groupedStores = cartItems.GroupBy(c => c.BusRegId);
             var storeOrders = new List<StoreOrder>();
 
+            // Shipping per store - New
+            var shippingMap = shippingSelections.ToDictionary(s => s.StoreId);
+
             foreach (var group in groupedStores)
             {
+                if (!shippingMap.TryGetValue(group.Key, out var shipping))
+                    throw new Exception($"Shipping selection missing for StoreId {group.Key}");
                 storeOrders.Add(new StoreOrder
                 {
                     OrderId = newOrder.OrderId,
                     StoreId = group.Key,
                     StoreTotalAmount = group.Sum(x => x.ProductPrice * x.ProdQty),
-                    Storeorder_Status = "Pending"
+                    Storeorder_Status = "Pending",
+                    CourierType = shipping.ShippingType // new added
                 });
             }
 
@@ -231,6 +246,7 @@ namespace mytown.DataAccess.Repositories
             {
                 OrderId = newOrder.OrderId,
                 ProductId = item.ProductId,
+                SkuId = item.SkuId,
                 StoreId = item.BusRegId,
                 Quantity = item.ProdQty,
                 Price = item.ProductPrice,
@@ -258,10 +274,20 @@ namespace mytown.DataAccess.Repositories
                     throw new Exception($"Courier branch not found for BranchId {shippingSelection.BranchId}");
 
                 // ✅ FETCH SERVICE (THIS IS THE FIX)
+
+                //convert Standard -- >Surface && Express --> Air
+                string dbShippingMode = shippingSelection.ShippingType.ToLower() switch
+                {
+                    "standard" => "Surface",
+                    "express" => "Air",
+                    _ => throw new Exception("Invalid shipping type")
+                };
+
                 var service = await _context.CourierBranchServices
-                    .FirstOrDefaultAsync(s =>
-                        s.BranchId == shippingSelection.BranchId &&
-                        s.ShippingMode == shippingSelection.ShippingType);
+                            .FirstOrDefaultAsync(s =>
+                                s.BranchId == shippingSelection.BranchId &&
+                                s.ShippingMode == dbShippingMode);
+
 
                 if (service == null)
                     throw new Exception("Courier service configuration not found.");

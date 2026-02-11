@@ -163,13 +163,12 @@ namespace mytown.DataAccess.Repositories
                     product_description = product.ProductDescription,
 
                     product_image =
-                    _context.ProductImages
-                        .Where(i =>
-                            (i.SkuId == sku.SkuId || i.ProductId == product.ProductId)
-                            && i.SortOrder == 1)
-                        .OrderByDescending(i => i.SkuId != null)
-                        .Select(i => i.FileName)
-                        .FirstOrDefault()!,
+                        _context.ProductImages
+                            .Where(i =>
+                                i.SkuId == sku.SkuId &&
+                                i.SortOrder == 1)
+                            .Select(i => i.FileName)
+                            .FirstOrDefault(),
 
                     // SKU-specific data
                     Sku_Id = sku.SkuId,
