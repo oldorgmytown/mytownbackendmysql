@@ -11,7 +11,7 @@ namespace mytown.Services.Interfaces
         Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId);
 
         // Save payment after Stripe confirms success
-        Task<Payments> AddPaymentAsync(int orderId, string stripePaymentIntentId, string paymentMethod);
+        Task<Payments> AddPaymentAsync(int orderId, string stripePaymentIntentId, string paymentMethod); //New
         // Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod);
 
         List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId);
