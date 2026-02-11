@@ -181,6 +181,7 @@ namespace mytown.DataAccess.Repositories
             var query =
         from bp in _context.BusinessProfiles
         where bp.BusinessLocation.Contains(location)
+        && bp.ProfileStatus == "approved"
         select new
         {
             BusinessProfile = bp,
@@ -401,7 +402,7 @@ namespace mytown.DataAccess.Repositories
 
             // 5. Get matching business profiles
             var stores = _context.BusinessProfiles
-                .Where(bp => finalBusinessIds.Contains(bp.BusRegId))
+                .Where(bp => finalBusinessIds.Contains(bp.BusRegId) && bp.ProfileStatus == "approved")
                 .ToList();
 
             // 6. Get matching products
@@ -738,7 +739,7 @@ namespace mytown.DataAccess.Repositories
 
             return _context.BusinessProfiles
                 .Where(bp => finalIds.Contains(bp.BusRegId)
-                 && bp.ProfileStatus == "Approved")
+                 && bp.ProfileStatus == "approved")
                 .ToList();
         }
 
