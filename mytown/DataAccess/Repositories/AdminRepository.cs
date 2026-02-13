@@ -698,7 +698,39 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
+        //courier tab
+        public async Task<List<CourierService>> GetAllCouriersAsync()
+        {
+            return await _context.CourierService.ToListAsync();
+        }
 
+        public async Task<AdminLocationCourierSummaryDto> GetCourierLocationSummaryAsync()
+        {
+            return new AdminLocationCourierSummaryDto
+            {
+                TotalCouriers = await _context.CourierService.CountAsync(),
+
+                TotalCountries = await _context.CourierService
+                    .Select(c => c.Country.Trim().ToLower())
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalStates = await _context.CourierService
+                    .Select(c => c.State.Trim().ToLower())
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalCities = await _context.CourierService
+                    .Select(c => c.City.Trim().ToLower())
+                    .Distinct()
+                    .CountAsync(),
+
+                TotalTowns = await _context.CourierService
+                    .Select(c => c.Town.Trim().ToLower())
+                    .Distinct()
+                    .CountAsync()
+            };
+        }
 
 
 

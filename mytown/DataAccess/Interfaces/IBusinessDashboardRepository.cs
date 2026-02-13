@@ -63,5 +63,13 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount);
 
+
+        //Notofication to courier -  Ready to ship 
+
+        Task<ShippingDetails?> GetShippingByStoreOrderIdAsync(int storeOrderId);
+        Task UpdateShippingStatusAsync(int storeOrderId, string status);
+        Task UpdateStoreOrderStatusAsync(int storeOrderId, string status);
+        Task AddCourierNotificationAsync(CourierDBNotifications notification);
+        Task SaveChangesAsync();
     }
 }

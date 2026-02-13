@@ -1,4 +1,5 @@
 ﻿using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 //using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
@@ -82,6 +83,41 @@ namespace mytown.Services.Implementations
         public async Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount = 5)
         {
             return await _repository.GetTopProductsAsync(storeId, topCount);
+        }
+
+        //Notification to coueir - Reday to ship 
+        public async Task MarkReadyToShipAsync(int storeOrderId)
+        {
+            // 1️⃣ Update shipping status
+            await _repository.UpdateShippingStatusAsync(
+                storeOrderId,
+                "Ready to Ship"
+            );
+
+            // 2️⃣ Update store order status (recommended)
+            await _repository.UpdateStoreOrderStatusAsync(
+                storeOrderId,
+                "Ready to Ship"
+            );
+
+            // 3️⃣ Get shipping to notify courier
+            var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
+            if (shipping == null)
+                return;
+
+            // 4️⃣ Create courier notification
+            var notification = new CourierDBNotifications
+            {
+                CourierId = shipping.CourierBranch.CourierId,
+                BranchId = shipping.BranchId,
+                Title = "Order Ready to Ship",
+                Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+            };
+
+            await _repository.AddCourierNotificationAsync(notification);
+
+            // 5️⃣ Persist everything
+            await _repository.SaveChangesAsync();
         }
     }
 

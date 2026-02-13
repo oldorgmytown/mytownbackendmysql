@@ -922,6 +922,43 @@ public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsyn
             .ToListAsync();
     }
 
+
+    // send notification to courier - Ready to ship
+
+    public async Task<ShippingDetails?> GetShippingByStoreOrderIdAsync(int storeOrderId)
+    {
+        return await _context.ShippingDetails
+            .Include(sd => sd.CourierBranch)
+            .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
+    }
+
+    public async Task UpdateShippingStatusAsync(int storeOrderId, string status)
+    {
+        var shipping = await GetShippingByStoreOrderIdAsync(storeOrderId);
+        if (shipping == null)
+            throw new Exception("Shipping details not found");
+
+        shipping.ShippingStatus = status;
+    }
+
+    public async Task UpdateStoreOrderStatusAsync(int storeOrderId, string status)
+    {
+        var storeOrder = await _context.StoreOrders
+            .FirstOrDefaultAsync(so => so.StoreOrderId == storeOrderId);
+
+        if (storeOrder != null)
+            storeOrder.Storeorder_Status = status;
+    }
+
+    public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
+    {
+        await _context.CourierDBNotifications.AddAsync(notification);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }
 
 

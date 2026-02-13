@@ -41,6 +41,10 @@ namespace mytown.Services.Interfaces
 
         Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount = 5);
 
+        //notification to coueir - ready to ship
+
+        Task MarkReadyToShipAsync(int storeOrderId);
+
 
     }
 }
