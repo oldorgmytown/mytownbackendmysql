@@ -76,7 +76,17 @@ namespace mytown.Models
         [JsonPropertyName("design")]
         public virtual Design? Design { get; set; }
 
-      
+        [Column("ProductStatus")]
+        public string ProductStatus { get; set; } = "Pending"; // Pending / Approved / Rejected
+
+
+        [Column("IsActive")]
+        public bool IsActive { get; set; } = false;               // Visible to shoppers or not
+        // New 13-2-26
+
+
+
+
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
 
