@@ -6,6 +6,6 @@
         public required string Password { get; init; }
 
         //  NEW
-        public required string Role { get; init; }  // Admin | Business | Shopper | Courier
+        public required string Role { get; init; }  // Admin | Business | Shopper | CourierHead | CourierBranch
     }
 }

@@ -12,5 +12,7 @@
         public string StoreContact { get; set; }
         public string TrackingId { get; set; }
         public string ShippingStatus { get; set; }
+
+
     }
 }

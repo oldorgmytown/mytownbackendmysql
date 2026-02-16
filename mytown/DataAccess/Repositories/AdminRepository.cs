@@ -187,39 +187,72 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        // Admin  - Approve, Reject, Block business profiles
+        // Admin  - Approve, Reject, Block business profiles .
+        // Then change products sttaus also. Approve, reject  - for the pending product sttaus
 
-        public async Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comments = null)
+        public async Task<bool> UpdateProfileStatusbyAdminAsync(
+    int busRegId,
+    string status,
+    string? comments = null)
         {
             var profile = await _context.BusinessProfiles
-      .Include(p => p.BusinessRegister) // Include the related BusinessRegister
-      .FirstOrDefaultAsync(p => p.BusRegId == busRegId);
+                .Include(p => p.BusinessRegister)
+                .FirstOrDefaultAsync(p => p.BusRegId == busRegId);
 
             if (profile == null)
                 return false;
 
             profile.ProfileStatus = status;
-            profile.ApprovedDate = status.ToLower() == "approved" ? DateTime.Now : profile.ApprovedDate;
 
-            _context.BusinessProfiles.Update(profile);
+            if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
+            {
+                profile.ApprovedDate = DateTime.Now;
 
-            //Save admin comments to admin_comments table
-    if (!string.IsNullOrEmpty(comments))
+                // ✅ Activate ONLY Pending products
+                await _context.products
+                    .Where(p => p.BusRegId == busRegId &&
+                                p.ProductStatus == "Pending")
+                    .ExecuteUpdateAsync(p => p
+                        .SetProperty(x => x.ProductStatus, "Approved")
+                        .SetProperty(x => x.IsActive, true));
+            }
+            else if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
+            {
+                // ❌ Reject ONLY Pending products
+                await _context.products
+                    .Where(p => p.BusRegId == busRegId &&
+                                p.ProductStatus == "Pending")
+                    .ExecuteUpdateAsync(p => p
+                        .SetProperty(x => x.ProductStatus, "Rejected")
+                        .SetProperty(x => x.IsActive, false));
+            }
+            else if (status.Equals("suspended", StringComparison.OrdinalIgnoreCase))
+            {
+                // 🚫 Suspend → ALL products inactive
+                await _context.products
+                    .Where(p => p.BusRegId == busRegId)
+                    .ExecuteUpdateAsync(p => p
+                        .SetProperty(x => x.IsActive, false));
+            }
+
+            // ✅ Save admin comments
+            if (!string.IsNullOrEmpty(comments))
             {
                 var adminComment = new AdminComment
                 {
                     BusRegId = busRegId,
                     Comments = comments,
-                    Status = status, // optionally save the new status in comments table too
+                    Status = status,
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now
                 };
 
                 await _context.AdminComments.AddAsync(adminComment);
             }
+
             await _context.SaveChangesAsync();
 
-            // 🔔 CREATE NOTIFICATION ONLY FOR APPROVED STATUS
+            // 🔔 Notification only for Approved
             if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
             {
                 var notification = new BusinessDBNotifications
@@ -235,20 +268,21 @@ namespace mytown.DataAccess.Repositories
                 await _context.SaveChangesAsync();
             }
 
-            // Now capture the business details
+            // 📧 Send email
             var business = profile.BusinessRegister;
             if (business != null)
             {
-                string businessName = business.BusinessName;
-                string username = business.BusinessUsername;
-                string email = business.BusEmail;
-
-                // Call your email sending logic here
-                await _emailService.SendBusinessStatusEmailAsync(email, username, businessName, status);
+                await _emailService.SendBusinessStatusEmailAsync(
+                    business.BusEmail,
+                    business.BusinessUsername,
+                    business.BusinessName,
+                    status);
             }
 
             return true;
         }
+
+
         public async Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginated(string status, int page, int pageSize)
         {
             var query = from br in _context.BusinessRegisters

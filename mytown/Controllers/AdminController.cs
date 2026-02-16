@@ -8,7 +8,7 @@ using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/admin")]
     [ApiController]
     public class AdminController : ControllerBase
@@ -104,7 +104,7 @@ namespace mytown.Controllers
             }
         }
 
-        [Authorize]
+    //    [Authorize]
         [HttpPost("updateprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateProfileStatusByAdmin(
             [FromQuery] int busRegId,
@@ -328,6 +328,19 @@ namespace mytown.Controllers
             }
         }
 
+        //courier tab
+        [HttpGet("Courierslist_Admindashboard")]
+        public async Task<IActionResult> GetCouriers()
+        {
+            var result = await _adminService.GetCouriersAsync();
+            return Ok(result);
+        }
 
+        [HttpGet("location-courier-summary")]
+        public async Task<IActionResult> GetSummary()
+        {
+            var result = await _adminService.GetLocationCourierSummaryAsync();
+            return Ok(result);
+        }
     }
 }

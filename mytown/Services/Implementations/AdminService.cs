@@ -139,5 +139,34 @@ namespace mytown.Services.Implementations
         }
 
 
+        //courier tab
+        public async Task<List<AdminCouriertabDto>> GetCouriersAsync()
+        {
+            var couriers = await _adminRepo.GetAllCouriersAsync();
+
+            return couriers.Select(c => new AdminCouriertabDto
+            {
+                CourierId = c.CourierId,
+                CourierServiceName = c.CourierServiceName,
+                CourierWebsiteName = c.CourierWebsiteName,
+                CourierEmail = c.CourierEmail,
+                CourierPhone = c.CourierPhone
+            }).ToList();
+        }
+
+        public async Task<AdminLocationCourierSummaryDto> GetLocationCourierSummaryAsync()
+        {
+            var summary = await _adminRepo.GetCourierLocationSummaryAsync();
+
+            return new AdminLocationCourierSummaryDto
+            {
+                TotalCouriers = summary.TotalCouriers,
+                TotalCountries = summary.TotalCountries,
+                TotalStates = summary.TotalStates,
+                TotalCities = summary.TotalCities,
+                TotalTowns = summary.TotalTowns
+            };
+        }
+
     }
 }

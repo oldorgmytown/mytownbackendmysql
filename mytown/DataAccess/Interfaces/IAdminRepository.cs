@@ -44,6 +44,12 @@ namespace mytown.DataAccess.Interfaces
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_DapperAsync();
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_EFAsync();
         Task TestConnectionAsync();
+
+        //Courier tab
+
+        Task<List<CourierService>> GetAllCouriersAsync();
+
+        Task<AdminLocationCourierSummaryDto> GetCourierLocationSummaryAsync();
     }
 }
 

@@ -16,27 +16,43 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<List<CourierOrderDto>> GetOrdersAsync(
-        int courierId,
-        string shippingStatus)
+     int courierId,
+     string shippingStatus)
         {
             return await _context.ShippingDetails
-                .Include(sd => sd.CourierBranch)
-                .Include(sd => sd.Order)
                 .Where(sd =>
                     sd.CourierBranch.CourierId == courierId &&
                     sd.ShippingStatus == shippingStatus
                 )
                 .Select(sd => new CourierOrderDto
                 {
+                    // 🔑 Store order
                     StoreOrderId = sd.StoreOrderId,
-                    TrackingId = sd.TrackingId,
-                    ShippingStatus = sd.ShippingStatus,
+
+                    // 🗓 Order date
+                    Orderdate = DateOnly.FromDateTime(
+                        sd.StoreOrder.Order.OrderDate
+                    ),
+
+                    // 🚚 ETA
                     EstimatedDeliveryDate =
-                        sd.Order.OrderDate.AddDays(sd.EstimatedDays)
+                        sd.StoreOrder.Order.OrderDate.AddDays(
+                            sd.EstimatedDays
+                        ),
+
+                    // 🏪 Store info
+                    StoreName = sd.StoreOrder.Store.BusinessName,
+                    StoreTown = sd.StoreOrder.Store.Town,
+                    StoreContact = sd.StoreOrder.Store.BusMobileNo,
+
+                    // 📦 Shipping
+                    TrackingId = sd.TrackingId,
+                    ShippingStatus = sd.ShippingStatus
                 })
                 .OrderByDescending(x => x.StoreOrderId)
                 .ToListAsync();
         }
+
 
         public async Task UpdateTrackingAndStatusAsync(
             int storeOrderId,
@@ -82,24 +98,18 @@ namespace mytown.DataAccess.Repositories
                 .Include(so => so.OrderDetails)
                     .ThenInclude(od => od.Variant)
                         .ThenInclude(v => v.Images)
-                .Include(so => so.Order.ShippingDetails)
-                    .ThenInclude(sd => sd.CourierBranch)
-                        .ThenInclude(cb => cb.CourierService)
                 .FirstOrDefaultAsync(so => so.StoreOrderId == storeOrderId);
 
             if (storeOrder == null)
                 return null;
 
-            var shipping = storeOrder.Order.ShippingDetails
-                .FirstOrDefault(sd => sd.StoreOrderId == storeOrderId);
+            var shipping = await _context.ShippingDetails
+                .Include(sd => sd.CourierBranch)
+                    .ThenInclude(cb => cb.CourierService)
+                .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
 
-            // 🔹 Estimate days logic
-            int estimateDays =
-                shipping?.CourierBranch?.EstimateDays
-                ?? shipping?.EstimatedDays
-                ?? 0;
+            int estimateDays = shipping?.EstimatedDays ?? 0;
 
-            // 🔹 Estimated delivery date
             DateTime estimatedDeliveryDate =
                 storeOrder.Order.OrderDate.AddDays(estimateDays);
 
@@ -125,12 +135,9 @@ namespace mytown.DataAccess.Repositories
                 ShippingCost = shippingCost,
                 ShippingAddress = shipping?.DeliveryAddress,
 
-                // ✅ CALCULATED
                 EstimatedDeliveryDate = estimatedDeliveryDate,
 
-                // ✅ FROM COURIER SERVICE
                 CourierServiceName = shipping?.CourierBranch?.CourierService?.CourierServiceName,
-
                 TrackingId = shipping?.TrackingId,
 
                 Products = storeOrder.OrderDetails.Select(od => new CourierOrderProductDto
@@ -142,7 +149,7 @@ namespace mytown.DataAccess.Repositories
                     Quantity = od.Quantity,
 
                     VariantImage = od.Variant.Images
-                        .Where(i => i.SortOrder == 1)
+                        .OrderBy(i => i.SortOrder)
                         .Select(i => i.FileName)
                         .FirstOrDefault(),
 
@@ -157,7 +164,6 @@ namespace mytown.DataAccess.Repositories
                 FinalTotalAmount = productTotal + shippingCost
             };
         }
-
 
         public async Task<CourierService> GetCourierWithBranchesAsync(int courierId)
         {

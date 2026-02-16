@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/business/profile")]
     [ApiController]
   public class BusinessProfileController : ControllerBase
