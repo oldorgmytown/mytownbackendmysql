@@ -200,5 +200,18 @@ namespace mytown.Controllers
 
             return Ok(new { code = 200, data = productDetails });
         }
+
+        //----Add to wishlist diretly from product detail page  ------------
+
+        [HttpPost("addtoWishlistDirectly")]
+        public async Task<IActionResult> AddToWishlist([FromBody] WishlistRequestDto request)
+        {
+            await _cartService.AddOrMoveToWishlistdirectlyAsync(
+                request.ShopperId,
+                request.ProductId,
+                request.SkuId);
+
+            return Ok("Moved to wishlist");
+        }
     }
 }

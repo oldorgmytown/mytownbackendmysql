@@ -28,6 +28,10 @@ namespace mytown.DataAccess.Interfaces
         //get prodcut and variant details for cart
         Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId);
 
+        //add directlt to wishlist
+
+        Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId);
+
 
 
     }

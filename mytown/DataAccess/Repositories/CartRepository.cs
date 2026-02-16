@@ -26,7 +26,7 @@ namespace mytown.DataAccess.Repositories
                     c.ProductId == cartItem.ProductId &&
                     c.SkuId == cartItem.SkuId &&
                     c.BusRegId == cartItem.BusRegId &&
-                    c.ShopperRegId == cartItem.ShopperRegId &&
+                    c.ShopperRegId == cartItem.ShopperRegId &&                   
                     c.orderstatus == "cart");
 
             if (existingCartItem != null)
@@ -247,6 +247,63 @@ namespace mytown.DataAccess.Repositories
             }
             return false;
         }
+
+        //Add to wishlist directly from prodcut detail page
+
+        public async Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
+        {
+            // Fetch product with validation
+            var product = await _context.products
+                .FirstOrDefaultAsync(p =>
+                    p.ProductId == productId &&
+                    p.ProductStatus == "Approved" &&
+                    p.IsActive == true);
+
+            if (product == null)
+                throw new Exception("Product not available");
+
+            // Fetch SKU
+            var sku = await _context.Sku_ProductVariants
+                .FirstOrDefaultAsync(s => s.SkuId == skuId && s.ProductId == productId);
+
+            if (sku == null)
+                throw new Exception("SKU not found");
+
+            // Decide price (discount first)
+            decimal finalPrice = sku.DiscountPrice ?? sku.Sku_Cost;
+
+            var existingItem = await _context.addtocart
+                .FirstOrDefaultAsync(x =>
+                    x.ShopperRegId == shopperId &&
+                    x.ProductId == productId &&
+                    x.SkuId == skuId);
+
+            if (existingItem != null)
+            {
+                existingItem.orderstatus = "wishlist";
+            }
+            else
+            {
+                var newItem = new AddToCart
+                {
+                    ShopperRegId = shopperId,
+                    ProductId = productId,
+                    SkuId = skuId,
+                    ProdQty = 1,
+                    ProductPrice = finalPrice, // ✅ Correct source
+                    BusRegId = product.BusRegId,
+                    BuscatId = product.BuscatId,
+                    ProdSubcatId = product.ProdSubcatId,
+                    orderstatus = "wishlist"
+                };
+
+                _context.addtocart.Add(newItem);
+            }
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
 
         public async Task<bool> MoveBackToCart(int cartId)
         {

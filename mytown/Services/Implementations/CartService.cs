@@ -48,5 +48,9 @@ namespace mytown.Services.Implementations
 
         public Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId)
             => _repo.GetProductAndVariantforCartAsync(productId);
+
+        public Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
+           => _repo.AddOrMoveToWishlistdirectlyAsync(shopperId, productId, skuId);
+    
     }
 }
