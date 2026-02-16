@@ -76,11 +76,13 @@ namespace mytown.Models
         [JsonPropertyName("design")]
         public virtual Design? Design { get; set; }
 
-        [Column("ProductStatus")]
+        //Commiting again for the error - 16/02/26
+
+        [Column("product_status")]
         public string ProductStatus { get; set; } = "Pending"; // Pending / Approved / Rejected
 
 
-        [Column("IsActive")]
+        [Column("is_active")]
         public bool IsActive { get; set; } = false;               // Visible to shoppers or not
         // New 13-2-26
 

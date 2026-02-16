@@ -188,8 +188,7 @@ namespace mytown.DataAccess.Repositories
 
 
         // Admin  - Approve, Reject, Block business profiles .
-        // Then change products sttaus also. Approve, reject  - for the pending product sttaus
-
+        // Then change products status also. Approve, reject  - for the pending product status - 16/02/26
         public async Task<bool> UpdateProfileStatusbyAdminAsync(
     int busRegId,
     string status,
@@ -208,7 +207,7 @@ namespace mytown.DataAccess.Repositories
             {
                 profile.ApprovedDate = DateTime.Now;
 
-                // ✅ Activate ONLY Pending products
+                //  Activate ONLY Pending products - added new
                 await _context.products
                     .Where(p => p.BusRegId == busRegId &&
                                 p.ProductStatus == "Pending")
@@ -218,7 +217,7 @@ namespace mytown.DataAccess.Repositories
             }
             else if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
             {
-                // ❌ Reject ONLY Pending products
+                //  Reject ONLY Pending products - added new
                 await _context.products
                     .Where(p => p.BusRegId == busRegId &&
                                 p.ProductStatus == "Pending")
@@ -228,14 +227,14 @@ namespace mytown.DataAccess.Repositories
             }
             else if (status.Equals("suspended", StringComparison.OrdinalIgnoreCase))
             {
-                // 🚫 Suspend → ALL products inactive
+                //  Suspend → ALL products inactive - added new
                 await _context.products
                     .Where(p => p.BusRegId == busRegId)
                     .ExecuteUpdateAsync(p => p
                         .SetProperty(x => x.IsActive, false));
             }
 
-            // ✅ Save admin comments
+            //  Save admin comments
             if (!string.IsNullOrEmpty(comments))
             {
                 var adminComment = new AdminComment
