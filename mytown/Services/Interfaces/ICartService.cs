@@ -28,5 +28,7 @@ namespace mytown.Services.Interfaces
         Task<ShopperRegister> GetShopperDetails(int shopperRegId);
 
         Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId);
+
+        Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId);
     }
 }
