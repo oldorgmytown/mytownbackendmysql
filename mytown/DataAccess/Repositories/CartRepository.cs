@@ -249,10 +249,9 @@ namespace mytown.DataAccess.Repositories
         }
 
         //Add to wishlist directly from prodcut detail page
-
         public async Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
         {
-            // Fetch product with validation
+            // Validate Product
             var product = await _context.products
                 .FirstOrDefaultAsync(p =>
                     p.ProductId == productId &&
@@ -262,35 +261,43 @@ namespace mytown.DataAccess.Repositories
             if (product == null)
                 throw new Exception("Product not available");
 
-            // Fetch SKU
+            // Validate SKU
             var sku = await _context.Sku_ProductVariants
                 .FirstOrDefaultAsync(s => s.SkuId == skuId && s.ProductId == productId);
 
             if (sku == null)
                 throw new Exception("SKU not found");
 
-            // Decide price (discount first)
             decimal finalPrice = sku.DiscountPrice ?? sku.Sku_Cost;
 
+            // Check ONLY cart/wishlist records
             var existingItem = await _context.addtocart
                 .FirstOrDefaultAsync(x =>
                     x.ShopperRegId == shopperId &&
                     x.ProductId == productId &&
-                    x.SkuId == skuId);
+                    x.SkuId == skuId &&
+                    (x.orderstatus == "cart" || x.orderstatus == "wishlist"));
 
             if (existingItem != null)
             {
-                existingItem.orderstatus = "wishlist";
+                // If cart → convert to wishlist
+                if (existingItem.orderstatus == "cart")
+                {
+                    existingItem.orderstatus = "wishlist";
+                }
+                
             }
             else
             {
+                // Even if ordered/paid status exists → create NEW wishlist row
+
                 var newItem = new AddToCart
                 {
                     ShopperRegId = shopperId,
                     ProductId = productId,
                     SkuId = skuId,
                     ProdQty = 1,
-                    ProductPrice = finalPrice, // ✅ Correct source
+                    ProductPrice = finalPrice,
                     BusRegId = product.BusRegId,
                     BuscatId = product.BuscatId,
                     ProdSubcatId = product.ProdSubcatId,
@@ -303,6 +310,7 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
             return true;
         }
+
 
 
         public async Task<bool> MoveBackToCart(int cartId)
