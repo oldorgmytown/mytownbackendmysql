@@ -118,7 +118,7 @@ namespace mytown.Services.Implementations
         {
             var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
 
-            // ✅ ONE notification/email per StoreOrder
+            // ONE notification/email per StoreOrder
             var storeWiseShipments = shippingDetails
                 .GroupBy(s => s.StoreOrderId)
                 .Select(g => g.First()) // representative row
@@ -126,24 +126,17 @@ namespace mytown.Services.Implementations
 
             foreach (var shipping in storeWiseShipments)
             {
-                // 📧 1 email per store
+                // 1 email per store
                 await SendCourierEmailAsync(
                     shipping.BranchId,
                     shipping.StoreOrderId   // IMPORTANT: store-level
                 );
 
-                // 🔔 1 notification per store
+                // 1 notification per store
                 var courierId = await _paymentRepo
                     .GetCourierIdByBranchIdAsync(shipping.BranchId);
 
-                //// 📧 SEND EMAIL TO COURIER (once per store order)
-                //await SendReadytoShipforCourier(
-                //    courierId.CourierEmail,
-                //    courierInfo.CourierServiceName,
-                //    storeOrderInfo.StoreOrderId,
-                //    storeOrderInfo.StoreName,
-                //    products
-                //);
+               
 
                 await AddCourierNotificationAsync(
                     courierId: courierId,
@@ -170,8 +163,8 @@ namespace mytown.Services.Implementations
                 CreatedDate = DateTime.UtcNow
             };
 
-            _paymentRepo.AddCourierNotificationAsync(notification);
-            await _paymentRepo.SaveChangesAsync();
+           await _paymentRepo.AddCourierNotificationAsync(notification);
+           // await _paymentRepo.SaveChangesAsync();
         }
 
     }

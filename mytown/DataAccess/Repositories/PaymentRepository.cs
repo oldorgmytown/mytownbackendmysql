@@ -169,11 +169,18 @@ namespace mytown.DataAccess.Repositories
         }
 
        
+        //public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
+        //{
+        //    _context.CourierDBNotifications.Add(notification);
+        //    await _context.SaveChangesAsync();
+        //}
+
         public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
         {
-            _context.CourierDBNotifications.Add(notification);
+            await _context.CourierDBNotifications.AddAsync(notification);
             await _context.SaveChangesAsync();
         }
+
 
         public List<(string ProductName, int Quantity)> GetProductsByStoreOrderId(int storeOrderId)
         {
