@@ -52,12 +52,12 @@ namespace mytown.Controllers
         }
 
         [HttpDelete("removefrom_wishlist")]
-        public async Task<IActionResult> RemoveFromWishlist(int cartId)
+        public async Task<IActionResult> RemoveFromWishlist(int shopperId, int productId, int skuId)
         {
-            if (cartId <= 0)
-                return BadRequest(new { code = 400, message = "Invalid cart id" });
+            if (shopperId <= 0)
+                return BadRequest(new { code = 400, message = "Invalid Shopper id" });
 
-            var removed = await _shopperdashboardService.RemoveFromWishlistAsync(cartId);
+            var removed = await _shopperdashboardService.RemoveFromWishlistAsync(shopperId, productId, skuId);
 
             if (!removed)
                 return NotFound(new { code = 404, message = "Wishlist item not found" });

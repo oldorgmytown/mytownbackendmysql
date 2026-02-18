@@ -11,6 +11,10 @@
     public string product_image { get; set; }
     public decimal product_cost { get; set; }
 
+    // new to check product avaliability based on product status
+    public bool IsProductAvailable { get; set; }
+
+
     // New Fields
     public string StoreName { get; set; }
     public string StoreLocation { get; set; }

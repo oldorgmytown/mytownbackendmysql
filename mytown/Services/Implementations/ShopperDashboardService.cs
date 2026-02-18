@@ -37,9 +37,9 @@ namespace mytown.Services.Implementations
             return await _shopperdashboardRepository.GetWishlistAsync(shopperId);
         }
         //remove fom wishlist
-        public async Task<bool> RemoveFromWishlistAsync(int cartId)
+        public async Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId)
         {
-            return await _shopperdashboardRepository.RemoveFromWishlistAsync(cartId);
+            return await _shopperdashboardRepository.RemoveFromWishlistAsync(shopperId,productId, skuId);
         }
        
         public async Task<ShopperOrderSummaryDto> GetShopperOrderSummaryAsync(int shopperRegId)

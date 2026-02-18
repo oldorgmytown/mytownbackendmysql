@@ -67,7 +67,7 @@ namespace mytown.DataAccess.Repositories
             if (orderData == null)
                 return null;
 
-            // ✅ PRODUCTS WITH PRICE + QTY + IMAGE
+            // PRODUCTS WITH PRICE + QTY + IMAGE
             var products = await (
                 from od in _context.OrderDetails
                 join pr in _context.products on od.ProductId equals pr.ProductId
@@ -147,6 +147,8 @@ namespace mytown.DataAccess.Repositories
                     on od.StoreId equals s.BusRegId
                 where o.ShopperRegId == shopperRegId
                       && pay.PaymentStatus == "Paid"
+                       && pr.ProductStatus == "Approved"
+                       && pr.IsActive == true
                 group new { o, od, pr, sku, s } by new
                 {
                     od.ProductId,
@@ -221,10 +223,16 @@ namespace mytown.DataAccess.Repositories
                     CartId = c.CartId,                 // 🔑 IMPORTANT for remove/move
                     ProductId = p.ProductId,
                     ProductName = p.ProductName,
+                    SkuId = c.SkuId,
                     VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
                     Price = c.ProductPrice,
                     StoreId = s.BusRegId,
-                    StoreName = s.BusinessName
+                    StoreName = s.BusinessName,
+                    // 🔹 NEW
+                    IsProductAvailable =
+                        p.ProductStatus == "Approved"
+                        && p.IsActive == true
+                       
                 }
             ).ToListAsync();
         }
@@ -232,29 +240,35 @@ namespace mytown.DataAccess.Repositories
 
         //Remove from wishlist
 
-       
-        public async Task<bool> RemoveFromWishlistAsync(int cartId)
+
+        public async Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId)
         {
             var item = await _context.addtocart
-                .FirstOrDefaultAsync(x => x.CartId == cartId && x.orderstatus == "wishlist");
+                .FirstOrDefaultAsync(x =>
+                    x.ShopperRegId == shopperId &&
+                    x.ProductId == productId &&
+                    x.SkuId == skuId &&
+                    x.orderstatus == "wishlist");
 
             if (item == null)
                 return false;
 
             _context.addtocart.Remove(item);
             await _context.SaveChangesAsync();
+
             return true;
         }
 
         // 1️⃣ Wishlist (Saved items) count
         public async Task<int> GetWishlistCountAsync(int shopperRegId)
         {
-            return await _context.OrderDetails
-                .Where(od =>
-                    od.Order.ShopperRegId == shopperRegId &&
-                    od.Order.OrderStatus == "Wishlist")
+            return await _context.addtocart
+                .Where(x =>
+                    x.ShopperRegId == shopperRegId &&
+                    x.orderstatus == "wishlist")
                 .CountAsync();
         }
+
 
         // 2️⃣ Current orders count (distinct orders)
         public async Task<int> GetCurrentOrdersCountAsync(int shopperRegId)

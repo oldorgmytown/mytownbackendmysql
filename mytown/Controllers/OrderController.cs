@@ -23,14 +23,22 @@ namespace mytown.Controllers
         [HttpPost("CreateOrders")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequestddto request)
         {
-            // var orderId = await _service.CreateOrderAsync(request.ShopperRegId, request.ShippingSelections);
-            var orderId = await _service.CreateOrderAsync(request.ShopperRegId, request.SelectedAltAddressId, request.ShippingSelections);
-     
- 
-            if (orderId == 0)
-                return BadRequest("No items in cart.");
+            try
+            {
+                var orderId = await _service.CreateOrderAsync(
+                    request.ShopperRegId,
+                    request.SelectedAltAddressId,
+                    request.ShippingSelections);
 
-            return Ok(new { Message = "Order placed successfully", OrderId = orderId });
+                if (orderId == 0)
+                    return BadRequest("No items in cart.");
+
+                return Ok(new { Message = "Order placed successfully", OrderId = orderId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("CreateOrder")]

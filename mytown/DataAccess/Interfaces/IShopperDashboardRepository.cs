@@ -14,7 +14,7 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId);
         //Remove from wishliast
-        Task<bool> RemoveFromWishlistAsync(int cartId);
+        Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId);
 
         Task<int> GetWishlistCountAsync(int shopperRegId);
     

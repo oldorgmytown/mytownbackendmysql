@@ -222,7 +222,8 @@ namespace mytown.DataAccess.Repositories
             var sinceDate = DateTime.UtcNow.AddDays(-days);
 
             var productDtos = await _context.ShopperProductRecentViews
-                .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate)
+                .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate && v.Product.IsActive
+                    && v.Product.ProductStatus == "Approved")
                 .OrderByDescending(v => v.LastViewedAt)
                 .Include(v => v.Product)
                     .ThenInclude(p => p.BusinessRegister)

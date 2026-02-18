@@ -182,7 +182,12 @@ namespace mytown.DataAccess.Repositories
                     StoreId = storeProfile.BusRegId,
                     StoreName = storeProfile.BusinessName,
                     StoreLocation = storeProfile.BusinessLocation,
-                    StoreLogo = storeProfile.LogoPath
+                    StoreLogo = storeProfile.LogoPath,
+                    // 🔹 NEW
+                    IsProductAvailable =
+                        product.ProductStatus == "Approved"
+                        && product.IsActive == true
+                        && storeProfile.ProfileStatus == "approved"
                 }
             ).ToListAsync();
 

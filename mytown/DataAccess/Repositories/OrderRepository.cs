@@ -140,8 +140,31 @@ namespace mytown.DataAccess.Repositories
             if (!cartItems.Any())
                 return 0;
 
+            // NEW-  VALIDATE PRODUCT & STORE STATUS
+
+            var productIds = cartItems.Select(c => c.ProductId).Distinct().ToList();
+
+            var invalidItems = await (
+                from p in _context.products
+                join bp in _context.BusinessProfiles
+                    on p.BusRegId equals bp.BusRegId
+                where productIds.Contains(p.ProductId)
+                      && (
+                            p.ProductStatus != "Approved"
+                            || !p.IsActive
+                            || bp.ProfileStatus != "approved"
+                         )
+                select p.ProductId
+            ).ToListAsync();
+
+            if (invalidItems.Any())
+            {
+                throw new Exception("One or more products are no longer available.");
+            }
+
+
             // 2️⃣ Create Order
-                     
+
 
             decimal totalAmount = cartItems.Sum(c => c.ProductPrice * c.ProdQty);
 
@@ -164,7 +187,7 @@ namespace mytown.DataAccess.Repositories
             _context.Orders.Add(newOrder);
             await _context.SaveChangesAsync();
 
-            // 🔹 Resolve delivery address ONCE (THIS IS THE KEY PART)
+            // Resolve delivery address ONCE (THIS IS THE KEY PART)
             string deliveryAddress;
            
 
@@ -302,7 +325,7 @@ namespace mytown.DataAccess.Repositories
                     TrackingId = "",
                     ShippingStatus = "In Progress",
 
-                    //  THIS IS WHAT YOU ASKED FOR
+                    //  added
                     DeliveryAddress = deliveryAddress
                 };
 

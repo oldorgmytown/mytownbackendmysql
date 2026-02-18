@@ -12,7 +12,7 @@ namespace mytown.Services.Interfaces
         Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId);
         // Remove from wishlist
       
-        Task<bool> RemoveFromWishlistAsync(int cartId);
+        Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId);
 
         Task<ShopperOrderSummaryDto> GetShopperOrderSummaryAsync(int shopperRegId);
 

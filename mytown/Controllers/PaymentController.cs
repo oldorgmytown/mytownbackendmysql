@@ -6,7 +6,7 @@ using Stripe;
 
 namespace mytown.Controllers
 {
-    [Authorize]
+   // [Authorize]
     [Route("api/shoppingcart/payment")]
     [ApiController]
     public class PaymentController : ControllerBase
@@ -118,21 +118,7 @@ namespace mytown.Controllers
 
             // 2️⃣ One loop = one store
             await _paymentService.ProcessPostPaymentAsync(model.OrderId);
-
-            //// Shipping emails
-            //var shippingDetails = _paymentService.GetShippingDetailsByOrderId(model.OrderId);
-            //foreach (var shipping in shippingDetails)
-            //{
-            //    await _paymentService.SendCourierEmailAsync(shipping.BranchId, shipping.ShippingDetailId);
-
-            //    // 2️⃣ Courier notification
-            //    await _paymentService.AddCourierNotificationAsync(
-            //        courierId: 1,   // from branch → courier
-            //        branchId: shipping.BranchId,
-            //        title: "New Order Assigned",
-            //        message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
-            //    );
-            //}
+           
 
             return Ok(new { message = "Payment successful!", paymentId = payment.PaymentId });
         }

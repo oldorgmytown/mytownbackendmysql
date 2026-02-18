@@ -442,7 +442,9 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
         {
             return await _context.Sku_ProductVariants
-       .Where(v => v.Discount != null && v.Discount > 0) // only discounted variants
+       .Where(v => v.Discount != null && v.Discount > 0 &&
+    v.Product.ProductStatus == "Approved" &&
+    v.Product.IsActive) // only discounted variants
        .Include(v => v.Images)
        .Include(v => v.Product)
            .ThenInclude(p => p.BusinessRegister)
@@ -513,7 +515,9 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId)
         {
             return await _context.Sku_ProductVariants
-        .Where(v => v.Product.ProdSubcatId == subCategoryId)
+        .Where(v => v.Product.ProdSubcatId == subCategoryId &&
+            v.Product.ProductStatus == "Approved" &&
+            v.Product.IsActive)
         .Include(v => v.Images)
         .Include(v => v.Product)
             .ThenInclude(p => p.BusinessRegister)
@@ -607,6 +611,7 @@ namespace mytown.DataAccess.Repositories
                 where bp.BusinessLocation != null && bp.BusinessLocation.Contains(location)
                 join p in _context.products on bp.BusRegId equals p.BusRegId
                 join v in _context.Sku_ProductVariants on p.ProductId equals v.ProductId
+                where p.ProductStatus == "Approved" && p.IsActive
                 select new { Product = p, Variant = v, Store = bp };
 
             var result = await query
