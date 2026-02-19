@@ -69,6 +69,9 @@ namespace mytown.Models
 
             public DbSet<CourierBranchService> CourierBranchServices { get; set; } // latest table
 
+            public DbSet<Wishlist> Wishlist { get; set; }// new
+
+
 
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)

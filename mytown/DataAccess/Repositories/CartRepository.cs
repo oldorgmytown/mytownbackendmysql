@@ -26,7 +26,9 @@ namespace mytown.DataAccess.Repositories
                     c.ProductId == cartItem.ProductId &&
                     c.SkuId == cartItem.SkuId &&
                     c.BusRegId == cartItem.BusRegId &&
-                    c.ShopperRegId == cartItem.ShopperRegId &&                   
+                    c.ShopperRegId == cartItem.ShopperRegId && 
+                    c.BuscatId == cartItem.BuscatId &&
+                    c.ProdSubcatId == cartItem.ProdSubcatId &&
                     c.orderstatus == "cart");
 
             if (existingCartItem != null)
@@ -273,46 +275,30 @@ namespace mytown.DataAccess.Repositories
             if (sku == null)
                 throw new Exception("SKU not found");
 
-            decimal finalPrice = sku.DiscountPrice ?? sku.Sku_Cost;
+            // Check if already in wishlist
+            var exists = await _context.Wishlist
+                .AnyAsync(w =>
+                    w.ShopperRegId == shopperId &&
+                    w.ProductId == productId &&
+                    w.SkuId == skuId);
 
-            // Check ONLY cart/wishlist records
-            var existingItem = await _context.addtocart
-                .FirstOrDefaultAsync(x =>
-                    x.ShopperRegId == shopperId &&
-                    x.ProductId == productId &&
-                    x.SkuId == skuId &&
-                    (x.orderstatus == "cart" || x.orderstatus == "wishlist"));
+            if (exists)
+                return false; // Already exists
 
-            if (existingItem != null)
+            var newWishlistItem = new Wishlist
             {
-                // If cart → convert to wishlist
-                if (existingItem.orderstatus == "cart")
-                {
-                    existingItem.orderstatus = "wishlist";
-                }
-                
-            }
-            else
-            {
-                // Even if ordered/paid status exists → create NEW wishlist row
+                ShopperRegId = shopperId,
+                ProductId = productId,
+                SkuId = skuId,
+                BusRegId = product.BusRegId,
+                BuscatId = product.BuscatId,
+                ProdSubcatId = product.ProdSubcatId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-                var newItem = new AddToCart
-                {
-                    ShopperRegId = shopperId,
-                    ProductId = productId,
-                    SkuId = skuId,
-                    ProdQty = 1,
-                    ProductPrice = finalPrice,
-                    BusRegId = product.BusRegId,
-                    BuscatId = product.BuscatId,
-                    ProdSubcatId = product.ProdSubcatId,
-                    orderstatus = "wishlist"
-                };
-
-                _context.addtocart.Add(newItem);
-            }
-
+            _context.Wishlist.Add(newWishlistItem);
             await _context.SaveChangesAsync();
+
             return true;
         }
 

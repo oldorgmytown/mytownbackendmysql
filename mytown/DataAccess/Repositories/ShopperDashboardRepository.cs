@@ -26,7 +26,7 @@ namespace mytown.DataAccess.Repositories
                 join sd in _context.ShippingDetails
                     on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                      && sd.ShippingStatus != "In Progress"
+                      && sd.ShippingStatus == "In Progress"
                 orderby o.OrderDate descending
                 select new CurrentOrderDto
                 {
@@ -198,41 +198,51 @@ namespace mytown.DataAccess.Repositories
         public async Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId)
         {
             return await (
-                from c in _context.addtocart
-                join p in _context.products on c.ProductId equals p.ProductId
-                join s in _context.BusinessRegisters on c.BusRegId equals s.BusRegId
+                from w in _context.Wishlist
+
+                join p in _context.products
+                    on w.ProductId equals p.ProductId
+
+                join s in _context.BusinessRegisters
+                    on w.BusRegId equals s.BusRegId
+
+                join sku in _context.Sku_ProductVariants
+                    on w.SkuId equals sku.SkuId
 
                 // 🔹 SKU image (SortOrder = 1)
                 join skuImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1)
-                    on c.SkuId equals skuImg.SkuId into skuImgJoin
+                    on w.SkuId equals skuImg.SkuId into skuImgJoin
                 from skuImg in skuImgJoin.DefaultIfEmpty()
 
-                    // 🔹 Product image fallback
+                    // 🔹 Product image fallback (no SKU image)
                 join prodImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1 && i.SkuId == null)
                     on p.ProductId equals prodImg.ProductId into prodImgJoin
                 from prodImg in prodImgJoin.DefaultIfEmpty()
 
-                where c.ShopperRegId == shopperId
-                      && c.orderstatus == "wishlist"
+                where w.ShopperRegId == shopperId
 
-                orderby c.CartId descending   // acts as AddedOn
+                orderby w.WishlistId descending   // acts as AddedOn
+
                 select new WishlistItemDto
                 {
-                    CartId = c.CartId,                 // 🔑 IMPORTANT for remove/move
+                    WishlistId = w.WishlistId,  
                     ProductId = p.ProductId,
                     ProductName = p.ProductName,
-                    SkuId = c.SkuId,
+                    SkuId = w.SkuId,
+
                     VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
-                    Price = c.ProductPrice,
+
+                    // Dynamic price (always latest)
+                    Price = sku.DiscountPrice ?? sku.Sku_Cost,
+
                     StoreId = s.BusRegId,
                     StoreName = s.BusinessName,
-                    // 🔹 NEW
+
                     IsProductAvailable =
                         p.ProductStatus == "Approved"
                         && p.IsActive == true
-                       
                 }
             ).ToListAsync();
         }
@@ -243,17 +253,16 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId)
         {
-            var item = await _context.addtocart
-                .FirstOrDefaultAsync(x =>
-                    x.ShopperRegId == shopperId &&
-                    x.ProductId == productId &&
-                    x.SkuId == skuId &&
-                    x.orderstatus == "wishlist");
+            var item = await _context.Wishlist
+        .FirstOrDefaultAsync(w =>
+            w.ShopperRegId == shopperId &&
+            w.ProductId == productId &&
+            w.SkuId == skuId);
 
             if (item == null)
                 return false;
 
-            _context.addtocart.Remove(item);
+            _context.Wishlist.Remove(item);
             await _context.SaveChangesAsync();
 
             return true;
@@ -262,12 +271,11 @@ namespace mytown.DataAccess.Repositories
         // 1️⃣ Wishlist (Saved items) count
         public async Task<int> GetWishlistCountAsync(int shopperRegId)
         {
-            return await _context.addtocart
-                .Where(x =>
-                    x.ShopperRegId == shopperRegId &&
-                    x.orderstatus == "wishlist")
+            return await _context.Wishlist
+                .Where(w => w.ShopperRegId == shopperRegId)
                 .CountAsync();
         }
+
 
 
         // 2️⃣ Current orders count (distinct orders)
@@ -293,7 +301,7 @@ namespace mytown.DataAccess.Repositories
             return await _context.Orders
                 .Where(o =>
                     o.ShopperRegId == shopperRegId &&
-                    o.OrderStatus != "Wishlist")
+                    o.OrderStatus != "Pending")
                 .CountAsync();
         }
 

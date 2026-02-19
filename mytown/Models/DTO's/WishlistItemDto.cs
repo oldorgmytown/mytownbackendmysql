@@ -2,7 +2,7 @@
 {
     public class WishlistItemDto
     {
-        public int CartId { get; set; }
+        public int WishlistId { get; set; }
 
         public int ProductId { get; set; }
         public string ProductName { get; set; }

@@ -217,13 +217,12 @@ namespace mytown.DataAccess.Repositories
             }
             else if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
             {
-                //  Reject ONLY Pending products - added new
-                await _context.products
-                    .Where(p => p.BusRegId == busRegId &&
-                                p.ProductStatus == "Pending")
-                    .ExecuteUpdateAsync(p => p
-                        .SetProperty(x => x.ProductStatus, "Rejected")
-                        .SetProperty(x => x.IsActive, false));
+                //Reject all products for that busregid
+                        await _context.products
+               .Where(p => p.BusRegId == busRegId)
+               .ExecuteUpdateAsync(p => p
+                   .SetProperty(x => x.ProductStatus, "Rejected")
+                   .SetProperty(x => x.IsActive, false));
             }
             else if (status.Equals("suspended", StringComparison.OrdinalIgnoreCase))
             {
