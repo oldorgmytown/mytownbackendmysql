@@ -466,7 +466,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate >= today &&
                 x.Order.OrderDate < today.AddDays(1) &&
-                x.Order.OrderStatus == "In Progress")
+                x.Order.OrderStatus == "Paid")
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
@@ -488,7 +488,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate < today &&
-                x.Order.OrderStatus == "In Progress")
+                x.Order.OrderStatus == "Paid")
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,

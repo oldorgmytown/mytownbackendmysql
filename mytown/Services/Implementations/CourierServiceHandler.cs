@@ -78,18 +78,22 @@ namespace mytown.Services.Implementations
                     CourierPhone = courierDto.CourierPhone,
                     CourierEmail = courierDto.CourierEmail,
 
-                    // 🔐 Security
+                    //  Address (MISSING BEFORE)
+                    Address = courierDto.Address,
+                    Town = courierDto.Town,
+                    City = courierDto.City,
+                    State = courierDto.State,
+                    Country = courierDto.Country,
+                    PostalCode = courierDto.PostalCode,
+
+                    //  Security
                     Password = hashed,
                     IsEmailVerified = true,
                     RegisteredDate = DateTime.UtcNow,
 
-                 
-
                     IsCity = courierDto.IsCity,
                     IsState = courierDto.IsState,
-                  
                 };
-
 
                 var created = await _repo.RegisterCourier(courier);
                 return created;

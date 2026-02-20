@@ -41,12 +41,12 @@ namespace mytown.Controllers
 
         [HttpGet("orders")]
         public async Task<IActionResult> GetOrders(
-         [FromQuery] string status)
+         int courierId,[FromQuery] string status)
         {
             if (string.IsNullOrWhiteSpace(status))
                 return BadRequest("Shipping status is required");
 
-            int courierId = int.Parse(User.FindFirst("CourierId").Value);
+         //   int courierId = int.Parse(User.FindFirst("CourierId").Value);
 
             var orders = await _courierService.GetOrdersAsync(courierId, status);
             return Ok(orders);
