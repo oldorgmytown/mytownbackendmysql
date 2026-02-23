@@ -28,9 +28,27 @@ namespace mytown.Services.Implementations
             if (order.OrderStatus == "Paid")
                 throw new Exception("Order already paid");
 
-            decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
-            long stripeAmount = (long)(totalAmount * 100);
+            //decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
+            //long stripeAmount = (long)(totalAmount * 100);
 
+
+            // 1️ Order Amount
+            decimal orderAmount = order.TotalAmount;
+
+            // 2️ Total Shipping Cost (all records for this order)
+            decimal shippingTotal = order.ShippingDetails != null
+                ? order.ShippingDetails.Sum(s => s.Cost)
+                : 0;
+
+            // 3️ Subtotal (Order + Shipping)
+            decimal subTotal = orderAmount + shippingTotal;
+
+            // 4️ 18% GST
+            decimal gstAmount = subTotal * 0.18m;
+
+            // 5️ Final Amount
+            decimal finalAmount = subTotal + gstAmount;
+            long stripeAmount = (long)(finalAmount * 100);
             var options = new PaymentIntentCreateOptions
             {
                 Amount = stripeAmount,
@@ -71,11 +89,28 @@ namespace mytown.Services.Implementations
             //if (intent.Status != "succeeded")
             //    throw new Exception("Payment not completed");
 
-            decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
+            // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
+
+            // 1️ Order Amount
+            decimal orderAmount = order.TotalAmount;
+
+            // 2️ Total Shipping Cost (all records for this order)
+            decimal shippingTotal = order.ShippingDetails != null
+                ? order.ShippingDetails.Sum(s => s.Cost)
+                : 0;
+
+            // 3️ Subtotal (Order + Shipping)
+            decimal subTotal = orderAmount + shippingTotal;
+
+            // 4️ 18% GST
+            decimal gstAmount = subTotal * 0.18m;
+
+            // 5️ Final Amount
+            decimal finalAmount = subTotal + gstAmount;
 
             var payment = await _paymentRepo.AddPaymentAsync(
                 orderId,
-                totalAmount,
+                finalAmount,
                 paymentMethod,
                 stripePaymentIntentId
             );

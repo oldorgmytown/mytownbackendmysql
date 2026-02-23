@@ -577,9 +577,8 @@ namespace mytown.DataAccess.Repositories
                 {
                     o.OrderId,
                     o.OrderDate,
-                    o.TotalAmount,
+                  //  o.TotalAmount,
                     o.ShopperRegId,
-
                     ShopperName = o.ShopperRegister.Username,
                     ShopperEmail = o.ShopperRegister.Email,
                     ShopperPhone = o.ShopperRegister.PhoneNumber,
@@ -589,7 +588,14 @@ namespace mytown.DataAccess.Repositories
                         .Where(p => p.OrderId == o.OrderId)
                         .OrderByDescending(p => p.PaymentDate)
                         .Select(p => p.PaymentMethod)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
+
+                          // ✅ Latest Amount Paid
+                    AmountPaid = _context.Payments
+                        .Where(p => p.OrderId == o.OrderId)
+                        .OrderByDescending(p => p.PaymentDate)
+                        .Select(p => (decimal?)p.AmountPaid)
+                        .FirstOrDefault() ?? 0
                 })
                 .FirstOrDefaultAsync();
 
@@ -650,7 +656,7 @@ namespace mytown.DataAccess.Repositories
             {
                 OrderId = order.OrderId,
                 OrderDate = order.OrderDate,
-                TotalAmount = order.TotalAmount,
+                TotalAmount = order.AmountPaid,
 
                 ShopperRegId = order.ShopperRegId,
                 ShopperName = order.ShopperName,
