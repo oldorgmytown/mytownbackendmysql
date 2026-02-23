@@ -26,6 +26,8 @@ namespace mytown.Services.Interfaces
          string storeName,
          List<(string ProductName, int Quantity)> products);
 
+        Task SendShopperReactivationEmailAsync(string email, string shopperName);
+
 
 
     }

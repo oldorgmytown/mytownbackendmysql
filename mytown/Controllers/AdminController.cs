@@ -226,7 +226,7 @@ namespace mytown.Controllers
         }
 
 
-        [Authorize]
+      //  [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
         public async Task<IActionResult> UpdateShopperStatusByAdmin([FromQuery] int shopperId, [FromQuery] string status)
         {
@@ -241,6 +241,17 @@ namespace mytown.Controllers
                 return NotFound($"No Shopper found with Id {shopperId}.");
 
             return Ok("Shopper status updated successfully.");
+        }
+
+        [HttpPut("SendReativateShopperemail")]
+        public async Task<IActionResult> SendReativateShopperemail(int shopperRegId)
+        {
+            var result = await _adminService.SendReativateShopperemail(shopperRegId);
+
+            if (!result)
+                return NotFound("Shopper not found");
+
+            return Ok(new { message = "Shopper Email successfully" });
         }
 
         [HttpPut("deactivateShopper")]

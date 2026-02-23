@@ -86,7 +86,7 @@ namespace mytown.Services.Implementations
         public async Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status)
         {
             // Keeping your existing repository call — NO change to repo method
-            return await _adminRepo.UpdateProfileStatusbyAdminAsync(shopperId, status);
+            return await _adminRepo.UpdateShopperStatusAsync(shopperId, status);
         }
         public async Task<bool> DeactivateShopperAsync(int shopperRegId)
         {
@@ -106,6 +106,23 @@ namespace mytown.Services.Implementations
             }
 
             return result;
+        }
+
+        public async Task<bool> SendReativateShopperemail(int shopperRegId)
+        {
+            var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
+
+            if (shopper == null)
+                return false;
+
+           
+                await _emailService.SendShopperReactivationEmailAsync(
+                    shopper.Email,
+                    shopper.Username
+                );
+
+
+            return true;
         }
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>

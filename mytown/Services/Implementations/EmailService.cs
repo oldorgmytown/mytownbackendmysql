@@ -546,5 +546,66 @@ public class EmailService : IEmailService
     }
 
 
+    public async Task SendShopperReactivationEmailAsync(string email, string shopperName)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Your Account Has Been Reactivated",
+                    IsBodyHtml = true,
+                    Body = $@"
+<html>
+  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
+
+    <h3 style='color:#000;'>Account Reactivation Notice</h3>
+
+    <p>Dear <strong>{shopperName}</strong>,</p>
+
+    <p>
+      Good news! Your shopper account has been
+      <strong>reactivated</strong> by the administrator.
+    </p>
+
+    <p>
+      You can now log in and continue placing orders and accessing your account as usual.
+    </p>
+
+    <p>
+      If you have any questions or need assistance, please feel free to contact our support team.
+    </p>
+
+    <p style='margin-top: 30px;'>
+      Welcome back!<br /><br />
+      Best regards,<br />
+      <strong style='color:#004481;'>MyTown Support Team</strong><br />
+      <em>Customer Care</em>
+    </p>
+
+  </body>
+</html>"
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending shopper reactivation email: {ex.Message}");
+            throw new Exception("Failed to send shopper reactivation email.");
+        }
+    }
+
 
 }
