@@ -15,7 +15,7 @@ namespace mytown.Services.Interfaces
         Task<int> GetBusinessRegisterCountAsync();
         Task<int> GetShoppersRegisterCountAsync();
         Task<(List<ShopperRegister> records, int totalCount)>
-    GetShoppersByStatusAsync(string status, int page, int pageSize);
+    GetShoppersByStatusAsync(string status, int page, int pageSize, string? search);
         //Decativate shopper account
         Task<bool> DeactivateShopperAsync(int shopperRegId);
         //Recativate shopper account

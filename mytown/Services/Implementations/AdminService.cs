@@ -72,11 +72,13 @@ namespace mytown.Services.Implementations
         }
 
         public Task<(List<ShopperRegister>, int)>
-    GetShoppersByStatusAsync(string status, int page, int pageSize)
+    GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
         {
-            return _adminRepo.GetShoppersByStatusAsync(status, page, pageSize);
+            return _adminRepo.GetShoppersByStatusAsync(status, page, pageSize, search);
+
         }
 
+      
         // get shopper stats on admin panel
         public async Task<ShopperStatsDto> GetActiveShopperStatsAsync()
         {

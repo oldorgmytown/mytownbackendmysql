@@ -46,7 +46,7 @@ namespace mytown.Controllers
             });
         }
 
-        [Authorize]
+      //  [Authorize]
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
             [FromQuery] string status,
@@ -202,12 +202,13 @@ namespace mytown.Controllers
 
         [HttpGet("shoppersonAdminpanel")]
         public async Task<IActionResult> GetShoppers(
-    string status = "active",
-    int page = 1,
-    int pageSize = 10)
+  [FromQuery] string status,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null)
         {
             var (records, totalCount) =
-                await _adminService.GetShoppersByStatusAsync(status, page, pageSize);
+                await _adminService.GetShoppersByStatusAsync(status, page, pageSize,search);
 
             return Ok(new
             {

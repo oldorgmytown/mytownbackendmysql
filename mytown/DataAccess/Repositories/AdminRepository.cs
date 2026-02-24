@@ -436,22 +436,47 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Shoppers tab
+
         public async Task<(List<ShopperRegister> records, int totalCount)>
-      GetShoppersByStatusAsync(string status, int page, int pageSize)
+GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
         {
             var query = _context.ShopperRegisters.AsQueryable();
 
-            if (status == "active")
+            //  Status Filter
+            if (!string.IsNullOrEmpty(status))
             {
-                query = query.Where(s => s.Status == null || s.Status != "Deactivated");
-            }
-            else if (status == "deactivated")
-            {
-                query = query.Where(s => s.Status == "Deactivated");
+                status = status.ToLower();
+
+                if (status == "active")
+                {
+                    query = query.Where(s => s.Status == null || s.Status != "Deactivated");
+                }
+                else if (status == "deactivated")
+                {
+                    query = query.Where(s => s.Status != null && s.Status == "Deactivated");
+                }
             }
 
+            // Search Filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(s =>
+                    s.Username.Contains(search) ||
+                    s.Email.Contains(search) ||
+                    s.PhoneNumber.Contains(search) ||
+                    s.Town.Contains(search) ||
+                    s.City.Contains(search) ||
+                    s.State.Contains(search) ||
+                    s.Country.Contains(search) 
+                   // (int.TryParse(search, out int shopperId) && s.ShopperRegId == shopperId)
+                );
+            
+        }
+
+            // Total Count
             var totalCount = await query.CountAsync();
 
+            //  Pagination
             var records = await query
                 .OrderByDescending(s => s.ShopperRegId)
                 .Skip((page - 1) * pageSize)
@@ -460,6 +485,30 @@ namespace mytown.DataAccess.Repositories
 
             return (records, totalCount);
         }
+      //  public async Task<(List<ShopperRegister> records, int totalCount)>
+      //GetShoppersByStatusAsync(string status, int page, int pageSize)
+      //  {
+      //      var query = _context.ShopperRegisters.AsQueryable();
+
+      //      if (status == "active")
+      //      {
+      //          query = query.Where(s => s.Status == null || s.Status != "Deactivated");
+      //      }
+      //      else if (status == "deactivated")
+      //      {
+      //          query = query.Where(s => s.Status == "Deactivated");
+      //      }
+
+      //      var totalCount = await query.CountAsync();
+
+      //      var records = await query
+      //          .OrderByDescending(s => s.ShopperRegId)
+      //          .Skip((page - 1) * pageSize)
+      //          .Take(pageSize)
+      //          .ToListAsync();
+
+      //      return (records, totalCount);
+      //  }
 
 
         //Shopper summary on Admin panel

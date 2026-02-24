@@ -19,7 +19,9 @@ namespace mytown.DataAccess.Interfaces
 
         //Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
         Task<(List<ShopperRegister> records, int totalCount)>
-       GetShoppersByStatusAsync(string status, int page, int pageSize);
+       GetShoppersByStatusAsync(string status, int page, int pageSize, string? search);
+
+
 
         //Shopper Summary on Admin panel
         Task<ShopperStatsDto> GetActiveShopperStatsAsync();
