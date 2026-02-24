@@ -93,6 +93,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId)
         {
             var product = await _context.products
+                .Include(p => p.BusinessRegister)
                 .Include(p => p.Sku_ProductVariants)
                     .ThenInclude(v => v.Images)
                 .Include(p => p.Sku_ProductVariants)
@@ -109,7 +110,7 @@ namespace mytown.DataAccess.Repositories
                 ProdSubcatId = product.ProdSubcatId,
                 ProductName = product.ProductName,
                 ProductDescription = product.ProductDescription,
-                SupplierName = product.SupplierName,
+                SupplierName = product.BusinessRegister.BusinessName,
                 ProductTypeId = product.ProductTypeId,
                 FabricId = product.FabricId,
                 DesignId = product.DesignId,
@@ -402,7 +403,7 @@ namespace mytown.DataAccess.Repositories
             ProdSubcatId = p.ProdSubcatId,
             ProductName = p.ProductName,
             ProductDescription = p.ProductDescription,
-            SupplierName = p.SupplierName,
+            SupplierName = p.BusinessRegister.BusinessName,
             ProductTypeId = p.ProductTypeId,
             FabricId = p.FabricId,
             DesignId = p.DesignId,
@@ -478,7 +479,7 @@ namespace mytown.DataAccess.Repositories
 
            ProductName = v.Product.ProductName,
            ProductDescription = v.Product.ProductDescription,
-           SupplierName = v.Product.SupplierName,
+           SupplierName = v.Product.BusinessRegister.BusinessName,
 
            Variants = new List<Sku_ProductVariantDto>
            {
@@ -552,7 +553,7 @@ namespace mytown.DataAccess.Repositories
 
             ProductName = v.Product.ProductName,
             ProductDescription = v.Product.ProductDescription,
-            SupplierName = v.Product.SupplierName,
+            SupplierName = v.Product.BusinessRegister.BusinessName,
 
             Variants = new List<Sku_ProductVariantDto>
             {
@@ -650,7 +651,7 @@ namespace mytown.DataAccess.Repositories
 
                     ProductName = x.Product.ProductName,
                     ProductDescription = x.Product.ProductDescription,
-                    SupplierName = x.Product.SupplierName,
+                    SupplierName = x.Product.BusinessRegister.BusinessName,
 
                     Variants = new List<Sku_ProductVariantDto>
                     {
