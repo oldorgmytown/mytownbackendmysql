@@ -256,9 +256,9 @@ namespace mytown.DataAccess.Repositories
         }
 
         //Add to wishlist directly from prodcut detail page
-        public async Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
+        public async Task<bool> AddOrMoveToWishlistDirectlyAsync(int shopperId, int productId, int skuId)
         {
-            // Validate Product
+            // 1️⃣ Validate Product
             var product = await _context.products
                 .FirstOrDefaultAsync(p =>
                     p.ProductId == productId &&
@@ -268,38 +268,53 @@ namespace mytown.DataAccess.Repositories
             if (product == null)
                 throw new Exception("Product not available");
 
-            // Validate SKU
+            // 2️⃣ Validate SKU
             var sku = await _context.Sku_ProductVariants
-                .FirstOrDefaultAsync(s => s.SkuId == skuId && s.ProductId == productId);
+                .FirstOrDefaultAsync(s =>
+                    s.SkuId == skuId &&
+                    s.ProductId == productId);
 
             if (sku == null)
                 throw new Exception("SKU not found");
 
-            // Check if already in wishlist
+            // 3️⃣ Check if already in wishlist
             var exists = await _context.Wishlist
                 .AnyAsync(w =>
                     w.ShopperRegId == shopperId &&
                     w.ProductId == productId &&
                     w.SkuId == skuId);
 
-            if (exists)
-                return false; // Already exists
-
-            var newWishlistItem = new Wishlist
+            if (!exists)
             {
-                ShopperRegId = shopperId,
-                ProductId = productId,
-                SkuId = skuId,
-                BusRegId = product.BusRegId,
-                BuscatId = product.BuscatId,
-                ProdSubcatId = product.ProdSubcatId,
-                CreatedAt = DateTime.UtcNow
-            };
+                var newWishlistItem = new Wishlist
+                {
+                    ShopperRegId = shopperId,
+                    ProductId = productId,
+                    SkuId = skuId,
+                    BusRegId = product.BusRegId,
+                    BuscatId = product.BuscatId,
+                    ProdSubcatId = product.ProdSubcatId,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            _context.Wishlist.Add(newWishlistItem);
+                _context.Wishlist.Add(newWishlistItem);
+            }
+
+            // 4️⃣ Remove from cart if exists
+            var cartItem = await _context.addtocart
+                .FirstOrDefaultAsync(c =>
+                    c.ShopperRegId == shopperId &&
+                    c.ProductId == productId &&
+                    c.SkuId == skuId);
+
+            if (cartItem != null)
+            {
+                _context.addtocart.Remove(cartItem);
+            }
+
             await _context.SaveChangesAsync();
 
-            return true;
+            return !exists; // true if added, false if already existed
         }
 
 
