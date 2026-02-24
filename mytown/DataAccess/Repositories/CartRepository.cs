@@ -256,7 +256,7 @@ namespace mytown.DataAccess.Repositories
         }
 
         //Add to wishlist directly from prodcut detail page
-        public async Task<bool> AddOrMoveToWishlistDirectlyAsync(int shopperId, int productId, int skuId)
+        public async Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
         {
             // 1️⃣ Validate Product
             var product = await _context.products
@@ -299,6 +299,10 @@ namespace mytown.DataAccess.Repositories
 
                 _context.Wishlist.Add(newWishlistItem);
             }
+            else
+            {
+                return false; // ietm already on wishlist
+            }
 
             // 4️⃣ Remove from cart if exists
             var cartItem = await _context.addtocart
@@ -314,7 +318,7 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
 
-            return !exists; // true if added, false if already existed
+            return true; // true if added, false if already existed
         }
 
 
