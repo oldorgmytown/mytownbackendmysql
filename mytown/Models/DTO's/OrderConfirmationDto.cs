@@ -15,6 +15,8 @@
 
         public string PaymentMethod { get; set; } = string.Empty;
 
+        public int TransactionId { get; set; }
+
         //  Always initialize collections
         public List<StoreOrderConfirmationDto> Stores { get; set; } = new();
     }
@@ -53,6 +55,8 @@
         public string ProductName { get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal Price { get; set; }
+
+        public string? ImageUrl { get; set; }
 
         // Optional but useful for emails/UI
         public decimal ItemTotal => Quantity * Price;
