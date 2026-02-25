@@ -9,6 +9,7 @@ using DnsClient;
 using Microsoft.EntityFrameworkCore;
 using mytown.Services.Interfaces;
 using mytown.Models.DTO_s;
+using System.Text;
 
 public class EmailService : IEmailService
 {
@@ -293,7 +294,7 @@ private string BuildShopperNotificationTemplate(string shopperName, OrderConfirm
         Qty: {item.Quantity}
     </td>
     <td style='padding:8px 0;font-size:14px;color:#000;text-align:right;'>
-        ₹{item.ItemTotal}
+        ₹{item.ItemTotal:F2}
     </td>
 </tr>");
         }
@@ -308,7 +309,7 @@ private string BuildShopperNotificationTemplate(string shopperName, OrderConfirm
                     {WebUtility.HtmlEncode(store.StoreName)}
                 </td>
                 <td style='font-size:16px;font-weight:700;color:#000;text-align:right;'>
-                    ₹{store.StoreTotal}
+                    ₹{store.StoreTotal:F2}
                 </td>
             </tr>
         </table>
@@ -377,9 +378,9 @@ Your order has been successfully placed and is being processed.
 <table width='100%' cellpadding='0' cellspacing='0' style='margin:20px 0;border:1px solid #E5E7EB;border-radius:6px;background:#F9FAFB;'>
 <tr>
 <td style='padding:15px;font-size:14px;color:#333;'>
-<strong style='color:#000;'>Order ID:</strong> {WebUtility.HtmlEncode(orderdto.OrderId)}<br/>
+<strong style='color:#000;'>Order ID:</strong> {WebUtility.HtmlEncode(orderdto.OrderId.ToString())}<br/>
 <strong style='color:#000;'>Order Date:</strong> {orderdto.OrderDate:MMMM dd, yyyy}<br/>
-<strong style='color:#000;'>Total Amount:</strong> <span style='color:#004481;font-weight:bold;'>₹{orderdto.TotalAmount}</span>
+<strong style='color:#000;'>Total Amount:</strong> <span style='color:#004481;font-weight:bold;'>₹{orderdto.TotalAmount:F2}</span>
 </td>
 </tr>
 </table>
@@ -407,7 +408,7 @@ Your order has been successfully placed and is being processed.
 
 <!-- CTA Button -->
 <div style='text-align:center;margin:30px 0;'>
-<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{WebUtility.HtmlEncode(orderdto.OrderId)}'
+<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}'
 style='background:#004481;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;display:inline-block;'>
 View Order Details
 </a>
