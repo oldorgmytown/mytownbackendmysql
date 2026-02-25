@@ -643,70 +643,68 @@ namespace mytown.DataAccess.Repositories
 
 
         //2-12-25 get bsiness prpfiles for search reuslts ( no products)
-
         public List<BusinessProfile> GetBusinessProfilesByFilters(string? searchTerm, string? locationQuery)
         {
-            // Final business IDs to return
-            IEnumerable<int> businessIds = Enumerable.Empty<int>();
+            IQueryable<int> businessIds = Enumerable.Empty<int>().AsQueryable();
 
-            // --------------------------------------------
-            // 1️⃣ PRODUCT / CATEGORY SEARCH (if searchTerm entered)
-            // --------------------------------------------
-            if (!string.IsNullOrEmpty(searchTerm))
+            // ------------------------------------------------
+            // 1️ SEARCH TERM FILTER
+            // ------------------------------------------------
+            if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.Trim();
 
-                // Match Business Categories
-                var matchingCatIds = _context.BusinessCategories
-                    .Where(x => x.BusinessCategoryName.Contains(searchTerm))
-                    .Select(x => x.BusCatId);
+                //  Store Name Search (FIRST)
+                var storeNameIds = _context.BusinessRegisters
+                    .Where(b => b.BusinessName.Contains(searchTerm))
+                    .Select(b => b.BusRegId);
 
-                businessIds = _context.products
-                    .Where(p => matchingCatIds.Contains(p.BuscatId))
-                    .Select(p => p.BusRegId)
-                    .Distinct();
+                // Category Match
+                var categoryIds = _context.BusinessCategories
+                    .Where(c => c.BusinessCategoryName.Contains(searchTerm))
+                    .Select(c => c.BusCatId);
 
-                // If no match → try subcategories
-                if (!businessIds.Any())
-                {
-                    var matchingSubcatIds = _context.product_sub_categories
-                        .Where(x => x.ProdSubcatName.Contains(searchTerm))
-                        .Select(x => x.ProdSubcatId);
+                var categoryBusinessIds = _context.products
+                    .Where(p => categoryIds.Contains(p.BuscatId))
+                    .Select(p => p.BusRegId);
 
-                    businessIds = _context.products
-                        .Where(p => matchingSubcatIds.Contains(p.ProdSubcatId))
-                        .Select(p => p.BusRegId)
-                        .Distinct();
-                }
+                // Subcategory Match
+                var subcategoryIds = _context.product_sub_categories
+                    .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
+                    .Select(sc => sc.ProdSubcatId);
 
-                // If still no match → search product name/subject/description
-                if (!businessIds.Any())
-                {
-                    businessIds = _context.products
-                        .Where(p =>
-                            p.ProductName.Contains(searchTerm) ||
-                            p.ProductSubject.Contains(searchTerm) ||
-                            p.ProductDescription.Contains(searchTerm))
-                        .Select(p => p.BusRegId)
-                        .Distinct();
-                }
+                var subcategoryBusinessIds = _context.products
+                    .Where(p => subcategoryIds.Contains(p.ProdSubcatId))
+                    .Select(p => p.BusRegId);
 
-                // SKU variant search (color / size)
+                // Product Field Match
+                var productFieldBusinessIds = _context.products
+                    .Where(p =>
+                        p.ProductName.Contains(searchTerm) ||
+                        p.ProductSubject.Contains(searchTerm) ||
+                        p.ProductDescription.Contains(searchTerm))
+                    .Select(p => p.BusRegId);
+
+                // SKU Variant Match
                 var skuBusinessIds = _context.Sku_ProductVariants
-                    .Include(v => v.Product)
                     .Where(v =>
                         v.Color.Contains(searchTerm) ||
                         (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
-                    .Select(v => v.Product.BusRegId)
-                    .Distinct();
+                    .Select(v => v.Product.BusRegId);
 
-                businessIds = businessIds.Union(skuBusinessIds);
+                // UNION ALL MATCHES
+                businessIds = storeNameIds
+                    .Union(categoryBusinessIds)
+                    .Union(subcategoryBusinessIds)
+                    .Union(productFieldBusinessIds)
+                    .Union(skuBusinessIds)
+                    .Distinct();
             }
 
-            // --------------------------------------------
-            // 2️⃣ LOCATION FILTER (optional)
-            // --------------------------------------------
-            if (!string.IsNullOrEmpty(locationQuery))
+            // ------------------------------------------------
+            //  LOCATION FILTER
+            // ------------------------------------------------
+            if (!string.IsNullOrWhiteSpace(locationQuery))
             {
                 locationQuery = locationQuery.Trim();
 
@@ -720,26 +718,23 @@ namespace mytown.DataAccess.Repositories
                         (b.Address2 != null && b.Address2.Contains(locationQuery)))
                     .Select(b => b.BusRegId);
 
-                // If searchTerm is empty → only location filter applies
-                if (string.IsNullOrEmpty(searchTerm))
+                if (string.IsNullOrWhiteSpace(searchTerm))
                 {
                     businessIds = locationBusinessIds;
                 }
                 else
                 {
-                    // Both location + searchTerm case → INTERSECT
                     businessIds = businessIds.Intersect(locationBusinessIds);
                 }
             }
 
-            // --------------------------------------------
-            // 3️⃣ FINAL: Return business profiles
-            // --------------------------------------------
-            var finalIds = businessIds.Distinct().ToList();
-
+            // ------------------------------------------------
+            // FINAL RESULT
+            // ------------------------------------------------
             return _context.BusinessProfiles
-                .Where(bp => finalIds.Contains(bp.BusRegId)
-                 && bp.ProfileStatus == "approved")
+                .Where(bp =>
+                    businessIds.Contains(bp.BusRegId) &&
+                    bp.ProfileStatus == "approved")
                 .ToList();
         }
 

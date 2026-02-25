@@ -25,8 +25,9 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync()
         {
             return await _context.BusinessProfiles
-                .Include(bp => bp.BusinessRegister) //  load BusinessRegister
-                .ToListAsync();
+        .Where(bp => bp.ProfileStatus == "approved")
+        .Include(bp => bp.BusinessRegister)
+        .ToListAsync();
         }
 
         public async Task<List<busprofilepreview>> GetBusinessProfilesByBusRegIdAsync(int busRegId)
