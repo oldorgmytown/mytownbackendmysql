@@ -236,145 +236,209 @@ public class EmailService : IEmailService
     }
 
     public async Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto)
+{
+    if (!await DomainHasMX(email))
+        throw new Exception("The email domain is not valid (no MX records found).");
+
+    try
     {
-        if (!await DomainHasMX(email))
-            throw new Exception("The email domain is not valid (no MX records found).");
+        var htmlBody = BuildShopperNotificationTemplate(
+            WebUtility.HtmlEncode(shopperName),
+            orderdto);
 
-        try
+        using (var smtpClient = new SmtpClient(_smtpServer))
         {
-            using (var smtpClient = new SmtpClient(_smtpServer))
+            smtpClient.Port = _smtpPort;
+            smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+            smtpClient.EnableSsl = true;
+
+            using (var mailMessage = new MailMessage
             {
-                smtpClient.Port = _smtpPort;
-                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
-                smtpClient.EnableSsl = true;
-
-                // 🔹 Build Store Sections Dynamically
-                var storeSections = "";
-
-                foreach (var store in orderdto.Stores)
-                {
-                    var itemsHtml = "";
-
-                    foreach (var item in store.Items)
-                    {
-                        itemsHtml += $@"
-<div class='item'>
-    <div class='item-details'>
-        <span class='item-name'>{item.ProductName}</span>
-        <span class='item-qty'>Qty: {item.Quantity}</span>
-        <span class='item-price'>₹{item.ItemTotal}</span>
-    </div>
-</div>";
-                    }
-
-                    storeSections += $@"
-<div class='store-section'>
-
-    <div class='store-header'>
-        <div class='store-info'>
-            <h3>{store.StoreName}</h3>
-        </div>
-        <div class='store-total'>
-            <span class='store-total-label'>Store Total</span>
-            <span class='store-total-amount'>₹{store.StoreTotal}</span>
-        </div>
-    </div>
-
-    <div class='store-meta'>
-        <div class='meta-row'>
-            <span class='meta-label'>Store Order ID</span>
-            <span class='meta-value'>{store.StoreOrderId}</span>
-        </div>
-        <div class='meta-row'>
-            <span class='meta-label'>Estimated Delivery</span>
-            <span class='meta-value'>{store.EstimatedDeliveryDate:MMMM dd, yyyy}</span>
-        </div>
-    </div>
-
-    <h4 class='items-heading'>Items in your order</h4>
-    <div class='items-list'>
-        {itemsHtml}
-    </div>
-
-    <div class='status-box'>
-        <p><strong>{store.ShippingStatus}</strong><br/>
-        Expected delivery by {store.EstimatedDeliveryDate:MMMM dd, yyyy}.
-        </p>
-    </div>
-
-</div>";
-                }
-
-                var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(_senderEmail),
-                    Subject = "Order Confirmation - ITISMYTOWN",
-                    IsBodyHtml = true,
-
-                    Body = $@"<!DOCTYPE html>
-<html>
-<head>
-<meta charset='UTF-8'>
-<title>Order Confirmation</title>
-</head>
-<body style='font-family:Arial;background:#FAFBFC;margin:0;padding:0;'>
-
-<div style='max-width:600px;margin:0 auto;background:#ffffff;padding:20px;'>
-
-<h2>Order Confirmed!</h2>
-
-<p>Hello {shopperName},</p>
-<p>Your order has been successfully placed.</p>
-
-<hr/>
-
-<p><strong>Order ID:</strong> {orderdto.OrderId}</p>
-<p><strong>Order Date:</strong> {orderdto.OrderDate:MMMM dd, yyyy}</p>
-<p><strong>Total Amount:</strong> ₹{orderdto.TotalAmount}</p>
-
-<hr/>
-
-{storeSections}
-
-<hr/>
-
-<h3>Payment Method</h3>
-<p>{orderdto.PaymentMethod}</p>
-
-<h3>Delivery Address</h3>
-<p>
-{orderdto.ShopperName}<br/>
-{orderdto.DeliveryAddress}<br/>
-{orderdto.ShopperPhone}
-</p>
-
-<div style='text-align:center;margin-top:30px;'>
-<a href='https://yourdomain.com/orders/{orderdto.OrderId}'
-style='background:#004481;color:white;padding:12px 24px;
-text-decoration:none;border-radius:5px;display:inline-block;'>
-View Order
-</a>
-</div>
-
-<p style='margin-top:40px;font-size:12px;color:#777;text-align:center;'>
-© 2026 itismytown. All rights reserved.
-</p>
-
-</div>
-</body>
-</html>"
-                };
-
+                From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                Subject = $"Order Confirmation - {orderdto.OrderId}",
+                Body = htmlBody,
+                IsBodyHtml = true
+            })
+            {
                 mailMessage.To.Add(email);
                 await smtpClient.SendMailAsync(mailMessage);
             }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error sending shopper notification email: {ex.Message}");
-            throw new Exception("Failed to send shopper notification email.");
-        }
+
+        Console.WriteLine($"Order confirmation email sent to {email}");
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error sending shopper notification email: {ex.Message}");
+        throw new Exception("Failed to send shopper notification email.");
+    }
+}
+
+private string BuildShopperNotificationTemplate(string shopperName, OrderConfirmationDto orderdto)
+{
+    var storesBuilder = new StringBuilder();
+
+    foreach (var store in orderdto.Stores)
+    {
+        var itemsBuilder = new StringBuilder();
+
+        foreach (var item in store.Items)
+        {
+            itemsBuilder.Append($@"
+<tr>
+    <td style='padding:8px 0;font-size:14px;color:#585858;'>
+        {WebUtility.HtmlEncode(item.ProductName)}
+    </td>
+    <td style='padding:8px 0;font-size:14px;color:#585858;text-align:center;'>
+        Qty: {item.Quantity}
+    </td>
+    <td style='padding:8px 0;font-size:14px;color:#000;text-align:right;'>
+        ₹{item.ItemTotal}
+    </td>
+</tr>");
+        }
+
+        storesBuilder.Append($@"
+<table width='100%' cellpadding='0' cellspacing='0' style='margin-bottom:20px;border:1px solid #E5E7EB;border-radius:6px;'>
+<tr>
+    <td style='padding:16px;'>
+        <table width='100%' cellpadding='0' cellspacing='0'>
+            <tr>
+                <td style='font-size:18px;font-weight:600;color:#000;'>
+                    {WebUtility.HtmlEncode(store.StoreName)}
+                </td>
+                <td style='font-size:16px;font-weight:700;color:#000;text-align:right;'>
+                    ₹{store.StoreTotal}
+                </td>
+            </tr>
+        </table>
+
+        <table width='100%' cellpadding='0' cellspacing='0' style='margin-top:10px;'>
+            {itemsBuilder}
+        </table>
+
+        <table width='100%' cellpadding='0' cellspacing='0' style='margin-top:12px;background:#F0FFF4;border:1px solid #BBF7D0;border-radius:4px;'>
+            <tr>
+                <td style='padding:10px;font-size:14px;color:#166534;'>
+                    <strong>{WebUtility.HtmlEncode(store.ShippingStatus)}</strong><br/>
+                    Expected delivery by {store.EstimatedDeliveryDate:MMMM dd, yyyy}
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+</table>");
+    }
+
+    return $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8'>
+    <title>Order Confirmation</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+</head>
+<body style='margin:0;padding:0;background:#FAFBFC;font-family:Arial,sans-serif;'>
+
+<table width='100%' cellpadding='0' cellspacing='0' style='background:#FAFBFC;padding:20px 0;'>
+<tr>
+<td align='center'>
+
+<table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 4px rgba(0,0,0,0.1);'>
+
+<!-- Header with Logo -->
+<tr>
+<td style='padding:20px;text-align:center;border-bottom:1px solid #E5E7EB;background:#ffffff;'>
+<img src='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png' height='50' alt='ITISMYTOWN Logo'/>
+</td>
+</tr>
+
+<!-- Hero Section -->
+<tr>
+<td style='padding:30px;text-align:center;background:#004481;color:#ffffff;'>
+<h1 style='margin:0;font-size:24px;font-weight:bold;'>Order Confirmed!</h1>
+<p style='margin:8px 0 0;font-size:14px;'>Thank you for shopping with us</p>
+</td>
+</tr>
+
+<!-- Main Content -->
+<tr>
+<td style='padding:30px;'>
+
+<p style='font-size:16px;color:#000;margin:0 0 10px 0;'>
+Hello <strong>{shopperName}</strong>,
+</p>
+
+<p style='font-size:14px;color:#585858;margin:0 0 20px 0;'>
+Your order has been successfully placed and is being processed.
+</p>
+
+<!-- Order Summary -->
+<table width='100%' cellpadding='0' cellspacing='0' style='margin:20px 0;border:1px solid #E5E7EB;border-radius:6px;background:#F9FAFB;'>
+<tr>
+<td style='padding:15px;font-size:14px;color:#333;'>
+<strong style='color:#000;'>Order ID:</strong> {WebUtility.HtmlEncode(orderdto.OrderId)}<br/>
+<strong style='color:#000;'>Order Date:</strong> {orderdto.OrderDate:MMMM dd, yyyy}<br/>
+<strong style='color:#000;'>Total Amount:</strong> <span style='color:#004481;font-weight:bold;'>₹{orderdto.TotalAmount}</span>
+</td>
+</tr>
+</table>
+
+<!-- Store Sections -->
+<h3 style='font-size:16px;color:#000;margin:20px 0 15px 0;font-weight:bold;'>Order Details</h3>
+{storesBuilder}
+
+<!-- Payment & Delivery Info -->
+<table width='100%' cellpadding='0' cellspacing='0' style='margin-top:20px;'>
+<tr>
+<td style='font-size:14px;color:#000;margin-bottom:15px;'>
+<strong>Payment Method:</strong> {WebUtility.HtmlEncode(orderdto.PaymentMethod)}
+</td>
+</tr>
+<tr>
+<td style='font-size:14px;color:#000;padding-top:10px;border-top:1px solid #E5E7EB;'>
+<strong>Delivery Address:</strong><br/>
+<span style='color:#585858;'>{WebUtility.HtmlEncode(orderdto.ShopperName)}<br/>
+{WebUtility.HtmlEncode(orderdto.DeliveryAddress)}<br/>
+{WebUtility.HtmlEncode(orderdto.ShopperPhone)}</span>
+</td>
+</tr>
+</table>
+
+<!-- CTA Button -->
+<div style='text-align:center;margin:30px 0;'>
+<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{WebUtility.HtmlEncode(orderdto.OrderId)}'
+style='background:#004481;color:#ffffff;padding:12px 24px;text-decoration:none;border-radius:6px;font-size:14px;font-weight:bold;display:inline-block;'>
+View Order Details
+</a>
+</div>
+
+<!-- Support Message -->
+<p style='font-size:12px;color:#585858;margin:20px 0 0 0;text-align:center;'>
+If you have any questions, please contact our support team.
+</p>
+
+</td>
+</tr>
+
+<!-- Footer -->
+<tr>
+<td style='padding:20px;background:#F3F4F6;text-align:center;font-size:11px;color:#585858;border-top:1px solid #E5E7EB;'>
+<p style='margin:0;'>© 2026 ITISMYTOWN. All rights reserved.</p>
+<p style='margin:5px 0 0 0;'>This is an automated message. Please do not reply directly to this email.</p>
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>";
+}
+
     private async Task<bool> DomainHasMX(string email)
     {
         try
