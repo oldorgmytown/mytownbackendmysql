@@ -583,19 +583,17 @@ namespace mytown.DataAccess.Repositories
                     ShopperEmail = o.ShopperRegister.Email,
                     ShopperPhone = o.ShopperRegister.PhoneNumber,
 
-                    // ✅ PaymentMethod from Payments table
-                    PaymentMethod = _context.Payments
-                        .Where(p => p.OrderId == o.OrderId)
-                        .OrderByDescending(p => p.PaymentDate)
-                        .Select(p => p.PaymentMethod)
-                        .FirstOrDefault(),
-
-                          // ✅ Latest Amount Paid
-                    AmountPaid = _context.Payments
-                        .Where(p => p.OrderId == o.OrderId)
-                        .OrderByDescending(p => p.PaymentDate)
-                        .Select(p => (decimal?)p.AmountPaid)
-                        .FirstOrDefault() ?? 0
+                    //  Get latest payment object
+                    LatestPayment = _context.Payments
+                .Where(p => p.OrderId == o.OrderId)
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => new
+                {
+                    p.PaymentId,        //  ADD THIS for transactionId
+                    p.PaymentMethod,
+                    p.AmountPaid
+                })
+                .FirstOrDefault()
                 })
                 .FirstOrDefaultAsync();
 
@@ -632,18 +630,28 @@ namespace mytown.DataAccess.Repositories
                 .FirstOrDefaultAsync();
 
             // 3️⃣ Items per store + totals
+            // 3️⃣ Items per store + totals (WITH IMAGE)
             foreach (var store in stores)
             {
                 var items = await (
                     from oi in _context.OrderDetails
+                    join v in _context.Sku_ProductVariants
+                        on oi.SkuId equals v.SkuId
                     join p in _context.products
-                        on oi.ProductId equals p.ProductId
+                        on v.ProductId equals p.ProductId
                     where oi.StoreOrderId == store.StoreOrderId
                     select new OrderItemDto
                     {
                         ProductName = p.ProductName,
                         Quantity = oi.Quantity,
-                        Price = oi.Price
+                        Price = oi.Price,
+
+                        // Get first image ordered by SortOrder
+                        ImageUrl = _context.ProductImages
+                            .Where(img => img.SkuId == v.SkuId)
+                            .OrderBy(img => img.SortOrder)
+                            .Select(img => img.FileName)
+                            .FirstOrDefault()
                     }
                 ).ToListAsync();
 
@@ -656,14 +664,16 @@ namespace mytown.DataAccess.Repositories
             {
                 OrderId = order.OrderId,
                 OrderDate = order.OrderDate,
-                TotalAmount = order.AmountPaid,
+                TotalAmount = order.LatestPayment?.AmountPaid ?? 0,
 
                 ShopperRegId = order.ShopperRegId,
                 ShopperName = order.ShopperName,
                 ShopperEmail = order.ShopperEmail,
                 ShopperPhone = order.ShopperPhone,
 
-                PaymentMethod = order.PaymentMethod,
+                TransactionId = order.LatestPayment?.PaymentId ?? 0,   //  ADDED THIS
+                PaymentMethod = order.LatestPayment?.PaymentMethod,
+
                 DeliveryAddress = deliveryAddress,
 
                 Stores = stores
