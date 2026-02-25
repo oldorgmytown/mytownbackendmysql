@@ -248,51 +248,121 @@ public class EmailService : IEmailService
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
+                // 🔹 Build Store Sections Dynamically
+                var storeSections = "";
+
+                foreach (var store in orderdto.Stores)
+                {
+                    var itemsHtml = "";
+
+                    foreach (var item in store.Items)
+                    {
+                        itemsHtml += $@"
+<div class='item'>
+    <div class='item-details'>
+        <span class='item-name'>{item.ProductName}</span>
+        <span class='item-qty'>Qty: {item.Quantity}</span>
+        <span class='item-price'>₹{item.ItemTotal}</span>
+    </div>
+</div>";
+                    }
+
+                    storeSections += $@"
+<div class='store-section'>
+
+    <div class='store-header'>
+        <div class='store-info'>
+            <h3>{store.StoreName}</h3>
+        </div>
+        <div class='store-total'>
+            <span class='store-total-label'>Store Total</span>
+            <span class='store-total-amount'>₹{store.StoreTotal}</span>
+        </div>
+    </div>
+
+    <div class='store-meta'>
+        <div class='meta-row'>
+            <span class='meta-label'>Store Order ID</span>
+            <span class='meta-value'>{store.StoreOrderId}</span>
+        </div>
+        <div class='meta-row'>
+            <span class='meta-label'>Estimated Delivery</span>
+            <span class='meta-value'>{store.EstimatedDeliveryDate:MMMM dd, yyyy}</span>
+        </div>
+    </div>
+
+    <h4 class='items-heading'>Items in your order</h4>
+    <div class='items-list'>
+        {itemsHtml}
+    </div>
+
+    <div class='status-box'>
+        <p><strong>{store.ShippingStatus}</strong><br/>
+        Expected delivery by {store.EstimatedDeliveryDate:MMMM dd, yyyy}.
+        </p>
+    </div>
+
+</div>";
+                }
+
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail),
-                    Subject = "Order Payment Confirmation",
-                    Body = $@"
+                    Subject = "Order Confirmation - ITISMYTOWN",
+                    IsBodyHtml = true,
+
+                    Body = $@"<!DOCTYPE html>
 <html>
-  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
-    <h3 style='color: #000;'>Payment Confirmation – Thank You for Your Purchase!</h3>
+<head>
+<meta charset='UTF-8'>
+<title>Order Confirmation</title>
+</head>
+<body style='font-family:Arial;background:#FAFBFC;margin:0;padding:0;'>
 
-    <p>Dear <strong>{shopperName}</strong>,</p>
+<div style='max-width:600px;margin:0 auto;background:#ffffff;padding:20px;'>
 
-    <p>
-      We are delighted to inform you that your payment for 
-      <strong>Order ID #</strong> has been successfully processed.
-    </p>
+<h2>Order Confirmed!</h2>
 
-    <p>
-      <strong>Payment Details:</strong><br />
-      Amount Paid: <strong>₹</strong><br />
-      Payment Date: <strong></strong>
-    </p>
+<p>Hello {shopperName},</p>
+<p>Your order has been successfully placed.</p>
 
-    <p>
-      Our partner stores have been notified and will begin preparing your order for shipment.
-      You can track your order status anytime by logging in to your account.
-    </p>
+<hr/>
 
-    <p>
-      If you have any questions or need assistance, please don’t hesitate to reach out to our support team.
-    </p>
+<p><strong>Order ID:</strong> {orderdto.OrderId}</p>
+<p><strong>Order Date:</strong> {orderdto.OrderDate:MMMM dd, yyyy}</p>
+<p><strong>Total Amount:</strong> ₹{orderdto.TotalAmount}</p>
 
-    <p style='margin-top: 30px;'>
-      Thank you for shopping with <strong style='color: #004481;'>ItIsMyTown</strong>!<br />
-      We hope to serve you again soon.
-    </p>
+<hr/>
 
-    <hr style='border: none; border-top: 1px solid #ccc; margin: 25px 0;' />
-    <p style='font-size: 0.9em; color: #666;'>
-      <em>This is an automated message. Please do not reply directly to this email.</em><br/>
-      <strong>ItIsMyTown</strong><br/>
-      support@itismytown.com | +91-XXXXXXXXXX
-    </p>
-  </body>
-</html>",
-                    IsBodyHtml = true
+{storeSections}
+
+<hr/>
+
+<h3>Payment Method</h3>
+<p>{orderdto.PaymentMethod}</p>
+
+<h3>Delivery Address</h3>
+<p>
+{orderdto.ShopperName}<br/>
+{orderdto.DeliveryAddress}<br/>
+{orderdto.ShopperPhone}
+</p>
+
+<div style='text-align:center;margin-top:30px;'>
+<a href='https://yourdomain.com/orders/{orderdto.OrderId}'
+style='background:#004481;color:white;padding:12px 24px;
+text-decoration:none;border-radius:5px;display:inline-block;'>
+View Order
+</a>
+</div>
+
+<p style='margin-top:40px;font-size:12px;color:#777;text-align:center;'>
+© 2026 itismytown. All rights reserved.
+</p>
+
+</div>
+</body>
+</html>"
                 };
 
                 mailMessage.To.Add(email);
@@ -305,7 +375,6 @@ public class EmailService : IEmailService
             throw new Exception("Failed to send shopper notification email.");
         }
     }
-
     private async Task<bool> DomainHasMX(string email)
     {
         try
