@@ -644,8 +644,12 @@ namespace mytown.DataAccess.Repositories
                     {
                         ProductName = p.ProductName,
                         Quantity = oi.Quantity,
-                        Price = oi.Price,
+                        FinalPrice = oi.Price,
 
+                        // Original price from variant
+                        OriginalPrice = v.Sku_Cost,
+                        //  Discount Amount calculation
+                        DiscountAmount = v.Sku_Cost - oi.Price,
                         // Get first image ordered by SortOrder
                         ImageUrl = _context.ProductImages
                             .Where(img => img.SkuId == v.SkuId)
@@ -656,7 +660,7 @@ namespace mytown.DataAccess.Repositories
                 ).ToListAsync();
 
                 store.Items = items;
-                store.StoreItemsTotal = items.Sum(i => i.Price * i.Quantity);
+                store.StoreItemsTotal = items.Sum(i => i.FinalPrice * i.Quantity);
             }
 
             // 4️⃣ Final DTO
