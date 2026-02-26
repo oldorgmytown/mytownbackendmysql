@@ -87,8 +87,28 @@ namespace mytown.Services.Implementations
 
         public async Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status)
         {
-            // Keeping your existing repository call — NO change to repo method
-            return await _adminRepo.UpdateShopperStatusAsync(shopperId, status);
+            // 1️ Update status
+            var updated = await _adminRepo.UpdateShopperStatusAsync(shopperId, status);
+
+            if (!updated)
+                return false;
+
+            // 2️ Get shopper details
+            var shopper = await _adminRepo.GetShopperByIdAsync(shopperId);
+
+            if (shopper == null)
+                return false;
+
+            // 3️ Send email only if reactivated
+            if (status.ToLower() == "active")
+            {
+                await _emailService.SendShopperReactivationEmailAsync(
+                    shopper.Email,
+                    shopper.Username
+                );
+            }
+
+            return true;
         }
         public async Task<bool> DeactivateShopperAsync(int shopperRegId)
         {
@@ -110,22 +130,22 @@ namespace mytown.Services.Implementations
             return result;
         }
 
-        public async Task<bool> SendReativateShopperemail(int shopperRegId)
-        {
-            var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
+        //public async Task<bool> SendReativateShopperemail(int shopperRegId)
+        //{
+        //    var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
 
-            if (shopper == null)
-                return false;
+        //    if (shopper == null)
+        //        return false;
 
            
-                await _emailService.SendShopperReactivationEmailAsync(
-                    shopper.Email,
-                    shopper.Username
-                );
+        //        await _emailService.SendShopperReactivationEmailAsync(
+        //            shopper.Email,
+        //            shopper.Username
+        //        );
 
 
-            return true;
-        }
+        //    return true;
+        //}
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
             GetCourierRegistersPaginatedAsync(int page, int pageSize)

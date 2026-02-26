@@ -19,7 +19,7 @@ namespace mytown.Services.Interfaces
         //Decativate shopper account
         Task<bool> DeactivateShopperAsync(int shopperRegId);
         //Recativate shopper account
-        Task<bool> SendReativateShopperemail(int shopperRegId);
+      
 
         // Shopper Summary on Admin panel
         Task<ShopperStatsDto> GetActiveShopperStatsAsync();

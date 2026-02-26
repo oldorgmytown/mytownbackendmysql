@@ -244,16 +244,16 @@ namespace mytown.Controllers
             return Ok("Shopper status updated successfully.");
         }
 
-        [HttpPut("SendReativateShopperemail")]
-        public async Task<IActionResult> SendReativateShopperemail(int shopperRegId)
-        {
-            var result = await _adminService.SendReativateShopperemail(shopperRegId);
+        //[HttpPut("SendReativateShopperemail")]
+        //public async Task<IActionResult> SendReativateShopperemail(int shopperRegId)
+        //{
+        //    var result = await _adminService.SendReativateShopperemail(shopperRegId);
 
-            if (!result)
-                return NotFound("Shopper not found");
+        //    if (!result)
+        //        return NotFound("Shopper not found");
 
-            return Ok(new { message = "Shopper Email successfully" });
-        }
+        //    return Ok(new { message = "Shopper Email successfully" });
+        //}
 
         [HttpPut("deactivateShopper")]
         public async Task<IActionResult> DeactivateShopper(int shopperRegId)
