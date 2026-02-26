@@ -17,6 +17,9 @@
         // public string? ProductImage { get; set; }
         public string? SupplierName { get; set; }
 
+        // new to check product avaliability based on product status
+        public bool IsProductAvailable { get; set; }
+
 
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
     }

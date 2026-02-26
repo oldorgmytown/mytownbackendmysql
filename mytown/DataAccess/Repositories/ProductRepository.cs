@@ -114,7 +114,10 @@ namespace mytown.DataAccess.Repositories
                 ProductTypeId = product.ProductTypeId,
                 FabricId = product.FabricId,
                 DesignId = product.DesignId,
-
+                IsProductAvailable =
+                        product.ProductStatus == "Approved"
+                        && product.IsActive == true,
+                        
 
 
                 Variants = product.Sku_ProductVariants.Select(v => new Sku_ProductVariantDto
