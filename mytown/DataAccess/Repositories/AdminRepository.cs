@@ -455,6 +455,10 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
                 {
                     query = query.Where(s => s.Status != null && s.Status == "Deactivated");
                 }
+                else if (status == "blocked")
+                {
+                    query = query.Where(s => s.Status == "Blocked");
+                }
             }
 
             // Search Filter
@@ -485,60 +489,77 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
             return (records, totalCount);
         }
-      //  public async Task<(List<ShopperRegister> records, int totalCount)>
-      //GetShoppersByStatusAsync(string status, int page, int pageSize)
-      //  {
-      //      var query = _context.ShopperRegisters.AsQueryable();
+        //  public async Task<(List<ShopperRegister> records, int totalCount)>
+        //GetShoppersByStatusAsync(string status, int page, int pageSize)
+        //  {
+        //      var query = _context.ShopperRegisters.AsQueryable();
 
-      //      if (status == "active")
-      //      {
-      //          query = query.Where(s => s.Status == null || s.Status != "Deactivated");
-      //      }
-      //      else if (status == "deactivated")
-      //      {
-      //          query = query.Where(s => s.Status == "Deactivated");
-      //      }
+        //      if (status == "active")
+        //      {
+        //          query = query.Where(s => s.Status == null || s.Status != "Deactivated");
+        //      }
+        //      else if (status == "deactivated")
+        //      {
+        //          query = query.Where(s => s.Status == "Deactivated");
+        //      }
 
-      //      var totalCount = await query.CountAsync();
+        //      var totalCount = await query.CountAsync();
 
-      //      var records = await query
-      //          .OrderByDescending(s => s.ShopperRegId)
-      //          .Skip((page - 1) * pageSize)
-      //          .Take(pageSize)
-      //          .ToListAsync();
+        //      var records = await query
+        //          .OrderByDescending(s => s.ShopperRegId)
+        //          .Skip((page - 1) * pageSize)
+        //          .Take(pageSize)
+        //          .ToListAsync();
 
-      //      return (records, totalCount);
-      //  }
+        //      return (records, totalCount);
+        //  }
 
 
         //Shopper summary on Admin panel
 
         public async Task<ShopperStatsDto> GetActiveShopperStatsAsync()
         {
-            var activeShoppers = _context.ShopperRegisters
+            var allShoppers = _context.ShopperRegisters;
+
+            var activeShoppers = allShoppers
                 .Where(s => s.Status == null || s.Status != "Deactivated");
+
+            var deactivatedShoppers = allShoppers
+                .Where(s => s.Status == "Deactivated");
 
             var result = new ShopperStatsDto
             {
+                // Total
+                TotalShoppers = await allShoppers.CountAsync(),
+
+                // Active
                 TotalActiveShoppers = await activeShoppers.CountAsync(),
 
+                //  Deactivated
+                TotalDeactivatedShoppers = await deactivatedShoppers.CountAsync(),
+
+                // Location stats based only on ACTIVE shoppers
                 TotalTowns = await activeShoppers
                     .Select(s => s.Town)
+                    .Where(t => t != null)
                     .Distinct()
                     .CountAsync(),
 
                 TotalCities = await activeShoppers
                     .Select(s => s.City)
+                    .Where(c => c != null)
                     .Distinct()
                     .CountAsync(),
 
                 TotalStates = await activeShoppers
                     .Select(s => s.State)
+                    .Where(s => s != null)
                     .Distinct()
                     .CountAsync(),
 
                 TotalCountries = await activeShoppers
                     .Select(s => s.Country)
+                    .Where(c => c != null)
                     .Distinct()
                     .CountAsync()
             };
