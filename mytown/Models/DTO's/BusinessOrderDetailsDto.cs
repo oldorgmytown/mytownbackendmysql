@@ -41,7 +41,12 @@ public class BusinessOrderProductDto
     public int Quantity { get; set; }
     public decimal Amount { get; set; }
 
-    public string ProductImage { get; set; }
+        public decimal? Weight { get; set; }
+        public decimal? Length { get; set; }
+        public decimal? Width { get; set; }
+        public decimal? Height { get; set; }
+
+        public string ProductImage { get; set; }
 }
 
 // Optional: Notification DTO in same file

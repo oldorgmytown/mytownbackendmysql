@@ -600,6 +600,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 Quantity = od.Quantity,
                 UnitPrice = od.Price,
                 Amount = od.Price * od.Quantity,
+                // Added these
+                Weight = sku != null ? sku.Weight : null,
+                Length = sku != null ? sku.Length : null,
+                Width = sku != null ? sku.Width : null,
+                Height = sku != null ? sku.Height : null,
                 ProductImage = skuImg.FileName ?? prodImg.FileName
             }
         ).ToListAsync();

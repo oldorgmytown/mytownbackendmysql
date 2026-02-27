@@ -72,6 +72,11 @@ namespace mytown.DataAccess.Repositories
                 from od in _context.OrderDetails
                 join pr in _context.products on od.ProductId equals pr.ProductId
 
+                //  Join Variant to get weight & dimensions
+                join v in _context.Sku_ProductVariants
+                    on od.SkuId equals v.SkuId
+
+
                 // SKU image (highest priority)
                 join skuImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1)
@@ -94,6 +99,12 @@ namespace mytown.DataAccess.Repositories
 
                     UnitPrice = od.Price,
                     Quantity = od.Quantity,
+
+                    //  Dimensions & Weight
+                    Length = v.Length,
+                    Width = v.Width,
+                    Height = v.Height,
+                    Weight = v.Weight,
 
                     ProductImage = skuImg != null
                         ? skuImg.FileName
