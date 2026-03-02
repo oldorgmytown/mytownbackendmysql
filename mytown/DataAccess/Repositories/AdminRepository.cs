@@ -464,6 +464,8 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
             // Search Filter
             if (!string.IsNullOrEmpty(search))
             {
+                int.TryParse(search, out int shopperId);
+
                 query = query.Where(s =>
                     s.Username.Contains(search) ||
                     s.Email.Contains(search) ||
@@ -471,11 +473,11 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
                     s.Town.Contains(search) ||
                     s.City.Contains(search) ||
                     s.State.Contains(search) ||
-                    s.Country.Contains(search) 
-                   // (int.TryParse(search, out int shopperId) && s.ShopperRegId == shopperId)
+                    s.Country.Contains(search) ||
+                    s.ShopperRegId == shopperId
                 );
-            
-        }
+
+            }
 
             // Total Count
             var totalCount = await query.CountAsync();
