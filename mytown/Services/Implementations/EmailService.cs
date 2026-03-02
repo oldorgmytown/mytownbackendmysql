@@ -178,8 +178,11 @@ public class EmailService : IEmailService
         }
     }
 
-    public async Task SendBusinessnotificationforOrderCnf(string email, string businessname, OrderConfirmationDto orderdto, StoreOrderConfirmationDto storedto)
-
+    public async Task SendBusinessnotificationforOrderCnf(
+      string email,
+      string businessname,
+      OrderConfirmationDto orderdto,
+      StoreOrderConfirmationDto storedto)
     {
         if (!await DomainHasMX(email))
             throw new Exception("The email domain is not valid (no MX records found).");
@@ -195,44 +198,224 @@ public class EmailService : IEmailService
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail),
-                    Subject = "Purchase Notiifcation",
-                    Body = $@"
-<html>
-  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
-    <h3 style='color: #000;'>Notification to business owner – Email content</h3>
-    <p>Dear <strong>{businessname}</strong>,</p>
-
-    <p>
-      We are writing to confirm that payment has been successfully completed for an order placed through our online platform.
-      Kindly proceed with processing and shipping the product for the order ID <strong></strong>.
-      Check for the order details in your business portal.
-    </p>
-
-    <p>
-      Please update the shipping status on the platform once the order has been dispatched.
-      If you encounter any issues or need further assistance, feel free to contact us.
-    </p>
-
-    <p>Thank you for your prompt attention to this order.</p>
-
-    <p style='margin-top: 30px;'>
-      Best regards,<br />
-      <strong style='color: #004481;'>ItIsMyTown</strong><br />
-      <em>[Contact Details]</em>
-    </p>
-  </body>
-</html>",
+                    Subject = $"New Order Received - {storedto.StoreOrderId}",
                     IsBodyHtml = true
                 };
 
                 mailMessage.To.Add(email);
+
+                // =============================
+                // 🔹 BUILD DYNAMIC ITEMS HTML
+                // =============================
+
+                var itemsHtml = new StringBuilder();
+
+                foreach (var item in storedto.Items)
+                {
+                    itemsHtml.Append($@"
+<tr>
+    <td style=""border-radius: 12px; border: 1px solid #E5E7EB; padding: 12px 16px; margin-bottom: 12px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"">
+            <tr>
+                <td style=""width: 48px; padding-right: 16px;"">
+                    <img src=""{item.ImageUrl}"" 
+                         style=""width: 48px; height: 48px; border-radius: 8px; object-fit: cover;"" />
+                </td>
+                <td style=""flex: 1; padding-right: 16px;"">
+                    <p style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0;"">
+                        {item.ProductName}
+                    </p>
+                </td>
+                <td style=""text-align: right;"">
+                    <span style=""color: #585858; font-size: 14px; font-weight: 500;"">
+                        Qty: {item.Quantity}
+                    </span>
+                    <span style=""color: #585858; font-size: 14px; font-weight: 600; margin-left: 16px;"">
+                        ₹{item.ItemTotal:N2}
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>");
+                }
+
+                // =============================
+                // 🔹 FULL EMAIL BODY (EXACT DESIGN)
+                // =============================
+
+                var body = $@"
+<!DOCTYPE html>
+<html lang=""en"">
+<head>
+<meta charset=""UTF-8"">
+<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+<title>New Order Received - ITISMYTOWN</title>
+</head>
+
+<body style=""margin: 0; padding: 0; font-family: -apple-system, Roboto, Helvetica, sans-serif; background-color: #f3f4f6; padding: 24px 16px; display: flex; justify-content: center; min-height: 100vh;"">
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""max-width: 600px; background-color: #FAFBFC; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);"">
+
+<tr>
+<td style=""padding: 20px 30px; border-bottom: 1px solid #F1F1F3; background-color: #fff; text-align: center;"">
+<img src=""https://api.builder.io/api/v1/image/assets/TEMP/61706e9c591f3c915cc46d92b1a6a96e3c9c3a70?width=462"" alt=""ITISMYTOWN"" style=""height: 46px; width: auto;"">
+</td>
+</tr>
+
+<tr>
+<td style=""padding: 20px 30px 24px;"">
+
+<div style=""margin-bottom: 16px;"">
+<p style=""color: #000; font-size: 16px; font-weight: 700; line-height: 1.5; margin: 0 0 12px 0;"">
+Hello {storedto.StoreName},
+</p>
+<p style=""color: #000; font-size: 16px; font-weight: 400; line-height: 1.5; margin: 0;"">
+You have received a new order from {orderdto.ShopperName}. Please prepare the items for shipment.
+</p>
+</div>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 4px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"">
+<tr>
+
+<td style=""padding: 0 16px 16px 0;"">
+<div style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4;"">Order ID</div>
+<div style=""color: #585858; font-size: 16px; font-weight: 600; line-height: 1.25;"">
+ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}
+</div>
+</td>
+
+<td style=""padding: 0 16px 16px 0;"">
+<div style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4;"">Store Order ID</div>
+<div style=""color: #585858; font-size: 16px; font-weight: 600; line-height: 1.25;"">
+{storedto.StoreOrderId}
+</div>
+</td>
+
+<td style=""padding: 0 16px 16px 0;"">
+<div style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4;"">Order Date</div>
+<div style=""color: #585858; font-size: 16px; font-weight: 600; line-height: 1.25;"">
+{orderdto.OrderDate:MMMM dd, yyyy}
+</div>
+</td>
+
+<td style=""padding: 0;"">
+<div style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4;"">Total Amount</div>
+<div style=""color: #585858; font-size: 16px; font-weight: 600; line-height: 1.25;"">
+₹{storedto.StoreTotal:N2}
+</div>
+</td>
+
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 8px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+<h2 style=""color: #000; font-size: 18px; font-weight: 500; line-height: 1; margin: 0 0 16px 0;"">Items Ordered</h2>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"">
+{itemsHtml}
+</table>
+
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 8px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+<h2 style=""color: #000; font-size: 18px; font-weight: 500; line-height: 1; margin: 0 0 16px 0;"">Payment Method</h2>
+<p style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0;"">
+{orderdto.PaymentMethod}
+</p>
+<p style=""color: #22A048; font-size: 14px; font-weight: 600; line-height: 1.4; margin: 4px 0 0 0;"">
+Payment successful
+</p>
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 8px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+<h2 style=""color: #000; font-size: 18px; font-weight: 500; line-height: 1; margin: 0 0 16px 0;"">Estimated Delivery Date</h2>
+<p style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0;"">
+{storedto.EstimatedDeliveryDate:MMMM dd, yyyy}
+</p>
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 8px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+<h2 style=""color: #000; font-size: 18px; font-weight: 500; line-height: 1; margin: 0 0 16px 0;"">Shipping method</h2>
+<p style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4; margin: 0;"">
+{storedto.ShippingType}
+</p>
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""background-color: #fff; border-radius: 8px; border: 1px solid rgba(139, 139, 139, 0.08); padding: 24px; margin-bottom: 16px;"">
+<tr>
+<td>
+<h2 style=""color: #000; font-size: 18px; font-weight: 500; line-height: 1; margin: 0 0 16px 0;"">Delivery Address</h2>
+<div style=""margin-bottom: 8px;"">
+<p style=""color: #585858; font-size: 14px; font-weight: 600; line-height: 1.4; margin: 0;"">
+{orderdto.ShopperName}
+</p>
+<p style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4; margin: 4px 0 0 0;"">
+{orderdto.DeliveryAddress}
+</p>
+</div>
+<div style=""display: flex; align-items: center; gap: 8px;"">
+<div style=""width: 24px; height: 24px; border-radius: 50%; background-color: #F5F5F5; display: flex; align-items: center; justify-content: center;"">
+<img src=""https://api.builder.io/api/v1/image/assets/TEMP/1fe9cca9f23167203c9ed4a6d5e4c3fb69278262?width=28"" style=""width: 12px; height: 12px;"" />
+</div>
+<span style=""color: #585858; font-size: 14px; font-weight: 500; line-height: 1.4;"">
+{orderdto.ShopperPhone}
+</span>
+</div>
+</td>
+</tr>
+</table>
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" style=""border-radius: 8px; border: 1px solid #F7BBBB; background-color: #FDF0F0; padding: 12px 16px; margin-bottom: 16px;"">
+<tr>
+<td>
+<p style=""color: #FF1434; font-size: 14px; line-height: 1.5; margin: 0;"">
+<strong style=""display: block; margin-bottom: 4px;"">Action Required</strong>
+Please process this order and update the shipping status. The customer is expecting delivery by {storedto.EstimatedDeliveryDate:MMMM dd, yyyy}.
+</p>
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+</body>
+</html>";
+
+                mailMessage.Body = body;
+
                 await smtpClient.SendMailAsync(mailMessage);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error sending business notifcation email: {ex.Message}");
-            throw new Exception("Failed to send business notifcation email.");
+            Console.WriteLine($"Error sending business notification email: {ex.Message}");
+            throw new Exception("Failed to send business notification email.");
         }
     }
 
