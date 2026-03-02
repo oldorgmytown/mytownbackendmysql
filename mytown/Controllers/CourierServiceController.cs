@@ -21,6 +21,7 @@ namespace mytown.Controllers
         private readonly ILogger<CourierController> _logger;
         private readonly IBusinessRepository _businessRepo;
         private readonly IShopperRepository _shopperRepo;
+        private readonly IBusinessRegistrationValidator _registrationValidator;
 
         public CourierController(
             ICourierServiceHandler courierService,
@@ -28,7 +29,8 @@ namespace mytown.Controllers
             IShopperRepository shopperRepo,
             IEmailService emailService,
             IConfiguration configuration,
-            ILogger<CourierController> logger)
+            ILogger<CourierController> logger,
+            IBusinessRegistrationValidator registrationValidator)
         {
             _courierService = courierService;
             _businessRepo = businessRepo;
@@ -36,6 +38,7 @@ namespace mytown.Controllers
             _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
+            _registrationValidator = registrationValidator;
         }
 
         [HttpPost("register")]
@@ -44,21 +47,28 @@ namespace mytown.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
+            //var validationErrors = _registrationValidator.Validate(courierDto);
+            //if (validationErrors.Count > 0)
+            //{
+            //    _logger.LogWarning("Validation failed for {Email}: {Errors}", businessRegisterDto.BusEmail, validationErrors);
+            //    return BadRequest(new { errors = validationErrors });
+            //}
+
             try
             {
-                // Register directly (no verification) — if you want verification, pass true.
-                var created = await _courierService.RegisterCourierAsync(courierDto, sendVerification: false);
-                if (created == null)
+                // First check if email is already taken
+                var emailTaken = await _courierService.IsCourierEmailTakenAsync(courierDto.CourierEmail);
+
+                if (emailTaken)
+                    return Conflict(new { error = "Email already registered. Try logging in." });
+
+                // Email NOT taken → trigger verification flow
+                await _courierService.RegisterCourierAsync(courierDto, sendVerification: true);
+
+                return Ok(new
                 {
-                    // null indicates email taken (or verification flow triggered)
-                    var taken = await _courierService.IsCourierEmailTakenAsync(courierDto.CourierEmail);
-                    if (taken)
-                        return Conflict(new { error = "Email already registered. Try logging in." });
-
-                    return StatusCode(500, new { error = "Registration failed." });
-                }
-
-                return Ok(new { message = "Courier registered successfully.", courier = created });
+                    message = "Verification email sent. Please check your inbox to complete registration."
+                });
             }
             catch (Exception ex)
             {

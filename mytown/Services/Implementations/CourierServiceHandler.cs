@@ -36,7 +36,7 @@ namespace mytown.Services.Implementations
             return await _repo.IsCourierEmailTaken(email);
         }
 
-        public async Task<CourierService?> RegisterCourierAsync(CourierServiceDto courierDto, bool sendVerification = false)
+        public async Task<CourierService?> RegisterCourierAsync(CourierServiceDto courierDto, bool sendVerification = true)
         {
             if (courierDto == null) return null;
 
@@ -124,23 +124,29 @@ namespace mytown.Services.Implementations
 
             var courier = new CourierService
             {
+                //  Basic Info
                 CourierServiceName = courierDto.CourierServiceName,
                 CourierWebsiteName = courierDto.CourierWebsiteName,
-                CourierPhone = courierDto.CourierPhone,
                 CourierEmail = courierDto.CourierEmail,
+                CourierPhone = courierDto.CourierPhone,
 
-                // 🔐 Security
-                Password = hashed,
-                IsEmailVerified = true,
-                RegisteredDate = DateTime.UtcNow,
+                //  Address
+                Address = courierDto.Address,
+                Town = courierDto.Town,
+                City = courierDto.City,
+                State = courierDto.State,
+                Country = courierDto.Country,
+                PostalCode = courierDto.PostalCode,
 
-                // 🚚 Coverage flags (updated)
+                // Coverage
                 IsCity = courierDto.IsCity,
                 IsState = courierDto.IsState,
 
-              
+                //  Security
+                Password = hashed,
+                IsEmailVerified = true,
+                RegisteredDate = DateTime.UtcNow
             };
-
 
             var created = await _repo.RegisterCourier(courier);
             await _repo.DeletePendingCourierVerification(token);
