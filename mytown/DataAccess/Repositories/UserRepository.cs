@@ -676,6 +676,7 @@ namespace mytown.DataAccess.Repositories
                         sessionId = newSession.SessionGuid,
                         courierDto = new CourierServiceDto
                         {
+                            CourierId = courier.CourierId,
                             CourierServiceName = courier.CourierServiceName,
                             CourierWebsiteName = courier.CourierWebsiteName,
                             CourierEmail = courier.CourierEmail,
