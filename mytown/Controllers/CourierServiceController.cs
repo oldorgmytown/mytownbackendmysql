@@ -168,7 +168,7 @@ namespace mytown.Controllers
                     Email = model.Email,
                     Token = token,
                     ExpiryDate = expiry,
-                    // JsonPayload = pending.JsonPayload
+                    JsonPayload = pending.JsonPayload
                 };
 
                 await _courierService.SavePendingVerification(newPending);

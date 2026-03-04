@@ -17,8 +17,8 @@ public interface ICourierServiceRepository
 
     //for resend email
 
-    Task<CourierVerification> FindPendingVerificationByEmail(string email);
-    Task RemoveVerification(CourierVerification verification);
+    Task<PendingCourierVerification> FindPendingVerificationByEmail(string email);
+    Task RemoveVerification(PendingCourierVerification verification);
 
     Task SavePendingVerification(PendingCourierVerification pending);
 

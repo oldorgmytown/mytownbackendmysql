@@ -154,7 +154,7 @@ namespace mytown.Services.Implementations
             return created;
         }
 
-        public async Task<CourierVerification?> FindPendingVerificationByEmail(string email)
+        public async Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email)
         {
             var verification = await _repo.FindPendingVerificationByEmail(email);
             return verification;
@@ -165,7 +165,7 @@ namespace mytown.Services.Implementations
             return _repo.SavePendingVerification(pending);
         }
 
-        public Task RemoveVerification(CourierVerification verification)
+        public Task RemoveVerification(PendingCourierVerification verification)
         {
             return _repo.RemoveVerification(verification);
         }

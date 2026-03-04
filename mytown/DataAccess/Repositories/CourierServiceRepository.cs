@@ -50,18 +50,19 @@ namespace mytown.DataAccess.Repositories
         }
 
         //resend email 
-        public async Task<CourierVerification> FindPendingVerificationByEmail(string email)
+        public async Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email)
         {
-            return await _context.CourierVerifications
-                .Include(bv => bv.CourierService)
-                .Where(bv => bv.CourierService.CourierEmail == email && !bv.IsUsed && bv.ExpiryDate > DateTime.UtcNow)
-                .FirstOrDefaultAsync();
+            return await _context.PendingCourierVerifications
+                .FirstOrDefaultAsync(p =>
+                    p.Email == email &&
+                    p.ExpiryDate > DateTime.UtcNow
+                );
         }
 
 
-        public async Task RemoveVerification(CourierVerification verification)
+        public async Task RemoveVerification(PendingCourierVerification verification)
         {
-            _context.CourierVerifications.Remove(verification);
+            _context.PendingCourierVerifications.Remove(verification);
             await _context.SaveChangesAsync();
         }
 

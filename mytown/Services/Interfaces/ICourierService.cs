@@ -14,9 +14,9 @@ namespace mytown.Services.Interfaces
       
         Task<CourierService?> VerifyCourierEmailAsync(string token);
 
-        Task<CourierVerification?> FindPendingVerificationByEmail(string email);
+        Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email);
 
-        Task RemoveVerification(CourierVerification verification);
+        Task RemoveVerification(PendingCourierVerification verification);
         
         Task SavePendingVerification(PendingCourierVerification pending);
         Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsvAsync(IFormFile file);
