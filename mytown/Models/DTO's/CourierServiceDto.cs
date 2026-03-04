@@ -3,6 +3,7 @@
 
     public class CourierServiceDto
     {
+       public int CourierId { get; set; }
         public string CourierServiceName { get; set; }
         public string CourierWebsiteName { get; set; }
         public string CourierEmail { get; set; }

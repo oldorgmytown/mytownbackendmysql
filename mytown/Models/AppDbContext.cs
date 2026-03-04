@@ -41,6 +41,8 @@ namespace mytown.Models
             public DbSet<ShippingDetails> ShippingDetails { get; set; } //done
             public DbSet<CourierService> CourierService { get; set; } //DONE
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
+
+            public DbSet<CourierVerification> CourierVerifications { get; set; } //new
             public DbSet<CourierBranch> CourierBranches { get; set; } //modified table
 
            

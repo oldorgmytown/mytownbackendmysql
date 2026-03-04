@@ -15,6 +15,13 @@ public interface ICourierServiceRepository
 
     Task<CourierService> RegisterCourier(CourierService courier);
 
+    //for resend email
+
+    Task<CourierVerification> FindPendingVerificationByEmail(string email);
+    Task RemoveVerification(CourierVerification verification);
+
+    Task SavePendingVerification(PendingCourierVerification pending);
+
     // upload csv file for branch details
     Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file);
 

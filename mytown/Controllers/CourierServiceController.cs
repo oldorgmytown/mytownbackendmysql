@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using mytown.Controllers.Helpers;
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Services;
 using mytown.Services.Interfaces;
 using System.Text.Json;
 
@@ -22,6 +24,7 @@ namespace mytown.Controllers
         private readonly IBusinessRepository _businessRepo;
         private readonly IShopperRepository _shopperRepo;
         private readonly IBusinessRegistrationValidator _registrationValidator;
+        private readonly IVerificationLinkBuildercourier _verificationLinkBuildercourier;
 
         public CourierController(
             ICourierServiceHandler courierService,
@@ -30,7 +33,8 @@ namespace mytown.Controllers
             IEmailService emailService,
             IConfiguration configuration,
             ILogger<CourierController> logger,
-            IBusinessRegistrationValidator registrationValidator)
+            IBusinessRegistrationValidator registrationValidator,
+            IVerificationLinkBuildercourier verificationLinkBuildercourier)
         {
             _courierService = courierService;
             _businessRepo = businessRepo;
@@ -39,6 +43,7 @@ namespace mytown.Controllers
             _configuration = configuration;
             _logger = logger;
             _registrationValidator = registrationValidator;
+            _verificationLinkBuildercourier = verificationLinkBuildercourier;
         }
 
         [HttpPost("register")]
@@ -139,7 +144,52 @@ namespace mytown.Controllers
             }
         }
 
-       // [Authorize]
+
+        [AllowAnonymous]
+        [HttpPost("resend-courier-verification")]
+        public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model.Email))
+                    return BadRequest(new { error = "Email is required." });
+
+                var pending = await _courierService.FindPendingVerificationByEmail(model.Email);
+                if (pending == null)
+                    return NotFound(new { error = "No pending verification found. Please register again." });
+
+                await _courierService.RemoveVerification(pending);
+
+                string token = Guid.NewGuid().ToString();
+                DateTime expiry = DateTime.UtcNow.AddHours(24);
+
+                var newPending = new PendingCourierVerification
+                {
+                    Email = model.Email,
+                    Token = token,
+                    ExpiryDate = expiry,
+                    // JsonPayload = pending.JsonPayload
+                };
+
+                await _courierService.SavePendingVerification(newPending);
+
+                string link = _verificationLinkBuildercourier.BuildLink(
+                    _configuration["FrontendBaseUrl"],
+                    token
+                );
+
+                await _emailService.SendVerificationEmail(model.Email, link);
+
+                return Ok(new { message = $"New verification email sent to {model.Email}" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Resend verification failed for {Email}", model.Email);
+                return StatusCode(500, new { error = "Something went wrong. Please try again." });
+            }
+        }
+
+        // [Authorize]
         [HttpPost("GetBestCourier")]
         public async Task<IActionResult> GetBestCourier([FromBody] StoreCourierRequestDto request)
         {

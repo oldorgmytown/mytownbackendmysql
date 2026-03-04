@@ -16,7 +16,7 @@ namespace mytown.Services.Implementations
         private readonly IVerificationLinkBuildercourier _verificationLinkBuilder;
         private readonly IConfiguration _configuration;
         private readonly ILogger<CourierService> _logger;
-
+        
         public CourierServiceHandler(
             ICourierServiceRepository repo,
             IEmailService emailService,
@@ -153,6 +153,23 @@ namespace mytown.Services.Implementations
 
             return created;
         }
+
+        public async Task<CourierVerification?> FindPendingVerificationByEmail(string email)
+        {
+            var verification = await _repo.FindPendingVerificationByEmail(email);
+            return verification;
+        }
+
+        public Task SavePendingVerification(PendingCourierVerification pending)
+        {
+            return _repo.SavePendingVerification(pending);
+        }
+
+        public Task RemoveVerification(CourierVerification verification)
+        {
+            return _repo.RemoveVerification(verification);
+        }
+
 
         public async Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsvAsync(IFormFile file)
         {

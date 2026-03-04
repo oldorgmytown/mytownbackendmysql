@@ -79,5 +79,7 @@ namespace mytown.Models
    
         // Navigation property
         public ICollection<CourierBranch> CourierBranches { get; set; }
+
+        public virtual ICollection<CourierVerification> CourierVerifications { get; set; }
     }
 }

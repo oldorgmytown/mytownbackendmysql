@@ -49,6 +49,29 @@ namespace mytown.DataAccess.Repositories
             return courier;
         }
 
+        //resend email 
+        public async Task<CourierVerification> FindPendingVerificationByEmail(string email)
+        {
+            return await _context.CourierVerifications
+                .Include(bv => bv.CourierService)
+                .Where(bv => bv.CourierService.CourierEmail == email && !bv.IsUsed && bv.ExpiryDate > DateTime.UtcNow)
+                .FirstOrDefaultAsync();
+        }
+
+
+        public async Task RemoveVerification(CourierVerification verification)
+        {
+            _context.CourierVerifications.Remove(verification);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task SavePendingVerification(PendingCourierVerification pending)
+        {
+            _context.PendingCourierVerifications.Add(pending);
+            await _context.SaveChangesAsync();
+        }
+
+
 
         //Upload CVS file for courier branches
 
