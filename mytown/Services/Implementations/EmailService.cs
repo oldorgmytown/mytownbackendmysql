@@ -219,7 +219,7 @@ public class EmailService : IEmailService
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"">
             <tr>
                 <td style=""width: 48px; padding-right: 16px;"">
-                    <img src=""{imageBaseUrl}/{item.ImageUrl}""
+                    <img src=""{imageBaseUrl}/{Uri.EscapeDataString(item.ImageUrl)}""
                          style=""width: 48px; height: 48px; border-radius: 8px; object-fit: cover;"" />
                 </td>
                 <td style=""flex: 1; padding-right: 16px;"">
