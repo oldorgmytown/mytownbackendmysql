@@ -50,6 +50,7 @@ namespace mytown.Services
             AddIfExists("businessProfile");
             AddIfExists("shopper");
             AddIfExists("courier");
+            AddIfExists("hasBranches");
 
             return (response, token!, sessionId!);
         }

@@ -641,7 +641,7 @@ namespace mytown.DataAccess.Repositories
                 if (courier != null && BCrypt.Net.BCrypt.Verify(password, courier.Password))
                 {
                     var oldSession = await _context.UserSessions
-                        .Where(s => s.UserId == courier.CourierId && s.UserType == "Courier" && s.IsActive)
+                        .Where(s => s.UserId == courier.CourierId && s.UserType == "CourierHead" && s.IsActive)
                         .FirstOrDefaultAsync();
 
                     if (oldSession != null)
@@ -662,10 +662,14 @@ namespace mytown.DataAccess.Repositories
                     _context.UserSessions.Add(newSession);
                     await _context.SaveChangesAsync();
 
+                    // Check if branches exist for this courier
+                    var hasBranches = await _context.CourierBranches
+                        .AnyAsync(b => b.CourierId == courier.CourierId && b.IsActive);
+
                     var token = _tokenService.GenerateToken(
                         courier.CourierId,
                         courier.CourierEmail,
-                        "Courier",
+                        "CourierHead",
                         newSession.SessionGuid
                     );
 
@@ -674,6 +678,7 @@ namespace mytown.DataAccess.Repositories
                         userType = "CourierHead",
                         token,
                         sessionId = newSession.SessionGuid,
+                        hasBranches, // added new
                         courier = new CourierServiceDto
                         {
                             CourierId = courier.CourierId,
@@ -688,11 +693,11 @@ namespace mytown.DataAccess.Repositories
                             Country = courier.Country,
                             PostalCode = courier.PostalCode,
                             IsCity = courier.IsCity,
-                            IsState = courier.IsState,
-                           // Password = courier.Password
+                            IsState = courier.IsState
                         }
                     };
                 }
+
                 return null;
             }
 
