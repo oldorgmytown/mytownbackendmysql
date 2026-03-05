@@ -277,11 +277,12 @@ public class EmailService : IEmailService
                             <div style=""position: absolute; background-color: #F1F1F3; border-radius: 50%; width: 8px; height: 8px; top: 64px; left: 36px;""></div>
 
                             <!-- Checkmark Icon -->
-                            <div style=""width: 64px; height: 64px; border-radius: 50%; border: 4px solid rgba(16, 86, 23, 0.1); background: linear-gradient(180deg, #105617 0%, #2F7C37 100%); display: inline-flex; align-items: center; justify-content: center; margin: 0 auto;"">
-                                <svg viewBox=""0 0 32 32"" fill=""none"" xmlns=""http://www.w3.org/2000/svg"" style=""width: 32px; height: 32px;"">
-                                    <path d=""M2.66699 15.9023L11.3809 24.63L29.3337 6.66797"" stroke=""white"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""/>
-                                </svg>
-                            </div>
+                           <div style=""width: 64px; height: 64px; border-radius: 50%; border: 4px solid rgba(16, 86, 23, 0.1); background: linear-gradient(180deg, #105617 0%, #2F7C37 100%); display: inline-flex; align-items: center; justify-content: center; margin: 0 auto;"">
+                            <svg viewBox=""0 0 32 32"" fill=""none"" xmlns=""http://www.w3.org/2000/svg"" style=""width: 32px; height: 32px;"">
+                                <path d=""M2.66699 15.9023L11.3809 24.63L29.3337 6.66797"" stroke=""white"" stroke-width=""2"" stroke-linecap=""round"" stroke-linejoin=""round""/>
+                            </svg>
+                        </div>
+
 
                             <!-- Confirmation Text -->
                             <div style=""margin-top: 24px; text-align: center;"">
