@@ -674,7 +674,7 @@ namespace mytown.DataAccess.Repositories
                         userType = "CourierHead",
                         token,
                         sessionId = newSession.SessionGuid,
-                        courierDto = new CourierServiceDto
+                        courier = new CourierServiceDto
                         {
                             CourierId = courier.CourierId,
                             CourierServiceName = courier.CourierServiceName,
@@ -689,7 +689,7 @@ namespace mytown.DataAccess.Repositories
                             PostalCode = courier.PostalCode,
                             IsCity = courier.IsCity,
                             IsState = courier.IsState,
-                            Password = courier.Password
+                           // Password = courier.Password
                         }
                     };
                 }
@@ -739,7 +739,7 @@ namespace mytown.DataAccess.Repositories
                         userType = "CourierBranch",
                         token,
                         sessionId = newSession.SessionGuid,
-                        branchDto = new CourierBranchLoginDto
+                        courier = new CourierBranchLoginDto
                         {
                             BranchId = branch.BranchId,
                             CourierId = branch.CourierId,
