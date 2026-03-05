@@ -176,13 +176,14 @@ namespace mytown.Services.Implementations
             return await _repo.ParseAndValidateCsv(file);
         }
 
-        public async Task<bool> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
+        public async Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
         {
-            if (rows == null || rows.Count == 0) return false;
+            if (rows == null || rows.Count == 0)
+                throw new Exception("No rows received.");
 
-            // double-check validity before saving (repo will save)
             var invalid = rows.Any(r => !r.IsValid);
-            if (invalid) return false;
+            if (invalid)
+                throw new Exception("Some rows are invalid. Please fix them before saving.");
 
             return await _repo.SaveCourierBranchesAsync(rows);
         }

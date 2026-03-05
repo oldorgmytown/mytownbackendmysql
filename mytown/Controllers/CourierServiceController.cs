@@ -131,11 +131,12 @@ namespace mytown.Controllers
 
             try
             {
-                var saved = await _courierService.SaveCourierBranchesAsync(rows);
-                if (!saved)
-                    return BadRequest(new { message = "Failed to save branches." });
+                var message = await _courierService.SaveCourierBranchesAsync(rows);
 
-                return Ok(new { message = "All rows saved successfully." });
+                return Ok(new
+                {
+                    message = message
+                });
             }
             catch (Exception ex)
             {

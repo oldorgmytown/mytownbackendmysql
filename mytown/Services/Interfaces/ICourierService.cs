@@ -22,7 +22,7 @@ namespace mytown.Services.Interfaces
         Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsvAsync(IFormFile file);
 
        
-        Task<bool> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
+        Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
 
 
         Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(int shopperId,

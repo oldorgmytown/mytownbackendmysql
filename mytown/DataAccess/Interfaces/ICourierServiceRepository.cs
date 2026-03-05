@@ -25,7 +25,7 @@ public interface ICourierServiceRepository
     // upload csv file for branch details
     Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file);
 
-    Task<bool> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
+    Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
 
    // Task <List<BestcourierinfoDto>> GetBestCourierOptions(BusinessRegister business, ShopperRegister shopper, decimal productWeightKg);
 

@@ -82,6 +82,16 @@ namespace mytown.DataAccess.Repositories
         {
             var result = new List<CourierBranchCsvRowDto>();
 
+            // Load all courier services once 
+            var courierServices = await _context.CourierService
+                .GroupBy(c => c.CourierServiceName.ToLower())
+                .Select(g => new
+                {
+                    Name = g.Key,
+                    CourierId = g.First().CourierId
+                })
+                .ToDictionaryAsync(x => x.Name, x => x.CourierId);
+
             using var stream = new StreamReader(file.OpenReadStream());
             int rowNumber = 0;
 
@@ -91,7 +101,7 @@ namespace mytown.DataAccess.Repositories
                 rowNumber++;
 
                 if (rowNumber == 1)
-                    continue; // header
+                    continue; // skip header
 
                 var raw = SplitCsvLine(line);
 
@@ -126,7 +136,19 @@ namespace mytown.DataAccess.Repositories
                     EstimateDays = CsvValidationHelper.ExtractMaxDays(raw[14])
                 };
 
+                // 🔹 Check if CourierService exists
+                bool courierExists = courierServices.TryGetValue(
+                    dto.CourierServiceName?.ToLower() ?? "",
+                    out int courierId
+                );
+
+                if (courierExists)
+                {
+                    dto.CourierId = courierId;
+                }
+
                 dto.IsValid =
+                    courierExists &&
                     !string.IsNullOrWhiteSpace(dto.CourierServiceName) &&
                     !string.IsNullOrWhiteSpace(dto.Country) &&
                     !string.IsNullOrWhiteSpace(dto.State) &&
@@ -260,97 +282,93 @@ namespace mytown.DataAccess.Repositories
         //}
 
 
-        public async Task<bool> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
+       public async Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
+{
+    if (rows == null || !rows.Any())
+        throw new Exception("No data received.");
+
+    if (rows.Any(r => !r.IsValid))
+        throw new Exception("Some rows are invalid. Please fix them before saving.");
+
+    int skippedDuplicates = 0;
+    int newRowsAdded = 0;
+
+    using var transaction = await _context.Database.BeginTransactionAsync();
+
+    try
+    {
+        foreach (var r in rows)
         {
-            if (rows == null || !rows.Any())
-                throw new Exception("No data received.");
+            var branch = await _context.CourierBranches.FirstOrDefaultAsync(b =>
+                b.CourierId == r.CourierId &&
+                b.BranchEmailId == r.BranchEmailId
+            );
 
-            if (rows.Any(r => !r.IsValid))
-                throw new Exception("Some rows are invalid. Please fix them before saving.");
-
-            // 1️⃣ Resolve CourierId
-            foreach (var r in rows)
+            if (branch == null)
             {
-                var service = await _context.CourierService
-                    .FirstOrDefaultAsync(s => s.CourierServiceName == r.CourierServiceName);
-
-                if (service == null)
-                    throw new Exception($"Courier service '{r.CourierServiceName}' does not exist.");
-
-                r.CourierId = service.CourierId;
-            }
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                foreach (var r in rows)
+                branch = new CourierBranch
                 {
-                    // 2️⃣ Check if BRANCH already exists
-                    var branch = await _context.CourierBranches.FirstOrDefaultAsync(b =>
-                        b.CourierId == r.CourierId &&
-                        b.BranchEmailId == r.BranchEmailId
-                    );
+                    CourierId = r.CourierId,
+                    CourierServiceName = r.CourierServiceName,
+                    Country = r.Country,
+                    State = r.State,
+                    City = r.City,
+                    Town = r.Town,
+                    BranchAddress = r.BranchAddress,
+                    BranchPhoneNumber = r.BranchPhoneNumber,
+                    BranchEmailId = r.BranchEmailId,
+                    BranchContactPerson = r.BranchContactPerson,
+                    IsActive = true
+                };
 
-                    // 3️⃣ If branch not exists → create it
-                    if (branch == null)
-                    {
-                        branch = new CourierBranch
-                        {
-                            CourierId = r.CourierId,
-                            CourierServiceName = r.CourierServiceName,
-                            Country = r.Country,
-                            State = r.State,
-                            City = r.City,
-                            Town = r.Town,
-                            BranchAddress = r.BranchAddress,
-                            BranchPhoneNumber = r.BranchPhoneNumber,
-                            BranchEmailId = r.BranchEmailId,
-                            BranchContactPerson = r.BranchContactPerson,
-                            IsActive = true
-                        };
-
-                        _context.CourierBranches.Add(branch);
-                        await _context.SaveChangesAsync(); // 🔑 get BranchId
-                    }
-
-                    // 4️⃣ Prevent duplicate SERVICE for same branch
-                    bool serviceExists = await _context.CourierBranchServices.AnyAsync(s =>
-                        s.BranchId == branch.BranchId &&
-                        s.ShippingMode == r.ShippingMode &&
-                        s.DistanceRange == r.DistanceRange &&
-                        s.WeightRange == r.WeightRange
-                    );
-
-                    if (serviceExists)
-                        continue; // skip duplicate service row
-
-                    // 5️⃣ Add service
-                    var serviceEntity = new CourierBranchService
-                    {
-                        BranchId = branch.BranchId,
-                        ShippingMode = r.ShippingMode,
-                        DistanceRange = r.DistanceRange,
-                        WeightRange = r.WeightRange,
-                        Charges = r.Charges,
-                        EstimateDays = r.EstimateDays,
-                        Destinations = r.Destinations
-                    };
-
-                    _context.CourierBranchServices.Add(serviceEntity);
-                }
-
+                _context.CourierBranches.Add(branch);
                 await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return true;
             }
-            catch (Exception ex)
+
+            bool serviceExists = await _context.CourierBranchServices.AnyAsync(s =>
+                s.BranchId == branch.BranchId &&
+                s.ShippingMode == r.ShippingMode &&
+                s.DistanceRange == r.DistanceRange &&
+                s.WeightRange == r.WeightRange
+            );
+
+            if (serviceExists)
             {
-                await transaction.RollbackAsync();
-                throw new Exception("SAVE ERROR: " + ex.Message);
+                skippedDuplicates++;
+                continue;
             }
+
+            var serviceEntity = new CourierBranchService
+            {
+                BranchId = branch.BranchId,
+                ShippingMode = r.ShippingMode,
+                DistanceRange = r.DistanceRange,
+                WeightRange = r.WeightRange,
+                Charges = r.Charges,
+                EstimateDays = r.EstimateDays,
+                Destinations = r.Destinations
+            };
+
+            _context.CourierBranchServices.Add(serviceEntity);
+            newRowsAdded++;
         }
 
+        await _context.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        if (skippedDuplicates > 0)
+        {
+            return $"{newRowsAdded} new rows added. Duplicate data already exists in DB for {skippedDuplicates} rows.";
+        }
+
+        return "All rows saved successfully.";
+    }
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync();
+        throw new Exception("SAVE ERROR: " + ex.Message);
+    }
+}
         //public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
         // string storeCity,
         // string storeState,
