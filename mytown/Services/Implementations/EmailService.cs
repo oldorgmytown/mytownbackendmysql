@@ -646,15 +646,15 @@ private string BuildShopperNotificationTemplate(string shopperName, OrderConfirm
         <!-- Order Info -->
         <div style='background: #FFF; border: 1px solid rgba(139, 139, 139, 0.08); border-radius: 4px; padding: 24px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 24px;'>
             <div style='flex: 1; min-width: 120px;'>
-                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px;'>Order ID</span>
+                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Order ID</span>
                 <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}</span>
             </div>
             <div style='flex: 1; min-width: 120px;'>
-                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px;'>Order Date</span>
+                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Order Date</span>
                 <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>{orderdto.OrderDate:MMMM dd, yyyy}</span>
             </div>
             <div style='flex: 1; min-width: 120px;'>
-                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px;'>Total Amount</span>
+                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Total Amount</span>
                 <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>₹{orderdto.TotalAmount:F2}</span>
             </div>
         </div>
