@@ -6,6 +6,8 @@
 
         public int ProductId { get; set; }
         public string ProductName { get; set; }
+        public int Buscatid { get; set; }
+        public int prod_sub_catid { get; set; }
         public int SkuId { get; set; }
 
         public string VariantImageUrl { get; set; }

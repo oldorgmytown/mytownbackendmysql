@@ -7,12 +7,28 @@ namespace mytown.DataAccess.Interfaces
 
     public interface IShopperDashboardRepository
     {
-        Task<List<CurrentOrderDto>> GetCurrentOrdersByShopperAsync(int shopperRegId);
-        Task<ShopperOrderDetailsDto> GetShopperOrderDetailsAsync(int storeOrderId);
+        Task<List<CurrentOrderDto>> GetCurrentOrdersByShopperAsync(
+      int shopperRegId,
+      string? search,
+      int pageNumber,
+      int pageSize);
 
-        Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(int shopperRegId);
+        Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
+            int storeOrderId,
+            string? search,
+            int pageNumber,
+            int pageSize);
+        Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
+      int shopperRegId,
+      string? search,
+      int pageNumber,
+      int pageSize);
 
-        Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId);
+        Task<List<WishlistItemDto>> GetWishlistAsync(
+            int shopperId,
+            string? search,
+            int pageNumber,
+            int pageSize);
         //Remove from wishliast
         Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId);
 

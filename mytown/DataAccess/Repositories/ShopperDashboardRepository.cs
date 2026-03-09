@@ -17,17 +17,18 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task<List<CurrentOrderDto>> GetCurrentOrdersByShopperAsync(int shopperRegId)
+        public async Task<List<CurrentOrderDto>> GetCurrentOrdersByShopperAsync(
+      int shopperRegId,
+      string? search,
+      int pageNumber,
+      int pageSize)
         {
             var query =
                 from o in _context.Orders
-                join so in _context.StoreOrders
-                    on o.OrderId equals so.OrderId
-                join sd in _context.ShippingDetails
-                    on so.StoreOrderId equals sd.StoreOrderId
+                join so in _context.StoreOrders on o.OrderId equals so.OrderId
+                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
                       && sd.ShippingStatus == "In Progress"
-                orderby o.OrderDate descending
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
@@ -35,10 +36,26 @@ namespace mytown.DataAccess.Repositories
                     ShippingStatus = sd.ShippingStatus
                 };
 
-            return await query.ToListAsync();
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x =>
+                    x.StoreOrderId.ToString().Contains(search) ||
+                    x.ShippingStatus.Contains(search));
+            }
+
+            return await query
+                .OrderByDescending(x => x.StoreOrderId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
         }
 
-        public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(int storeOrderId)
+
+        public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
+       int storeOrderId,
+       string? search,
+       int pageNumber,
+       int pageSize)
         {
             var orderData = await (
                 from so in _context.StoreOrders
@@ -67,17 +84,19 @@ namespace mytown.DataAccess.Repositories
             if (orderData == null)
                 return null;
 
-            // PRODUCTS WITH PRICE + QTY + IMAGE
-            var products = await (
+
+            // ===============================
+            // PRODUCTS QUERY
+            // ===============================
+            var productQuery =
                 from od in _context.OrderDetails
                 join pr in _context.products on od.ProductId equals pr.ProductId
 
-                //  Join Variant to get weight & dimensions
+                // Variant
                 join v in _context.Sku_ProductVariants
                     on od.SkuId equals v.SkuId
 
-
-                // SKU image (highest priority)
+                // SKU image
                 join skuImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1)
                     on od.SkuId equals skuImg.SkuId into skuImages
@@ -100,7 +119,6 @@ namespace mytown.DataAccess.Repositories
                     UnitPrice = od.Price,
                     Quantity = od.Quantity,
 
-                    //  Dimensions & Weight
                     Length = v.Length,
                     Width = v.Width,
                     Height = v.Height,
@@ -111,9 +129,27 @@ namespace mytown.DataAccess.Repositories
                         : prodImg != null
                             ? prodImg.FileName
                             : null
-                }
-            ).ToListAsync();
+                };
 
+
+            // 🔎 SEARCH (Product Name)
+            if (!string.IsNullOrEmpty(search))
+            {
+                productQuery = productQuery.Where(p =>
+                    p.ProductName.Contains(search));
+            }
+
+
+            // 📄 PAGINATION (Products only)
+            var products = await productQuery
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+
+            // ===============================
+            // RETURN DTO
+            // ===============================
             return new ShopperOrderDetailsDto
             {
                 StoreOrderId = orderData.StoreOrderId,
@@ -127,7 +163,6 @@ namespace mytown.DataAccess.Repositories
 
                 Products = products,
 
-                // ✅ Accurate product total
                 ProductAmount = products.Sum(p => p.UnitPrice * p.Quantity),
                 CourierAmount = orderData.Cost,
 
@@ -140,9 +175,11 @@ namespace mytown.DataAccess.Repositories
                 ShippingAddress = orderData.DeliveryAddress
             };
         }
-
-
-        public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(int shopperRegId)
+        public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
+     int shopperRegId,
+     string? search,
+     int pageNumber,
+     int pageSize)
         {
             var query =
                 from o in _context.Orders
@@ -158,8 +195,8 @@ namespace mytown.DataAccess.Repositories
                     on od.StoreId equals s.BusRegId
                 where o.ShopperRegId == shopperRegId
                       && pay.PaymentStatus == "Paid"
-                       && pr.ProductStatus == "Approved"
-                       && pr.IsActive == true
+                      && pr.ProductStatus == "Approved"
+                      && pr.IsActive == true
                 group new { o, od, pr, sku, s } by new
                 {
                     od.ProductId,
@@ -174,10 +211,8 @@ namespace mytown.DataAccess.Repositories
                 {
                     ProductId = g.Key.ProductId,
                     SkuId = g.Key.SkuId,
-
                     ProductName = g.Key.ProductName,
 
-                    // ✅ FIRST IMAGE LOGIC
                     VariantImage =
                         g.SelectMany(x => x.sku.Images)
                          .OrderBy(i => i.SortOrder)
@@ -200,15 +235,29 @@ namespace mytown.DataAccess.Repositories
                                 .First()
                 };
 
+
+            // 🔎 SEARCH
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x =>
+                    x.ProductName.Contains(search) ||
+                    x.StoreName.Contains(search));
+            }
+
+
             return await query
                 .OrderByDescending(x => x.LastOrderedOn)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
         }
-
-
-        public async Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId)
+        public async Task<List<WishlistItemDto>> GetWishlistAsync(
+     int shopperId,
+     string? search,
+     int pageNumber,
+     int pageSize)
         {
-            return await (
+            var query =
                 from w in _context.Wishlist
 
                 join p in _context.products
@@ -220,13 +269,11 @@ namespace mytown.DataAccess.Repositories
                 join sku in _context.Sku_ProductVariants
                     on w.SkuId equals sku.SkuId
 
-                // 🔹 SKU image (SortOrder = 1)
                 join skuImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1)
                     on w.SkuId equals skuImg.SkuId into skuImgJoin
                 from skuImg in skuImgJoin.DefaultIfEmpty()
 
-                    // 🔹 Product image fallback (no SKU image)
                 join prodImg in _context.ProductImages
                     .Where(i => i.SortOrder == 1 && i.SkuId == null)
                     on p.ProductId equals prodImg.ProductId into prodImgJoin
@@ -234,18 +281,17 @@ namespace mytown.DataAccess.Repositories
 
                 where w.ShopperRegId == shopperId
 
-                orderby w.WishlistId descending   // acts as AddedOn
-
                 select new WishlistItemDto
                 {
-                    WishlistId = w.WishlistId,  
+                    WishlistId = w.WishlistId,
                     ProductId = p.ProductId,
                     ProductName = p.ProductName,
                     SkuId = w.SkuId,
+                    Buscatid = p.BuscatId,
+                    prod_sub_catid = p.ProdSubcatId,
 
                     VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
 
-                    // Dynamic price (always latest)
                     Price = sku.DiscountPrice ?? sku.Sku_Cost,
 
                     StoreId = s.BusRegId,
@@ -254,10 +300,24 @@ namespace mytown.DataAccess.Repositories
                     IsProductAvailable =
                         p.ProductStatus == "Approved"
                         && p.IsActive == true
-                }
-            ).ToListAsync();
-        }
+                };
 
+
+            // 🔎 SEARCH
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(x =>
+                    x.ProductName.Contains(search) ||
+                    x.StoreName.Contains(search));
+            }
+
+
+            return await query
+                .OrderByDescending(x => x.WishlistId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+        }
 
         //Remove from wishlist
 

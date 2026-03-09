@@ -20,16 +20,28 @@ namespace mytown.Controllers
         }
 
         [HttpGet("currentordersforshopper")]
-        public async Task<IActionResult> GetCurrentOrders([FromQuery]int shopperRegId)
+        public async Task<IActionResult> GetCurrentOrders(
+       [FromQuery] int shopperRegId,
+       [FromQuery] string? search,
+       [FromQuery] int pageNumber = 1,
+       [FromQuery] int pageSize = 100)
         {
-            var result = await _shopperdashboardService.GetCurrentOrdersAsync(shopperRegId);
+            var result = await _shopperdashboardService.GetCurrentOrdersAsync(
+                shopperRegId, search, pageNumber, pageSize);
+
             return Ok(result);
         }
 
+
         [HttpGet("storeorderid_details")]
-        public async Task<IActionResult> GetShopperOrderDetails([FromQuery] int storeOrderId)
+        public async Task<IActionResult> GetShopperOrderDetails(
+            [FromQuery] int storeOrderId,
+            [FromQuery] string? search,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)
         {
-            var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(storeOrderId);
+            var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(
+                storeOrderId, search, pageNumber, pageSize);
 
             if (result == null)
                 return NotFound();
@@ -38,16 +50,29 @@ namespace mytown.Controllers
         }
 
         [HttpGet("shopperDBbuy-again")]
-        public async Task<IActionResult> GetBuyAgainProducts([FromQuery] int shopperRegId)
+        public async Task<IActionResult> GetBuyAgainProducts(
+     [FromQuery] int shopperRegId,
+     [FromQuery] string? search,
+     [FromQuery] int pageNumber = 1,
+     [FromQuery] int pageSize = 100)
         {
-            var result = await _shopperdashboardService.GetBuyAgainProductsAsync(shopperRegId);
+            var result = await _shopperdashboardService
+                .GetBuyAgainProductsAsync(shopperRegId, search, pageNumber, pageSize);
+
             return Ok(result);
         }
 
+
         [HttpGet("shopperDBwishlist")]
-        public async Task<IActionResult> GetWishlist(int shopperId)
+        public async Task<IActionResult> GetWishlist(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 100)
         {
-            var data = await _shopperdashboardService.GetWishlistAsync(shopperId);
+            var data = await _shopperdashboardService
+                .GetWishlistAsync(shopperId, search, pageNumber, pageSize);
+
             return Ok(data);
         }
 

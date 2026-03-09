@@ -17,24 +17,44 @@ namespace mytown.Services.Implementations
             _shopperdashboardRepository = shopperdashboardRepository;
         }
 
-        public async Task<List<CurrentOrderDto>> GetCurrentOrdersAsync(int shopperRegId)
+        public async Task<List<CurrentOrderDto>> GetCurrentOrdersAsync(
+     int shopperRegId,
+     string? search,
+     int pageNumber,
+     int pageSize)
         {
-            // Business rules can be added here later
-            return await _shopperdashboardRepository.GetCurrentOrdersByShopperAsync(shopperRegId);
+            return await _shopperdashboardRepository
+                .GetCurrentOrdersByShopperAsync(shopperRegId, search, pageNumber, pageSize);
         }
 
-        public async Task<ShopperOrderDetailsDto> GetShopperOrderDetailsAsync(int storeOrderId)
+        public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
+            int storeOrderId,
+            string? search,
+            int pageNumber,
+            int pageSize)
         {
-            return await _shopperdashboardRepository.GetShopperOrderDetailsAsync(storeOrderId);
+            return await _shopperdashboardRepository
+                .GetShopperOrderDetailsAsync(storeOrderId, search, pageNumber, pageSize);
         }
-        public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(int shopperRegId)
+        public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
+       int shopperRegId,
+       string? search,
+       int pageNumber,
+       int pageSize)
         {
-            return await _shopperdashboardRepository.GetBuyAgainProductsAsync(shopperRegId);
+            return await _shopperdashboardRepository
+                .GetBuyAgainProductsAsync(shopperRegId, search, pageNumber, pageSize);
         }
 
-        public async Task<List<WishlistItemDto>> GetWishlistAsync(int shopperId)
+
+        public async Task<List<WishlistItemDto>> GetWishlistAsync(
+            int shopperId,
+            string? search,
+            int pageNumber,
+            int pageSize)
         {
-            return await _shopperdashboardRepository.GetWishlistAsync(shopperId);
+            return await _shopperdashboardRepository
+                .GetWishlistAsync(shopperId, search, pageNumber, pageSize);
         }
         //remove fom wishlist
         public async Task<bool> RemoveFromWishlistAsync(int shopperId, int productId, int skuId)
