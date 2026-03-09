@@ -178,6 +178,7 @@ public class EmailService : IEmailService
         }
     }
 
+    // order Email confirmation to business owner
     public async Task SendBusinessnotificationforOrderCnf(
       string email,
       string businessname,
@@ -501,6 +502,8 @@ Please process this order and update the shipping status. The customer is expect
         }
     }
 
+
+    //order email confirmation to shopper
     public async Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto)
 {
     if (!await DomainHasMX(email))
