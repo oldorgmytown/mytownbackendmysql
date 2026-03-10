@@ -61,15 +61,27 @@ namespace mytown.Controllers
         }
 
         [HttpGet("dashboardsummary")]
-        public async Task<IActionResult> GetSalesReport(int storeId)
+       
+        public async Task<IActionResult> GetSalesReport(
+    int storeId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? month,
+    int? year)
         {
-            var salesReport = await _dashboardRepository.GetSalesReportByStoreId(storeId);
-            if (salesReport == null)
-            {
-                return NotFound();
-            }
+            var result = await _dashboardRepository.GetSalesReportByStoreId(storeId, startDate, endDate, month, year);
+            return Ok(result);
+        }
 
-            return Ok(salesReport);
+        [HttpGet("monthly-revenue-summary")]
+        public async Task<IActionResult> GetMonthlySalesSummary(
+    int storeId,
+    int? year,
+    int? month,
+    string? currency)
+        {
+            var result = await _dasboardservice.GetMonthlySalesAsync(storeId, year, month, currency);
+            return Ok(result);
         }
 
         //[HttpGet("dashboardproducts")]
@@ -99,25 +111,47 @@ namespace mytown.Controllers
 
 
         //latest 05-01-26 Orders - new, pending,in progress, complete
-
         [HttpGet("neworders")]
-        public async Task<IActionResult> GetNewOrders(int storeId)
-            => Ok(await _dasboardservice.GetNewOrdersAsync(storeId));
+        public async Task<IActionResult> GetNewOrders(
+            int storeId,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            return Ok(await _dasboardservice.GetNewOrdersAsync(storeId, search, pageNumber, pageSize));
+        }
 
         [HttpGet("pendingorders")]
-        public async Task<IActionResult> GetPendingOrders(int storeId)
-            => Ok(await _dasboardservice.GetPendingOrdersAsync(storeId));
+        public async Task<IActionResult> GetPendingOrders(
+            int storeId,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            return Ok(await _dasboardservice.GetPendingOrdersAsync(storeId, search, pageNumber, pageSize));
+        }
 
         [HttpGet("inprogress_shippedorders")]
-        public async Task<IActionResult> GetInProgressOrders(int storeId)
-            => Ok(await _dasboardservice.GetInProgressOrdersAsync(storeId));
+        public async Task<IActionResult> GetInProgressOrders(
+            int storeId,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            return Ok(await _dasboardservice.GetInProgressOrdersAsync(storeId, search, pageNumber, pageSize));
+        }
 
         [HttpGet("completedorders")]
-        public async Task<IActionResult> GetCompletedOrders(int storeId)
-            => Ok(await _dasboardservice.GetCompletedOrdersAsync(storeId));
+        public async Task<IActionResult> GetCompletedOrders(
+            int storeId,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
+        {
+            return Ok(await _dasboardservice.GetCompletedOrdersAsync(storeId, search, pageNumber, pageSize));
+        }
 
         //OrderDeatils for storeorderid
-
 
         [HttpGet("order-details_Storeorderid")]
         public async Task<IActionResult> GetOrderDetails(int storeOrderId)
@@ -131,9 +165,13 @@ namespace mytown.Controllers
         }
 
         [HttpGet("Productsonstore")]
-        public async Task<IActionResult> GetProducts(int storeId)
+        public async Task<IActionResult> GetProducts(
+            int storeId,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
         {
-            var result = await _dasboardservice.GetProductsAsync(storeId);
+            var result = await _dasboardservice.GetProductsAsync(storeId, search, pageNumber, pageSize);
             return Ok(result);
         }
 
@@ -168,10 +206,27 @@ namespace mytown.Controllers
         //sales tab - Store Transaction details
 
         [HttpGet("salestab_storetransactions")]
-        public async Task<IActionResult> GetStoreTransactions(int storeId)
+        public async Task<IActionResult> GetStoreTransactions(
+     int storeId,
+     string? search,
+     int pageNumber = 1,
+     int pageSize = 10)
         {
-            var data = await _dasboardservice.GetStoreTransactionsAsync(storeId);
+            var data = await _dasboardservice.GetStoreTransactionsAsync(storeId, search, pageNumber, pageSize);
             return Ok(data);
+        }
+
+
+        // Transaction id Details 
+        [HttpGet("transaction-details")]
+        public async Task<IActionResult> GetTransactionDetails(int paymentId)
+        {
+            var result = await _dasboardservice.GetTransactionDetailsAsync(paymentId);
+
+            if (result == null)
+                return NotFound("Transaction not found");
+
+            return Ok(result);
         }
 
         //countrywise_sales

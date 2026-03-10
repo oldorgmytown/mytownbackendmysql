@@ -15,30 +15,31 @@ namespace mytown.Services.Implementations
             _repository = repository;
         }
 
-        public Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId)
-            => _repository.GetNewOrdersAsync(storeId);
+        public Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
+       => _repository.GetNewOrdersAsync(storeId, search, pageNumber, pageSize);
 
-        public Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId)
-            => _repository.GetPendingOrdersAsync(storeId);
+        public Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
+            => _repository.GetPendingOrdersAsync(storeId, search, pageNumber, pageSize);
 
-        public Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId)
-            => _repository.GetInProgressOrdersAsync(storeId);
+        public Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
+            => _repository.GetInProgressOrdersAsync(storeId, search, pageNumber, pageSize);
 
-        public Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId)
-            => _repository.GetCompletedOrdersAsync(storeId);
+        public Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
+            => _repository.GetCompletedOrdersAsync(storeId, search, pageNumber, pageSize);
 
         public async Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId)
         {
-            // Simply call repository
-            var details = await _repository.GetBusinessOrderDetailsAsync(storeOrderId);
-            return details;
+            return await _repository.GetBusinessOrderDetailsAsync(storeOrderId);
         }
 
-        public async Task<List<BusinessProductDashboardDto>> GetProductsAsync(int storeId)
+        public async Task<List<BusinessProductDashboardDto>> GetProductsAsync(
+            int storeId,
+            string? search,
+            int pageNumber,
+            int pageSize)
         {
-            return await _repository.GetProductsForDashboardAsync(storeId);
+            return await _repository.GetProductsForDashboardAsync(storeId, search, pageNumber, pageSize);
         }
-
         public async Task<List<Sku_ProductVariantDto>> GetVariantsByProductIdAsync(int productId)
         {
             return await _repository.GetVariantsByProductIdAsync(productId);
@@ -67,10 +68,29 @@ namespace mytown.Services.Implementations
         }
 
         //Sales tab
-        public async Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(int storeId)
+        public async Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(
+      int storeId,
+      string? search,
+      int pageNumber,
+      int pageSize)
         {
-            return await _repository.GetStoreTransactionsAsync(storeId);
+            return await _repository.GetStoreTransactionsAsync(storeId, search, pageNumber, pageSize);
         }
+
+
+        //transaction deatils
+        public async Task<TransactionDetailsDto> GetTransactionDetailsAsync(int paymentId)
+        {
+            var transaction = await _repository.GetTransactionDetailsAsync(paymentId);
+
+            if (transaction == null)
+            {
+                throw new Exception("Transaction not found");
+            }
+
+            return transaction;
+        }
+
 
         //country wise sales
 
@@ -119,10 +139,18 @@ namespace mytown.Services.Implementations
             // 5️⃣ Persist everything
             await _repository.SaveChangesAsync();
         }
+
+
+        // Get monthly Revenue for summary page
+
+        public async Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(
+        int storeId, int? year, int? month, string? currency)
+        {
+            return await _repository.GetMonthlySalesAsync(storeId, year, month, currency);
+        }
     }
 
-
-}
+    }
 
 
 

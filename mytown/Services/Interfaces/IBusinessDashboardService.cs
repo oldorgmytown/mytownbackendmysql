@@ -8,15 +8,21 @@ namespace mytown.Services.Interfaces
 {
     public interface IBusinessDashboardService
     {
-        Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId);
-        Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId);
-        Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId);
-        Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId);
+        Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId, string? search, int pageNumber, int pageSize);
 
-        Task<List<BusinessProductDashboardDto>> GetProductsAsync(int storeId);
+        Task<List<BusinessOrderListDto>> GetPendingOrdersAsync(int storeId, string? search, int pageNumber, int pageSize);
+
+        Task<List<BusinessOrderListDto>> GetInProgressOrdersAsync(int storeId, string? search, int pageNumber, int pageSize);
+
+        Task<List<BusinessOrderListDto>> GetCompletedOrdersAsync(int storeId, string? search, int pageNumber, int pageSize);
 
         Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId);
 
+        Task<List<BusinessProductDashboardDto>> GetProductsAsync(
+            int storeId,
+            string? search,
+            int pageNumber,
+            int pageSize);
         // get variant details
 
         Task<List<Sku_ProductVariantDto>> GetVariantsByProductIdAsync(int productId);
@@ -31,7 +37,16 @@ namespace mytown.Services.Interfaces
 
         //Sales tab - transaction deatils
 
-        Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(int storeId);
+        Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(
+       int storeId,
+       string? search,
+       int pageNumber,
+       int pageSize);
+        // Transaction details 
+       
+            Task<TransactionDetailsDto> GetTransactionDetailsAsync(int paymentId);
+       
+
 
         // country wise sales
 
@@ -44,6 +59,9 @@ namespace mytown.Services.Interfaces
         //notification to coueir - ready to ship
 
         Task MarkReadyToShipAsync(int storeOrderId);
+        // get monthly Revenue - for summary page
+
+        Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(int storeId, int? year, int? month, string? currency);
 
 
     }
