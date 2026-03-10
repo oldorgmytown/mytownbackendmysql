@@ -63,6 +63,12 @@ namespace mytown.Services.Interfaces
 
         Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(int storeId, int? year, int? month, string? currency);
 
+        //sales history
+
+        Task<StoreSalesHistoryDto> GetSalesHistoryByStoreIdAsync(int storeId);
+
+        //sales trend graph
+        Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
 
     }
 }

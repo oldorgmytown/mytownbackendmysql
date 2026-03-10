@@ -148,6 +148,20 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetMonthlySalesAsync(storeId, year, month, currency);
         }
+
+        // sales history
+
+        public async Task<StoreSalesHistoryDto> GetSalesHistoryByStoreIdAsync(int storeId)
+        {
+            return await _repository.GetSalesHistoryByStoreIdAsync(storeId);
+        }
+
+        //sales trend graph
+
+        public async Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate)
+        {
+            return await _repository.GetSalesTrendAsync(storeId, fromDate, toDate);
+        }
     }
 
     }

@@ -5,5 +5,7 @@
         public int TotalOrders { get; set; }
         public decimal TotalRevenue { get; set; }
         public string Currency { get; set; }
+
+        public List<SalesTrendDto> RevenueTrend { get; set; }
     }
 }

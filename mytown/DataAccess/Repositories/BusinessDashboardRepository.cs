@@ -806,7 +806,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 on so.StoreOrderId equals sd.StoreOrderId
             where so.StoreId == storeId
                   && p.PaymentStatus == "Paid"
-                  && sd.ShippingStatus == "Delivered"
+                 // && sd.ShippingStatus == "Delivered"
             select so;
 
         return query;
@@ -832,21 +832,40 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     public async Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(
     int storeId, int? year, int? month, string? currency)
     {
-        // Set defaults if values are not provided
         int selectedYear = year ?? DateTime.Now.Year;
         int selectedMonth = month ?? DateTime.Now.Month;
         string selectedCurrency = string.IsNullOrEmpty(currency) ? "INR" : currency;
 
         var query = GetDeliveredPaidOrders(storeId)
+            .Include(so => so.Order)
             .Where(so =>
                 so.Order.OrderDate.Year == selectedYear &&
                 so.Order.OrderDate.Month == selectedMonth);
 
+        var orders = await query.ToListAsync();
+
+        var totalOrders = orders.Count;
+        var totalRevenue = orders.Sum(x => x.StoreTotalAmount);
+
+        int daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
+
+        var revenueTrend = Enumerable.Range(1, daysInMonth)
+            .Select(day => new DateTime(selectedYear, selectedMonth, day))
+            .Select(date => new SalesTrendDto
+            {
+                Date = date,
+                Revenue = orders
+                    .Where(o => o.Order.OrderDate.Date == date.Date)
+                    .Sum(o => o.StoreTotalAmount)
+            })
+            .ToList();
+
         return new BusinessSalesSummaryDto
         {
-            TotalOrders = await query.CountAsync(),
-            TotalRevenue = await query.SumAsync(x => x.StoreTotalAmount),
-            Currency = selectedCurrency
+            TotalOrders = totalOrders,
+            TotalRevenue = totalRevenue,
+            Currency = selectedCurrency,
+            RevenueTrend = revenueTrend
         };
     }
 
@@ -987,13 +1006,23 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     int busRegId, bool onlyUnread)
     {
         var query = _context.BusinessDBNotifications
-            .Where(n => n.BusRegId == busRegId);
+         .Where(n => n.BusRegId == busRegId);
 
-        if (onlyUnread)
-            query = query.Where(n => !n.IsRead);
+        // Apply unread filter only when requested
+        if (onlyUnread == true)
+        {
+            query = query.Where(n => n.IsRead == false);
+        }
 
         return await query
             .OrderByDescending(n => n.CreatedDate)
+            .Select(n => new BusinessDBNotifications
+            {
+                NotificationId = n.NotificationId,
+                Message = n.Message,
+                IsRead = n.IsRead,
+                CreatedDate = n.CreatedDate
+            })
             .ToListAsync();
     }
 
@@ -1114,6 +1143,89 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    //sales history 
+
+    public async Task<StoreSalesHistoryDto> GetSalesHistoryByStoreIdAsync(int storeId)
+    {
+        var query = from od in _context.OrderDetails
+                    join o in _context.Orders on od.OrderId equals o.OrderId
+                    join p in _context.Payments on o.OrderId equals p.OrderId
+                    where od.StoreId == storeId
+                          && p.PaymentStatus == "Paid"
+                    select new
+                    {
+                        od.Quantity,
+                        od.Price,
+                        od.OrderId,
+                        o.ShopperRegId
+                    };
+
+        var data = await query.ToListAsync();
+
+        if (!data.Any())
+        {
+            return new StoreSalesHistoryDto
+            {
+                TotalSales = 0,
+                TotalOrders = 0,
+                AvgOrderValue = 0,
+                TotalActiveCustomers = 0
+            };
+        }
+
+        var totalSales = data.Sum(x => x.Quantity * x.Price);
+        var totalOrders = data.Select(x => x.OrderId).Distinct().Count();
+        var totalCustomers = data.Select(x => x.ShopperRegId).Distinct().Count();
+
+        return new StoreSalesHistoryDto
+        {
+            TotalSales = totalSales,
+            TotalOrders = totalOrders,
+            AvgOrderValue = totalOrders > 0 ? totalSales / totalOrders : 0,
+            TotalActiveCustomers = totalCustomers
+        };
+    }
+
+        // sales trend graph
+
+        public async Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate)
+    {
+        var endDate = toDate ?? DateTime.UtcNow.Date;
+        var startDate = fromDate ?? endDate.AddDays(-6);
+
+        var salesData = await (
+            from od in _context.OrderDetails
+            join o in _context.Orders on od.OrderId equals o.OrderId
+            join p in _context.Payments on o.OrderId equals p.OrderId
+            where od.StoreId == storeId
+                  && p.PaymentStatus == "Paid"
+                  && o.OrderDate.Date >= startDate
+                  && o.OrderDate.Date <= endDate
+            group od by o.OrderDate.Date into g
+            select new
+            {
+                Date = g.Key,
+                Revenue = g.Sum(x => x.Quantity * x.Price)
+            }
+        ).ToListAsync();
+
+        var result = Enumerable.Range(0, (endDate - startDate).Days + 1)
+            .Select(i => startDate.AddDays(i))
+            .Select(date => new SalesTrendDto
+            {
+                Date = date,
+                Revenue = salesData
+                    .Where(x => x.Date == date)
+                    .Select(x => x.Revenue)
+                    .FirstOrDefault()
+            })
+            .OrderBy(x => x.Date)
+            .ToList();
+
+        return result;
+    }
 }
+
 
 

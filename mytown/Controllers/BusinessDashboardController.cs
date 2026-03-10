@@ -260,6 +260,26 @@ namespace mytown.Controllers
                 message = "Order marked as Ready to Ship"
             });
         }
+
+        //sales history
+
+        [HttpGet("sales-history")]
+        public async Task<IActionResult> GetSalesHistory(int storeId)
+        {
+            var result = await _dasboardservice.GetSalesHistoryByStoreIdAsync(storeId);
+            return Ok(result);
+        }
+
+        //sales trend graph
+        [HttpGet("sales-trend-graph")]
+        public async Task<IActionResult> GetSalesTrend(
+    int storeId,
+    DateTime? fromDate,
+    DateTime? toDate)
+        {
+            var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
+            return Ok(result);
+        }
     }
 
 

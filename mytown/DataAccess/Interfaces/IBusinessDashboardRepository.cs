@@ -104,5 +104,13 @@ namespace mytown.DataAccess.Interfaces
         Task UpdateStoreOrderStatusAsync(int storeOrderId, string status);
         Task AddCourierNotificationAsync(CourierDBNotifications notification);
         Task SaveChangesAsync();
+
+        //sales history
+
+        Task<StoreSalesHistoryDto> GetSalesHistoryByStoreIdAsync(int storeId);
+
+        //sales trend graph
+
+        Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
     }
 }
