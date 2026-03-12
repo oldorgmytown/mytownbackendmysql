@@ -28,7 +28,7 @@ namespace mytown.DataAccess.Repositories
                 join so in _context.StoreOrders on o.OrderId equals so.OrderId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                      && sd.ShippingStatus == "In Progress"
+                      && sd.ShippingStatus == "Pending"
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,

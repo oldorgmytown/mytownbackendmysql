@@ -579,7 +579,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Shipping != null &&
-                x.Shipping.ShippingStatus == "Shipped");
+                x.Shipping.ShippingStatus == "In Progress");
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -594,7 +594,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
-                Status = "Shipped",
+                Status = "In Progress",
                 EstimatedDeliveryDate =
                     x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
             })

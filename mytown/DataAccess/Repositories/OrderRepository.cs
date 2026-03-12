@@ -256,7 +256,7 @@ namespace mytown.DataAccess.Repositories
             {
                 BusRegId = so.StoreId,
                 Title = "New Order Received",
-                Message = $"Order #{newOrder.OrderId} has been placed",
+                Message = $"Store Order #{so.StoreOrderId} has been placed",
                 IsRead = false,
                 CreatedDate = DateTime.UtcNow
             }).ToList();
@@ -323,7 +323,7 @@ namespace mytown.DataAccess.Repositories
                     EstimatedDays = service.EstimateDays ?? 0,
                     Cost = service.Charges,
                     TrackingId = "",
-                    ShippingStatus = "In Progress",
+                    ShippingStatus = "Pending",
 
                     //  added
                     DeliveryAddress = deliveryAddress
@@ -526,7 +526,7 @@ namespace mytown.DataAccess.Repositories
                     Cost = service.Charges,
 
                     TrackingId = null,
-                    ShippingStatus = "In Progress"
+                    ShippingStatus = "Pending"
                 };
 
                 shippingList.Add(shipping);

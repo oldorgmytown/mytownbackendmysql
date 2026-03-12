@@ -28,7 +28,7 @@ namespace mytown.Models
         public decimal StoreTotalAmount { get; set; }
 
         [Column("status")]
-        public string Storeorder_Status { get; set; }        // Delivery level -  Pending, Packed, Shipped, Delivered
+        public string Storeorder_Status { get; set; }        // Delivery level -  Pending, Ready to ship, In progress, Delivered
 
         public ICollection<orderdetails> OrderDetails { get; set; }
     }
