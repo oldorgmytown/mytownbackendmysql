@@ -28,7 +28,7 @@ namespace mytown.DataAccess.Repositories
                 join so in _context.StoreOrders on o.OrderId equals so.OrderId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                      && sd.ShippingStatus == "Pending"
+                    //  && sd.ShippingStatus == "Pending"
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
@@ -359,7 +359,7 @@ namespace mytown.DataAccess.Repositories
                 join sd in _context.ShippingDetails
                     on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                      && sd.ShippingStatus != "In Progress"
+                      && sd.ShippingStatus != "Pending"
                 select o.OrderId
             )
             .Distinct()
@@ -379,22 +379,20 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<List<ShopperDBOrderHistoryDto>> GetOrderHistoryByShopperAsync(int shopperRegId)
         {
-            return await (
-                from o in _context.Orders
-                join so in _context.StoreOrders
-                    on o.OrderId equals so.OrderId
-                join sd in _context.ShippingDetails
-                    on so.StoreOrderId equals sd.StoreOrderId
-                where o.ShopperRegId == shopperRegId
-                      && sd.DeliveredDate != null
-                orderby sd.DeliveredDate descending
-                select new ShopperDBOrderHistoryDto
+            var result = await _context.ShippingDetails
+                .Where(sd => sd.Order.ShopperRegId == shopperRegId)
+                .GroupBy(sd => sd.OrderId)
+                .Where(g => g.All(x => x.ShippingStatus == "Delivered" && x.DeliveredDate != null))
+                .Select(g => new ShopperDBOrderHistoryDto
                 {
-                    StoreOrderId = so.StoreOrderId,
-                    DeliveredDate = sd.DeliveredDate,
-                    ShippingStatus = sd.ShippingStatus
-                }
-            ).ToListAsync();
+                    OrderId = g.Key,
+                    DeliveredDate = g.Max(x => x.DeliveredDate),
+                    ShippingStatus = "Delivered"
+                })
+                .OrderByDescending(x => x.DeliveredDate)
+                .ToListAsync();
+
+            return result;
         }
 
         //Get shopper profile details
