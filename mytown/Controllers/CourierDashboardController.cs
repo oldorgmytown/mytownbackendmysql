@@ -39,17 +39,44 @@ namespace mytown.Controllers
             _logger = logger;
         }
 
-        [HttpGet("orders")]
+        [HttpGet("Courierhead-orders")]
         public async Task<IActionResult> GetOrders(
-         int courierId,[FromQuery] string status)
+      int courierId,
+      [FromQuery] string status,
+      [FromQuery] string? search,
+      [FromQuery] int pageNumber = 1,
+      [FromQuery] int pageSize = 10)
         {
             if (string.IsNullOrWhiteSpace(status))
                 return BadRequest("Shipping status is required");
 
-         //   int courierId = int.Parse(User.FindFirst("CourierId").Value);
+            var orders = await _courierService.GetOrdersAsync(
+                courierId,
+                status,
+                search,
+                pageNumber,
+                pageSize);
 
-            var orders = await _courierService.GetOrdersAsync(courierId, status);
             return Ok(orders);
+        }
+
+        [HttpGet("branch-orders")]
+        public async Task<IActionResult> GetBranchOrders(
+   int branchId,
+   string shippingStatus,
+   string? search,
+   int pageNumber = 1,
+   int pageSize = 10)
+        {
+            var result = await _courierService.GetOrdersByBranchAsync(
+                branchId,
+                shippingStatus,
+                search,
+                pageNumber,
+                pageSize
+            );
+
+            return Ok(result);
         }
 
         [HttpGet("Orderdetail_StoreOrder")]
@@ -101,9 +128,9 @@ namespace mytown.Controllers
         }
 
         [HttpGet("Courierprofilesummary")]
-        public async Task<IActionResult> GetProfileSummary()
+        public async Task<IActionResult> GetProfileSummary(int courierId)
         {
-            int courierId = int.Parse(User.FindFirst("CourierId").Value);
+           // int courierId = int.Parse(User.FindFirst("CourierId").Value);
 
             var summary = await _courierService.GetProfileSummaryAsync(courierId);
             return Ok(summary);
@@ -111,9 +138,9 @@ namespace mytown.Controllers
 
         // 🔹 Today’s Deliveries
         [HttpGet("deliveries/today")]
-        public async Task<IActionResult> GetTodayDeliveries()
+        public async Task<IActionResult> GetTodayDeliveries(int courierId)
         {
-            int courierId = int.Parse(User.FindFirst("CourierId").Value);
+           // int courierId = int.Parse(User.FindFirst("CourierId").Value);
 
             var result = await _courierService.GetCompletedDeliveriesAsync(
                 courierId,
@@ -124,9 +151,9 @@ namespace mytown.Controllers
 
         // 🔹 All Completed Deliveries
         [HttpGet("deliveries/completed")]
-        public async Task<IActionResult> GetAllCompletedDeliveries()
+        public async Task<IActionResult> GetAllCompletedDeliveries(int courierId)
         {
-            int courierId = int.Parse(User.FindFirst("CourierId").Value);
+          //  int courierId = int.Parse(User.FindFirst("CourierId").Value);
 
             var result = await _courierService.GetCompletedDeliveriesAsync(
                 courierId,
@@ -150,6 +177,80 @@ namespace mytown.Controllers
         }
 
 
+        // API'S for courier branch dashboard
+
+        [HttpGet("branch")]
+        public async Task<IActionResult> GetBranch(int branchId)
+        {
+            var branch = await _courierService.GetBranchAsync(branchId);
+            return Ok(branch);
+        }
+
+        [HttpGet("Branchprofilesummary")]
+        public async Task<IActionResult> GetBranchProfileSummary(int branchId)
+        {           
+
+            var summary = await _courierService.GetBranchProfileSummaryAsync(branchId);
+            return Ok(summary);
+        }
+
+        [HttpGet("branch/completed-today")]
+        public async Task<IActionResult> GetCompletedToday(int branchId)
+        {
+            var result = await _courierService.GetCompletedDeliveriesCountByBranchAsync(branchId, DateTime.Today);
+            return Ok(result);
+        }
+
+        [HttpGet("branch/completed-total")]
+        public async Task<IActionResult> GetTotalCompleted(int branchId)
+        {
+            var result = await _courierService.GetTotalCompletedDeliveriesCountByBranchAsync(branchId);
+            return Ok(result);
+        }
+
+        [HttpGet("branch/pending-tasks")]
+        public async Task<IActionResult> GetPendingTasks(int branchId)
+        {
+            var result = await _courierService.GetPendingTasksCountByBranchAsync(branchId);
+            return Ok(result);
+        }
+
+        [HttpGet("branch/completed-deliveries")]
+        public async Task<IActionResult> GetCompletedDeliveries(int branchId, DateTime? date)
+        {
+            var result = await _courierService.GetCompletedDeliveriesByBranchAsync(branchId, date);
+            return Ok(result);
+        }
+
+        [HttpGet("branch/unread-notifications")]
+        public async Task<IActionResult> GetUnreadNotificationsforbranch(int branchId)
+        {
+            var result = await _courierService.GetUnreadNotificationsByBranchAsync(branchId);
+            return Ok(result);
+        }
+
+        [HttpPut("markeach-notification-read")]
+        public async Task<IActionResult> MarkEachNotificationRead(int notificationId)
+        {
+            await _courierService.MarkEachNotificationReadAsync(notificationId);
+            return Ok(new { message = "Notification marked as read successfully" });
+        }
+
+        [HttpPost("upload-delivery-proof")]
+       // [HttpPost("upload-delivery-proof")]
+        public async Task<IActionResult> UploadDeliveryProof([FromForm] UploadDeliveryProofDto dto)
+        {
+            if (dto.File == null || dto.File.Length == 0)
+                return BadRequest("File is required");
+
+            var fileName = await _courierService.UploadDeliveryProofAsync(dto.StoreOrderId, dto.File);
+
+            return Ok(new
+            {
+                message = "Delivery proof uploaded successfully",
+                fileName = fileName
+            });
+        }
     }
 
 }

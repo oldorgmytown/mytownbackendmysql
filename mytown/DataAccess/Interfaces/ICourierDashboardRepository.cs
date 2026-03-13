@@ -8,9 +8,18 @@ namespace mytown.DataAccess.Interfaces
     public interface ICourierDashboardRepository
     {
         Task<List<CourierOrderDto>> GetOrdersAsync(
-    int courierId,
-    string shippingStatus);
+     int courierId,
+     string shippingStatus,
+     string? search,
+     int pageNumber,
+     int pageSize);
 
+        Task<List<CourierOrderDto>> GetOrdersByBranchAsync(
+    int branchId,
+    string shippingStatus,
+    string? search,
+    int pageNumber,
+    int pageSize);
         Task<ShippingDetails> GetByStoreOrderIdAsync(int storeOrderId);
         Task SaveAsync();
 
@@ -30,6 +39,24 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<CourierDBNotifications>> GetUnreadNotificationsAsync(int courierId);
         Task MarkNotificationsAsReadAsync(int courierId);
+
+        // here are apis for courier branch 
+
+        Task<CourierBranch> GetBranchAsync(int branchId);
+        Task<int> GetCompletedDeliveriesCountByBranchAsync(int branchId, DateTime date);
+
+        Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId);
+
+        Task<int> GetPendingTasksCountByBranchAsync(int branchId);
+
+        Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesByBranchAsync(int branchId, DateTime? date);
+
+        Task<List<CourierDBNotifications>> GetUnreadNotificationsByBranchAsync(int branchId);
+
+
+        Task MarkEachNotificationReadAsync(int notificationId);
+
+        Task<string> UploadDeliveryProofAsync(int storeOrderId, IFormFile file);
 
 
     }

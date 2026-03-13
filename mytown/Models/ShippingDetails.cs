@@ -67,5 +67,9 @@ namespace mytown.Models
         [Column("delivery_address", TypeName = "text")]
         public string DeliveryAddress { get; set; } // new
 
+        // Delivery proof uploaded by courier
+        [Column("delivery_proof_file_name", TypeName = "varchar(255)")]
+        public string? DeliveryProofFileName { get; set; }
+
     }
 }

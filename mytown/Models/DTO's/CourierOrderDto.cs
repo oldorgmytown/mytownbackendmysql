@@ -4,6 +4,8 @@
     {
         public int StoreOrderId { get; set; }
 
+        public int BranchId { get; set; }
+
         public DateOnly Orderdate { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
 
