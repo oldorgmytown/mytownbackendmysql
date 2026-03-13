@@ -53,25 +53,7 @@ namespace mytown.Models
         [Column("is_active")]
         public bool IsActive { get; set; } = true;
 
-        //[Column("destinations", TypeName = "varchar(255)")]
-        //public string Destinations { get; set; } // To be normalized later
-
-        //[Required]
-        //[Column("shipping_mode", TypeName = "varchar(50)")]
-        //public string ShippingMode { get; set; } // Air / Surface
-
-        //[Column("charges", TypeName = "decimal(10,2)")]
-        //public decimal Charges { get; set; }
-
-        //[Column("weight_range", TypeName = "varchar(100)")]
-        //public string WeightRange { get; set; }
-
-        //[Column("distance_range", TypeName = "varchar(100)")]
-        //public string DistanceRange { get; set; }
-
-        //[Column("estimate_days", TypeName = "int")]
-        //public int? EstimateDays { get; set; }   // nullable, because CSV may not have value
-
+       
 
         // 🔗 Navigation property
         public CourierService CourierService { get; set; }

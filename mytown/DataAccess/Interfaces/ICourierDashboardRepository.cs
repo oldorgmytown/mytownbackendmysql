@@ -42,7 +42,7 @@ namespace mytown.DataAccess.Interfaces
 
         // here are apis for courier branch 
 
-        Task<CourierBranch> GetBranchAsync(int branchId);
+        Task<CourierBranchDto> GetBranchAsync(int branchId);
         Task<int> GetCompletedDeliveriesCountByBranchAsync(int branchId, DateTime date);
 
         Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId);

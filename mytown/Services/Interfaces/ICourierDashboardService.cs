@@ -37,7 +37,7 @@ namespace mytown.Services.Interfaces
 
         //for branches 
 
-        Task<CourierBranch> GetBranchAsync(int branchId);
+        Task<CourierBranchDto> GetBranchAsync(int branchId);
         Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int courierId);
         
 

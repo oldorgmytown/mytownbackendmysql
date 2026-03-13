@@ -155,7 +155,7 @@ namespace mytown.Services.Implementations
 
         // branches 
 
-        public async Task<CourierBranch> GetBranchAsync(int branchId)
+        public async Task<CourierBranchDto> GetBranchAsync(int branchId)
         {
             return await _repository.GetBranchAsync(branchId);
         }

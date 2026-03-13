@@ -347,10 +347,31 @@ namespace mytown.DataAccess.Repositories
 
         // here are apis for branches 
 
-        public async Task<CourierBranch> GetBranchAsync(int branchId)
+        public async Task<CourierBranchDto> GetBranchAsync(int branchId)
         {
             return await _context.CourierBranches
-                .FirstOrDefaultAsync(b => b.BranchId == branchId);
+                .Where(b => b.BranchId == branchId)
+                .Select(b => new CourierBranchDto
+                {
+                    BranchId = b.BranchId,
+                    City = b.City,
+                    State = b.State,
+                    Town = b.Town,
+                    BranchAddress = b.BranchAddress,
+                    BranchPhoneNumber = b.BranchPhoneNumber,
+
+                    Services = b.Services.Select(s => new CourierBranchServiceDto
+                    {
+                        BranchServiceId = s.BranchServiceId,
+                        Destinations = s.Destinations,
+                        ShippingMode = s.ShippingMode,
+                        DistanceRange = s.DistanceRange,
+                        WeightRange = s.WeightRange,
+                        Charges = s.Charges,
+                        EstimateDays = s.EstimateDays
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
         }
 
         public async Task<int> GetCompletedDeliveriesCountByBranchAsync(int branchId, DateTime date)
