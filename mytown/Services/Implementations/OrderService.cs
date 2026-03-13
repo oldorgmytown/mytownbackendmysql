@@ -78,6 +78,14 @@ namespace mytown.Services.Implementations
             return orderConfirmation;
         }
 
+        public async Task<OrderConfirmationDto> GetOrderConfirmationforOrderHistoryAsync(int orderId)
+        {
+            // 1️⃣ Get everything from repository
+            var orderConfirmation = await _repo.GetOrderConfirmationAsync(orderId);
+            
+            return orderConfirmation;
+        }
+
 
     }
 }

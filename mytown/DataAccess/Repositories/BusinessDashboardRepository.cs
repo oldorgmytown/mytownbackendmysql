@@ -1038,6 +1038,18 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task MarkeachNotificationAsReadAsync(int notificationId)
+    {
+        var notification = await _context.BusinessDBNotifications
+            .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+
+        if (notification != null && !notification.IsRead)
+        {
+            notification.IsRead = true;
+            await _context.SaveChangesAsync();
+        }
+    }
+
     // country wise sales
     public async Task<List<CountrySalesDto>> GetCountryWiseSalesAsync(int storeId)
     {

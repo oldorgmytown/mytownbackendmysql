@@ -67,6 +67,11 @@ namespace mytown.Services.Implementations
             await _repository.MarkAllAsReadAsync(busRegId);
         }
 
+        public async Task MarkeachNotificationAsReadAsync(int notificationId)
+        {
+            await _repository.MarkeachNotificationAsReadAsync(notificationId);
+        }
+
         //Sales tab
         public async Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(
       int storeId,

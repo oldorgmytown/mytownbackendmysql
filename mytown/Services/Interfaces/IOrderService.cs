@@ -14,8 +14,10 @@ namespace mytown.Services.Interfaces
         Task SaveShippingSelectionsAsync(int orderId, List<StoreShippingSelection> selections);
 
         Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId);
+        Task<OrderConfirmationDto> GetOrderConfirmationforOrderHistoryAsync(int orderId);
 
-       
-    
+
+
+
     }
 }

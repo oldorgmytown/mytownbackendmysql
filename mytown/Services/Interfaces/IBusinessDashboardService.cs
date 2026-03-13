@@ -31,7 +31,7 @@ namespace mytown.Services.Interfaces
        int busRegId,
        bool onlyUnread
    );
-
+        Task MarkeachNotificationAsReadAsync(int notificationId);
         Task MarkAllAsReadAsync(int busRegId);
         //  Task GetNotificationsAsync(int busRegId, bool onlyUnread);
 

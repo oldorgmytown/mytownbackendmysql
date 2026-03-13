@@ -90,5 +90,16 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("Orderconfdetails-OrderHistory")]
+        public async Task<IActionResult> GetOrderConfirmationforOrderHistory(int orderId)
+        {
+            var result = await _service.GetOrderConfirmationforOrderHistoryAsync(orderId);
+
+            if (result == null)
+                return NotFound("Order not found");
+
+            return Ok(result);
+        }
     }
 }

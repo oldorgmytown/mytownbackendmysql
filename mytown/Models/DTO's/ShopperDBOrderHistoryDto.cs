@@ -2,7 +2,7 @@
 {
     public class ShopperDBOrderHistoryDto
     {
-        public int StoreOrderId { get; set; }
+        public int OrderId { get; set; }
         public DateTime? DeliveredDate { get; set; }
         public string ShippingStatus { get; set; }
     }

@@ -5,6 +5,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Services;
 using mytown.Services.Interfaces;
 using Stripe;
 using System.Collections.Generic;
@@ -200,8 +201,16 @@ namespace mytown.Controllers
         public async Task<IActionResult> MarkNotificationsAsRead(int busRegId)
         {
             await _dasboardservice.MarkAllAsReadAsync(busRegId);
-            return Ok(new { message = "Notifications marked as read" });
+            return Ok(new { message = "All Notifications marked as read" });
         }
+
+        [HttpPut("each-notification-read")]
+        public async Task<IActionResult> MarkeachNotificationAsRead(int notificationId)
+        {
+            await _dasboardservice.MarkeachNotificationAsReadAsync(notificationId);
+            return Ok(new { message = "Notification marked as read" });
+        }
+
 
         //sales tab - Store Transaction details
 

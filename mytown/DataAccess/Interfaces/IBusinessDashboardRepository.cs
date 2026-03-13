@@ -77,6 +77,8 @@ namespace mytown.DataAccess.Interfaces
 
         Task MarkAllAsReadAsync(int busRegId);
 
+        Task MarkeachNotificationAsReadAsync(int notificationId);
+
         //sales tab
 
         Task<List<Salestab_storeTransactionsDto>> GetStoreTransactionsAsync(
