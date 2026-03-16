@@ -1875,5 +1875,66 @@ public class EmailService : IEmailService
         }
     }
 
+    public async Task SendBranchLoginEmailAsync(string email, string password)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Courier Branch Login Credentials - MyTown",
+                    Body = $@"
+<div style='font-family: Arial, sans-serif; background-color: #ffffff; padding: 40px; text-align: center;'>
+    <div style='max-width: 500px; margin: auto; background: white; padding: 30px; border-radius: 10px; 
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); border: 2px solid #004481;'>
+
+        <!-- MyTown Logo -->
+        <img src='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png' 
+             alt='MyTown Logo' width='120' style='margin-bottom: 20px;' />
+
+        <h2 style='color: #004481; margin-bottom: 10px;'>Courier Branch Login Created</h2>
+
+        <p style='color: #333; font-size: 14px;'>
+            Your courier branch account has been successfully created in the MyTown system.
+        </p>
+
+        <div style='background-color:#f5f7fa;padding:15px;border-radius:6px;margin:20px 0;'>
+            <p style='font-size:14px;margin:5px 0;'><b>Login Email:</b> {email}</p>
+            <p style='font-size:14px;margin:5px 0;'><b>Default Password:</b> {password}</p>
+        </div>
+
+        <p style='color:#333;font-size:13px;'>
+            For security reasons, we recommend changing your password after your first login.
+        </p>
+
+        <hr style='border: 0.5px solid #ddd; margin: 20px 0;' />
+
+        <p style='font-size: 10px; color: #777;'>© 2025 MyTown. All rights reserved.</p>
+
+    </div>
+</div>",
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending email: {ex.Message}");
+            throw new Exception("Failed to send branch login email.");
+        }
+    }
 
 }

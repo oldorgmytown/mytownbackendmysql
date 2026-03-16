@@ -28,6 +28,9 @@ namespace mytown.Services.Interfaces
 
         Task SendShopperReactivationEmailAsync(string email, string shopperName);
 
+        // send email to all branches for login credentials
+        Task SendBranchLoginEmailAsync(string email, string password);
+
 
 
     }

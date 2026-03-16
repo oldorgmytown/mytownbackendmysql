@@ -185,7 +185,22 @@ namespace mytown.Services.Implementations
             if (invalid)
                 throw new Exception("Some rows are invalid. Please fix them before saving.");
 
-            return await _repo.SaveCourierBranchesAsync(rows);
+            var result =  await _repo.SaveCourierBranchesAsync(rows);
+
+            // Get unique emails from rows
+            var emails = rows
+                .Select(r => r.BranchEmailId)
+                .Where(e => !string.IsNullOrEmpty(e))
+                .Distinct()
+                .ToList();
+
+            // Send login email to each branch
+            foreach (var email in emails)
+            {
+                await _emailService.SendBranchLoginEmailAsync(email, "Branch@123");
+            }
+
+            return result;
         }
 
         public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
