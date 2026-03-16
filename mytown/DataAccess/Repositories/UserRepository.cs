@@ -636,66 +636,82 @@ namespace mytown.DataAccess.Repositories
             if (role == "CourierHead")
             {
                 var courier = await _context.CourierService
-     .FirstOrDefaultAsync(c => c.CourierEmail.ToLower() == email.ToLower());
+                    .FirstOrDefaultAsync(c => c.CourierEmail.ToLower() == email.ToLower());
 
-                if (courier != null && BCrypt.Net.BCrypt.Verify(password, courier.Password))
+                if (courier != null)
                 {
-                    var oldSession = await _context.UserSessions
-                        .Where(s => s.UserId == courier.CourierId && s.UserType == "CourierHead" && s.IsActive)
-                        .FirstOrDefaultAsync();
+                    bool isValidPassword = false;
 
-                    if (oldSession != null)
+                    if (!string.IsNullOrEmpty(courier.Password) && courier.Password.StartsWith("$2"))
                     {
-                        oldSession.IsActive = false;
-                        _context.UserSessions.Update(oldSession);
+                        // BCrypt hashed password
+                        isValidPassword = BCrypt.Net.BCrypt.Verify(password, courier.Password);
+                    }
+                    else
+                    {
+                        // Plain text password
+                        isValidPassword = courier.Password == password;
                     }
 
-                    var newSession = new UserSession
+                    if (isValidPassword)
                     {
-                        UserId = courier.CourierId,
-                        UserType = "CourierHead",
-                        SessionGuid = Guid.NewGuid().ToString(),
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    };
+                        var oldSession = await _context.UserSessions
+                            .Where(s => s.UserId == courier.CourierId && s.UserType == "CourierHead" && s.IsActive)
+                            .FirstOrDefaultAsync();
 
-                    _context.UserSessions.Add(newSession);
-                    await _context.SaveChangesAsync();
-
-                    // Check if branches exist for this courier
-                    var hasBranches = await _context.CourierBranches
-                        .AnyAsync(b => b.CourierId == courier.CourierId && b.IsActive);
-
-                    var token = _tokenService.GenerateToken(
-                        courier.CourierId,
-                        courier.CourierEmail,
-                        "CourierHead",
-                        newSession.SessionGuid
-                    );
-
-                    return new
-                    {
-                        userType = "CourierHead",
-                        token,
-                        sessionId = newSession.SessionGuid,
-                        hasBranches, // added new
-                        courier = new CourierServiceDto
+                        if (oldSession != null)
                         {
-                            CourierId = courier.CourierId,
-                            CourierServiceName = courier.CourierServiceName,
-                            CourierWebsiteName = courier.CourierWebsiteName,
-                            CourierEmail = courier.CourierEmail,
-                            CourierPhone = courier.CourierPhone,
-                            Address = courier.Address,
-                            Town = courier.Town,
-                            City = courier.City,
-                            State = courier.State,
-                            Country = courier.Country,
-                            PostalCode = courier.PostalCode,
-                            IsCity = courier.IsCity,
-                            IsState = courier.IsState
+                            oldSession.IsActive = false;
+                            _context.UserSessions.Update(oldSession);
                         }
-                    };
+
+                        var newSession = new UserSession
+                        {
+                            UserId = courier.CourierId,
+                            UserType = "CourierHead",
+                            SessionGuid = Guid.NewGuid().ToString(),
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        _context.UserSessions.Add(newSession);
+                        await _context.SaveChangesAsync();
+
+                        // Check if branches exist for this courier
+                        var hasBranches = await _context.CourierBranches
+                            .AnyAsync(b => b.CourierId == courier.CourierId && b.IsActive);
+
+                        var token = _tokenService.GenerateToken(
+                            courier.CourierId,
+                            courier.CourierEmail,
+                            "CourierHead",
+                            newSession.SessionGuid
+                        );
+
+                        return new
+                        {
+                            userType = "CourierHead",
+                            token,
+                            sessionId = newSession.SessionGuid,
+                            hasBranches,
+                            courier = new CourierServiceDto
+                            {
+                                CourierId = courier.CourierId,
+                                CourierServiceName = courier.CourierServiceName,
+                                CourierWebsiteName = courier.CourierWebsiteName,
+                                CourierEmail = courier.CourierEmail,
+                                CourierPhone = courier.CourierPhone,
+                                Address = courier.Address,
+                                Town = courier.Town,
+                                City = courier.City,
+                                State = courier.State,
+                                Country = courier.Country,
+                                PostalCode = courier.PostalCode,
+                                IsCity = courier.IsCity,
+                                IsState = courier.IsState
+                            }
+                        };
+                    }
                 }
 
                 return null;
