@@ -354,11 +354,13 @@ namespace mytown.DataAccess.Repositories
                 .Select(b => new CourierBranchDto
                 {
                     BranchId = b.BranchId,
+                    CourierBranchName = b.CourierServiceName,
                     City = b.City,
                     State = b.State,
                     Town = b.Town,
                     BranchAddress = b.BranchAddress,
                     BranchPhoneNumber = b.BranchPhoneNumber,
+                    BranchEmail = b.BranchEmailId,
 
                     Services = b.Services.Select(s => new CourierBranchServiceDto
                     {

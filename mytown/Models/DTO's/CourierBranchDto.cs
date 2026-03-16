@@ -3,6 +3,7 @@
     public class CourierBranchDto
 {
     public int BranchId { get; set; }
+        public string CourierBranchName { get; set; }
 
     public string City { get; set; }
 
@@ -13,6 +14,7 @@
     public string BranchAddress { get; set; }
 
     public string BranchPhoneNumber { get; set; }
+        public string BranchEmail { get; set; }
 
     public List<CourierBranchServiceDto> Services { get; set; }
 }

@@ -112,27 +112,28 @@ namespace mytown.Services.Implementations
             };
         }
 
-        public async Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int courierId)
+        public async Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int branchId)
         {
-            var courier = await _repository.GetCourierWithBranchesAsync(courierId);
+            var branch = await _repository.GetBranchAsync(branchId);
 
             var today = DateTime.UtcNow.Date;
 
             return new CourierProfileSummaryDto
-            {
-                CourierName = courier.CourierServiceName,
-                Phone = courier.CourierPhone,
-                Email = courier.CourierEmail,
+            { 
+            //{
+                CourierName = branch.CourierBranchName,
+               Phone = branch.BranchPhoneNumber,
+               Email = branch.BranchEmail,
 
 
-                TodayDeliveries = await _repository.GetCompletedDeliveriesCountAsync(
-                    courierId, today),
+                TodayDeliveries = await _repository.GetCompletedDeliveriesCountByBranchAsync(
+                    branch.BranchId, today),
 
-                TotalDeliveries = await _repository.GetTotalCompletedDeliveriesCountAsync(
-                    courierId),
+                TotalDeliveries = await _repository.GetTotalCompletedDeliveriesCountByBranchAsync(
+                    branch.BranchId),
 
-                PendingTasks = await _repository.GetPendingTasksCountAsync(
-                    courierId)
+                PendingTasks = await _repository.GetPendingTasksCountByBranchAsync(
+                    branch.BranchId)
             };
         }
 
