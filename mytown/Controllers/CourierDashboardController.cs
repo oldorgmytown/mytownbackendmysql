@@ -128,11 +128,23 @@ namespace mytown.Controllers
         }
 
         [HttpGet("Courierprofilesummary")]
-        public async Task<IActionResult> GetProfileSummary(int courierId)
+        public async Task<IActionResult> GetProfileSummary(
+    int courierId,
+    [FromQuery] int? month,
+    [FromQuery] int? year,
+    [FromQuery] DateTime? fromDate,
+    [FromQuery] DateTime? toDate)
         {
-           // int courierId = int.Parse(User.FindFirst("CourierId").Value);
+            var filter = new CourierDeliveryFilterDto
+            {
+                Month = month,
+                Year = year,
+                FromDate = fromDate,
+                ToDate = toDate
+            };
 
-            var summary = await _courierService.GetProfileSummaryAsync(courierId);
+            var summary = await _courierService.GetProfileSummaryAsync(courierId, filter);
+
             return Ok(summary);
         }
 
@@ -187,10 +199,23 @@ namespace mytown.Controllers
         }
 
         [HttpGet("Branchprofilesummary")]
-        public async Task<IActionResult> GetBranchProfileSummary(int branchId)
-        {           
+        public async Task<IActionResult> GetBranchProfileSummary(
+     int branchId,
+     [FromQuery] int? month,
+     [FromQuery] int? year,
+     [FromQuery] DateTime? fromDate,
+     [FromQuery] DateTime? toDate)
+        {
+            var filter = new CourierDeliveryFilterDto
+            {
+                Month = month,
+                Year = year,
+                FromDate = fromDate,
+                ToDate = toDate
+            };
 
-            var summary = await _courierService.GetBranchProfileSummaryAsync(branchId);
+            var summary = await _courierService.GetBranchProfileSummaryAsync(branchId, filter);
+
             return Ok(summary);
         }
 
@@ -201,19 +226,19 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        [HttpGet("branch/completed-total")]
-        public async Task<IActionResult> GetTotalCompleted(int branchId)
-        {
-            var result = await _courierService.GetTotalCompletedDeliveriesCountByBranchAsync(branchId);
-            return Ok(result);
-        }
+        //[HttpGet("branch/completed-total")]
+        //public async Task<IActionResult> GetTotalCompleted(int branchId)
+        //{
+        //    var result = await _courierService.GetTotalCompletedDeliveriesCountByBranchAsync(branchId);
+        //    return Ok(result);
+        //}
 
-        [HttpGet("branch/pending-tasks")]
-        public async Task<IActionResult> GetPendingTasks(int branchId)
-        {
-            var result = await _courierService.GetPendingTasksCountByBranchAsync(branchId);
-            return Ok(result);
-        }
+        //[HttpGet("branch/pending-tasks")]
+        //public async Task<IActionResult> GetPendingTasks(int branchId)
+        //{
+        //    var result = await _courierService.GetPendingTasksCountByBranchAsync(branchId);
+        //    return Ok(result);
+        //}
 
         [HttpGet("branch/completed-deliveries")]
         public async Task<IActionResult> GetCompletedDeliveries(int branchId, DateTime? date)

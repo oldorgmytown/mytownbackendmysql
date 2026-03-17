@@ -88,7 +88,8 @@ namespace mytown.Services.Implementations
             return await _repository.GetCourierOrderDetailAsync(storeOrderId);
         }
 
-        public async Task<CourierProfileSummaryDto> GetProfileSummaryAsync(int courierId)
+        public async Task<CourierProfileSummaryDto> GetProfileSummaryAsync(
+     int courierId, CourierDeliveryFilterDto? filter)
         {
             var courier = await _repository.GetCourierWithBranchesAsync(courierId);
 
@@ -100,19 +101,28 @@ namespace mytown.Services.Implementations
                 Phone = courier.CourierPhone,
                 Email = courier.CourierEmail,
 
-              
+                //  Always today's deliveries (fixed)
                 TodayDeliveries = await _repository.GetCompletedDeliveriesCountAsync(
                     courierId, today),
 
+                //  Filtered total deliveries
                 TotalDeliveries = await _repository.GetTotalCompletedDeliveriesCountAsync(
-                    courierId),
+                    courierId,
+                    filter?.Month,
+                    filter?.Year,
+                    filter?.FromDate,
+                    filter?.ToDate),
 
+                //  Pending tasks (based on OrderDate + filter)
                 PendingTasks = await _repository.GetPendingTasksCountAsync(
-                    courierId)
+                    courierId,
+                    filter?.Month,
+                    filter?.Year,
+                    filter?.FromDate,
+                    filter?.ToDate)
             };
         }
-
-        public async Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int branchId)
+        public async Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int branchId, CourierDeliveryFilterDto? filter)
         {
             var branch = await _repository.GetBranchAsync(branchId);
 
@@ -130,10 +140,16 @@ namespace mytown.Services.Implementations
                     branch.BranchId, today),
 
                 TotalDeliveries = await _repository.GetTotalCompletedDeliveriesCountByBranchAsync(
-                    branch.BranchId),
+                    branch.BranchId, filter?.Month,
+                    filter?.Year,
+                    filter?.FromDate,
+                    filter?.ToDate),
 
                 PendingTasks = await _repository.GetPendingTasksCountByBranchAsync(
-                    branch.BranchId)
+                    branch.BranchId, filter?.Month,
+                    filter?.Year,
+                    filter?.FromDate,
+                    filter?.ToDate)
             };
         }
 
@@ -166,14 +182,26 @@ namespace mytown.Services.Implementations
             return await _repository.GetCompletedDeliveriesCountByBranchAsync(branchId, date);
         }
 
-        public async Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId)
+        public async Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(
+     int branchId, CourierDeliveryFilterDto? filter)
         {
-            return await _repository.GetTotalCompletedDeliveriesCountByBranchAsync(branchId);
+            return await _repository.GetTotalCompletedDeliveriesCountByBranchAsync(
+                branchId,
+                filter?.Month,
+                filter?.Year,
+                filter?.FromDate,
+                filter?.ToDate);
         }
 
-        public async Task<int> GetPendingTasksCountByBranchAsync(int branchId)
+        public async Task<int> GetPendingTasksCountByBranchAsync(
+     int branchId, CourierDeliveryFilterDto? filter)
         {
-            return await _repository.GetPendingTasksCountByBranchAsync(branchId);
+            return await _repository.GetPendingTasksCountByBranchAsync(
+                branchId,
+                filter?.Month,
+                filter?.Year,
+                filter?.FromDate,
+                filter?.ToDate);
         }
 
         public async Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesByBranchAsync(int branchId, DateTime? date)

@@ -29,9 +29,19 @@ namespace mytown.DataAccess.Interfaces
 
         Task<int> GetCompletedDeliveriesCountAsync(int courierId, DateTime date);
 
-        Task<int> GetTotalCompletedDeliveriesCountAsync(int courierId);
+        Task<int> GetTotalCompletedDeliveriesCountAsync(
+     int courierId,
+     int? month,
+     int? year,
+     DateTime? fromDate,
+     DateTime? toDate);
 
-        Task<int> GetPendingTasksCountAsync(int courierId);
+        Task<int> GetPendingTasksCountAsync(
+      int courierId,
+      int? month,
+      int? year,
+      DateTime? fromDate,
+      DateTime? toDate);
 
         Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesAsync(
    int courierId,
@@ -45,9 +55,19 @@ namespace mytown.DataAccess.Interfaces
         Task<CourierBranchDto> GetBranchAsync(int branchId);
         Task<int> GetCompletedDeliveriesCountByBranchAsync(int branchId, DateTime date);
 
-        Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId);
-
-        Task<int> GetPendingTasksCountByBranchAsync(int branchId);
+        Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(
+     int branchId,
+     int? month,
+     int? year,
+     DateTime? fromDate,
+     DateTime? toDate);
+        Task<int> GetPendingTasksCountByBranchAsync(
+    int branchId,
+    int? month,
+    int? year,
+    DateTime? fromDate,
+    DateTime? toDate);
+       
 
         Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesByBranchAsync(int branchId, DateTime? date);
 

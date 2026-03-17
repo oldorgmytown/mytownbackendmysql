@@ -25,7 +25,7 @@ namespace mytown.Services.Interfaces
         Task MarkAsDeliveredAsync(int storeOrderId);
 
         Task<CourierOrderDetailDto> GetCourierOrderDetailAsync(int storeOrderId);
-        Task<CourierProfileSummaryDto> GetProfileSummaryAsync(int courierId);
+        Task<CourierProfileSummaryDto> GetProfileSummaryAsync(int courierId, CourierDeliveryFilterDto? filter);
 
         // 🔹 Completed Deliveries (Today / All)
         Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesAsync(
@@ -38,14 +38,14 @@ namespace mytown.Services.Interfaces
         //for branches 
 
         Task<CourierBranchDto> GetBranchAsync(int branchId);
-        Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int branchId);
+        Task<CourierProfileSummaryDto> GetBranchProfileSummaryAsync(int branchId, CourierDeliveryFilterDto? filter);
         
 
         Task<int> GetCompletedDeliveriesCountByBranchAsync(int branchId, DateTime date);
 
-        Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId);
+       // Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId);
 
-        Task<int> GetPendingTasksCountByBranchAsync(int branchId);
+       // Task<int> GetPendingTasksCountByBranchAsync(int branchId);
 
         Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesByBranchAsync(int branchId, DateTime? date);
 

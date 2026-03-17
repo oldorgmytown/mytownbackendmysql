@@ -268,24 +268,68 @@ namespace mytown.DataAccess.Repositories
                 .CountAsync();
         }
 
-        public async Task<int> GetTotalCompletedDeliveriesCountAsync(int courierId)
+        public async Task<int> GetTotalCompletedDeliveriesCountAsync(
+     int courierId,
+     int? month,
+     int? year,
+     DateTime? fromDate,
+     DateTime? toDate)
         {
-            return await _context.ShippingDetails
+            var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.CourierBranch.CourierId == courierId &&
-                    sd.ShippingStatus == "Delivered")
-                .CountAsync();
+                    sd.ShippingStatus == "Delivered");
+
+            // 🔹 Priority 1: Custom date range
+            if (fromDate.HasValue && toDate.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.DeliveredDate.HasValue &&
+                    sd.DeliveredDate.Value.Date >= fromDate.Value.Date &&
+                    sd.DeliveredDate.Value.Date <= toDate.Value.Date);
+            }
+            // 🔹 Priority 2: Month filter
+            else if (month.HasValue && year.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.DeliveredDate.HasValue &&
+                    sd.DeliveredDate.Value.Month == month.Value &&
+                    sd.DeliveredDate.Value.Year == year.Value);
+            }
+
+            return await query.CountAsync();
         }
 
-        public async Task<int> GetPendingTasksCountAsync(int courierId)
+        public async Task<int> GetPendingTasksCountAsync(
+      int courierId,
+      int? month,
+      int? year,
+      DateTime? fromDate,
+      DateTime? toDate)
         {
-            return await _context.ShippingDetails
+            var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.CourierBranch.CourierId == courierId &&
-                    sd.ShippingStatus == "Ready to ship")
-                .CountAsync();
-        }
+                    (sd.ShippingStatus == "Ready to ship" ||
+                     sd.ShippingStatus == "Pending"));
 
+            // 🔹 Custom date range (using OrderDate)
+            if (fromDate.HasValue && toDate.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.Order.OrderDate.Date >= fromDate.Value.Date &&
+                    sd.Order.OrderDate.Date <= toDate.Value.Date);
+            }
+            // 🔹 Month filter
+            else if (month.HasValue && year.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.Order.OrderDate.Month == month.Value &&
+                    sd.Order.OrderDate.Year == year.Value);
+            }
+
+            return await query.CountAsync();
+        }
 
         public async Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesAsync(
     int courierId,
@@ -387,22 +431,67 @@ namespace mytown.DataAccess.Repositories
                 .CountAsync();
         }
 
-        public async Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(int branchId)
+        public async Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(
+     int branchId,
+     int? month,
+     int? year,
+     DateTime? fromDate,
+     DateTime? toDate)
         {
-            return await _context.ShippingDetails
+            var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.BranchId == branchId &&
-                    sd.ShippingStatus == "Delivered")
-                .CountAsync();
+                    sd.ShippingStatus == "Delivered");
+
+            // Custom date range (priority)
+            if (fromDate.HasValue && toDate.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.DeliveredDate.HasValue &&
+                    sd.DeliveredDate.Value.Date >= fromDate.Value.Date &&
+                    sd.DeliveredDate.Value.Date <= toDate.Value.Date);
+            }
+            // Month filter
+            else if (month.HasValue && year.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.DeliveredDate.HasValue &&
+                    sd.DeliveredDate.Value.Month == month.Value &&
+                    sd.DeliveredDate.Value.Year == year.Value);
+            }
+
+            return await query.CountAsync();
         }
 
-        public async Task<int> GetPendingTasksCountByBranchAsync(int branchId)
+        public async Task<int> GetPendingTasksCountByBranchAsync(
+    int branchId,
+    int? month,
+    int? year,
+    DateTime? fromDate,
+    DateTime? toDate)
         {
-            return await _context.ShippingDetails
+            var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.BranchId == branchId &&
-                    (sd.ShippingStatus == "Pending" || sd.ShippingStatus == "ReadyToShip"))
-                .CountAsync();
+                    (sd.ShippingStatus == "Pending" ||
+                     sd.ShippingStatus == "Ready to ship"));
+
+            // 🔹 Custom date range (based on OrderDate)
+            if (fromDate.HasValue && toDate.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.Order.OrderDate.Date >= fromDate.Value.Date &&
+                    sd.Order.OrderDate.Date <= toDate.Value.Date);
+            }
+            // 🔹 Month filter
+            else if (month.HasValue && year.HasValue)
+            {
+                query = query.Where(sd =>
+                    sd.Order.OrderDate.Month == month.Value &&
+                    sd.Order.OrderDate.Year == year.Value);
+            }
+
+            return await query.CountAsync();
         }
 
         public async Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesByBranchAsync(
