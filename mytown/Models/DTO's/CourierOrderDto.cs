@@ -8,6 +8,7 @@
 
         public DateOnly Orderdate { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
+        public DateTime? DeliveredDate { get; set; }
 
         public string StoreName { get; set; }
         public string StoreTown { get; set; }

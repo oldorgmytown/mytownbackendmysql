@@ -74,7 +74,8 @@ namespace mytown.DataAccess.Repositories
                     StoreContact = sd.StoreOrder.Store.BusMobileNo,
 
                     TrackingId = sd.TrackingId,
-                    ShippingStatus = sd.ShippingStatus
+                    ShippingStatus = sd.ShippingStatus,
+                    DeliveredDate = sd.DeliveredDate
                 })
                 .ToListAsync();
         }
@@ -134,7 +135,8 @@ namespace mytown.DataAccess.Repositories
                     StoreContact = sd.StoreOrder.Store.BusMobileNo,
 
                     TrackingId = sd.TrackingId,
-                    ShippingStatus = sd.ShippingStatus
+                    ShippingStatus = sd.ShippingStatus,
+                    DeliveredDate = sd.DeliveredDate
                 })
                 .ToListAsync();
         }
