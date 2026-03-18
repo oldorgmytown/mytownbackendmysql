@@ -138,10 +138,10 @@ namespace mytown.Services.Implementations
             return _paymentRepo.GetShippingDetailsByOrderId(orderId);
         }
 
-        public async Task SendCourierEmailAsync(int branchId, int shippingDetailId)
-        {
-            await _paymentRepo.SendEmailToCourier(branchId, shippingDetailId);
-        }
+        //public async Task SendCourierEmailAsync(int branchId, int shippingDetailId)
+        //{
+        //    await _paymentRepo.SendEmailToCourier(branchId, shippingDetailId);
+        //}
 
         public ShopperRegisterDto GetShopperDetailsByOrderId(int orderId)
         {
@@ -161,11 +161,11 @@ namespace mytown.Services.Implementations
 
             foreach (var shipping in storeWiseShipments)
             {
-                // 1 email per store
-                await SendCourierEmailAsync(
-                    shipping.BranchId,
-                    shipping.StoreOrderId   // IMPORTANT: store-level
-                );
+                //// 1 email per store
+                //await SendCourierEmailAsync(
+                //    shipping.BranchId,
+                //    shipping.StoreOrderId   // IMPORTANT: store-level
+                //);
 
                 // 1 notification per store
                 var courierId = await _paymentRepo

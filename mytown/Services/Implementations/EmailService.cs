@@ -1063,7 +1063,7 @@ public class EmailService : IEmailService
 </tr>");
         }
 
-        decimal subtotal = orderdto.TotalAmount;
+        decimal subtotal = orderdto.Stores.Sum(s => s.StoreItemsTotal);
         decimal shipping = orderdto.Stores.Sum(s => s.ShippingAmount);
         decimal tax = subtotal * 0.18m;
         decimal grandTotal = subtotal + shipping + tax;

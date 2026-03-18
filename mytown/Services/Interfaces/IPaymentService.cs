@@ -22,7 +22,7 @@ namespace mytown.Services.Interfaces
         // ================================
         Task ProcessPostPaymentAsync(int orderId);
 
-        Task SendCourierEmailAsync(int branchId, int storeOrderId);
+      //  Task SendCourierEmailAsync(int branchId, int storeOrderId);
 
         ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);
 

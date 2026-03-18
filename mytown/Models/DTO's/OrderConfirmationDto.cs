@@ -30,6 +30,9 @@
         public string StoreName { get; set; } = string.Empty;
         public string BusinessEmail { get; set; } = string.Empty;
 
+        //courier email
+        public string CourierName { get; set; } = string.Empty;
+        public string CourierEmail { get; set; } = string.Empty;
         public string ShippingType { get; set; } = string.Empty;
         public decimal ShippingAmount { get; set; }
 

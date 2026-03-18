@@ -607,6 +607,13 @@ namespace mytown.DataAccess.Repositories
                     on so.StoreOrderId equals sd.StoreOrderId
                 join b in _context.BusinessRegisters
                     on so.StoreId equals b.BusRegId
+                    // join cpurier branch
+                join br in _context.CourierBranches
+         on sd.BranchId equals br.BranchId
+
+                // join Courier Service
+                join c in _context.CourierService
+                    on br.CourierId equals c.CourierId
                 where so.OrderId == orderId
                 select new StoreOrderConfirmationDto
                 {
@@ -614,6 +621,9 @@ namespace mytown.DataAccess.Repositories
                     StoreId = so.StoreId,
                     StoreName = b.BusinessName,
                     BusinessEmail = b.BusEmail,
+
+                    CourierName = c.CourierServiceName,   // from CourierService
+                    CourierEmail = br.BranchEmailId,      // from CourierBranch for courieri cnf email
 
                     ShippingType = sd.ShippingType,
                     ShippingAmount = sd.Cost,
