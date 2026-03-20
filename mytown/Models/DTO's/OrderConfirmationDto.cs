@@ -66,4 +66,6 @@
         // Optional but useful for emails/UI
         public decimal ItemTotal => Quantity * FinalPrice;
     }
+
+  
 }

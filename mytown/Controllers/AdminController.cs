@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MySqlConnector;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using System.Diagnostics;
@@ -266,7 +267,7 @@ namespace mytown.Controllers
             return Ok(new { message = "Shopper account deactivated successfully" });
         }
 
-        [Authorize]
+      //  [Authorize]
         [HttpGet("getCourierRegistersPaginated")]
         public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
         {
@@ -353,6 +354,23 @@ namespace mytown.Controllers
         {
             var result = await _adminService.GetLocationCourierSummaryAsync();
             return Ok(result);
+        }
+
+        [HttpGet("branches_info_courierId")]
+        public async Task<IActionResult> GetBasicBranches(int courierId)
+        {
+            var result = await _adminService.GetBasicBranchesAsync(courierId);
+            return Ok(result);
+        }
+
+
+        // API'S for courier branch dashboard
+
+        [HttpGet("branch")]
+        public async Task<IActionResult> GetBranch(int branchId)
+        {
+            var branch = await _adminService.GetBranchAsync(branchId);
+            return Ok(branch);
         }
     }
 }

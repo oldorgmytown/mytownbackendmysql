@@ -390,6 +390,19 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<BranchBasicDto>> GetBasicBranches(int courierId)
+        {
+            return await _context.CourierBranches
+                .Where(b => b.CourierId == courierId && b.IsActive)
+                .Select(b => new BranchBasicDto
+                {
+                    BranchId = b.BranchId,
+                    Town = b.Town,
+                    Country = b.Country
+                })
+                .ToListAsync();
+        }
+
 
         // here are apis for branches 
 

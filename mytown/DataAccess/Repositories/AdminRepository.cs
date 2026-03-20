@@ -836,6 +836,48 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
             };
         }
 
+        public async Task<List<BranchBasicDto>> GetBasicBranches(int courierId)
+        {
+            return await _context.CourierBranches
+                .Where(b => b.CourierId == courierId && b.IsActive)
+                .Select(b => new BranchBasicDto
+                {
+                    BranchId = b.BranchId,
+                    Town = b.Town,
+                    Country = b.Country
+                })
+                .ToListAsync();
+        }
+
+
+               public async Task<CourierBranchDto> GetBranchAsync(int branchId)
+        {
+            return await _context.CourierBranches
+                .Where(b => b.BranchId == branchId)
+                .Select(b => new CourierBranchDto
+                {
+                    BranchId = b.BranchId,
+                    CourierBranchName = b.CourierServiceName,
+                    City = b.City,
+                    State = b.State,
+                    Town = b.Town,
+                    BranchAddress = b.BranchAddress,
+                    BranchPhoneNumber = b.BranchPhoneNumber,
+                    BranchEmail = b.BranchEmailId,
+
+                    Services = b.Services.Select(s => new CourierBranchServiceDto
+                    {
+                        BranchServiceId = s.BranchServiceId,
+                        Destinations = s.Destinations,
+                        ShippingMode = s.ShippingMode,
+                        DistanceRange = s.DistanceRange,
+                        WeightRange = s.WeightRange,
+                        Charges = s.Charges,
+                        EstimateDays = s.EstimateDays
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
+        }
 
 
     }

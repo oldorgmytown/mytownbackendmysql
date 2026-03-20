@@ -50,6 +50,8 @@ namespace mytown.DataAccess.Interfaces
         Task<List<CourierDBNotifications>> GetUnreadNotificationsAsync(int courierId);
         Task MarkNotificationsAsReadAsync(int courierId);
 
+        Task<List<BranchBasicDto>> GetBasicBranches(int courierId);
+
         // here are apis for courier branch 
 
         Task<CourierBranchDto> GetBranchAsync(int branchId);

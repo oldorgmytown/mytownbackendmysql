@@ -35,6 +35,10 @@ namespace mytown.Services.Interfaces
         Task<List<CourierDBNotifications>> GetUnreadNotificationsAsync(int courierId);
         Task MarkAsReadAsync(int courierId);
 
+        //get branhc details with courier id
+
+        Task<List<BranchBasicDto>> GetBasicBranchesAsync(int courierId);
+
         //for branches 
 
         Task<CourierBranchDto> GetBranchAsync(int branchId);

@@ -188,6 +188,13 @@ namespace mytown.Controllers
             return Ok(new { message = "Notifications marked as read" });
         }
 
+        [HttpGet("branches_info_courierId")]
+        public async Task<IActionResult> GetBasicBranches(int courierId)
+        {
+            var result = await _courierService.GetBasicBranchesAsync(courierId);
+            return Ok(result);
+        }
+
 
         // API'S for courier branch dashboard
 

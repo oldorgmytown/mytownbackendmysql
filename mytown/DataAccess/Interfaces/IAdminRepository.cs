@@ -52,6 +52,9 @@ namespace mytown.DataAccess.Interfaces
         Task<List<CourierService>> GetAllCouriersAsync();
 
         Task<AdminLocationCourierSummaryDto> GetCourierLocationSummaryAsync();
+        Task<List<BranchBasicDto>> GetBasicBranches(int courierId);       
+
+        Task<CourierBranchDto> GetBranchAsync(int branchId);
     }
 }
 

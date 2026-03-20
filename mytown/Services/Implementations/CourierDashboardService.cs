@@ -170,6 +170,18 @@ namespace mytown.Services.Implementations
             await _repository.MarkNotificationsAsReadAsync(courierId);
         }
 
+        public async Task<List<BranchBasicDto>> GetBasicBranchesAsync(int courierId)
+        {
+            if (courierId <= 0)
+            {
+                throw new ArgumentException("Invalid courierId");
+            }
+
+            var branches = await _repository.GetBasicBranches(courierId);
+
+            return branches ?? new List<BranchBasicDto>();
+        }
+
         // branches 
 
         public async Task<CourierBranchDto> GetBranchAsync(int branchId)

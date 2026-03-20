@@ -207,5 +207,24 @@ namespace mytown.Services.Implementations
             };
         }
 
+        public async Task<List<BranchBasicDto>> GetBasicBranchesAsync(int courierId)
+        {
+            if (courierId <= 0)
+            {
+                throw new ArgumentException("Invalid courierId");
+            }
+
+            var branches = await _adminRepo.GetBasicBranches(courierId);
+
+            return branches ?? new List<BranchBasicDto>();
+        }
+
+        // branches 
+
+        public async Task<CourierBranchDto> GetBranchAsync(int branchId)
+        {
+            return await _adminRepo.GetBranchAsync(branchId);
+        }
+
     }
 }
