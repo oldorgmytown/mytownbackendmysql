@@ -172,6 +172,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<ShippingDetails?> GetByStoreOrderIdAsync(int storeOrderId)
         {
             return await _context.ShippingDetails
+                .Include(s => s.CourierBranch) // for courier
                 .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
         }
         public async Task<CourierOrderDetailDto> GetCourierOrderDetailAsync(int storeOrderId)
@@ -606,5 +607,21 @@ namespace mytown.DataAccess.Repositories
 
             return newFileName; // return file name (store in DB)
         }
+
+        // update profile status as Active when courier starts taking orders
+
+        public async Task<CourierService?> GetCourierByIdAsync(int courierId)
+        {
+            return await _context.CourierService
+                .FirstOrDefaultAsync(c => c.CourierId == courierId);
+        }
+
+        public async Task UpdateCourierAsync(CourierService courier)
+        {
+            _context.CourierService.Update(courier);
+            await _context.SaveChangesAsync();
+        }
+
+       
     }
 }

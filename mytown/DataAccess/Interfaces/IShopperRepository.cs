@@ -7,15 +7,11 @@ namespace mytown.DataAccess.Interfaces
     {
         Task<ShopperRegister> RegisterShopper(ShopperRegister shopper);
         Task<(bool isTaken, string message)> IsEmailTaken(string email);
-        ////     Task<ShopperVerification> GenerateEmailVerification(string email);
-        //     Task<bool> VerifyEmail(string token);
+      
 
         //resend email
         Task<ShopperVerification> FindPendingVerificationByEmail(string email);
         Task RemoveVerification(ShopperVerification verification);
-
-
-
 
         Task SavePendingVerification(PendingVerification pending);
         Task<PendingVerification> FindPendingVerificationByToken(string token);

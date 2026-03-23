@@ -76,7 +76,11 @@ namespace mytown.Models
 
         [Column("is_email_verified")]
         public bool IsEmailVerified { get; set; } = false;
-   
+        [Column("profile_status")]
+        public string ProfileStatus { get; set; } = "Incomplete";
+
+
+
         // Navigation property
         public ICollection<CourierBranch> CourierBranches { get; set; }
 

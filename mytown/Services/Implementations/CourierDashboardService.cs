@@ -1,4 +1,5 @@
-﻿using mytown.DataAccess.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -61,13 +62,26 @@ namespace mytown.Services.Implementations
         {
             var shipment = await _repository.GetByStoreOrderIdAsync(storeOrderId);
 
-            if (shipment.ShippingStatus != "Pending")
+            if (shipment.ShippingStatus != "Pending" && shipment.ShippingStatus != "Ready to Ship")
                 throw new Exception("Tracking can be added only for new orders");
 
             shipment.TrackingId = trackingId;
             shipment.ShippingStatus = "In Progress";
+            //make courier profile status as Active after taking firts order
 
+            // Get CourierId
+            var courierId = shipment.CourierBranch.CourierId;
+
+            var courier = await _repository.GetCourierByIdAsync(courierId);
+
+            if (courier != null)
+            {
+                courier.ProfileStatus = "Active";
+                await _repository.UpdateCourierAsync(courier);
+            }
             await _repository.SaveAsync();
+
+           // await _repository.SaveAsync();
         }
 
         public async Task MarkAsDeliveredAsync(int storeOrderId)

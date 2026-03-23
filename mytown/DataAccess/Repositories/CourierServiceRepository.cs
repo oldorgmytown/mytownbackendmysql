@@ -283,7 +283,31 @@ namespace mytown.DataAccess.Repositories
             return $"{newRowsAdded} new rows added. Duplicate data already exists in DB for {skippedDuplicates} rows.";
         }
 
-        return "All rows saved successfully.";
+                // Get courierId safely
+                var courierId = rows.FirstOrDefault()?.CourierId;
+
+                if (courierId.HasValue)
+                {
+                    var courier = await _context.CourierService
+                        .FirstOrDefaultAsync(c => c.CourierId == courierId.Value);
+
+                    if (courier != null)
+                    {
+                        // Optional validation (recommended)
+                        bool hasBranches = await _context.CourierBranches
+                            .AnyAsync(b => b.CourierId == courierId.Value);
+
+                        bool hasServices = await _context.CourierBranchServices
+                            .AnyAsync(s => s.CourierBranch.CourierId == courierId.Value);
+
+                        if (hasBranches && hasServices)
+                        {
+                            courier.ProfileStatus = "Complete";
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+                }
+                    return "All rows saved successfully.";
     }
     catch (Exception ex)
     {

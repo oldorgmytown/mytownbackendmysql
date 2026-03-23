@@ -80,6 +80,11 @@ namespace mytown.DataAccess.Interfaces
 
         Task<string> UploadDeliveryProofAsync(int storeOrderId, IFormFile file);
 
+        // updating courier profile status
+        Task<CourierService?> GetCourierByIdAsync(int courierId);
+
+        Task UpdateCourierAsync(CourierService courier);
+
 
     }
 
