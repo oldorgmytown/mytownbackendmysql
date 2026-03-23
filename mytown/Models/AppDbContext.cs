@@ -73,6 +73,14 @@ namespace mytown.Models
 
             public DbSet<Wishlist> Wishlist { get; set; }// new
 
+            public DbSet<TransporterRegister> TransporterRegisters { get; set; } //new
+
+            public DbSet<PendingTransporterVerification>PendingTransporterVerifications { get; set; }
+            public DbSet<TransporterVerification> TransporterVerification { get; set; }
+
+
+
+
 
 
 
