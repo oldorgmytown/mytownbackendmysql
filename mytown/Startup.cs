@@ -56,6 +56,7 @@ public class Startup
         services.AddScoped<IVerificationLinkBuilderbusiness,VerificationLinkBuilderbusiness>();
         services.AddScoped<mytown.DataAccess.IBusinessRepository, BusinessRepository>();
         services.AddScoped<IBusinessRegistrationValidator, BusinessRegistrationValidator>();
+        services.AddScoped<IVerificationLinkBuildertransporter, VerificationLinkBuildertransporter>();
       
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
