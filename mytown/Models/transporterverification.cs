@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
-    [Table("TransporterVerification")]
+    [Table("transporter_verification")]
     public class TransporterVerification
     {
         [Key]
