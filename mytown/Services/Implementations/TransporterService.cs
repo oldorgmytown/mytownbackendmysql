@@ -12,14 +12,14 @@ namespace mytown.Services.Implementations
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<TransporterService> _logger;
-        private readonly IVerificationLinkBuilder _verificationLinkBuilder;
+        private readonly IVerificationLinkBuildertransporter _verificationLinkBuilder;
 
         public TransporterService(
             ITransporterRepository repo,
             IEmailService emailService,
             IConfiguration configuration,
             ILogger<TransporterService> logger,
-            IVerificationLinkBuilder verificationLinkBuilder)
+            IVerificationLinkBuildertransporter verificationLinkBuilder)
         {
             _repo = repo;
             _emailService = emailService;
