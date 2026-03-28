@@ -14,26 +14,26 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        public async Task SavePendingVerification(PendingVerification pending)
+        public async Task SavePendingVerification(PendingTransporterVerification pending)
         {
-            _context.PendingVerifications.Add(pending);
+            _context.PendingTransporterVerifications.Add(pending);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<PendingVerification> FindPendingVerificationByToken(string token)
+        public async Task<PendingTransporterVerification> FindPendingVerificationByToken(string token)
         {
-            return await _context.PendingVerifications
+            return await _context.PendingTransporterVerifications
                 .FirstOrDefaultAsync(p => p.Token == token);
         }
 
         public async Task DeletePendingVerification(string token)
         {
-            var pending = await _context.PendingVerifications
+            var pending = await _context.PendingTransporterVerifications
                 .FirstOrDefaultAsync(p => p.Token == token);
 
             if (pending != null)
             {
-                _context.PendingVerifications.Remove(pending);
+                _context.PendingTransporterVerifications.Remove(pending);
                 await _context.SaveChangesAsync();
             }
         }

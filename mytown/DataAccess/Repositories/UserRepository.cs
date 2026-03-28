@@ -781,7 +781,92 @@ namespace mytown.DataAccess.Repositories
                 return null;
             }
 
+            // ---------------- TRANSPORTER LOGIN ----------------
+            if (role == "Transporter")
+            {
+                var transporter = await _context.TransporterRegisters
+                    .FirstOrDefaultAsync(t => t.Email == email);
 
+                if (transporter != null && BCrypt.Net.BCrypt.Verify(password, transporter.Password))
+                {
+                    // ❗ Optional but recommended: check email verified
+                    if (!transporter.IsEmailVerified)
+                    {
+                        return new
+                        {
+                            error = "Please verify your email before logging in."
+                        };
+                    }
+
+                    // ❗ Optional: check status
+                    if (transporter.Status == "Blocked")
+                    {
+                        return new
+                        {
+                            error = "Your account is blocked. Contact support."
+                        };
+                    }
+
+                    // ---------------- SESSION HANDLING ----------------
+                    var oldSession = await _context.UserSessions
+                        .Where(s => s.UserId == transporter.TransporterRegId
+                                 && s.UserType == "Transporter"
+                                 && s.IsActive)
+                        .FirstOrDefaultAsync();
+
+                    if (oldSession != null)
+                    {
+                        oldSession.IsActive = false;
+                        _context.UserSessions.Update(oldSession);
+                    }
+
+                    var newSession = new UserSession
+                    {
+                        UserId = transporter.TransporterRegId,
+                        UserType = "Transporter",
+                        SessionGuid = Guid.NewGuid().ToString(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.UserSessions.Add(newSession);
+                    await _context.SaveChangesAsync();
+
+                    // ---------------- TOKEN ----------------
+                    var token = _tokenService.GenerateToken(
+                        transporter.TransporterRegId,
+                        transporter.Email,
+                        "Transporter",
+                        newSession.SessionGuid
+                    );
+
+                    // ---------------- RESPONSE ----------------
+                    return new
+                    {
+                        userType = "Transporter",
+                        token,
+                        sessionId = newSession.SessionGuid,
+                        transporter = new TransporterRegisterDto
+                        {
+                            TransporterId = transporter.TransporterRegId,
+                            TransporterName = transporter.TransporterName,
+                            Email = transporter.Email,
+                            PhoneNumber = transporter.PhoneNumber,
+                            Address = transporter.Address,
+                            Town = transporter.Town,
+                            City = transporter.City,
+                            State = transporter.State,
+                            Country = transporter.Country,
+                            PostalCode = transporter.PostalCode,
+                            Status = transporter.Status,
+                           // IsEmailVerified = transporter.IsEmailVerified.ToString(), // ⚠️ since your DTO has string
+                            TransporterRegDate = transporter.TransporeterRegDate
+                        }
+                    };
+                }
+
+                return null;
+            }
             return null;
         }
 

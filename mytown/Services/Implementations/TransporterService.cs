@@ -45,7 +45,7 @@ namespace mytown.Services.Implementations
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];
             string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
 
-            var pending = new PendingVerification
+            var pending = new PendingTransporterVerification
             {
                 Email = dto.Email,
                 Token = token,
@@ -105,7 +105,7 @@ namespace mytown.Services.Implementations
             string token = Guid.NewGuid().ToString();
             DateTime expiry = DateTime.UtcNow.AddHours(24);
 
-            var pending = new PendingVerification
+            var pending = new PendingTransporterVerification
             {
                 Email = email,
                 Token = token,

@@ -16,9 +16,9 @@ namespace mytown.DataAccess.Interfaces
             Task RemoveVerification(TransporterVerification verification);
 
             // ---------------- COMMON VERIFICATION ----------------
-            Task SavePendingVerification(PendingVerification pending);
+            Task SavePendingVerification(PendingTransporterVerification pending);
 
-            Task<PendingVerification> FindPendingVerificationByToken(string token);
+            Task<PendingTransporterVerification> FindPendingVerificationByToken(string token);
 
             Task DeletePendingVerification(string token);
         }
