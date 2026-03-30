@@ -51,6 +51,7 @@ namespace mytown.Services
             AddIfExists("shopper");
             AddIfExists("courier");
             AddIfExists("hasBranches");
+            AddIfExists("transporter");
 
             return (response, token!, sessionId!);
         }

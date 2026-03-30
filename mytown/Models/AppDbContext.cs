@@ -78,6 +78,12 @@ namespace mytown.Models
             public DbSet<PendingTransporterVerification>PendingTransporterVerifications { get; set; }
             public DbSet<TransporterVerification> TransporterVerification { get; set; }
 
+            public DbSet<TransporterKYC> TransporterKYCs { get; set; }
+            public DbSet<TransporterBankDetails> TransporterBankDetails { get; set; }
+            public DbSet<TransporterTravelPlan> TransporterTravelPlans { get; set; }
+            public DbSet<TransporterDeliveryRequest> TransporterDeliveryRequests { get; set; }
+            public DbSet<TransporterExceptionReport> TransporterExceptionReports { get; set; }
+
 
 
 

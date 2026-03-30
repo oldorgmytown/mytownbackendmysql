@@ -72,6 +72,7 @@ public class Startup
         services.AddScoped<IShopperDashboardRepository, ShopperDashboardRepository>();
         services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>(); //latest
         services.AddScoped<ITransporterRepository, TransporterRepository>();
+        services.AddScoped<ITransporterDashboardRepository, TransporterDashboardRepository>();
 
 
         services.AddScoped<ITokenService, TokenService>();
@@ -92,6 +93,7 @@ public class Startup
         services.AddScoped<IShopperDashboardService, ShopperDashboardService>();
         services.AddScoped<ICourierDashboardService, CourierDashboardService>();
         services.AddScoped<ITransporterService, TransporterService>();
+        services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
 
     }
 
