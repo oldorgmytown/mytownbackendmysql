@@ -21,16 +21,21 @@ namespace mytown.Services.Implementations
         //    => _repo.CreateOrderAsync(shopperRegId, selections);
 
 
-        public async Task<int> CreateOrderAsync(
-       int shopperRegId,
-       int? selectedAltAddressId,
-       List<StoreShippingSelection> shippingSelections)
+        // public async Task<int> CreateOrderAsync(
+        //int shopperRegId,
+        //int? selectedAltAddressId,
+        //List<StoreShippingSelection> shippingSelections)
+        // {
+        //     return await _repo.CreateOrderAsync(
+        //         shopperRegId,
+        //         selectedAltAddressId,
+        //         shippingSelections
+        //     );
+        // }
+
+        public async Task<int> CreateOrderAsync(CreateOrderRequestddto request)
         {
-            return await _repo.CreateOrderAsync(
-                shopperRegId,
-                selectedAltAddressId,
-                shippingSelections
-            );
+            return await _repo.CreateOrderAsync(request);
         }
         public Task<int> CreateOrderAndOrderDetailsAsync(int shopperRegId)
             => _repo.CreateOrderAndOrderDetailsAsync(shopperRegId);

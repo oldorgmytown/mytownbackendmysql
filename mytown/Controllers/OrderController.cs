@@ -25,10 +25,7 @@ namespace mytown.Controllers
         {
             try
             {
-                var orderId = await _service.CreateOrderAsync(
-                    request.ShopperRegId,
-                    request.SelectedAltAddressId,
-                    request.ShippingSelections);
+                var orderId = await _service.CreateOrderAsync(request); // ✅ changed
 
                 if (orderId == 0)
                     return BadRequest("No items in cart.");
