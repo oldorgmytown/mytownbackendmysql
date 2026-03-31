@@ -12,7 +12,7 @@ namespace mytown.Controllers.Helpers
                 throw new ArgumentException("Frontend base URL must not be null or empty.", nameof(frontendBaseUrl));
             }
 
-            return $"{frontendBaseUrl.TrimEnd('/')}/verify-business-email?token={token}";
+            return $"{frontendBaseUrl.TrimEnd('/')}/?verify-business-email&token={token}";
         }
     }
 }

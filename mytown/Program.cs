@@ -1,8 +1,19 @@
-﻿using MySqlConnector;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using MySqlConnector;
+using mytown.Filters;
 using Serilog;
+using System.Text;
+
 
 try
 {
+
+    // Prevent ASP.NET from starting when running EF CLI commands
+    if (args.Contains("--ef"))
+    {
+        return;
+    }
     // Configure Serilog for both console and file logging.
     Log.Logger = new LoggerConfiguration()
         .MinimumLevel.Information()
@@ -14,6 +25,7 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Replace the default logging provider with Serilog.
+    Directory.CreateDirectory("logs");
     builder.Host.UseSerilog(); // Requires using Serilog.Extensions.Hosting
 
     // Load configuration files.
@@ -22,6 +34,14 @@ try
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
         .AddEnvironmentVariables();
+
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<ValidateModelAttribute>();
+    })
+ .AddJsonOptions(x =>
+     x.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
+
 
     // Initialize Startup and register all services.
     var startup = new Startup(builder.Configuration);
@@ -34,7 +54,7 @@ try
     Microsoft.Extensions.Logging.ILogger logger = app.Services.GetRequiredService<ILogger<Program>>();
 
     // Test the MySQL connection before starting the app.
-    TestMySQLConnection(builder.Configuration, logger);
+   // TestMySQLConnection(builder.Configuration, logger);
 
     // Configure the HTTP request pipeline via Startup.Configure.
     startup.Configure(app, builder.Environment, app.Services.GetRequiredService<ILogger<Startup>>());

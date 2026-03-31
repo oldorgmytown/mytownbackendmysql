@@ -1,24 +1,40 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
-    public class wishlist
+    [Table("wishlist")]
+    public class Wishlist
     {
         [Key]
-        public int WishlistId { get; set; } // Primary key
+        [Column("wishlist_id")]
+        public int WishlistId { get; set; }
+
         [Required]
-        public int product_id { get; set; }
-        [Required]
-        public int BusRegId { get; set; }
-        [Required]
-        public int BuscatId { get; set; }
-        [Required]
-        public int prod_subcat_id { get; set; }
-        [Required]
+        [Column("shopper_reg_id")]
         public int ShopperRegId { get; set; }
 
-       // public int prod_qty { get; set; }
+        [Required]
+        [Column("product_id")]
+        public int ProductId { get; set; }
 
-        //public string orderstatus { get; set; }
+        [Required]
+        [Column("sku_id")]
+        public int SkuId { get; set; }
+
+        [Required]
+        [Column("bus_reg_id")]
+        public int BusRegId { get; set; }
+
+        [Required]
+        [Column("buscat_id")]
+        public int BuscatId { get; set; }
+
+        [Required]
+        [Column("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
     }
 }

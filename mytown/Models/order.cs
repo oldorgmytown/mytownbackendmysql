@@ -1,31 +1,47 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using mytown.Models.DTO_s;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
+    [Table("orders")]
     public class Order
     {
         [Key]
-        public int OrderId { get; set; } // Primary Key
+        [Column("order_id")]
+        public int OrderId { get; set; }
 
         [Required]
-        public int ShopperRegId { get; set; } // Foreign Key - Shopper
+        [Column("shopper_reg_id")]
+        public int ShopperRegId { get; set; }
+
         [ForeignKey("ShopperRegId")]
         public ShopperRegister ShopperRegister { get; set; }
 
-        [Required]
-        public decimal TotalAmount { get; set; } // Order Total
+        // Selected delivery address
+        [Column("selected_alt_address_id")]
+        public int? SelectedAltAddressId { get; set; }
+
+        // Optional navigation (recommended)
+        [ForeignKey("SelectedAltAddressId")]
+        public ShopperAlternateAddress? SelectedAlternateAddress { get; set; }
 
         [Required]
-        public string ShippingType { get; set; } // Shipping Type (Standard, Peer-to-Peer, etc.)
+        [Column("total_amount")]
+        public decimal TotalAmount { get; set; }
 
-        public string OrderStatus { get; set; } // Pending, Shipped, Delivered, etc.
+        [Required]
+        [Column("shipping_type")]
+        public string ShippingType { get; set; }
 
-        public DateTime OrderDate { get; set; } // Order Creation Date
+        [Column("orderstatus")]
+        public string OrderStatus { get; set; }
+
+        [Column("order_date")]
+        public DateTime OrderDate { get; set; }
 
         public virtual ICollection<orderdetails> OrderDetails { get; set; }
         public virtual ICollection<Payments> Payments { get; set; }
-
         public virtual ICollection<ShippingDetails> ShippingDetails { get; set; }
     }
 

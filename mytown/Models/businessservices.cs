@@ -1,16 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
-    public class businessservices
+    [Table("business_services")]
+    public class BusinessService
     {
         [Key]
-        public int BusservId { get; set; } // Primary key
-
-
+        [Column("bus_serv_id")]
+        public int BusServId { get; set; } // Primary key
 
         [Required]
         [StringLength(100)]
-        public string Businessservice_name { get; set; }
+        [Column("business_service_name")]
+        public string BusinessServiceName { get; set; }
     }
 }

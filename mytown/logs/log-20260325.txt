@@ -1,0 +1,1084 @@
+2026-03-25 10:46:14.578 +05:30 [INF] Swagger UI is enabled.
+2026-03-25 10:46:16.511 +05:30 [INF] API is ready and running.
+2026-03-25 10:46:16.553 +05:30 [INF] User profile is available. Using 'C:\Users\DELL\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-03-25 10:46:16.811 +05:30 [INF] Now listening on: http://localhost:5100
+2026-03-25 10:46:16.812 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-03-25 10:46:16.813 +05:30 [INF] Hosting environment: Development
+2026-03-25 10:46:16.814 +05:30 [INF] Content root path: e:\project\oldorgmytown\mytownbackendmysql\mytown
+2026-03-25 10:47:24.494 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:47:24.496 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - null null
+2026-03-25 10:47:24.496 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - null null
+2026-03-25 10:47:24.496 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - null null
+2026-03-25 10:47:24.552 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-03-25 10:47:24.826 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:47:24.827 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:47:24.827 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:47:24.827 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:47:29.698 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:47:29.698 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:47:29.698 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:47:29.698 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:47:29.770 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:47:29.770 +05:30 [INF] Route matched with {action = "GetBusinessRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBusinessRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:47:29.770 +05:30 [INF] Route matched with {action = "GetShoppersRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetShoppersRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:47:29.770 +05:30 [INF] Route matched with {action = "GetUniqueCounts", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCounts() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:47:34.130 +05:30 [WRN] The foreign key {'ProdTypeId'} on entity type 'ProductType' targets itself. Consider removing it since it serves no purpose.
+2026-03-25 10:47:36.816 +05:30 [INF] Executed DbCommand (294ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`town`
+    FROM (
+        SELECT `b`.`town`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`town` <> ''
+        UNION
+        SELECT `s`.`town`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`town` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:47:36.816 +05:30 [INF] Executed DbCommand (292ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `business_registers` AS `b`
+2026-03-25 10:47:36.833 +05:30 [INF] Executed DbCommand (319ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `shopper_registers` AS `s`
+2026-03-25 10:47:36.846 +05:30 [INF] Executed DbCommand (332ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:47:36.851 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:47:36.851 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:47:36.916 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown) in 7130.5085ms
+2026-03-25 10:47:36.916 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown) in 7132.2185ms
+2026-03-25 10:47:36.924 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:47:36.924 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:47:36.952 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - 200 null application/json; charset=utf-8 12470.7156ms
+2026-03-25 10:47:36.952 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - 200 null application/json; charset=utf-8 12470.717ms
+2026-03-25 10:47:36.969 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:47:37.025 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 7250.7007ms
+2026-03-25 10:47:37.031 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:47:37.039 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 12557.3702ms
+2026-03-25 10:47:37.479 +05:30 [INF] Executed DbCommand (318ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_city`
+    FROM (
+        SELECT `b`.`business_city`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_city` <> ''
+        UNION
+        SELECT `s`.`city` AS `business_city`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`city` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:47:38.110 +05:30 [INF] Executed DbCommand (307ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_state`
+    FROM (
+        SELECT `b`.`business_state`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_state` <> ''
+        UNION
+        SELECT `s`.`state` AS `business_state`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`state` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:47:38.759 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_country`
+    FROM (
+        SELECT `b`.`business_country`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_country` <> ''
+        UNION
+        SELECT `s`.`country` AS `business_country`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`country` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:47:38.766 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType3`4[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:47:38.784 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetUniqueCounts (mytown) in 9004.8913ms
+2026-03-25 10:47:38.786 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:47:38.791 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - 200 null application/json; charset=utf-8 14309.752ms
+2026-03-25 10:57:41.972 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - null null
+2026-03-25 10:57:41.972 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - null null
+2026-03-25 10:57:41.972 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:57:41.972 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - null null
+2026-03-25 10:57:42.041 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:42.042 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:42.044 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:42.044 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:42.073 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:57:42.073 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:57:42.072 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:57:42.072 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:57:42.095 +05:30 [INF] Route matched with {action = "GetBusinessRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBusinessRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:57:42.095 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:57:42.095 +05:30 [INF] Route matched with {action = "GetShoppersRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetShoppersRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:57:42.095 +05:30 [INF] Route matched with {action = "GetUniqueCounts", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCounts() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:57:46.246 +05:30 [INF] Executed DbCommand (266ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:57:46.246 +05:30 [INF] Executed DbCommand (274ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `business_registers` AS `b`
+2026-03-25 10:57:46.246 +05:30 [INF] Executed DbCommand (273ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`town`
+    FROM (
+        SELECT `b`.`town`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`town` <> ''
+        UNION
+        SELECT `s`.`town`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`town` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:57:46.248 +05:30 [INF] Executed DbCommand (272ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `shopper_registers` AS `s`
+2026-03-25 10:57:46.270 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:57:46.270 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:57:46.278 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:57:46.282 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown) in 4181.143ms
+2026-03-25 10:57:46.282 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown) in 4183.7956ms
+2026-03-25 10:57:46.284 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 4185.3537ms
+2026-03-25 10:57:46.287 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:57:46.291 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:57:46.294 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:57:46.300 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - 200 null application/json; charset=utf-8 4331.2836ms
+2026-03-25 10:57:46.300 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - 200 null application/json; charset=utf-8 4331.9632ms
+2026-03-25 10:57:46.302 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 4333.5549ms
+2026-03-25 10:57:46.773 +05:30 [INF] Executed DbCommand (260ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_city`
+    FROM (
+        SELECT `b`.`business_city`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_city` <> ''
+        UNION
+        SELECT `s`.`city` AS `business_city`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`city` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:57:47.414 +05:30 [INF] Executed DbCommand (314ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_state`
+    FROM (
+        SELECT `b`.`business_state`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_state` <> ''
+        UNION
+        SELECT `s`.`state` AS `business_state`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`state` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:57:47.984 +05:30 [INF] Executed DbCommand (259ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_country`
+    FROM (
+        SELECT `b`.`business_country`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_country` <> ''
+        UNION
+        SELECT `s`.`country` AS `business_country`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`country` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:57:47.989 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType3`4[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:57:48.006 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetUniqueCounts (mytown) in 5905.1117ms
+2026-03-25 10:57:48.012 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:57:48.018 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - 200 null application/json; charset=utf-8 6049.9746ms
+2026-03-25 10:57:58.227 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - null null
+2026-03-25 10:57:58.227 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/profile/uniquecountries - null null
+2026-03-25 10:57:58.233 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.233 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.234 +05:30 [INF] Executing endpoint 'mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown)'
+2026-03-25 10:57:58.234 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown)'
+2026-03-25 10:57:58.248 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/profile/GetAllProductsubcategories - null null
+2026-03-25 10:57:58.250 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/17 - null null
+2026-03-25 10:57:58.250 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=17 - null null
+2026-03-25 10:57:58.252 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.255 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.255 +05:30 [INF] Executing endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:57:58.256 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperDashboardController.GetWishlist (mytown)'
+2026-03-25 10:57:58.259 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.259 +05:30 [INF] Route matched with {action = "GetUniqueCountries", controller = "BusinessProfile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCountries() on controller mytown.Controllers.BusinessProfileController (mytown).
+2026-03-25 10:57:58.260 +05:30 [INF] Executing endpoint 'mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown)'
+2026-03-25 10:57:58.273 +05:30 [INF] Route matched with {action = "GetAllProductsubcategories", controller = "BusinessProfile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAllProductsubcategories() on controller mytown.Controllers.BusinessProfileController (mytown).
+2026-03-25 10:57:58.278 +05:30 [INF] Route matched with {action = "GetTownsWithStoreCountByCountry", controller = "Shopper"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetTownsWithStoreCountByCountry(System.String) on controller mytown.Controllers.ShopperController (mytown).
+2026-03-25 10:57:58.278 +05:30 [INF] Route matched with {action = "GetCartItems", controller = "Cart"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCartItems(Int32) on controller mytown.Controllers.CartController (mytown).
+2026-03-25 10:57:58.278 +05:30 [INF] Route matched with {action = "GetWishlist", controller = "ShopperDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetWishlist(Int32, System.String, Int32, Int32) on controller mytown.Controllers.ShopperDashboardController (mytown).
+2026-03-25 10:57:58.436 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:57:58.438 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:57:58.439 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:57:58.439 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:00.140 +05:30 [INF] Executed DbCommand (243ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `p`.`prod_subcat_id`, `p`.`bus_cat_id`, `p`.`prod_subcat_image`, `p`.`prod_subcat_name`
+FROM `product_sub_categories` AS `p`
+2026-03-25 10:58:00.166 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.ProductSubCategory, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:00.179 +05:30 [INF] Executed action mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown) in 1903.2122ms
+2026-03-25 10:58:00.180 +05:30 [INF] Executed endpoint 'mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown)'
+2026-03-25 10:58:00.181 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/profile/GetAllProductsubcategories - 200 null application/json; charset=utf-8 1932.5384ms
+2026-03-25 10:58:00.184 +05:30 [INF] Executed DbCommand (270ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_location`
+FROM `business_profiles` AS `b`
+WHERE `b`.`business_location` IS NOT NULL AND (`b`.`business_location` LIKE '%,%')
+2026-03-25 10:58:00.184 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/products/GetDiscountedProductsAsync - null null
+2026-03-25 10:58:00.189 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:00.190 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:00.190 +05:30 [INF] Executing endpoint 'MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown)'
+2026-03-25 10:58:00.192 +05:30 [INF] Executed action mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown) in 1931.3239ms
+2026-03-25 10:58:00.194 +05:30 [INF] Executed endpoint 'mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown)'
+2026-03-25 10:58:00.195 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/profile/uniquecountries - 200 null application/json; charset=utf-8 1967.927ms
+2026-03-25 10:58:00.201 +05:30 [INF] Route matched with {action = "GetDiscountedProducts", controller = "Product"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDiscountedProductsAsync() on controller MyTown.Controllers.ProductController (mytown).
+2026-03-25 10:58:00.266 +05:30 [INF] Executed DbCommand (262ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:58:00.267 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:00.269 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 1826.8427ms
+2026-03-25 10:58:00.269 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:58:00.270 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 1834.1747ms
+2026-03-25 10:58:00.341 +05:30 [INF] Executed DbCommand (314ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `a`.`cart_id` AS `CartId`, `a`.`shopper_reg_id` AS `ShopperRegId`, `a`.`prod_qty`, `a`.`orderstatus`, `p`.`product_id`, `p`.`product_name`, `p`.`product_subject`, `p`.`product_description`, (
+    SELECT `p1`.`file_name`
+    FROM `product_images` AS `p1`
+    WHERE (`p1`.`sku_id` = `s`.`sku_id`) AND (`p1`.`sort_order` = 1)
+    LIMIT 1) AS `product_image`, `s`.`sku_id` AS `Sku_Id`, `s`.`sku_cost` AS `product_cost`, `s`.`color` AS `Color`, COALESCE(`s`.`size_id`, 0) AS `SizeId`, `p0`.`size_name` AS `SizeName`, `s`.`discount` AS `Discount`, `s`.`discount_price` AS `DiscountPrice`, `b`.`bus_reg_id` AS `StoreId`, `b`.`business_name` AS `StoreName`, `b`.`business_location` AS `StoreLocation`, `b`.`logo_path` AS `StoreLogo`, ((`p`.`product_status` = 'Approved') AND `p`.`is_active`) AND ((`b`.`profile_status` = 'approved') AND `b`.`profile_status` IS NOT NULL) AS `IsProductAvailable`
+FROM `addtocart` AS `a`
+INNER JOIN `products` AS `p` ON `a`.`product_id` = `p`.`product_id`
+INNER JOIN `business_profiles` AS `b` ON `p`.`bus_reg_id` = `b`.`bus_reg_id`
+INNER JOIN `sku_product_variants` AS `s` ON `a`.`sku_id` = `s`.`sku_id`
+LEFT JOIN `product_sizes` AS `p0` ON `s`.`size_id` = `p0`.`size_id`
+WHERE (`a`.`shopper_reg_id` = @__shopperRegId_0) AND (`a`.`orderstatus` = 'cart')
+2026-03-25 10:58:00.353 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType17`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[CartItemDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:00.384 +05:30 [INF] Executed action mytown.Controllers.CartController.GetCartItems (mytown) in 2102.831ms
+2026-03-25 10:58:00.385 +05:30 [INF] Executed endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:58:00.386 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/17 - 200 null application/json; charset=utf-8 2136.1473ms
+2026-03-25 10:58:01.216 +05:30 [INF] Executed DbCommand (256ms) [Parameters=[@__country_0='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`town` AS `Town`, COUNT(*) AS `StoreCount`
+FROM `business_registers` AS `b`
+LEFT JOIN `business_profiles` AS `b0` ON `b`.`bus_reg_id` = `b0`.`bus_reg_id`
+WHERE `b0`.`business_profile_id` IS NOT NULL AND (`b`.`business_country` = @__country_0)
+GROUP BY `b`.`town`
+2026-03-25 10:58:01.222 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[<>f__AnonymousType116`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:01.229 +05:30 [INF] Executed action mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown) in 2949.9777ms
+2026-03-25 10:58:01.232 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown)'
+2026-03-25 10:58:01.234 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - 200 null application/json; charset=utf-8 3006.3867ms
+2026-03-25 10:58:01.250 +05:30 [INF] Executed DbCommand (250ms) [Parameters=[@__shopperId_0='?' (DbType = Int32), @__p_2='?' (DbType = Int32), @__p_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `w`.`wishlist_id` AS `WishlistId`, `p`.`product_id` AS `ProductId`, `p`.`product_name` AS `ProductName`, `w`.`sku_id` AS `SkuId`, `p`.`buscat_id` AS `Buscatid`, `p`.`prod_subcat_id` AS `prod_sub_catid`, COALESCE(`p1`.`file_name`, `p3`.`file_name`) AS `VariantImageUrl`, COALESCE(`s`.`discount_price`, `s`.`sku_cost`) AS `Price`, `b`.`bus_reg_id` AS `StoreId`, `b`.`business_name` AS `StoreName`, (`p`.`product_status` = 'Approved') AND `p`.`is_active` AS `IsProductAvailable`
+FROM `wishlist` AS `w`
+INNER JOIN `products` AS `p` ON `w`.`product_id` = `p`.`product_id`
+INNER JOIN `business_registers` AS `b` ON `w`.`bus_reg_id` = `b`.`bus_reg_id`
+INNER JOIN `sku_product_variants` AS `s` ON `w`.`sku_id` = `s`.`sku_id`
+LEFT JOIN (
+    SELECT `p0`.`file_name`, `p0`.`sku_id`
+    FROM `product_images` AS `p0`
+    WHERE `p0`.`sort_order` = 1
+) AS `p1` ON `w`.`sku_id` = `p1`.`sku_id`
+LEFT JOIN (
+    SELECT `p2`.`file_name`, `p2`.`product_id`
+    FROM `product_images` AS `p2`
+    WHERE (`p2`.`sort_order` = 1) AND `p2`.`sku_id` IS NULL
+) AS `p3` ON `p`.`product_id` = `p3`.`product_id`
+WHERE `w`.`shopper_reg_id` = @__shopperId_0
+ORDER BY `w`.`wishlist_id` DESC
+LIMIT @__p_2 OFFSET @__p_1
+2026-03-25 10:58:01.258 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.WishlistItemDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:01.265 +05:30 [INF] Executed action mytown.Controllers.ShopperDashboardController.GetWishlist (mytown) in 2982.8851ms
+2026-03-25 10:58:01.267 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperDashboardController.GetWishlist (mytown)'
+2026-03-25 10:58:01.268 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=17 - 200 null application/json; charset=utf-8 3017.82ms
+2026-03-25 10:58:01.358 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:58:01.360 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - null null
+2026-03-25 10:58:01.360 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - null null
+2026-03-25 10:58:01.360 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - null null
+2026-03-25 10:58:01.361 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:01.364 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:01.366 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:01.368 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:01.369 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:58:01.369 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:58:01.370 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:58:01.371 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:58:01.372 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:01.374 +05:30 [INF] Route matched with {action = "GetBusinessRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBusinessRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:01.375 +05:30 [INF] Route matched with {action = "GetUniqueCounts", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCounts() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:01.376 +05:30 [INF] Route matched with {action = "GetShoppersRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetShoppersRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:02.303 +05:30 [INF] Executed DbCommand (518ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `s`.`product_id`, `p`.`bus_reg_id`, `b`.`business_name`, `p`.`buscat_id`, `p`.`prod_subcat_id`, `p`.`product_type_id`, `p0`.`prod_type_name`, `p`.`fabric_id`, `f`.`fabric_name`, `p`.`design_id`, `d`.`design_name`, `p`.`product_name`, `p`.`product_description`, `s`.`sku_id`, `s`.`color`, `s`.`size_id`, `p1`.`size_name`, `s`.`sku_cost`, `s`.`discount_price`, `s`.`quantity`, `s`.`length`, `s`.`width`, `s`.`height`, `s`.`weight`, `s`.`discount`, `p`.`product_id`, `b`.`bus_reg_id`, `p0`.`prod_type_id`, `f`.`fabric_id`, `d`.`design_id`, `p1`.`size_id`, `p2`.`file_name`, `p2`.`sort_order`, `p2`.`image_id`
+FROM `sku_product_variants` AS `s`
+INNER JOIN `products` AS `p` ON `s`.`product_id` = `p`.`product_id`
+INNER JOIN `business_registers` AS `b` ON `p`.`bus_reg_id` = `b`.`bus_reg_id`
+LEFT JOIN `product_type` AS `p0` ON `p`.`product_type_id` = `p0`.`prod_type_id`
+LEFT JOIN `fabrics` AS `f` ON `p`.`fabric_id` = `f`.`fabric_id`
+LEFT JOIN `designs` AS `d` ON `p`.`design_id` = `d`.`design_id`
+LEFT JOIN `product_sizes` AS `p1` ON `s`.`size_id` = `p1`.`size_id`
+LEFT JOIN `product_images` AS `p2` ON `s`.`sku_id` = `p2`.`sku_id`
+WHERE ((`s`.`discount` IS NOT NULL AND (`s`.`discount` > 0.0)) AND (`p`.`product_status` = 'Approved')) AND `p`.`is_active`
+ORDER BY `s`.`sku_id`, `p`.`product_id`, `b`.`bus_reg_id`, `p0`.`prod_type_id`, `f`.`fabric_id`, `d`.`design_id`, `p1`.`size_id`, `p2`.`sort_order`
+2026-03-25 10:58:02.315 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.ProdcVariantforShopperDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:02.343 +05:30 [INF] Executed action MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown) in 2139.8618ms
+2026-03-25 10:58:02.345 +05:30 [INF] Executed endpoint 'MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown)'
+2026-03-25 10:58:02.346 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/products/GetDiscountedProductsAsync - 200 null application/json; charset=utf-8 2162.1843ms
+2026-03-25 10:58:03.296 +05:30 [INF] Executed DbCommand (272ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:58:03.301 +05:30 [INF] Executed DbCommand (269ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `shopper_registers` AS `s`
+2026-03-25 10:58:03.305 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:03.309 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:03.309 +05:30 [INF] Executed DbCommand (259ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`town`
+    FROM (
+        SELECT `b`.`town`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`town` <> ''
+        UNION
+        SELECT `s`.`town`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`town` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:58:03.314 +05:30 [INF] Executed DbCommand (270ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `business_registers` AS `b`
+2026-03-25 10:58:03.317 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:03.319 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown) in 1937.5973ms
+2026-03-25 10:58:03.319 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown) in 1934.3481ms
+2026-03-25 10:58:03.319 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 1940.3426ms
+2026-03-25 10:58:03.321 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:58:03.334 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:58:03.336 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:58:03.337 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - 499 null application/json; charset=utf-8 1977.2631ms
+2026-03-25 10:58:03.338 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - 499 null application/json; charset=utf-8 1978.1213ms
+2026-03-25 10:58:03.339 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 499 null application/json; charset=utf-8 1980.8103ms
+2026-03-25 10:58:03.894 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_city`
+    FROM (
+        SELECT `b`.`business_city`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_city` <> ''
+        UNION
+        SELECT `s`.`city` AS `business_city`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`city` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:58:04.434 +05:30 [INF] Executed DbCommand (269ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_state`
+    FROM (
+        SELECT `b`.`business_state`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_state` <> ''
+        UNION
+        SELECT `s`.`state` AS `business_state`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`state` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:58:04.974 +05:30 [INF] Executed DbCommand (271ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_country`
+    FROM (
+        SELECT `b`.`business_country`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_country` <> ''
+        UNION
+        SELECT `s`.`country` AS `business_country`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`country` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:58:04.978 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType3`4[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:04.979 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetUniqueCounts (mytown) in 3595.6561ms
+2026-03-25 10:58:04.979 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:58:04.980 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - 499 null application/json; charset=utf-8 3620.5185ms
+2026-03-25 10:58:20.248 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/User/login - null null
+2026-03-25 10:58:20.250 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:20.252 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/User/login - 204 null null 3.8468ms
+2026-03-25 10:58:20.254 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/User/login - application/json 78
+2026-03-25 10:58:20.257 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:20.258 +05:30 [INF] Executing endpoint 'mytown.Controllers.UserController.Login (mytown)'
+2026-03-25 10:58:20.263 +05:30 [INF] Route matched with {action = "Login", controller = "User"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Login(mytown.Models.DTO_s.LoginRequestDto) on controller mytown.Controllers.UserController (mytown).
+2026-03-25 10:58:22.936 +05:30 [INF] Executed DbCommand (321ms) [Parameters=[@__email_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `s`.`shopper_reg_id`, `s`.`address`, `s`.`city`, `s`.`country`, `s`.`email`, `s`.`is_email_verified`, `s`.`password`, `s`.`phone_number`, `s`.`photo_name`, `s`.`postal_code`, `s`.`shopper_reg_date`, `s`.`state`, `s`.`status`, `s`.`town`, `s`.`username`
+FROM `shopper_registers` AS `s`
+WHERE `s`.`email` = @__email_0
+LIMIT 1
+2026-03-25 10:58:24.006 +05:30 [INF] Executed DbCommand (271ms) [Parameters=[@__shopper_ShopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`user_id` = @__shopper_ShopperRegId_0) AND (`u`.`user_type` = 'Shopper')) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:25.177 +05:30 [INF] Executed DbCommand (315ms) [Parameters=[@p8='?' (DbType = Int32), @p0='?' (DbType = DateTime), @p1='?' (Size = 4000), @p2='?' (DbType = DateTime), @p3='?' (Size = 4000), @p4='?' (DbType = Boolean), @p5='?' (Size = 4000), @p6='?' (DbType = Int32), @p7='?' (Size = 4000), @p9='?' (DbType = DateTime), @p10='?' (Size = 4000), @p11='?' (DbType = DateTime), @p12='?' (Size = 4000), @p13='?' (DbType = Boolean), @p14='?' (Size = 4000), @p15='?' (DbType = Int32), @p16='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+UPDATE `user_sessions` SET `created_at` = @p0, `device_info` = @p1, `expires_at` = @p2, `ip_address` = @p3, `is_active` = @p4, `session_guid` = @p5, `user_id` = @p6, `user_type` = @p7
+WHERE `id` = @p8;
+SELECT ROW_COUNT();
+
+INSERT INTO `user_sessions` (`created_at`, `device_info`, `expires_at`, `ip_address`, `is_active`, `session_guid`, `user_id`, `user_type`)
+VALUES (@p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16);
+SELECT `id`
+FROM `user_sessions`
+WHERE ROW_COUNT() = 1 AND `id` = LAST_INSERT_ID();
+2026-03-25 10:58:25.591 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Object, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:25.601 +05:30 [INF] Executed action mytown.Controllers.UserController.Login (mytown) in 5336.8436ms
+2026-03-25 10:58:25.602 +05:30 [INF] Executed endpoint 'mytown.Controllers.UserController.Login (mytown)'
+2026-03-25 10:58:25.602 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/User/login - 200 null application/json; charset=utf-8 5347.8276ms
+2026-03-25 10:58:25.607 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/GetCartItems/22 - null null
+2026-03-25 10:58:25.610 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:25.611 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/GetCartItems/22 - 204 null null 4.2375ms
+2026-03-25 10:58:25.613 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/22 - null null
+2026-03-25 10:58:25.614 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.148 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - null null
+2026-03-25 10:58:26.148 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/business/profile/uniquecountries - null null
+2026-03-25 10:58:26.155 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.155 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.157 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/business/profile/uniquecountries - 204 null null 8.7226ms
+2026-03-25 10:58:26.157 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - 204 null null 9.289ms
+2026-03-25 10:58:26.159 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - null null
+2026-03-25 10:58:26.161 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/profile/uniquecountries - null null
+2026-03-25 10:58:26.162 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.163 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.165 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/business/profile/GetAllProductsubcategories - null null
+2026-03-25 10:58:26.167 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.168 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/business/profile/GetAllProductsubcategories - 204 null null 2.1916ms
+2026-03-25 10:58:26.169 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/profile/GetAllProductsubcategories - null null
+2026-03-25 10:58:26.171 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.222 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:58:26.224 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.224 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/admin/business/completed-stores-in-locations - 204 null null 2.178ms
+2026-03-25 10:58:26.226 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:58:26.227 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.258 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/business/products/GetDiscountedProductsAsync - null null
+2026-03-25 10:58:26.264 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:26.265 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/business/products/GetDiscountedProductsAsync - 204 null null 6.6658ms
+2026-03-25 10:58:26.269 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/business/products/GetDiscountedProductsAsync - null null
+2026-03-25 10:58:26.271 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:27.707 +05:30 [INF] Executed DbCommand (262ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:27.711 +05:30 [INF] Executing endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:58:27.712 +05:30 [INF] Route matched with {action = "GetCartItems", controller = "Cart"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCartItems(Int32) on controller mytown.Controllers.CartController (mytown).
+2026-03-25 10:58:27.976 +05:30 [INF] Executed DbCommand (269ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:27.977 +05:30 [INF] Executed DbCommand (272ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:27.980 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown)'
+2026-03-25 10:58:27.981 +05:30 [INF] Executing endpoint 'mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown)'
+2026-03-25 10:58:27.981 +05:30 [INF] Route matched with {action = "GetTownsWithStoreCountByCountry", controller = "Shopper"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetTownsWithStoreCountByCountry(System.String) on controller mytown.Controllers.ShopperController (mytown).
+2026-03-25 10:58:27.982 +05:30 [INF] Route matched with {action = "GetUniqueCountries", controller = "BusinessProfile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCountries() on controller mytown.Controllers.BusinessProfileController (mytown).
+2026-03-25 10:58:27.991 +05:30 [INF] Executed DbCommand (260ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:27.993 +05:30 [INF] Executing endpoint 'mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown)'
+2026-03-25 10:58:27.994 +05:30 [INF] Route matched with {action = "GetAllProductsubcategories", controller = "BusinessProfile"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetAllProductsubcategories() on controller mytown.Controllers.BusinessProfileController (mytown).
+2026-03-25 10:58:28.024 +05:30 [INF] Executed DbCommand (249ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:28.027 +05:30 [INF] Executing endpoint 'MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown)'
+2026-03-25 10:58:28.028 +05:30 [INF] Route matched with {action = "GetDiscountedProducts", controller = "Product"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDiscountedProductsAsync() on controller MyTown.Controllers.ProductController (mytown).
+2026-03-25 10:58:28.038 +05:30 [INF] Executed DbCommand (263ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:28.041 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:58:28.042 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:58:28.250 +05:30 [INF] Executed DbCommand (274ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `a`.`cart_id` AS `CartId`, `a`.`shopper_reg_id` AS `ShopperRegId`, `a`.`prod_qty`, `a`.`orderstatus`, `p`.`product_id`, `p`.`product_name`, `p`.`product_subject`, `p`.`product_description`, (
+    SELECT `p1`.`file_name`
+    FROM `product_images` AS `p1`
+    WHERE (`p1`.`sku_id` = `s`.`sku_id`) AND (`p1`.`sort_order` = 1)
+    LIMIT 1) AS `product_image`, `s`.`sku_id` AS `Sku_Id`, `s`.`sku_cost` AS `product_cost`, `s`.`color` AS `Color`, COALESCE(`s`.`size_id`, 0) AS `SizeId`, `p0`.`size_name` AS `SizeName`, `s`.`discount` AS `Discount`, `s`.`discount_price` AS `DiscountPrice`, `b`.`bus_reg_id` AS `StoreId`, `b`.`business_name` AS `StoreName`, `b`.`business_location` AS `StoreLocation`, `b`.`logo_path` AS `StoreLogo`, ((`p`.`product_status` = 'Approved') AND `p`.`is_active`) AND ((`b`.`profile_status` = 'approved') AND `b`.`profile_status` IS NOT NULL) AS `IsProductAvailable`
+FROM `addtocart` AS `a`
+INNER JOIN `products` AS `p` ON `a`.`product_id` = `p`.`product_id`
+INNER JOIN `business_profiles` AS `b` ON `p`.`bus_reg_id` = `b`.`bus_reg_id`
+INNER JOIN `sku_product_variants` AS `s` ON `a`.`sku_id` = `s`.`sku_id`
+LEFT JOIN `product_sizes` AS `p0` ON `s`.`size_id` = `p0`.`size_id`
+WHERE (`a`.`shopper_reg_id` = @__shopperRegId_0) AND (`a`.`orderstatus` = 'cart')
+2026-03-25 10:58:28.254 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType17`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[CartItemDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:28.255 +05:30 [INF] Executed action mytown.Controllers.CartController.GetCartItems (mytown) in 541.6141ms
+2026-03-25 10:58:28.256 +05:30 [INF] Executed endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:58:28.258 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/22 - 200 null application/json; charset=utf-8 2644.8903ms
+2026-03-25 10:58:28.534 +05:30 [INF] Executed DbCommand (296ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `p`.`prod_subcat_id`, `p`.`bus_cat_id`, `p`.`prod_subcat_image`, `p`.`prod_subcat_name`
+FROM `product_sub_categories` AS `p`
+2026-03-25 10:58:28.534 +05:30 [INF] Executed DbCommand (295ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_location`
+FROM `business_profiles` AS `b`
+WHERE `b`.`business_location` IS NOT NULL AND (`b`.`business_location` LIKE '%,%')
+2026-03-25 10:58:28.534 +05:30 [INF] Executed DbCommand (289ms) [Parameters=[@__country_0='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`town` AS `Town`, COUNT(*) AS `StoreCount`
+FROM `business_registers` AS `b`
+LEFT JOIN `business_profiles` AS `b0` ON `b`.`bus_reg_id` = `b0`.`bus_reg_id`
+WHERE `b0`.`business_profile_id` IS NOT NULL AND (`b`.`business_country` = @__country_0)
+GROUP BY `b`.`town`
+2026-03-25 10:58:28.540 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.ProductSubCategory, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:28.543 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:28.546 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[<>f__AnonymousType116`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:28.549 +05:30 [INF] Executed action mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown) in 554.033ms
+2026-03-25 10:58:28.552 +05:30 [INF] Executed action mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown) in 567.0551ms
+2026-03-25 10:58:28.553 +05:30 [INF] Executed action mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown) in 569.2323ms
+2026-03-25 10:58:28.554 +05:30 [INF] Executed endpoint 'mytown.Controllers.BusinessProfileController.GetAllProductsubcategories (mytown)'
+2026-03-25 10:58:28.554 +05:30 [INF] Executed endpoint 'mytown.Controllers.BusinessProfileController.GetUniqueCountries (mytown)'
+2026-03-25 10:58:28.555 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperController.GetTownsWithStoreCountByCountry (mytown)'
+2026-03-25 10:58:28.556 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/profile/GetAllProductsubcategories - 200 null application/json; charset=utf-8 2386.4275ms
+2026-03-25 10:58:28.556 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/profile/uniquecountries - 200 null application/json; charset=utf-8 2395.734ms
+2026-03-25 10:58:28.558 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shoppers/GetTownsWithStoreCountByCountry/India - 200 null application/json; charset=utf-8 2398.616ms
+2026-03-25 10:58:28.574 +05:30 [INF] Executed DbCommand (270ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:58:28.577 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:28.578 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 533.5459ms
+2026-03-25 10:58:28.579 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:58:28.580 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 2353.7877ms
+2026-03-25 10:58:28.770 +05:30 [INF] Executed DbCommand (491ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `s`.`product_id`, `p`.`bus_reg_id`, `b`.`business_name`, `p`.`buscat_id`, `p`.`prod_subcat_id`, `p`.`product_type_id`, `p0`.`prod_type_name`, `p`.`fabric_id`, `f`.`fabric_name`, `p`.`design_id`, `d`.`design_name`, `p`.`product_name`, `p`.`product_description`, `s`.`sku_id`, `s`.`color`, `s`.`size_id`, `p1`.`size_name`, `s`.`sku_cost`, `s`.`discount_price`, `s`.`quantity`, `s`.`length`, `s`.`width`, `s`.`height`, `s`.`weight`, `s`.`discount`, `p`.`product_id`, `b`.`bus_reg_id`, `p0`.`prod_type_id`, `f`.`fabric_id`, `d`.`design_id`, `p1`.`size_id`, `p2`.`file_name`, `p2`.`sort_order`, `p2`.`image_id`
+FROM `sku_product_variants` AS `s`
+INNER JOIN `products` AS `p` ON `s`.`product_id` = `p`.`product_id`
+INNER JOIN `business_registers` AS `b` ON `p`.`bus_reg_id` = `b`.`bus_reg_id`
+LEFT JOIN `product_type` AS `p0` ON `p`.`product_type_id` = `p0`.`prod_type_id`
+LEFT JOIN `fabrics` AS `f` ON `p`.`fabric_id` = `f`.`fabric_id`
+LEFT JOIN `designs` AS `d` ON `p`.`design_id` = `d`.`design_id`
+LEFT JOIN `product_sizes` AS `p1` ON `s`.`size_id` = `p1`.`size_id`
+LEFT JOIN `product_images` AS `p2` ON `s`.`sku_id` = `p2`.`sku_id`
+WHERE ((`s`.`discount` IS NOT NULL AND (`s`.`discount` > 0.0)) AND (`p`.`product_status` = 'Approved')) AND `p`.`is_active`
+ORDER BY `s`.`sku_id`, `p`.`product_id`, `b`.`bus_reg_id`, `p0`.`prod_type_id`, `f`.`fabric_id`, `d`.`design_id`, `p1`.`size_id`, `p2`.`sort_order`
+2026-03-25 10:58:28.773 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.ProdcVariantforShopperDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:28.774 +05:30 [INF] Executed action MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown) in 745.5577ms
+2026-03-25 10:58:28.775 +05:30 [INF] Executed endpoint 'MyTown.Controllers.ProductController.GetDiscountedProductsAsync (mytown)'
+2026-03-25 10:58:28.776 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/business/products/GetDiscountedProductsAsync - 200 null application/json; charset=utf-8 2506.8228ms
+2026-03-25 10:58:30.488 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/add-to-cart - null null
+2026-03-25 10:58:30.490 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:30.490 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/add-to-cart - 204 null null 2.2205ms
+2026-03-25 10:58:30.492 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/shoppingcart/add-to-cart - application/json 160
+2026-03-25 10:58:30.493 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:32.696 +05:30 [INF] Executed DbCommand (321ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:32.698 +05:30 [INF] Executing endpoint 'mytown.Controllers.CartController.AddToCart (mytown)'
+2026-03-25 10:58:32.704 +05:30 [INF] Route matched with {action = "AddToCart", controller = "Cart"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] AddToCart(mytown.Models.AddToCart) on controller mytown.Controllers.CartController (mytown).
+2026-03-25 10:58:33.335 +05:30 [INF] Executed DbCommand (321ms) [Parameters=[@__cartItem_ProductId_0='?' (DbType = Int32), @__cartItem_SkuId_1='?' (DbType = Int32), @__cartItem_BusRegId_2='?' (DbType = Int32), @__cartItem_ShopperRegId_3='?' (DbType = Int32), @__cartItem_BuscatId_4='?' (DbType = Int32), @__cartItem_ProdSubcatId_5='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `a`.`cart_id`, `a`.`bus_reg_id`, `a`.`buscat_id`, `a`.`prod_qty`, `a`.`prod_subcat_id`, `a`.`product_id`, `a`.`product_price`, `a`.`shopper_reg_id`, `a`.`sku_id`, `a`.`orderstatus`
+FROM `addtocart` AS `a`
+WHERE ((((((`a`.`product_id` = @__cartItem_ProductId_0) AND (`a`.`sku_id` = @__cartItem_SkuId_1)) AND (`a`.`bus_reg_id` = @__cartItem_BusRegId_2)) AND (`a`.`shopper_reg_id` = @__cartItem_ShopperRegId_3)) AND (`a`.`buscat_id` = @__cartItem_BuscatId_4)) AND (`a`.`prod_subcat_id` = @__cartItem_ProdSubcatId_5)) AND (`a`.`orderstatus` = 'cart')
+LIMIT 1
+2026-03-25 10:58:34.293 +05:30 [INF] Executed DbCommand (324ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = Int32), @p2='?' (DbType = Int32), @p3='?' (DbType = Int32), @p4='?' (DbType = Int32), @p5='?' (DbType = Decimal), @p6='?' (DbType = Int32), @p7='?' (DbType = Int32), @p8='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO `addtocart` (`bus_reg_id`, `buscat_id`, `prod_qty`, `prod_subcat_id`, `product_id`, `product_price`, `shopper_reg_id`, `sku_id`, `orderstatus`)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8);
+SELECT `cart_id`
+FROM `addtocart`
+WHERE ROW_COUNT() = 1 AND `cart_id` = LAST_INSERT_ID();
+2026-03-25 10:58:34.616 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType17`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[mytown.Models.AddToCart, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:34.622 +05:30 [INF] Executed action mytown.Controllers.CartController.AddToCart (mytown) in 1916.761ms
+2026-03-25 10:58:34.625 +05:30 [INF] Executed endpoint 'mytown.Controllers.CartController.AddToCart (mytown)'
+2026-03-25 10:58:34.628 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/shoppingcart/add-to-cart - 200 null application/json; charset=utf-8 4136.0253ms
+2026-03-25 10:58:34.632 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/GetCartItems/22 - null null
+2026-03-25 10:58:34.633 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:34.634 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shoppingcart/GetCartItems/22 - 204 null null 1.7169ms
+2026-03-25 10:58:34.635 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/22 - null null
+2026-03-25 10:58:34.636 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:36.855 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:36.861 +05:30 [INF] Executing endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:58:36.864 +05:30 [INF] Route matched with {action = "GetCartItems", controller = "Cart"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCartItems(Int32) on controller mytown.Controllers.CartController (mytown).
+2026-03-25 10:58:37.495 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `a`.`cart_id` AS `CartId`, `a`.`shopper_reg_id` AS `ShopperRegId`, `a`.`prod_qty`, `a`.`orderstatus`, `p`.`product_id`, `p`.`product_name`, `p`.`product_subject`, `p`.`product_description`, (
+    SELECT `p1`.`file_name`
+    FROM `product_images` AS `p1`
+    WHERE (`p1`.`sku_id` = `s`.`sku_id`) AND (`p1`.`sort_order` = 1)
+    LIMIT 1) AS `product_image`, `s`.`sku_id` AS `Sku_Id`, `s`.`sku_cost` AS `product_cost`, `s`.`color` AS `Color`, COALESCE(`s`.`size_id`, 0) AS `SizeId`, `p0`.`size_name` AS `SizeName`, `s`.`discount` AS `Discount`, `s`.`discount_price` AS `DiscountPrice`, `b`.`bus_reg_id` AS `StoreId`, `b`.`business_name` AS `StoreName`, `b`.`business_location` AS `StoreLocation`, `b`.`logo_path` AS `StoreLogo`, ((`p`.`product_status` = 'Approved') AND `p`.`is_active`) AND ((`b`.`profile_status` = 'approved') AND `b`.`profile_status` IS NOT NULL) AS `IsProductAvailable`
+FROM `addtocart` AS `a`
+INNER JOIN `products` AS `p` ON `a`.`product_id` = `p`.`product_id`
+INNER JOIN `business_profiles` AS `b` ON `p`.`bus_reg_id` = `b`.`bus_reg_id`
+INNER JOIN `sku_product_variants` AS `s` ON `a`.`sku_id` = `s`.`sku_id`
+LEFT JOIN `product_sizes` AS `p0` ON `s`.`size_id` = `p0`.`size_id`
+WHERE (`a`.`shopper_reg_id` = @__shopperRegId_0) AND (`a`.`orderstatus` = 'cart')
+2026-03-25 10:58:37.501 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType17`2[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Collections.Generic.IEnumerable`1[[CartItemDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:58:37.503 +05:30 [INF] Executed action mytown.Controllers.CartController.GetCartItems (mytown) in 635.8379ms
+2026-03-25 10:58:37.507 +05:30 [INF] Executed endpoint 'mytown.Controllers.CartController.GetCartItems (mytown)'
+2026-03-25 10:58:37.510 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shoppingcart/GetCartItems/22 - 200 null application/json; charset=utf-8 2874.9813ms
+2026-03-25 10:58:39.562 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=22 - null null
+2026-03-25 10:58:39.569 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:39.571 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=22 - 204 null null 8.7681ms
+2026-03-25 10:58:39.574 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=22 - null null
+2026-03-25 10:58:39.575 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:41.981 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:41.987 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperDashboardController.GetWishlist (mytown)'
+2026-03-25 10:58:41.990 +05:30 [INF] Route matched with {action = "GetWishlist", controller = "ShopperDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetWishlist(Int32, System.String, Int32, Int32) on controller mytown.Controllers.ShopperDashboardController (mytown).
+2026-03-25 10:58:42.615 +05:30 [INF] Executed DbCommand (330ms) [Parameters=[@__shopperId_0='?' (DbType = Int32), @__p_2='?' (DbType = Int32), @__p_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `w`.`wishlist_id` AS `WishlistId`, `p`.`product_id` AS `ProductId`, `p`.`product_name` AS `ProductName`, `w`.`sku_id` AS `SkuId`, `p`.`buscat_id` AS `Buscatid`, `p`.`prod_subcat_id` AS `prod_sub_catid`, COALESCE(`p1`.`file_name`, `p3`.`file_name`) AS `VariantImageUrl`, COALESCE(`s`.`discount_price`, `s`.`sku_cost`) AS `Price`, `b`.`bus_reg_id` AS `StoreId`, `b`.`business_name` AS `StoreName`, (`p`.`product_status` = 'Approved') AND `p`.`is_active` AS `IsProductAvailable`
+FROM `wishlist` AS `w`
+INNER JOIN `products` AS `p` ON `w`.`product_id` = `p`.`product_id`
+INNER JOIN `business_registers` AS `b` ON `w`.`bus_reg_id` = `b`.`bus_reg_id`
+INNER JOIN `sku_product_variants` AS `s` ON `w`.`sku_id` = `s`.`sku_id`
+LEFT JOIN (
+    SELECT `p0`.`file_name`, `p0`.`sku_id`
+    FROM `product_images` AS `p0`
+    WHERE `p0`.`sort_order` = 1
+) AS `p1` ON `w`.`sku_id` = `p1`.`sku_id`
+LEFT JOIN (
+    SELECT `p2`.`file_name`, `p2`.`product_id`
+    FROM `product_images` AS `p2`
+    WHERE (`p2`.`sort_order` = 1) AND `p2`.`sku_id` IS NULL
+) AS `p3` ON `p`.`product_id` = `p3`.`product_id`
+WHERE `w`.`shopper_reg_id` = @__shopperId_0
+ORDER BY `w`.`wishlist_id` DESC
+LIMIT @__p_2 OFFSET @__p_1
+2026-03-25 10:58:42.621 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.WishlistItemDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:42.626 +05:30 [INF] Executed action mytown.Controllers.ShopperDashboardController.GetWishlist (mytown) in 630.5952ms
+2026-03-25 10:58:42.628 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperDashboardController.GetWishlist (mytown)'
+2026-03-25 10:58:42.628 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBwishlist?shopperId=22 - 200 null application/json; charset=utf-8 3054.5183ms
+2026-03-25 10:58:49.426 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=4 - null null
+2026-03-25 10:58:49.427 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/shopperDBorder-summary?shopperRegId=22 - null null
+2026-03-25 10:58:49.428 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:49.429 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:49.430 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=4 - 204 null null 3.2694ms
+2026-03-25 10:58:49.430 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/shopperDBorder-summary?shopperRegId=22 - 204 null null 3.4552ms
+2026-03-25 10:58:49.432 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=4 - null null
+2026-03-25 10:58:49.436 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:49.434 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBorder-summary?shopperRegId=22 - null null
+2026-03-25 10:58:49.443 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:51.573 +05:30 [INF] Executed DbCommand (316ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:51.573 +05:30 [INF] Executed DbCommand (314ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:51.575 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown)'
+2026-03-25 10:58:51.576 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperDashboardController.GetOrderSummary (mytown)'
+2026-03-25 10:58:51.582 +05:30 [INF] Route matched with {action = "GetCurrentOrders", controller = "ShopperDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCurrentOrders(Int32, System.String, Int32, Int32) on controller mytown.Controllers.ShopperDashboardController (mytown).
+2026-03-25 10:58:51.582 +05:30 [INF] Route matched with {action = "GetOrderSummary", controller = "ShopperDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetOrderSummary(Int32) on controller mytown.Controllers.ShopperDashboardController (mytown).
+2026-03-25 10:58:52.213 +05:30 [INF] Executed DbCommand (327ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `wishlist` AS `w`
+WHERE `w`.`shopper_reg_id` = @__shopperRegId_0
+2026-03-25 10:58:52.213 +05:30 [INF] Executed DbCommand (327ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32), @__p_2='?' (DbType = Int32), @__p_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `s`.`store_order_id` AS `StoreOrderId`, DATE_ADD(`o`.`order_date`, INTERVAL CAST(CAST(`s0`.`estimated_days` AS double) AS signed) day) AS `ExpectedDeliveryDate`, `s0`.`shipping_status` AS `ShippingStatus`
+FROM `orders` AS `o`
+INNER JOIN `store_orders` AS `s` ON `o`.`order_id` = `s`.`order_id`
+INNER JOIN `shipping_details` AS `s0` ON `s`.`store_order_id` = `s0`.`store_order_id`
+WHERE `o`.`shopper_reg_id` = @__shopperRegId_0
+ORDER BY `s`.`store_order_id` DESC
+LIMIT @__p_2 OFFSET @__p_1
+2026-03-25 10:58:52.224 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.CurrentOrderDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:52.229 +05:30 [INF] Executed action mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown) in 645.6423ms
+2026-03-25 10:58:52.231 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown)'
+2026-03-25 10:58:52.233 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=4 - 200 null application/json; charset=utf-8 2800.3168ms
+2026-03-25 10:58:52.855 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `o`.`order_id`
+    FROM `orders` AS `o`
+    INNER JOIN `store_orders` AS `s` ON `o`.`order_id` = `s`.`order_id`
+    INNER JOIN `shipping_details` AS `s0` ON `s`.`store_order_id` = `s0`.`store_order_id`
+    WHERE (`o`.`shopper_reg_id` = @__shopperRegId_0) AND (`s0`.`shipping_status` <> 'Pending')
+) AS `s1`
+2026-03-25 10:58:53.495 +05:30 [INF] Executed DbCommand (329ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `orders` AS `o`
+WHERE (`o`.`shopper_reg_id` = @__shopperRegId_0) AND (`o`.`orderstatus` <> 'Pending')
+2026-03-25 10:58:53.500 +05:30 [INF] Executing OkObjectResult, writing value of type 'mytown.Models.DTO_s.ShopperOrderSummaryDto'.
+2026-03-25 10:58:53.505 +05:30 [INF] Executed action mytown.Controllers.ShopperDashboardController.GetOrderSummary (mytown) in 1920.6229ms
+2026-03-25 10:58:53.508 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperDashboardController.GetOrderSummary (mytown)'
+2026-03-25 10:58:53.511 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/shopperDBorder-summary?shopperRegId=22 - 200 null application/json; charset=utf-8 4076.4959ms
+2026-03-25 10:58:55.301 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=10 - null null
+2026-03-25 10:58:55.303 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:55.303 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=10 - 204 null null 1.7678ms
+2026-03-25 10:58:55.305 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=10 - null null
+2026-03-25 10:58:55.306 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:58:57.655 +05:30 [INF] Executed DbCommand (329ms) [Parameters=[@__sessionId_0='?' (Size = 4000), @__Parse_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `u`.`id`, `u`.`created_at`, `u`.`device_info`, `u`.`expires_at`, `u`.`ip_address`, `u`.`is_active`, `u`.`session_guid`, `u`.`user_id`, `u`.`user_type`
+FROM `user_sessions` AS `u`
+WHERE ((`u`.`session_guid` = @__sessionId_0) AND (`u`.`user_id` = @__Parse_1)) AND `u`.`is_active`
+LIMIT 1
+2026-03-25 10:58:57.660 +05:30 [INF] Executing endpoint 'mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown)'
+2026-03-25 10:58:57.662 +05:30 [INF] Route matched with {action = "GetCurrentOrders", controller = "ShopperDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCurrentOrders(Int32, System.String, Int32, Int32) on controller mytown.Controllers.ShopperDashboardController (mytown).
+2026-03-25 10:58:58.295 +05:30 [INF] Executed DbCommand (375ms) [Parameters=[@__shopperRegId_0='?' (DbType = Int32), @__p_2='?' (DbType = Int32), @__p_1='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `s`.`store_order_id` AS `StoreOrderId`, DATE_ADD(`o`.`order_date`, INTERVAL CAST(CAST(`s0`.`estimated_days` AS double) AS signed) day) AS `ExpectedDeliveryDate`, `s0`.`shipping_status` AS `ShippingStatus`
+FROM `orders` AS `o`
+INNER JOIN `store_orders` AS `s` ON `o`.`order_id` = `s`.`order_id`
+INNER JOIN `shipping_details` AS `s0` ON `s`.`store_order_id` = `s0`.`store_order_id`
+WHERE `o`.`shopper_reg_id` = @__shopperRegId_0
+ORDER BY `s`.`store_order_id` DESC
+LIMIT @__p_2 OFFSET @__p_1
+2026-03-25 10:58:58.298 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.CurrentOrderDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:58:58.301 +05:30 [INF] Executed action mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown) in 634.8334ms
+2026-03-25 10:58:58.303 +05:30 [INF] Executed endpoint 'mytown.Controllers.ShopperDashboardController.GetCurrentOrders (mytown)'
+2026-03-25 10:58:58.306 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/shopperdashboard/currentordersforshopper?shopperRegId=22&search=&pageNumber=1&pageSize=10 - 200 null application/json; charset=utf-8 3000.9316ms
+2026-03-25 10:59:05.699 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 10:59:05.701 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:59:05.701 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:59:05.702 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:59:05.704 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - null null
+2026-03-25 10:59:05.704 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - null null
+2026-03-25 10:59:05.704 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - null null
+2026-03-25 10:59:05.707 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:59:05.709 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:59:05.710 +05:30 [INF] CORS policy execution successful.
+2026-03-25 10:59:05.711 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:59:05.711 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:59:05.712 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:59:05.712 +05:30 [INF] Route matched with {action = "GetUniqueCounts", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCounts() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:59:05.713 +05:30 [INF] Route matched with {action = "GetBusinessRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBusinessRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:59:05.714 +05:30 [INF] Route matched with {action = "GetShoppersRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetShoppersRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 10:59:08.045 +05:30 [INF] Executed DbCommand (303ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `business_registers` AS `b`
+2026-03-25 10:59:08.045 +05:30 [INF] Executed DbCommand (304ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 10:59:08.045 +05:30 [INF] Executed DbCommand (303ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `shopper_registers` AS `s`
+2026-03-25 10:59:08.045 +05:30 [INF] Executed DbCommand (303ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`town`
+    FROM (
+        SELECT `b`.`town`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`town` <> ''
+        UNION
+        SELECT `s`.`town`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`town` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:59:08.047 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:59:08.048 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:59:08.049 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 10:59:08.051 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown) in 2326.2622ms
+2026-03-25 10:59:08.052 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 2348.3345ms
+2026-03-25 10:59:08.053 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown) in 2325.1928ms
+2026-03-25 10:59:08.053 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 10:59:08.054 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 10:59:08.054 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 10:59:08.055 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - 200 null application/json; charset=utf-8 2351.2951ms
+2026-03-25 10:59:08.056 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 2357.1923ms
+2026-03-25 10:59:08.057 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - 200 null application/json; charset=utf-8 2352.7247ms
+2026-03-25 10:59:08.696 +05:30 [INF] Executed DbCommand (322ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_city`
+    FROM (
+        SELECT `b`.`business_city`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_city` <> ''
+        UNION
+        SELECT `s`.`city` AS `business_city`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`city` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:59:09.335 +05:30 [INF] Executed DbCommand (319ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_state`
+    FROM (
+        SELECT `b`.`business_state`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_state` <> ''
+        UNION
+        SELECT `s`.`state` AS `business_state`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`state` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:59:09.928 +05:30 [INF] Executed DbCommand (273ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_country`
+    FROM (
+        SELECT `b`.`business_country`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_country` <> ''
+        UNION
+        SELECT `s`.`country` AS `business_country`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`country` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 10:59:09.932 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType3`4[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 10:59:09.933 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetUniqueCounts (mytown) in 4212.2935ms
+2026-03-25 10:59:09.934 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 10:59:09.935 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - 200 null application/json; charset=utf-8 4231.0454ms
+2026-03-25 11:00:07.777 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - null null
+2026-03-25 11:00:07.779 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:00:07.780 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - 204 null null 3.4117ms
+2026-03-25 11:00:07.782 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/transporters/register - application/json 249
+2026-03-25 11:00:07.785 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:00:07.786 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:00:07.797 +05:30 [INF] Route matched with {action = "Register", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Register(mytown.Models.DTO_s.TransporterRegisterDto) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:00:10.127 +05:30 [INF] Executed DbCommand (313ms) [Parameters=[@__ToLower_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`transporter_reg_id`, `t`.`address`, `t`.`city`, `t`.`country`, `t`.`transporter_email`, `t`.`is_email_verified`, `t`.`password`, `t`.`phone_number`, `t`.`postal_code`, `t`.`state`, `t`.`status`, `t`.`town`, `t`.`transporter_reg_date`, `t`.`transporter_name`
+FROM `transporter_registers` AS `t`
+WHERE LOWER(`t`.`transporter_email`) = @__ToLower_0
+LIMIT 1
+2026-03-25 11:00:10.176 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType29`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.ValueTuple`2[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:00:10.189 +05:30 [INF] Executed action mytown.Controllers.TransporterController.Register (mytown) in 2389.9197ms
+2026-03-25 11:00:10.190 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:00:10.191 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/transporters/register - 200 null application/json; charset=utf-8 2408.7013ms
+2026-03-25 11:01:16.575 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/resend-verification - null null
+2026-03-25 11:01:16.577 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:01:16.578 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/resend-verification - 204 null null 3.3554ms
+2026-03-25 11:01:16.582 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/transporters/resend-verification - application/json 40
+2026-03-25 11:01:16.584 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:01:16.585 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.ResendVerification (mytown)'
+2026-03-25 11:01:16.595 +05:30 [INF] Route matched with {action = "ResendVerification", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ResendVerification(mytown.Models.DTO_s.ResendemailVerificationDTO) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:01:18.779 +05:30 [INF] Executed DbCommand (315ms) [Parameters=[@__email_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`id`, `t`.`created_at`, `t`.`expiry_date`, `t`.`is_used`, `t`.`transporter_id`, `t`.`verification_token`, `t0`.`transporter_reg_id`, `t0`.`address`, `t0`.`city`, `t0`.`country`, `t0`.`transporter_email`, `t0`.`is_email_verified`, `t0`.`password`, `t0`.`phone_number`, `t0`.`postal_code`, `t0`.`state`, `t0`.`status`, `t0`.`town`, `t0`.`transporter_reg_date`, `t0`.`transporter_name`
+FROM `transporter_verification` AS `t`
+INNER JOIN `transporter_registers` AS `t0` ON `t`.`transporter_id` = `t0`.`transporter_reg_id`
+WHERE ((`t0`.`transporter_email` = @__email_0) AND NOT (`t`.`is_used`)) AND (`t`.`expiry_date` > UTC_TIMESTAMP(6))
+LIMIT 1
+2026-03-25 11:01:18.785 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:01:18.787 +05:30 [INF] Executed action mytown.Controllers.TransporterController.ResendVerification (mytown) in 2191.0758ms
+2026-03-25 11:01:18.788 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.ResendVerification (mytown)'
+2026-03-25 11:01:18.788 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/transporters/resend-verification - 200 null application/json; charset=utf-8 2206.8605ms
+2026-03-25 11:02:07.604 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - null null
+2026-03-25 11:02:07.605 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:02:07.606 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - 204 null null 2.5711ms
+2026-03-25 11:02:07.608 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/transporters/register - application/json 247
+2026-03-25 11:02:07.610 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:02:07.610 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:02:07.611 +05:30 [INF] Route matched with {action = "Register", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Register(mytown.Models.DTO_s.TransporterRegisterDto) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:02:09.979 +05:30 [INF] Executed DbCommand (309ms) [Parameters=[@__ToLower_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`transporter_reg_id`, `t`.`address`, `t`.`city`, `t`.`country`, `t`.`transporter_email`, `t`.`is_email_verified`, `t`.`password`, `t`.`phone_number`, `t`.`postal_code`, `t`.`state`, `t`.`status`, `t`.`town`, `t`.`transporter_reg_date`, `t`.`transporter_name`
+FROM `transporter_registers` AS `t`
+WHERE LOWER(`t`.`transporter_email`) = @__ToLower_0
+LIMIT 1
+2026-03-25 11:02:10.890 +05:30 [INF] Executed DbCommand (271ms) [Parameters=[@p0='?' (Size = 4000), @p1='?' (DbType = DateTime), @p2='?' (Size = 4000), @p3='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO `pending_verifications` (`email`, `expiry_date`, `json_payload`, `token`)
+VALUES (@p0, @p1, @p2, @p3);
+SELECT `id`
+FROM `pending_verifications`
+WHERE ROW_COUNT() = 1 AND `id` = LAST_INSERT_ID();
+2026-03-25 11:02:26.805 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType29`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.ValueTuple`2[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:02:26.809 +05:30 [INF] Executed action mytown.Controllers.TransporterController.Register (mytown) in 19196.4478ms
+2026-03-25 11:02:26.811 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:02:26.812 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/transporters/register - 200 null application/json; charset=utf-8 19203.6012ms
+2026-03-25 11:03:34.046 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/resend-verification - null null
+2026-03-25 11:03:34.049 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:03:34.050 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/resend-verification - 204 null null 3.1723ms
+2026-03-25 11:03:34.052 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/transporters/resend-verification - application/json 38
+2026-03-25 11:03:34.055 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:03:34.055 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.ResendVerification (mytown)'
+2026-03-25 11:03:34.057 +05:30 [INF] Route matched with {action = "ResendVerification", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] ResendVerification(mytown.Models.DTO_s.ResendemailVerificationDTO) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:03:36.508 +05:30 [INF] Executed DbCommand (286ms) [Parameters=[@__email_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`id`, `t`.`created_at`, `t`.`expiry_date`, `t`.`is_used`, `t`.`transporter_id`, `t`.`verification_token`, `t0`.`transporter_reg_id`, `t0`.`address`, `t0`.`city`, `t0`.`country`, `t0`.`transporter_email`, `t0`.`is_email_verified`, `t0`.`password`, `t0`.`phone_number`, `t0`.`postal_code`, `t0`.`state`, `t0`.`status`, `t0`.`town`, `t0`.`transporter_reg_date`, `t0`.`transporter_name`
+FROM `transporter_verification` AS `t`
+INNER JOIN `transporter_registers` AS `t0` ON `t`.`transporter_id` = `t0`.`transporter_reg_id`
+WHERE ((`t0`.`transporter_email` = @__email_0) AND NOT (`t`.`is_used`)) AND (`t`.`expiry_date` > UTC_TIMESTAMP(6))
+LIMIT 1
+2026-03-25 11:03:36.510 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType0`1[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:03:36.512 +05:30 [INF] Executed action mytown.Controllers.TransporterController.ResendVerification (mytown) in 2451.0013ms
+2026-03-25 11:03:36.513 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.ResendVerification (mytown)'
+2026-03-25 11:03:36.514 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/transporters/resend-verification - 200 null application/json; charset=utf-8 2461.9855ms
+2026-03-25 11:04:11.460 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporters/verify-transporter-email?token=6f7cc841-a407-443b-8448-170f86833edc - null null
+2026-03-25 11:04:11.463 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:04:11.464 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.VerifyEmail (mytown)'
+2026-03-25 11:04:11.483 +05:30 [INF] Route matched with {action = "VerifyEmail", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyEmail(System.String) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:04:13.492 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__token_0='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+SELECT `p`.`id`, `p`.`email`, `p`.`expiry_date`, `p`.`json_payload`, `p`.`token`
+FROM `pending_verifications` AS `p`
+WHERE `p`.`token` = @__token_0
+LIMIT 1
+2026-03-25 11:04:14.742 +05:30 [INF] Executed DbCommand (273ms) [Parameters=[@p0='?' (Size = 300), @p1='?' (Size = 100), @p2='?' (Size = 100), @p3='?' (Size = 200), @p4='?' (DbType = Boolean), @p5='?' (Size = 100), @p6='?' (Size = 15), @p7='?' (Size = 10), @p8='?' (Size = 100), @p9='?' (Size = 4000), @p10='?' (Size = 100), @p11='?' (DbType = DateTime), @p12='?' (Size = 100)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO `transporter_registers` (`address`, `city`, `country`, `transporter_email`, `is_email_verified`, `password`, `phone_number`, `postal_code`, `state`, `status`, `town`, `transporter_reg_date`, `transporter_name`)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12);
+SELECT `transporter_reg_id`
+FROM `transporter_registers`
+WHERE ROW_COUNT() = 1 AND `transporter_reg_id` = LAST_INSERT_ID();
+2026-03-25 11:04:15.551 +05:30 [INF] Executed DbCommand (265ms) [Parameters=[@__token_0='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+SELECT `p`.`id`, `p`.`email`, `p`.`expiry_date`, `p`.`json_payload`, `p`.`token`
+FROM `pending_verifications` AS `p`
+WHERE `p`.`token` = @__token_0
+LIMIT 1
+2026-03-25 11:04:16.102 +05:30 [INF] Executed DbCommand (270ms) [Parameters=[@p0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SET AUTOCOMMIT = 1;
+DELETE FROM `pending_verifications`
+WHERE `id` = @p0;
+SELECT ROW_COUNT();
+2026-03-25 11:04:16.116 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType29`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.ValueTuple`3[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:04:16.145 +05:30 [INF] Executed action mytown.Controllers.TransporterController.VerifyEmail (mytown) in 4660.5934ms
+2026-03-25 11:04:16.147 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.VerifyEmail (mytown)'
+2026-03-25 11:04:16.148 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporters/verify-transporter-email?token=6f7cc841-a407-443b-8448-170f86833edc - 200 null application/json; charset=utf-8 4688.499ms
+2026-03-25 11:04:55.744 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporters/verify-transporter-email?token=6f7cc841-a407-443b-8448-170f86833edc - null null
+2026-03-25 11:04:55.746 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:04:55.747 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.VerifyEmail (mytown)'
+2026-03-25 11:04:55.749 +05:30 [INF] Route matched with {action = "VerifyEmail", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] VerifyEmail(System.String) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:04:57.819 +05:30 [INF] Executed DbCommand (285ms) [Parameters=[@__token_0='?' (Size = 4000)], CommandType='"Text"', CommandTimeout='30']
+SELECT `p`.`id`, `p`.`email`, `p`.`expiry_date`, `p`.`json_payload`, `p`.`token`
+FROM `pending_verifications` AS `p`
+WHERE `p`.`token` = @__token_0
+LIMIT 1
+2026-03-25 11:04:57.820 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType29`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.ValueTuple`3[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Nullable`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:04:57.821 +05:30 [INF] Executed action mytown.Controllers.TransporterController.VerifyEmail (mytown) in 2070.0572ms
+2026-03-25 11:04:57.822 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.VerifyEmail (mytown)'
+2026-03-25 11:04:57.823 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporters/verify-transporter-email?token=6f7cc841-a407-443b-8448-170f86833edc - 200 null application/json; charset=utf-8 2079.2368ms
+2026-03-25 11:05:00.586 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - null null
+2026-03-25 11:05:00.588 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:00.589 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 11:05:00.590 +05:30 [INF] Route matched with {action = "GetLocationsWithCompletedStores", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetLocationsWithCompletedStores() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 11:05:00.591 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - null null
+2026-03-25 11:05:00.591 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - null null
+2026-03-25 11:05:00.601 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:00.602 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 11:05:00.602 +05:30 [INF] Route matched with {action = "GetUniqueCounts", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUniqueCounts() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 11:05:00.597 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:00.592 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - null null
+2026-03-25 11:05:00.605 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 11:05:00.607 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:00.608 +05:30 [INF] Route matched with {action = "GetBusinessRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetBusinessRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 11:05:00.609 +05:30 [INF] Executing endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 11:05:00.611 +05:30 [INF] Route matched with {action = "GetShoppersRegisterCount", controller = "Admin"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetShoppersRegisterCount() on controller mytown.Controllers.AdminController (mytown).
+2026-03-25 11:05:02.783 +05:30 [INF] Executed DbCommand (319ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `shopper_registers` AS `s`
+2026-03-25 11:05:02.789 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:05:02.790 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown) in 2177.7911ms
+2026-03-25 11:05:02.791 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetShoppersRegisterCount (mytown)'
+2026-03-25 11:05:02.792 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getShoppersRegisterCount - 200 null application/json; charset=utf-8 2199.5174ms
+2026-03-25 11:05:03.843 +05:30 [INF] Executed DbCommand (250ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT `b`.`business_profile_id`, `b`.`approved_date`, `b`.`banner_path`, `b`.`bus_cat_id`, `b`.`bus_reg_id`, `b`.`bus_serv_id`, `b`.`business_about`, `b`.`business_location`, `b`.`business_name`, `b`.`logo_path`, `b`.`profile_status`
+FROM `business_profiles` AS `b`
+WHERE LOWER(`b`.`profile_status`) = 'approved'
+2026-03-25 11:05:03.845 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.LocationStoresDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 11:05:03.847 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown) in 3253.5647ms
+2026-03-25 11:05:03.848 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetLocationsWithCompletedStores (mytown)'
+2026-03-25 11:05:03.849 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/business/completed-stores-in-locations - 200 null application/json; charset=utf-8 3262.8188ms
+2026-03-25 11:05:03.852 +05:30 [INF] Executed DbCommand (263ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `business_registers` AS `b`
+2026-03-25 11:05:03.854 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType5`1[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:05:03.855 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown) in 3244.9748ms
+2026-03-25 11:05:03.856 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetBusinessRegisterCount (mytown)'
+2026-03-25 11:05:03.856 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/getBusinessRegisterCount - 200 null application/json; charset=utf-8 3264.9696ms
+2026-03-25 11:05:03.856 +05:30 [INF] Executed DbCommand (264ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`town`
+    FROM (
+        SELECT `b`.`town`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`town` <> ''
+        UNION
+        SELECT `s`.`town`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`town` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 11:05:04.383 +05:30 [INF] Executed DbCommand (270ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_city`
+    FROM (
+        SELECT `b`.`business_city`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_city` <> ''
+        UNION
+        SELECT `s`.`city` AS `business_city`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`city` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 11:05:05.023 +05:30 [INF] Executed DbCommand (364ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_state`
+    FROM (
+        SELECT `b`.`business_state`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_state` <> ''
+        UNION
+        SELECT `s`.`state` AS `business_state`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`state` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 11:05:05.663 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM (
+    SELECT DISTINCT `u`.`business_country`
+    FROM (
+        SELECT `b`.`business_country`
+        FROM `business_registers` AS `b`
+        WHERE `b`.`business_country` <> ''
+        UNION
+        SELECT `s`.`country` AS `business_country`
+        FROM `shopper_registers` AS `s`
+        WHERE `s`.`country` <> ''
+    ) AS `u`
+) AS `u0`
+2026-03-25 11:05:05.668 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType2`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[<>f__AnonymousType3`4[[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.Int32, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-03-25 11:05:05.671 +05:30 [INF] Executed action mytown.Controllers.AdminController.GetUniqueCounts (mytown) in 5067.5502ms
+2026-03-25 11:05:05.674 +05:30 [INF] Executed endpoint 'mytown.Controllers.AdminController.GetUniqueCounts (mytown)'
+2026-03-25 11:05:05.675 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/admin/GetUniqueCounts - 200 null application/json; charset=utf-8 5084.0868ms
+2026-03-25 11:05:56.987 +05:30 [INF] Request starting HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - null null
+2026-03-25 11:05:56.990 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:56.990 +05:30 [INF] Request finished HTTP/1.1 OPTIONS http://localhost:5100/api/transporters/register - 204 null null 3.1612ms
+2026-03-25 11:05:56.992 +05:30 [INF] Request starting HTTP/1.1 POST http://localhost:5100/api/transporters/register - application/json 247
+2026-03-25 11:05:56.994 +05:30 [INF] CORS policy execution successful.
+2026-03-25 11:05:56.995 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:05:56.997 +05:30 [INF] Route matched with {action = "Register", controller = "Transporter"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Register(mytown.Models.DTO_s.TransporterRegisterDto) on controller mytown.Controllers.TransporterController (mytown).
+2026-03-25 11:05:59.267 +05:30 [INF] Executed DbCommand (324ms) [Parameters=[@__ToLower_0='?' (Size = 200)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`transporter_reg_id`, `t`.`address`, `t`.`city`, `t`.`country`, `t`.`transporter_email`, `t`.`is_email_verified`, `t`.`password`, `t`.`phone_number`, `t`.`postal_code`, `t`.`state`, `t`.`status`, `t`.`town`, `t`.`transporter_reg_date`, `t`.`transporter_name`
+FROM `transporter_registers` AS `t`
+WHERE LOWER(`t`.`transporter_email`) = @__ToLower_0
+LIMIT 1
+2026-03-25 11:05:59.269 +05:30 [INF] Executing OkObjectResult, writing value of type '<>f__AnonymousType29`2[[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.ValueTuple`2[[System.Boolean, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.String, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]'.
+2026-03-25 11:05:59.272 +05:30 [INF] Executed action mytown.Controllers.TransporterController.Register (mytown) in 2273.0637ms
+2026-03-25 11:05:59.273 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterController.Register (mytown)'
+2026-03-25 11:05:59.274 +05:30 [INF] Request finished HTTP/1.1 POST http://localhost:5100/api/transporters/register - 200 null application/json; charset=utf-8 2281.8518ms

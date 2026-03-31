@@ -1,47 +1,101 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using MyTown.Models;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
-    public class products
+    [Table("products")]
+    public class Products
     {
         [Key]
-        public int product_id {  get; set; }
+        [Column("product_id")]
+        [JsonPropertyName("product_id")]
+        public int ProductId { get; set; }
 
+        [ForeignKey(nameof(BusinessRegister))]
+        [Column("BusRegId")]
+        [JsonPropertyName("BusRegId")]
         public int BusRegId { get; set; }
 
+        [Column("BuscatId")]
+        [JsonPropertyName("BuscatId")]
         public int BuscatId { get; set; }
 
-        public int prod_subcat_id { get; set; }
+        [Column("prod_subcat_id")]
+        [JsonPropertyName("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
 
         [Required]
         [StringLength(100)]
-        public string product_name { get; set; }
+        [Column("product_name")]
+        [JsonPropertyName("product_name")]
+        public string? ProductName { get; set; }
 
-        [Required]
         [StringLength(100)]
-        public string product_subject { get; set; }
+        [Column("product_subject")]
+        [JsonPropertyName("product_subject")]
+        public string? ProductSubject { get; set; }
 
         [Required]
         [StringLength(500)]
-        public string product_description   { get; set; }
-        public string product_image { get; set; }
+        [Column("product_description")]
+        [JsonPropertyName("product_description")]
+        public string? ProductDescription { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal product_cost { get; set; }
+        [Column("product_image")]
+        [JsonPropertyName("product_image")]
+        public string? ProductImage { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal product_length { get; set; }
+        [Column("supplier_name")]
+        [JsonPropertyName("supplier_name")]
+        public string? SupplierName { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal product_width { get; set; }
+        [Column("ProductTypeId")]
+        [JsonPropertyName("ProductTypeId")]
+        public int? ProductTypeId { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal product_weight { get; set; }
+        [Column("FabricId")]
+        [JsonPropertyName("FabricId")]
+        public int? FabricId { get; set; }
 
-        [Range(0, double.MaxValue)]
-        public decimal product_quantity { get; set; }
-        [Range(0, double.MaxValue)]
-        public decimal product_height { get; set; }
+        [Column("DesignId")]
+        [JsonPropertyName("DesignId")]
+        public int? DesignId { get; set; }
 
+        // Relationships
+        [ForeignKey(nameof(ProductTypeId))]
+        [JsonPropertyName("product_type")]
+        public virtual ProductType? ProductType { get; set; }
+
+        [ForeignKey(nameof(FabricId))]
+        [JsonPropertyName("fabric")]
+        public virtual Fabric? Fabric { get; set; }
+
+        [ForeignKey(nameof(DesignId))]
+        [JsonPropertyName("design")]
+        public virtual Design? Design { get; set; }
+
+        //Commiting again for the error - 16/02/26
+
+        [Column("product_status")]
+        public string ProductStatus { get; set; } = "Pending"; // Pending / Approved / Rejected
+
+
+        [Column("is_active")]
+        public bool IsActive { get; set; } = false;               // Visible to shoppers or not
+        // New 13-2-26
+
+
+
+
+        [JsonIgnore]
+        public virtual BusinessRegister? BusinessRegister { get; set; }
+
+        [JsonPropertyName("images")]
+        public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
+
+        [JsonPropertyName("sku_product_variants")]
+        public virtual ICollection<Sku_ProductVariant> Sku_ProductVariants { get; set; } = new List<Sku_ProductVariant>();
     }
 }

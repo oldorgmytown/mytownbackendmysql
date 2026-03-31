@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
     public interface ICartRepository
     {
-        Task<addtocart> AddToCart(addtocart cartItem);
+        Task<AddToCart> AddToCart(AddToCart cartItem);
 
         Task<IEnumerable<CartItemDto>> GetCartItems(int shopperRegId);
 
@@ -23,7 +24,15 @@ namespace mytown.DataAccess.Interfaces
 
         Task<bool> UpdateCartStatusByShopperAsync(int shopperRegId);
         Task<ShopperRegister> GetShopperDetails(int shopperRegId);
-        
+
+        //get prodcut and variant details for cart
+        Task<ProdcVariantforShopperDto?> GetProductAndVariantforCartAsync(int productId);
+
+        //add directlt to wishlist
+
+        Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId);
+
+
 
     }
 }

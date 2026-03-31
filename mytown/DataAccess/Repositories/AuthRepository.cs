@@ -1,8 +1,9 @@
-﻿using mytown.Models.mytown.DataAccess;
-using mytown.Models;
-using mytown.Services;
-using static mytown.DataAccess.Repositories.AuthRepository;
+﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
+using mytown.Models.mytown.DataAccess;
+using mytown.Services.Interfaces;
+using static mytown.DataAccess.Repositories.AuthRepository;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -13,7 +14,7 @@ namespace mytown.DataAccess.Repositories
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
 
-        public AuthRepository(AppDbContext context, IEmailService emailService,IConfiguration configuration)
+        public AuthRepository(AppDbContext context, IEmailService emailService, IConfiguration configuration)
         {
             _context = context;
             _emailService = emailService;
@@ -52,11 +53,19 @@ namespace mytown.DataAccess.Repositories
 
             var token = CreatePasswordResetToken(email);
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-            var resetLink = $"{frontendBaseUrl}?reset=1&email={email}&token={token}";
-           // var resetLink = $"{frontendBaseUrl}/reset-password?token={token}";
-           // var resetLink = $"https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/reset-password?token={token}";
+            var resetLink = $"{frontendBaseUrl}?reset-password&token={token}";
+            // var resetLink = $"{frontendBaseUrl}?reset=1&email={email}&token={token}";
+            // var resetLink = $"{frontendBaseUrl}/reset-password?token={token}";
+            // var resetLink = $"https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/reset-password?token={token}";
 
             await _emailService.SendPasswordResetEmail(email, resetLink);
+        }
+
+
+        public PasswordResetRequest GetResetRequestByToken(string token)
+        {
+            return _context.PasswordResetRequests
+                           .FirstOrDefault(r => r.Token == token && r.Expiry > DateTime.UtcNow);
         }
 
 
@@ -69,6 +78,8 @@ namespace mytown.DataAccess.Repositories
 
             var shopper = _context.ShopperRegisters.FirstOrDefault(s => s.Email == email);
             var business = _context.BusinessRegisters.FirstOrDefault(b => b.BusEmail == email);
+            var courier = _context.CourierService.FirstOrDefault(b => b.CourierEmail == email);
+
 
             if (shopper != null)
             {
@@ -78,12 +89,16 @@ namespace mytown.DataAccess.Repositories
             {
                 business.Password = HashPassword(newPassword);
             }
+            else if (courier != null)
+            {
+                courier.Password = HashPassword(newPassword);
+            }
             else
             {
                 return false;
             }
 
-          //  _context.PasswordResetRequests.Remove(email);
+            //  _context.PasswordResetRequests.Remove(email);
             _context.SaveChanges();
 
             return true;
@@ -92,10 +107,46 @@ namespace mytown.DataAccess.Repositories
         private string HashPassword(string password)
         {
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
-            
-            return hashedPassword; 
-        }
-    }
 
+            return hashedPassword;
+        }
+
+
+        public async Task<bool> LogoutAsync(int userId, string sessionId, string userType)
+        {
+            var session = await _context.UserSessions
+                .FirstOrDefaultAsync(s => s.SessionGuid == sessionId
+                                          && s.UserId == userId
+                                          && s.UserType == userType
+                                          && s.IsActive);
+
+            if (session == null)
+                return false;
+
+            session.IsActive = false;
+            _context.UserSessions.Update(session);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<UserSession?> GetSessionBySessionIdAsync(string sessionId)
+        {
+            return await _context.UserSessions
+                .FirstOrDefaultAsync(x => x.SessionGuid == sessionId);
+        }
+
+        public async Task<bool> RevokeSessionAsync(string sessionId)
+        {
+            var session = await GetSessionBySessionIdAsync(sessionId);
+            if (session == null) return false;
+
+            session.IsActive = false;
+            _context.UserSessions.Update(session);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+    }
 
 }

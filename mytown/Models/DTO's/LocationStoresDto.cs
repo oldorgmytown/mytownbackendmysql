@@ -3,6 +3,6 @@
     public class LocationStoresDto
     {
         public string Location { get; set; }
-        public List<businessprofile> Stores { get; set; }
+        public List<BusinessProfile> Stores { get; set; }
     }
 }

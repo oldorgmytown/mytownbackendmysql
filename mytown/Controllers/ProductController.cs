@@ -1,111 +1,124 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using mytown.Models;
-using mytown.DataAccess.Interfaces;
-
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
 
 namespace MyTown.Controllers
 {
+   // [Authorize]
     [Route("api/business/products")]
     [ApiController]
     public class ProductController : ControllerBase
     {
-        private readonly IProductRepository _productRepo;
-        private readonly ILogger<ProductController> _logger;
+        private readonly IProductService _service;
 
-        public ProductController(IProductRepository productRepo,
-                                 ILogger<ProductController> logger)
+        public ProductController(IProductService service)
         {
-            _productRepo = productRepo ?? throw new ArgumentNullException(nameof(productRepo));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _service = service;
         }
 
+        // ---------------- Add Product ----------------
 
-        [HttpPost("Add_Products")]
-        public async Task<IActionResult> CreateProduct([FromBody] products product)
+        [HttpPost("Add_Product")]
+        public async Task<IActionResult> AddProduct([FromBody] ProductCreateDto dto)
         {
-            if (product == null)
-            {
-                return BadRequest("Product data is required.");
-            }
-
-            await _productRepo.CreateProductAsync(product);
-            return Ok(new { productId = product.product_id });
+            var product = await _service.AddProductAsync(dto);
+            return Ok(new { productId = product.ProductId, message = "Product added successfully" });
         }
+
+        // ---------------- Add Variant ----------------
+
+        [HttpPost("Add_SKU_ProductVariant")]
+        public async Task<IActionResult> AddProductVariant([FromForm] Sku_CreateVariantDto dto)
+        {
+            var variant = await _service.AddProductVariantAsync(dto);
+            return Ok(variant);
+        }
+
+        // ---------------- Fetch ----------------
+
+        [HttpGet("GetSizeMeasurements")]
+        public async Task<IActionResult> GetMeasurementBySizeId(int sizeId)
+        {
+            var result = await _service.GetMeasurementBySizeIdAsync(sizeId);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("GetProductandVariantDetails/{productId}")]
+        public async Task<IActionResult> GetProductandVariantDetails(int productId)
+        {
+            var result = await _service.GetProductAndVariantAsync(productId);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("GetAllProductsforbusid/{busRegId}")]
+        public async Task<IActionResult> GetAllProducts(int busRegId)
+        {
+            var products = await _service.GetAllProductsAsync(busRegId);
+            return Ok(products);
+        }
+
+        // ---------------- Update ----------------
+
+        [HttpPut("Update_Productdetails")]
+        public async Task<IActionResult> UpdateProduct([FromBody] ProductCreateDto dto)
+        {
+            var result = await _service.UpdateProductAsync(dto);
+            return result == null ? NotFound() : Ok(new { message = "Product updated successfully" });
+        }
+
+        [HttpPut("UpdateProductVariants")]
+        public async Task<IActionResult> UpdateVariant(
+            [FromForm] Sku_ProductVariantDto dto,
+            [FromForm] List<IFormFile>? images)
+        {
+            var result = await _service.UpdateVariantAsync(dto, images ?? new());
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        // ---------------- Delete ----------------
 
         [HttpDelete("deleteProduct")]
-        public async Task<IActionResult> DeleteProductAsync(int productId)
+        public async Task<IActionResult> DeleteProduct(int productId)
         {
-            try
-            {
-                // Use the repository to delete the product
-                await _productRepo.DeleteProductAsync(productId);
-
-                return Ok(new { message = "Product deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine($"Error deleting product: {ex.Message}");
-
-                // Return a generic error response
-                return StatusCode(500, new { message = "An error occurred while deleting the product." });
-            }
+            await _service.DeleteProductAsync(productId);
+            return Ok(new { message = "Product deleted successfully" });
         }
 
-        [HttpPut("updateProduct")]
-        public IActionResult UpdateProduct([FromBody] products updatedProduct)
+        [HttpDelete("delete_ProductVariant")]
+        public async Task<IActionResult> DeleteVariant(int productId, int sku_VariantId)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { message = "Invalid product data" });
-            }
-
-            var isUpdated = _productRepo.UpdateProductAsync(updatedProduct);
-            //if (!isUpdated)
-            //{
-            //    return NotFound(new { message = "Product not found" });
-            //}
-
-            return Ok(new { message = "Product updated successfully" });
+            await _service.DeleteVariantAsync(productId, sku_VariantId);
+            return Ok(new { message = "Variant deleted successfully" });
         }
 
-        // GET: api/products/{id}
-        [HttpGet("GetProductById/{productId}")]
-        public async Task<ActionResult<products>> GetProductById(int productId)
+        // ---------------- Shopper APIs ----------------
+
+        [HttpGet("GetDiscountedProductsAsync")]
+        public async Task<IActionResult> GetDiscountedProductsAsync()
         {
-            var product = await _productRepo.GetProductById(productId);
-
-            if (product == null)
-            {
-                return NotFound();
-            }
-
-            return Ok(product);
+            return Ok(await _service.GetDiscountedProductsAsync());
         }
 
-        // GET: api/User/GetAllProducts
-        [HttpGet("GetAllProducts/{BusRegId}")]
-        public async Task<ActionResult<products>> GetAllProducts(int BusRegId)
+        [HttpGet("GetProductsBySubCategory/{subCategoryId}")]
+        public async Task<IActionResult> GetProductsBySubCategory(int subCategoryId)
         {
-            try
-            {
-                // Fetch all products from the repository
-                var products = await _productRepo.GetAllProductsAsync(BusRegId);
+            return Ok(await _service.GetProductsBySubCategoryAsync(subCategoryId));
+        }
 
-                // Check if no products were found
-                if (products == null || !products.Any())
-                {
-                    return NotFound("No products found.");
-                }
+        [HttpPost("ShopperRecentViewProduct")]
+        public async Task<IActionResult> ShopperRecentViewProduct(int shopperId, int productId)
+        {
+            await _service.SaveProductViewAsync(shopperId, productId);
+            return Ok(new { message = "Product view recorded" });
+        }
 
-                // Return the list of products with a 200 OK status
-                return Ok(products);
-            }
-            catch (Exception ex)
-            {
-                // Handle any errors and return a 500 Internal Server Error
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+        [HttpGet("TopPurchasedProductsByTown")]
+        public async Task<IActionResult> GetTopPurchasedProductsByLocation(
+            string location,
+            int minOrders = 5)
+        {
+            return Ok(await _service.GetTopPurchasedProductsByLocation(location, minOrders));
         }
     }
 }

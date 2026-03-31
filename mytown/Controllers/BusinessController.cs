@@ -1,10 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess;
+﻿using Azure.Storage.Blobs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
-using mytown.Services;
+using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
 using System.Text.Json;
+using System.Text.RegularExpressions;
+//using mytown.Controllers.Helpers;
+using mytown.Services.Implementations;
 using mytown.DataAccess.Interfaces;
-
+using MyTown.Models;
 
 namespace mytown.Controllers
 {
@@ -12,32 +17,38 @@ namespace mytown.Controllers
     [ApiController]
     public class BusinessController : ControllerBase
     {
-        private readonly IBusinessRepository _businessRepository;
+        private readonly IBusinessService _businessService;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
         private readonly ILogger<BusinessController> _logger;
         private readonly IBusinessRegistrationValidator _registrationValidator;
         private readonly IVerificationLinkBuilderbusiness _verificationLinkBuilderbusiness;
+        private readonly ITokenService _tokenService;
 
-        public BusinessController(IBusinessRepository businessRepository, 
+        public BusinessController(
+            IBusinessService businessService,
             IEmailService emailService,
-          IConfiguration configuration,
-          ILogger<BusinessController> logger,
-          IBusinessRegistrationValidator registrationValidator,
-          IVerificationLinkBuilderbusiness verificationLinkBuilderbusiness)
+            IConfiguration configuration,
+            ILogger<BusinessController> logger,
+            IBusinessRegistrationValidator registrationValidator,
+            IVerificationLinkBuilderbusiness verificationLinkBuilderbusiness,
+            ITokenService tokenService)
         {
-            _businessRepository = businessRepository;
+            _businessService = businessService;
             _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
             _registrationValidator = registrationValidator;
             _verificationLinkBuilderbusiness = verificationLinkBuilderbusiness;
+            _tokenService = tokenService;
         }
 
+        // ================== REGISTER BUSINESS ===================
+        [AllowAnonymous]
         [HttpPost("businessregister")]
         public async Task<IActionResult> RegisterBusiness([FromBody] BusinessRegisterDto businessRegisterDto)
         {
-            List<string> validationErrors = _registrationValidator.Validate(businessRegisterDto);
+            var validationErrors = _registrationValidator.Validate(businessRegisterDto);
             if (validationErrors.Count > 0)
             {
                 _logger.LogWarning("Validation failed for {Email}: {Errors}", businessRegisterDto.BusEmail, validationErrors);
@@ -46,7 +57,7 @@ namespace mytown.Controllers
 
             try
             {
-                if (await _businessRepository.IsEmailTaken(businessRegisterDto.BusEmail))
+                if (await _businessService.IsEmailTaken(businessRegisterDto.BusEmail))
                 {
                     return Conflict(new { error = "This email is already registered. Try logging in instead." });
                 }
@@ -66,36 +77,9 @@ namespace mytown.Controllers
                     JsonPayload = jsonPayload
                 };
 
-                await _businessRepository.SavePendingVerification(pending);
+                await _businessService.SavePendingVerification(pending);
                 await _emailService.SendVerificationEmail(businessRegisterDto.BusEmail, verificationLink);
 
-                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(businessRegisterDto.Password);
-
-                //var newBusiness = new BusinessRegister
-                //{
-                //    BusinessUsername = businessRegisterDto.BusinessUsername,
-                //    Businessname = businessRegisterDto.Businessname,
-                //    LicenseType = businessRegisterDto.LicenseType,
-                //    Gstin = businessRegisterDto.Gstin,
-                //    BusservId = businessRegisterDto.BusservId,
-                //    BuscatId = businessRegisterDto.BuscatId,
-                //    Town = businessRegisterDto.Town,
-                //    BusMobileNo = businessRegisterDto.BusMobileNo,
-                //    BusEmail = businessRegisterDto.BusEmail,
-                //    Address1 = businessRegisterDto.Address1,
-                //    Address2 = businessRegisterDto.Address2,
-                //    businessCity = businessRegisterDto.businessCity,
-                //    businessState = businessRegisterDto.businessState,
-                //    businessCountry = businessRegisterDto.businessCountry,
-                //    postalCode = businessRegisterDto.postalCode,
-                //    Password = hashedPassword,
-                //    IsEmailVerified = true,
-                //    BusinessRegDate = DateTime.UtcNow
-                //};
-
-                //await _businessRepository.RegisterBusiness(newBusiness);
-
-                _logger.LogInformation("Verification email sent to {Email}", businessRegisterDto.BusEmail);
                 return Ok(new { message = "Verification email sent! Please check your inbox." });
             }
             catch (Exception ex)
@@ -105,12 +89,14 @@ namespace mytown.Controllers
             }
         }
 
+        // ================== VERIFY EMAIL ===================
+        [AllowAnonymous]
         [HttpGet("verify-business-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
             try
             {
-                var pending = await _businessRepository.FindPendingVerificationByToken(token);
+                var pending = await _businessService.FindPendingVerificationByToken(token);
                 if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
                 {
                     return BadRequest(new { error = "Invalid or expired verification link." });
@@ -122,29 +108,52 @@ namespace mytown.Controllers
                 var newBusiness = new BusinessRegister
                 {
                     BusinessUsername = businessDto.BusinessUsername,
-                    Businessname = businessDto.Businessname,
+                    BusinessName = businessDto.Businessname,
                     LicenseType = businessDto.LicenseType,
                     Gstin = businessDto.Gstin,
-                    BusservId = businessDto.BusservId,
-                    BuscatId = businessDto.BuscatId,
+                    BusServId = businessDto.BusservId,
+                    BusCatId = businessDto.BuscatId,
                     Town = businessDto.Town,
                     BusMobileNo = businessDto.BusMobileNo,
                     BusEmail = businessDto.BusEmail,
                     Address1 = businessDto.Address1,
                     Address2 = businessDto.Address2,
-                    businessCity = businessDto.businessCity,
-                    businessState = businessDto.businessState,
-                    businessCountry = businessDto.businessCountry,
-                    postalCode = businessDto.postalCode,
+                    BusinessCity = businessDto.businessCity,
+                    BusinessState = businessDto.businessState,
+                    BusinessCountry = businessDto.businessCountry,
+                    PostalCode = businessDto.postalCode,
                     Password = hashedPassword,
-                    IsEmailVerified = true
+                    IsEmailVerified = true,
+                    Currency = GetCurrencyByCountry(businessDto.businessCountry)
                 };
 
-                await _businessRepository.RegisterBusiness(newBusiness);
-                await _businessRepository.DeletePendingVerification(token);
+                await _businessService.RegisterBusiness(newBusiness);
 
-                _logger.LogInformation("Email verified and business registered for {Email}", newBusiness.BusEmail);
-                return Ok(new { message = "Your email is verified and your business account is created!", busRegId = newBusiness.BusRegId });
+                var newProfile = new BusinessProfile
+                {
+                    BusRegId = newBusiness.BusRegId,
+                    ProfileStatus = "Incomplete",
+                    BusinessName = newBusiness.BusinessName,
+                    BusinessLocation = $"{newBusiness.Town}, {newBusiness.BusinessCity}, {newBusiness.BusinessState}, {newBusiness.BusinessCountry}"
+                };
+
+                await _businessService.CreateProfile(newProfile);
+                await _businessService.DeletePendingVerification(token);
+
+                var sessionId = Guid.NewGuid().ToString();
+                var jwtToken = _tokenService.GenerateToken(
+                    newBusiness.BusRegId,
+                    newBusiness.BusEmail,
+                    "Business",
+                    sessionId
+                );
+
+                return Ok(new
+                {
+                    message = "Your email is verified and your business account is created!",
+                    busRegId = newBusiness.BusRegId,
+                    token = jwtToken
+                });
             }
             catch (Exception ex)
             {
@@ -153,65 +162,98 @@ namespace mytown.Controllers
             }
         }
 
+        private string GetCurrencyByCountry(string country)
+        {
+            var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "India", "INR" },
+                { "United States", "USD" },
+                { "UK", "GBP" },
+                { "Germany", "EUR" },
+                { "France", "EUR" },
+                { "Australia", "AUD" },
+                { "Canada", "CAD" }
+            };
 
-        //[HttpPost("resend-business-verification")]
-        //public async Task<IActionResult> ResendVerificationEmail([FromQuery] string token)
-        //{
-        //    try
-        //    {
-        //        if (string.IsNullOrWhiteSpace(token))
-        //        {
-        //            _logger.LogWarning("Resend verification requested without a token.");
-        //            return BadRequest(new { error = "Verification token is missing." });
-        //        }
+            return map.ContainsKey(country) ? map[country] : "INR";
+        }
 
-        //        var existingVerification = await _businessRepository.FindVerificationByToken(token);
-        //        if (existingVerification == null)
-        //        {
-        //            _logger.LogWarning("Resend verification requested: token {Token} not found.", token);
-        //            return BadRequest(new { error = "Verification token not found. Please register again." });
-        //        }
+        // ================== CHECK EMAIL ===================
+        [AllowAnonymous]
+        [HttpPost("check-email")]
+        public async Task<IActionResult> CheckBusinessEmail([FromBody] EmailCheckRequestDto request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Email))
+                return BadRequest(new { error = "Email is required." });
 
-        //        string email = existingVerification.Email;
-        //        _logger.LogInformation("Resend verification requested for {Email} (old token: {Token})", email, token);
+            const string emailPattern = @"^[^@\s]+@[^@\s]+\.[^@\s]+$";
+            if (!Regex.IsMatch(request.Email, emailPattern))
+                return BadRequest(new { errors = new[] { "Please enter a valid email address." } });
 
-        //        // Remove old verification record and generate a new one
-        //        await _businessRepository.RemoveVerification(existingVerification);
-        //        var newVerification = await _businessRepository.GenerateEmailVerification(email);
+            bool isTaken = await _businessService.IsEmailTaken(request.Email);
 
-        //        string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-        //        if (string.IsNullOrWhiteSpace(frontendBaseUrl))
-        //        {
-        //            _logger.LogError("Frontend base URL is not configured properly.");
-        //            return StatusCode(500, new { message = "Frontend base URL is missing. Please contact support." });
-        //        }
+            if (isTaken)
+                return Conflict(new { error = "This email is already registered. Try logging in instead." });
 
-        //        // Build and send new verification link
-        //        string verificationLink = _verificationLinkBuilderbusiness.BuildLink(frontendBaseUrl, newVerification.VerificationToken);
-        //        _logger.LogInformation("New verification link generated for {Email}: {VerificationLink}", email, verificationLink);
+            return Ok(new { message = "Email is valid and available." });
+        }
 
-        //        await _emailService.SendVerificationEmail(email, verificationLink);
-        //        return Ok(new { message = $"A new verification email has been sent to {email}." });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Exception during resend verification for token: {Token}", token);
-        //        return BadRequest(new { error = ex.Message });
-        //    }
-        //}
+        // ================== RESEND VERIFICATION ===================
+        [AllowAnonymous]
+        [HttpPost("resend-business-verification")]
+        public async Task<IActionResult> ResendVerificationEmail([FromBody] ResendemailVerificationDTO model)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(model.Email))
+                    return BadRequest(new { error = "Email is required." });
 
-        //get business owner home page with busregid
+                var pending = await _businessService.FindPendingVerificationByEmail(model.Email);
+                if (pending == null)
+                    return NotFound(new { error = "No pending verification found. Please register again." });
+
+                await _businessService.RemoveVerification(pending);
+
+                string token = Guid.NewGuid().ToString();
+                DateTime expiry = DateTime.UtcNow.AddHours(24);
+
+                var newPending = new PendingBusinessVerification
+                {
+                    Email = model.Email,
+                    Token = token,
+                    ExpiryDate = expiry,
+                   // JsonPayload = pending.JsonPayload
+                };
+
+                await _businessService.SavePendingVerification(newPending);
+
+                string link = _verificationLinkBuilderbusiness.BuildLink(
+                    _configuration["FrontendBaseUrl"],
+                    token
+                );
+
+                await _emailService.SendVerificationEmail(model.Email, link);
+
+                return Ok(new { message = $"New verification email sent to {model.Email}" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Resend verification failed for {Email}", model.Email);
+                return StatusCode(500, new { error = "Something went wrong. Please try again." });
+            }
+        }
+
+        // ================== GET BUSINESS BY ID ===================
+        [Authorize]
         [HttpGet("businessregister/{busRegId}")]
         public async Task<IActionResult> GetBusinessById(int busRegId)
         {
             try
             {
-                var business = await _businessRepository.GetBusinessByIdAsync(busRegId);
+                var business = await _businessService.GetBusinessByIdAsync(busRegId);
 
                 if (business == null)
-                {
                     return NotFound(new { error = "Business not found with the given BusRegId." });
-                }
 
                 return Ok(business);
             }
@@ -222,64 +264,52 @@ namespace mytown.Controllers
             }
         }
 
-
+        // ================== CATEGORIES ===================
+        [Authorize]
         [HttpGet("BusinessCategories")]
-        public async Task<ActionResult<IEnumerable<businesscategoriescs>>> GetBusinessCategories()
+        public async Task<ActionResult> GetBusinessCategories()
         {
-            var categories = await _businessRepository.GetBusinessCategories();
-            return Ok(categories);
+            var categories = await _businessService.GetBusinessCategories();
+
+            return Ok(new { value = categories });
         }
 
 
-
-        [HttpPost("Add_Products")]
-        public async Task<IActionResult> CreateProduct([FromBody] products product)
+        [Authorize]
+        [HttpGet("BusinessSubCategoriesforStores")]
+        public async Task<ActionResult<IEnumerable<BusinessCategory>>> BusinessSubCategoriesforStores(int buscatid)
         {
-            if (product == null)
-            {
-                return BadRequest("Product data is required.");
-            }
-
-            await _businessRepository.CreateProductAsync(product);
-            return Ok(new { productId = product.product_id });
+            return Ok(await _businessService.BusinessSubCategoriesforStores(buscatid));
         }
 
-        [HttpDelete("deleteProduct")]
-        public async Task<IActionResult> DeleteProductAsync(int productId)
+        // ================== UPLOAD IMAGE ===================
+        [Authorize]
+        [HttpPost("upload_image")]
+        public async Task<IActionResult> UploadImage(IFormFile file, string imageType)
         {
-            try
-            {
-                // Use the repository to delete the product
-                await _businessRepository.DeleteProductAsync(productId);
+            if (file == null || file.Length == 0)
+                return BadRequest("File is required.");
 
-                return Ok(new { message = "Product deleted successfully" });
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.WriteLine($"Error deleting product: {ex.Message}");
+            var containerName = _configuration["AzureBlobStorage:ContainerName"];
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
 
-                // Return a generic error response
-                return StatusCode(500, new { message = "An error occurred while deleting the product." });
-            }
-        }
+            var blobServiceClient = new BlobServiceClient(connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
-        [HttpPut("updateProduct")]
-        public IActionResult UpdateProduct([FromBody] products updatedProduct)
-        {
-            if (!ModelState.IsValid)
+            await containerClient.CreateIfNotExistsAsync();
+            await containerClient.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+
+            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var newFileName = $"{imageType}_{Path.GetFileNameWithoutExtension(file.FileName)}_{timestamp}{Path.GetExtension(file.FileName)}";
+
+            var blobClient = containerClient.GetBlobClient(newFileName);
+
+            using (var stream = file.OpenReadStream())
             {
-                return BadRequest(new { message = "Invalid product data" });
+                await blobClient.UploadAsync(stream, overwrite: true);
             }
 
-            var isUpdated = _businessRepository.UpdateProduct(updatedProduct);
-            if (!isUpdated)
-            {
-                return NotFound(new { message = "Product not found" });
-            }
-
-            return Ok(new { message = "Product updated successfully" });
+            return Ok(new { FileName = newFileName, Url = blobClient.Uri.AbsoluteUri });
         }
     }
-
 }

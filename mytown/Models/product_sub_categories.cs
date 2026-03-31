@@ -1,17 +1,29 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace mytown.Models
 {
-    public class product_sub_categories
+    [Table("product_sub_categories")]
+    public class ProductSubCategory
     {
         [Key]
-        public int prod_subcat_id { get; set; }
+        [Column("prod_subcat_id")]
+        [JsonPropertyName("prod_subcat_id")]
+        public int ProdSubcatId { get; set; }
 
+        [Column("bus_cat_id")]
+        [JsonPropertyName("buscatId")]
         public int BuscatId { get; set; }
+
         [Required]
         [StringLength(100)]
-        public string prod_subcat_name { get; set; }
-        public string prod_subcat_image { get; set; }
+        [Column("prod_subcat_name")]
+        [JsonPropertyName("prod_subcat_name")]
+        public string ProdSubcatName { get; set; }
 
+        [Column("prod_subcat_image")]
+        [JsonPropertyName("prod_subcat_image")]
+        public string? ProdSubcatImage { get; set; }
     }
 }

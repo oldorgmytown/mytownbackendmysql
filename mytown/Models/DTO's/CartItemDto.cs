@@ -11,9 +11,25 @@
     public string product_image { get; set; }
     public decimal product_cost { get; set; }
 
+    // new to check product avaliability based on product status
+    public bool IsProductAvailable { get; set; }
+
+
     // New Fields
     public string StoreName { get; set; }
     public string StoreLocation { get; set; }
 
     public int StoreId { get; set; }
+
+    public string? StoreLogo { get; set; }
+
+    // SKU / Variant Info
+
+    public int Sku_Id { get; set; }
+    public string? Color { get; set; }
+    public int SizeId { get; set; }
+    public string? SizeName { get; set; }
+    public decimal? Sku_Cost { get; set; }
+    public decimal? Discount { get; set; }
+    public decimal? DiscountPrice { get; set; }
 }

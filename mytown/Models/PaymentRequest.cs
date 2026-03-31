@@ -1,10 +1,18 @@
-﻿namespace mytown.Models
-{
-    public class PaymentRequest
-    {
-        public string CountryName { get; set; } // Name of the country
-        public string CurrencySymbol { get; set; } // Symbol or code of currency
-        public long Amount { get; set; } // Amount in cents (e.g., $10 = 1000)
-    }
+﻿using System.ComponentModel.DataAnnotations;
 
+namespace mytown.Models
+{
+    public class PaymentRequestDto
+    {
+        [Required(ErrorMessage = "CountryName is required.")]
+        [StringLength(100, ErrorMessage = "CountryName cannot exceed 100 characters.")]
+        public string CountryName { get; set; }
+
+        [Required(ErrorMessage = "CurrencySymbol is required.")]
+        [StringLength(10, ErrorMessage = "CurrencySymbol cannot exceed 10 characters.")]
+        public string CurrencySymbol { get; set; }
+
+        [Range(1, long.MaxValue, ErrorMessage = "Amount must be greater than 0.")]
+        public long Amount { get; set; }
+    }
 }
