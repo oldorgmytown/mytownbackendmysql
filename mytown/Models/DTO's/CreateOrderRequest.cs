@@ -3,14 +3,28 @@ using System.ComponentModel.DataAnnotations;
 
 public class CreateOrderRequestddto
 {
-    [Required(ErrorMessage = "ShopperRegId is required.")]
-    [Range(1, int.MaxValue, ErrorMessage = "ShopperRegId must be a valid positive number.")]
-    public int ShopperRegId { get; set; }
+  
+        [Required]
+        public int ShopperRegId { get; set; }
 
-    [Required(ErrorMessage = "ShippingSelections are required.")]
-    [MinLength(1, ErrorMessage = "At least one store shipping selection is required.")]
-    public List<StoreShippingSelection> ShippingSelections { get; set; }
+        [Required]
+        public List<StoreShippingSelection> ShippingSelections { get; set; }
 
-    public int? SelectedAltAddressId { get; set; }
-    // null = default address
-}
+        public int? SelectedAltAddressId { get; set; }
+    //null == default address
+
+        //  NEW
+        public bool UseCart { get; set; } = true;
+
+        public List<BuyNowItem>? Items { get; set; }
+    }
+
+    public class BuyNowItem
+    {
+        public int ProductId { get; set; }
+        public int? SkuId { get; set; }
+        public int Quantity { get; set; }
+        
+        public decimal ? Price { get; set; }
+    }
+
