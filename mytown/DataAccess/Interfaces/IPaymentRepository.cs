@@ -1,4 +1,5 @@
 ﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -7,7 +8,7 @@ namespace mytown.DataAccess.Interfaces
         Task<Payments> AddPaymentAsync(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId);
 
         Task<Order> GetOrderWithShippingDetailsAsync(int orderId);
-        //  Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod);
+
         List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId);
         List<ShippingDetails> GetShippingDetailsByOrderId(int orderId);
 
@@ -27,6 +28,29 @@ namespace mytown.DataAccess.Interfaces
         // 💾 Save
         Task SaveChangesAsync();
 
+        // ============================================================
+        // P2P Delivery Methods
+        // ============================================================
 
+        // Get StoreOrder by ID (needed to parse P2P transporter info)
+        Task<StoreOrder?> GetStoreOrderByIdAsync(int storeOrderId);
+
+        // Create P2P delivery request to transporter
+        Task CreateP2PDeliveryRequestAsync(CreateP2PDeliveryRequestDto dto);
+
+        // Notify transporter in transporter_delivery_requests table
+        Task CreateTransporterNotificationAsync(int transporterRegId, string title, string message);
+
+        // Get store address for pickup location
+        Task<string> GetStoreAddressAsync(int storeId);
+
+        // Get total weight of items in store order
+        Task<decimal> GetStoreOrderWeightAsync(int storeOrderId);
+
+        // Get item count in store order
+        Task<int> GetStoreOrderItemCountAsync(int storeOrderId);
+
+        // Update order status
+        Task UpdateOrderStatusAsync(int orderId, string status);
     }
 }

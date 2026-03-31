@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
-using System.Security.Cryptography.X509Certificates;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -12,13 +12,12 @@ namespace mytown.DataAccess.Repositories
         private readonly AppDbContext _context;
         private readonly IEmailService _emailService;
 
-
         public PaymentRepository(AppDbContext context, IEmailService emailService)
         {
             _context = context;
             _emailService = emailService;
-
         }
+
         public async Task<Order> GetOrderWithShippingDetailsAsync(int orderId)
         {
             return await _context.Orders
@@ -44,7 +43,6 @@ namespace mytown.DataAccess.Repositories
 
             return payment;
         }
-
 
         public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
@@ -82,11 +80,9 @@ namespace mytown.DataAccess.Repositories
                     PostalCode = o.ShopperRegister.PostalCode,
                     PhoneNumber = o.ShopperRegister.PhoneNumber,
                     PhotoName = o.ShopperRegister.PhotoName,
-                   // Status = o.ShopperRegister.Status,
-                   // Password = o.ShopperRegister.Password,
                     ShopperRegDate = o.ShopperRegister.ShopperRegDate
                 })
-                .FirstOrDefault(); // Single shopper per order
+                .FirstOrDefault();
 
             return shopperDetails;
         }
@@ -103,7 +99,6 @@ namespace mytown.DataAccess.Repositories
         {
             await _context.SaveChangesAsync();
         }
-
 
         public async Task SendEmailToCourier(int branchId, int storeOrderId)
         {
@@ -143,7 +138,6 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
 
-            // ✅ Convert to required tuple format
             var productList = products
                 .Select(p => (p.ProductName, p.Quantity))
                 .ToList();
@@ -158,8 +152,6 @@ namespace mytown.DataAccess.Repositories
             );
         }
 
-
-
         public async Task<int> GetCourierIdByBranchIdAsync(int branchId)
         {
             return await _context.CourierBranches
@@ -168,19 +160,11 @@ namespace mytown.DataAccess.Repositories
                 .FirstAsync();
         }
 
-       
-        //public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
-        //{
-        //    _context.CourierDBNotifications.Add(notification);
-        //    await _context.SaveChangesAsync();
-        //}
-
         public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
         {
             await _context.CourierDBNotifications.AddAsync(notification);
             await _context.SaveChangesAsync();
         }
-
 
         public List<(string ProductName, int Quantity)> GetProductsByStoreOrderId(int storeOrderId)
         {
@@ -191,11 +175,98 @@ namespace mytown.DataAccess.Repositories
                     od.Product.ProductName,
                     od.Quantity
                 })
-                .AsEnumerable() // 👈 important for tuple conversion
+                .AsEnumerable()
                 .Select(p => (p.ProductName, p.Quantity))
                 .ToList();
         }
 
+        // ============================================================
+        // P2P Delivery Implementations
+        // ============================================================
 
+        public async Task<StoreOrder?> GetStoreOrderByIdAsync(int storeOrderId)
+        {
+            return await _context.StoreOrders
+                .Include(so => so.Order)
+                .FirstOrDefaultAsync(so => so.StoreOrderId == storeOrderId);
+        }
+
+        public async Task CreateP2PDeliveryRequestAsync(CreateP2PDeliveryRequestDto dto)
+        {
+            // Avoid duplicates on retry
+            var existing = await _context.TransporterDeliveryRequests
+                .AnyAsync(d =>
+                    d.PlanId == dto.PlanId &&
+                    d.ShopperRegId == dto.ShopperRegId &&
+                    d.OrderId == dto.OrderId);
+
+            if (existing) return;
+
+            var request = new TransporterDeliveryRequest
+            {
+                PlanId = dto.PlanId,
+                TransporterRegId = dto.TransporterRegId,
+                ShopperRegId = dto.ShopperRegId,
+                OrderId = dto.OrderId,
+                PickupLocation = dto.PickupLocation,
+                DropoffLocation = dto.DropoffLocation,
+                PackageWeightKg = dto.PackageWeightKg,
+                NumberOfPackages = dto.NumberOfPackages,
+                DeliveryFee = dto.DeliveryFee,
+                PackageTags = dto.PackageTags ?? "NA",
+                DeliveryStatus = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.TransporterDeliveryRequests.Add(request);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CreateTransporterNotificationAsync(
+            int transporterRegId,
+            string title,
+            string message)
+        {
+            // The TransporterDeliveryRequest row with status "Pending" acts as
+            // the notification — transporter sees pending requests on their dashboard.
+            // Add a dedicated transporter notifications table here later if needed.
+            await Task.CompletedTask;
+        }
+
+        public async Task<string> GetStoreAddressAsync(int storeId)
+        {
+            return await _context.BusinessRegisters
+                .Where(b => b.BusRegId == storeId)
+                .Select(b => b.Address1 + ", " + b.Town + ", " + b.BusinessCity +
+                             ", " + b.BusinessState + ", " + b.BusinessCountry)
+                .FirstOrDefaultAsync() ?? "Store Address";
+        }
+
+        public async Task<decimal> GetStoreOrderWeightAsync(int storeOrderId)
+        {
+            return await (
+                from od in _context.OrderDetails
+                join sku in _context.Sku_ProductVariants on od.SkuId equals sku.SkuId
+                where od.StoreOrderId == storeOrderId
+                select (sku.Weight ?? 0) * od.Quantity
+            ).SumAsync();
+        }
+
+        public async Task<int> GetStoreOrderItemCountAsync(int storeOrderId)
+        {
+            return await _context.OrderDetails
+                .Where(od => od.StoreOrderId == storeOrderId)
+                .SumAsync(od => od.Quantity);
+        }
+
+        public async Task UpdateOrderStatusAsync(int orderId, string status)
+        {
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+            if (order != null)
+            {
+                order.OrderStatus = status;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

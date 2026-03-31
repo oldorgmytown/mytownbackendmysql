@@ -203,86 +203,105 @@ namespace mytown.Services.Implementations
             return result;
         }
 
-        public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
-      int shopperId,
-      List<int> storeIds)
+// ============================================================
+// REPLACE the entire GetBestCourierOptionsByStoresAsync method
+// in CourierServiceHandler.cs with this
+// ============================================================
+
+public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
+    int shopperId,
+    List<int> storeIds)
+{
+    var shopper = await _repo.GetShopperByIdAsync(shopperId)
+        ?? throw new Exception("Shopper not found");
+
+    var stores = await _repo.GetStoresByIdsAsync(storeIds);
+    var storeWeights = await _repo.GetStoreWeightsAsync(shopperId, storeIds);
+
+    var results = new List<StoreCourierResultDto>();
+
+    foreach (var storeId in storeIds)
+    {
+        if (!stores.TryGetValue(storeId, out var store))
+            continue;
+
+        var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
+            ? weight
+            : 0;
+
+        // ─── Standard + Express courier options ───────────────────────────
+        var allCourierOptions = await _repo.GetBestCourierOptions(
+            store.BusinessCity,
+            store.BusinessState,
+            store.BusinessCountry,
+            shopper.City,
+            totalWeight
+        );
+
+        // Cheapest Surface → Standard Delivery
+        var cheapestSurface = allCourierOptions
+            .Where(c => c.ShippingMode.Equals("Surface", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(c => c.Cost)
+            .FirstOrDefault();
+
+        // Fastest Air → Express Delivery
+        var fastestAir = allCourierOptions
+            .Where(c => c.ShippingMode.Equals("Air", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(c => c.MaxDeliveryDays)
+            .FirstOrDefault();
+
+        var selectedCouriers = new List<BestcourierinfoDto>();
+
+        if (cheapestSurface != null)
         {
-            var shopper = await _repo.GetShopperByIdAsync(shopperId)
-                ?? throw new Exception("Shopper not found");
-
-            var stores = await _repo.GetStoresByIdsAsync(storeIds);
-            var storeWeights = await _repo.GetStoreWeightsAsync(shopperId, storeIds);
-
-            var results = new List<StoreCourierResultDto>();
-
-            foreach (var storeId in storeIds)
-            {
-                if (!stores.TryGetValue(storeId, out var store))
-                    continue;
-
-                var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
-                    ? weight
-                    : 0;
-
-                var allCourierOptions = await _repo.GetBestCourierOptions(
-                    store.BusinessCity,
-                    store.BusinessState,
-                    store.BusinessCountry,
-                    shopper.City,
-                    totalWeight
-                );
-
-                // ✅ Cheapest Surface option
-                var cheapestSurface = allCourierOptions
-                    .Where(c => c.ShippingMode.Equals("Surface", StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(c => c.Cost)
-                    .FirstOrDefault();
-
-                // ✅ Fastest Air option
-                var fastestAir = allCourierOptions
-                    .Where(c => c.ShippingMode.Equals("Air", StringComparison.OrdinalIgnoreCase))
-                    .OrderBy(c => c.MaxDeliveryDays) // <-- fastest delivery
-                    .FirstOrDefault();
-
-                var selectedCouriers = new List<BestcourierinfoDto>();
-
-                if (cheapestSurface != null)
-                {
-                    cheapestSurface.ShippingMode = "Standard Delivery";
-                    selectedCouriers.Add(cheapestSurface);
-                }
-
-                if (fastestAir != null)
-                {
-                    fastestAir.ShippingMode = "Express Delivery";
-                    selectedCouriers.Add(fastestAir);
-                }
-
-                // ✅ HARD-CODED P2P OPTION
-                var p2pCost = Math.Max(100, totalWeight * 80); // min ₹100
-
-                selectedCouriers.Add(new BestcourierinfoDto
-                {
-                    BranchId = 0, // not from courier_branch table
-                    ShippingMode = "P2P",
-                    Cost = p2pCost,
-                    MaxDeliveryDays = 1,
-                    DeliveryDaysRange = "Same day / Next day",
-                    EstimatedDeliveryDate = DateTime.UtcNow
-        .ToString("MMM dd, yyyy", CultureInfo.InvariantCulture)
-                });
-
-
-                results.Add(new StoreCourierResultDto
-                {
-                    StoreId = storeId,
-                    TotalWeightKg = totalWeight,
-                    CourierOptions = selectedCouriers
-                });
-            }
-
-            return results;
+            cheapestSurface.ShippingMode = "Standard Delivery";
+            selectedCouriers.Add(cheapestSurface);
         }
+
+        if (fastestAir != null)
+        {
+            fastestAir.ShippingMode = "Express Delivery";
+            selectedCouriers.Add(fastestAir);
+        }
+
+        // ─── P2P option — find real matching transporter ──────────────────
+        // storeCity = store.BusinessCity  (transporter picks up FROM here)
+        // shopperCity = shopper.City      (transporter drops off TO here)
+        var matchingTransporter = await _repo.FindMatchingTransporterAsync(
+            store.BusinessCity,
+            shopper.City,
+            totalWeight
+        );
+
+        if (matchingTransporter != null)
+        {
+            // P2P cost = 30% of Standard Delivery price
+            // If no standard option exists, fall back to 30% of Express, else ₹100 minimum
+            decimal basePrice = cheapestSurface?.Cost
+                ?? fastestAir?.Cost
+                ?? 333m; // fallback so 30% = ~₹100
+
+            decimal p2pCost = Math.Round(basePrice * 0.30m, 2);
+            p2pCost = Math.Max(p2pCost, 50m); // minimum ₹50
+
+            matchingTransporter.Cost = p2pCost;
+            matchingTransporter.ShippingMode = "P2P";
+
+            selectedCouriers.Add(matchingTransporter);
+        }
+        // If no transporter matches → P2P option is simply NOT shown to shopper
+        // (no fallback dummy P2P entry)
+
+        results.Add(new StoreCourierResultDto
+        {
+            StoreId = storeId,
+            TotalWeightKg = totalWeight,
+            CourierOptions = selectedCouriers
+        });
+    }
+
+    return results;
+}
 
 
 

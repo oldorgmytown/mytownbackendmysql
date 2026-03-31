@@ -15,27 +15,32 @@ public interface ICourierServiceRepository
 
     Task<CourierService> RegisterCourier(CourierService courier);
 
-    //for resend email
-
+    // resend email
     Task<PendingCourierVerification> FindPendingVerificationByEmail(string email);
     Task RemoveVerification(PendingCourierVerification verification);
-
     Task SavePendingVerification(PendingCourierVerification pending);
 
-    // upload csv file for branch details
+    // CSV upload
     Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file);
-
     Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
 
-   // Task <List<BestcourierinfoDto>> GetBestCourierOptions(BusinessRegister business, ShopperRegister shopper, decimal productWeightKg);
-
-    Task<List<BestcourierinfoDto>> GetBestCourierOptions(string storeCity, string storeState, string storeCountry, string shopperCity, decimal productWeightKg);
-    //   Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
+    // Courier options
+    Task<List<BestcourierinfoDto>> GetBestCourierOptions(
+        string storeCity,
+        string storeState,
+        string storeCountry,
+        string shopperCity,
+        decimal productWeightKg);
 
     Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
     Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds);
     Task<Dictionary<int, decimal>> GetStoreWeightsAsync(int shopperId, List<int> storeIds);
 
-
+    // ✅ NEW — Find a matching transporter for P2P
+    // Matches transporter who is going FROM storeCity TO shopperCity
+    // on or after today's date and still has capacity
+    Task<BestcourierinfoDto?> FindMatchingTransporterAsync(
+        string storeCity,
+        string shopperCity,
+        decimal packageWeightKg);
 }
-

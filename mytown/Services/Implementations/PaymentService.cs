@@ -149,38 +149,81 @@ namespace mytown.Services.Implementations
         }
 
 
-        public async Task ProcessPostPaymentAsync(int orderId)
+
+
+
+
+
+public async Task ProcessPostPaymentAsync(int orderId)
+{
+    var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
+ 
+    // One notification/email per StoreOrder
+    var storeWiseShipments = shippingDetails
+        .GroupBy(s => s.StoreOrderId)
+        .Select(g => g.First())
+        .ToList();
+ 
+    foreach (var shipping in storeWiseShipments)
+    {
+        // ─── P2P PATH ──────────────────────────────────────────────────────
+        if (shipping.ShippingType?.Trim().ToLower() == "p2p")
         {
-            var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
-
-            // ONE notification/email per StoreOrder
-            var storeWiseShipments = shippingDetails
-                .GroupBy(s => s.StoreOrderId)
-                .Select(g => g.First()) // representative row
-                .ToList();
-
-            foreach (var shipping in storeWiseShipments)
+            // Parse transporterRegId and planId from StoreOrder.CourierType
+            // Format saved in OrderRepository: "P2P|transporterRegId|planId"
+            var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
+ 
+            if (storeOrder == null) continue;
+ 
+            var parts = storeOrder.CourierType?.Split('|');
+            if (parts == null || parts.Length != 3)
+                continue;
+ 
+            if (!int.TryParse(parts[1], out int transporterRegId) ||
+                !int.TryParse(parts[2], out int planId))
+                continue;
+ 
+            // ✅ Auto-create delivery request to transporter
+            await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
             {
-                //// 1 email per store
-                //await SendCourierEmailAsync(
-                //    shipping.BranchId,
-                //    shipping.StoreOrderId   // IMPORTANT: store-level
-                //);
-
-                // 1 notification per store
-                var courierId = await _paymentRepo
-                    .GetCourierIdByBranchIdAsync(shipping.BranchId);
-
-               
-
-                await AddCourierNotificationAsync(
-                    courierId: courierId,
-                    branchId: shipping.BranchId,
-                    title: "New Order Assigned",
-                    message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
-                );
-            }
+                PlanId = planId,
+                TransporterRegId = transporterRegId,
+                ShopperRegId = storeOrder.Order.ShopperRegId,
+                OrderId = orderId,
+                StoreOrderId = shipping.StoreOrderId,
+                PickupLocation = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
+                DropoffLocation = shipping.DeliveryAddress,
+                PackageWeightKg = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId),
+                NumberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId),
+                DeliveryFee = shipping.Cost,
+                PackageTags = "NA"
+            });
+ 
+            // ✅ Notify transporter
+            await _paymentRepo.CreateTransporterNotificationAsync(
+                transporterRegId: transporterRegId,
+                title: "New P2P Delivery Request",
+                message: $"You have a new delivery request for Order #{orderId}. " +
+                         $"Please check your dashboard to accept."
+            );
+ 
+            // ✅ Also update order status
+            await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
         }
+        else
+        {
+            // ─── STANDARD / EXPRESS PATH (existing logic) ──────────────────
+            var courierId = await _paymentRepo.GetCourierIdByBranchIdAsync(shipping.BranchId);
+ 
+            await AddCourierNotificationAsync(
+                courierId: courierId,
+                branchId: shipping.BranchId,
+                title: "New Order Assigned",
+                message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+            );
+        }
+    }
+}
 
         public async Task AddCourierNotificationAsync(
     int courierId,
