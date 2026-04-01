@@ -81,6 +81,7 @@ namespace mytown.Models.DTO_s
     public class ActiveDeliveryDto
     {
         public int DeliveryReqId { get; set; }
+        public int PlanId { get; set; }
         public string DeliveryCode { get; set; } // DEL-XXXX
         public string CustomerName { get; set; }
         public string PickupLocation { get; set; }

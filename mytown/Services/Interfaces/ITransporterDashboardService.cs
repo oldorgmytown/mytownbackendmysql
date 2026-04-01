@@ -21,6 +21,7 @@ namespace mytown.Services.Interfaces
         Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId);
         Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto);
         Task<List<ActiveDeliveryDto>> GetCompletedDeliveriesAsync(int transporterRegId);
+        Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId);
 
         Task<bool> SubmitExceptionReportAsync(ExceptionReportDto dto);
 

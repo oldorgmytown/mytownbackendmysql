@@ -10,6 +10,7 @@ namespace mytown.DataAccess.Interfaces
 
         // ---- Travel Plan ----
         Task<TravelPlanDto?> GetActivePlanAsync(int transporterRegId);
+        Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId);
         Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto);
         Task<bool> DeactivatePlanAsync(int planId, int transporterRegId);
 

@@ -1592,6 +1592,14 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("tracking_id");
 
+                    b.Property<int?>("TransporterPlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_plan_id");
+
+                    b.Property<int?>("TransporterRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_reg_id");
+
                     b.HasKey("ShippingDetailId");
 
                     b.HasIndex("BranchId");

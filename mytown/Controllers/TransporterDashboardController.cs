@@ -173,6 +173,14 @@ namespace mytown.Controllers
             if (profile == null) return NotFound("Transporter not found.");
             return Ok(profile);
         }
+        [HttpGet("travel-plan/all/{transporterRegId}")]
+public async Task<IActionResult> GetAllPlans(int transporterRegId)
+{
+    // ✅ Returns ALL plans (not just the active one)
+    // Used by the My Plans page in the frontend
+    var plans = await _service.GetAllPlansAsync(transporterRegId);
+    return Ok(plans);   // always returns array — empty [] if none
+}
 
         [HttpPut("profile/update")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateTransporterProfileDto dto)

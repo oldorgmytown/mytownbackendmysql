@@ -254,6 +254,7 @@ public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporte
         select new
         {
             d.DeliveryReqId,
+            d.PlanId,
             d.DeliveryStatus,
             d.PickupLocation,
             d.DropoffLocation,
@@ -271,6 +272,7 @@ public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporte
     return raw.Select(d => new ActiveDeliveryDto
     {
         DeliveryReqId    = d.DeliveryReqId,
+        PlanId           = d.PlanId,
         DeliveryCode     = "DEL-" + d.DeliveryReqId.ToString("D4"),
         CustomerName     = d.CustomerName,
         PickupLocation   = d.PickupLocation,
@@ -283,6 +285,19 @@ public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporte
         AcceptedAt       = d.AcceptedAt,
         EtaInfo          = "~42 min · 32.4 km"
     }).ToList();
+}
+
+public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
+{
+    // ✅ Returns ALL plans for this transporter — active, cancelled, completed
+    // NOT just the one active plan. This is what My Plans page needs.
+    var plans = await _context.TransporterTravelPlans
+        .Where(p => p.TransporterRegId == transporterRegId)
+        .OrderByDescending(p => p.CreatedAt)   // newest first
+        .AsNoTracking()
+        .ToListAsync();
+ 
+    return plans.Select(MapPlanToDto).ToList();
 }
 
         public async Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId)
