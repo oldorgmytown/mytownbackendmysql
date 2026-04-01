@@ -83,6 +83,7 @@ namespace mytown.Models
             public DbSet<TransporterTravelPlan> TransporterTravelPlans { get; set; }
             public DbSet<TransporterDeliveryRequest> TransporterDeliveryRequests { get; set; }
             public DbSet<TransporterExceptionReport> TransporterExceptionReports { get; set; }
+            public DbSet<TransporterDBNotifications> TransporterDBNotifications { get; set; }
 
 
 

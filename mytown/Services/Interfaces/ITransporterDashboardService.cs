@@ -1,4 +1,5 @@
 // ===== ITransporterDashboardService.cs =====
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
@@ -29,5 +30,10 @@ namespace mytown.Services.Interfaces
         Task<TransporterProfileDto?> GetProfileAsync(int transporterRegId);
         Task<bool> UpdateProfileAsync(UpdateTransporterProfileDto dto);
         Task<bool> UpdatePasswordAsync(int transporterRegId, string currentPassword, string newPassword);
+
+
+        Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
+        Task MarkAsReadAsync(int transporterId);
+        Task MarkEachNotificationReadAsync(int notificationId);
     }
 }

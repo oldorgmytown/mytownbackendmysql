@@ -200,7 +200,7 @@ public async Task ProcessPostPaymentAsync(int orderId)
             });
  
             // ✅ Notify transporter
-            await _paymentRepo.CreateTransporterNotificationAsync(
+            await CreateTransporterNotificationAsync(
                 transporterRegId: transporterRegId,
                 title: "New P2P Delivery Request",
                 message: $"You have a new delivery request for Order #{orderId}. " +
@@ -243,6 +243,26 @@ public async Task ProcessPostPaymentAsync(int orderId)
 
            await _paymentRepo.AddCourierNotificationAsync(notification);
            // await _paymentRepo.SaveChangesAsync();
+        }
+
+
+        public async Task CreateTransporterNotificationAsync(
+   int transporterRegId,
+   string title,
+   string message)
+        {
+            var notification = new TransporterDBNotifications
+            {
+                TransporterRegId = transporterRegId,
+                //BranchId = branchId,
+                Title = title,
+                Message = message,
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _paymentRepo.AddTransporterNotificationAsync(notification);
+            // await _paymentRepo.SaveChangesAsync();
         }
 
     }

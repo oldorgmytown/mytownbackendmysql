@@ -166,6 +166,13 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+
+        // add transporter notifications
+        public async Task AddTransporterNotificationAsync(TransporterDBNotifications notification)
+        {
+            await _context.TransporterDBNotifications.AddAsync(notification);
+            await _context.SaveChangesAsync();
+        }
         public List<(string ProductName, int Quantity)> GetProductsByStoreOrderId(int storeOrderId)
         {
             return _context.OrderDetails

@@ -563,5 +563,46 @@ public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporte
             NotifyNewOrders     = plan.NotifyNewOrders,
             NotifyPayments      = plan.NotifyPayments
         };
+
+        public async Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId)
+        {
+            return await _context.TransporterDBNotifications
+                .Where(n => n.TransporterRegId == transporterId && !n.IsRead)
+                .OrderByDescending(n => n.CreatedDate)
+                .Select(n => new TransporterDBNotifications
+                {
+                    NotificationId = n.NotificationId,
+                    Message = n.Message,
+                    CreatedDate = n.CreatedDate,
+                    IsRead = n.IsRead
+                })
+                .ToListAsync();
+        }
+
+        public async Task MarkAllAsReadAsync(int transporterId)
+        {
+            var notifications = await _context.TransporterDBNotifications
+                .Where(n => n.TransporterRegId == transporterId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var notification in notifications)
+            {
+                notification.IsRead = true;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkEachNotificationReadAsync(int notificationId)
+        {
+            var notification = await _context.TransporterDBNotifications
+                .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+
+            if (notification != null)
+            {
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

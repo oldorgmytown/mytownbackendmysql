@@ -78,7 +78,7 @@ namespace mytown.Services.Implementations
                         store
                     );
                 }
-                // 🔹 Courier Email (per StoreOrderId ✅)
+                // Courier Email (per StoreOrderId ✅)
 
                
                 if (!string.IsNullOrEmpty(store.CourierEmail))
@@ -90,14 +90,14 @@ namespace mytown.Services.Implementations
                     await _EmailService.SendEmailToCourierAsync(
                         store.CourierEmail,
                         store.CourierName,
-                        store.StoreOrderId,   // 🔥 important
+                        store.StoreOrderId,   // important
                         store.StoreName,
                         products
                     );
                 }
             
         }
-            // 3️⃣ Return DTO to controller
+            //  Return DTO to controller
             return orderConfirmation;
         }
 

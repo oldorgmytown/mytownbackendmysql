@@ -40,5 +40,11 @@ namespace mytown.DataAccess.Interfaces
         Task<TransporterProfileDto?> GetProfileAsync(int transporterRegId);
         Task<bool> UpdateProfileAsync(UpdateTransporterProfileDto dto);
         Task<bool> UpdatePasswordAsync(int transporterRegId, string newHashedPassword);
+
+        // Notifications
+
+        Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
+        Task MarkAllAsReadAsync(int transporterId);
+        Task MarkEachNotificationReadAsync(int notificationId);
     }
 }

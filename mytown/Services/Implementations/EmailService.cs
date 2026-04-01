@@ -801,6 +801,16 @@ public class EmailService : IEmailService
                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                 {storedto.ShippingType}
               </p>
+              <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:12px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">CourierInfo</div>
+              <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
+                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {storedto.CourierName}
+              </p>
+                <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
+                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {storedto.CourierPhone}
+              </p>
             </td>
           </tr>
         </table>

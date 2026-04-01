@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -111,11 +112,11 @@ namespace mytown.Controllers
         // =================== ACTIVE DELIVERY ===================
 
         [HttpGet("active-delivery/{transporterRegId}")]
-public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
-{
-    var deliveries = await _service.GetActiveDeliveryAsync(transporterRegId);
-    return Ok(deliveries);  // ✅ always returns array — frontend handles 1 or many
-}
+        public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
+        {
+            var deliveries = await _service.GetActiveDeliveryAsync(transporterRegId);
+            return Ok(deliveries);  // ✅ always returns array — frontend handles 1 or many
+        }
 
         // Update status (ReachedPickup, PickedUp, InTransit, Delivered)
         [HttpPatch("active-delivery/update-status")]
@@ -189,13 +190,37 @@ public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
             if (!result) return BadRequest(new { error = "Password update failed." });
             return Ok(new { message = "Password changed successfully." });
         }
-    }
 
-    // Small DTO for password change (local to controller file)
-    public class ChangeTransporterPasswordDto
-    {
-        public int TransporterRegId { get; set; }
-        public string CurrentPassword { get; set; }
-        public string NewPassword { get; set; }
+
+        // get transporter notifications 
+
+        [HttpGet("Gettransporternotifications")]
+        public async Task<IActionResult> GetUnreadNotifications(int trasnporterId)
+        {
+            var notifications = await _service.GetUnreadNotificationsAsync(trasnporterId);
+            return Ok(notifications);
+        }
+
+        [HttpPost("MarktransporternotificationsAsread")]
+        public async Task<IActionResult> MarkNotificationsAsRead(int trasnporterId)
+        {
+            await _service.MarkAsReadAsync(trasnporterId);
+            return Ok(new { message = "Notifications marked as read" });
+        }
+
+        [HttpPut("markeach-notification-read")]
+        public async Task<IActionResult> MarkEachNotificationRead(int notificationId)
+        {
+            await _service.MarkEachNotificationReadAsync(notificationId);
+            return Ok(new { message = "Notification marked as read successfully" });
+        }
+
+        // Small DTO for password change (local to controller file)
+        public class ChangeTransporterPasswordDto
+        {
+            public int TransporterRegId { get; set; }
+            public string CurrentPassword { get; set; }
+            public string NewPassword { get; set; }
+        }
     }
 }

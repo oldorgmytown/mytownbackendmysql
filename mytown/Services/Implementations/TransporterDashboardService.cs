@@ -116,5 +116,20 @@ namespace mytown.Services.Implementations
             await blob.UploadAsync(stream, overwrite: true);
             return uniqueName;
         }
+
+        public async Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId)
+        {
+            return await _repo.GetUnreadNotificationsAsync(transporterId);
+        }
+
+        public async Task MarkAsReadAsync(int transporterId)
+        {
+            await _repo.MarkAllAsReadAsync(transporterId);
+        }
+
+        public async Task MarkEachNotificationReadAsync(int notificationId)
+        {
+            await _repo.MarkEachNotificationReadAsync(notificationId);
+        }
     }
 }

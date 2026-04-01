@@ -542,6 +542,7 @@ namespace mytown.DataAccess.Repositories
 
                     CourierName = c.CourierServiceName,
                     CourierEmail = br.BranchEmailId,
+                    CourierPhone = br.BranchPhoneNumber,
 
                     ShippingType = sd.ShippingType,
                     ShippingAmount = sd.Cost,
