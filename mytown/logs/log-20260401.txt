@@ -16047,3 +16047,11 @@ SELECT EXISTS (
 2026-04-01 15:42:19.698 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetDashboardSummary (mytown)'
 2026-04-01 15:42:19.701 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/summary/5 - 200 null application/json; charset=utf-8 6699.6737ms
 2026-04-01 15:42:20.890 +05:30 [INF] Application is shutting down...
+2026-04-01 15:46:38.139 +05:30 [INF] Swagger UI is enabled.
+2026-04-01 15:46:40.213 +05:30 [INF] API is ready and running.
+2026-04-01 15:46:40.240 +05:30 [INF] User profile is available. Using 'C:\Users\DELL\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-01 15:46:40.380 +05:30 [INF] Now listening on: http://localhost:5100
+2026-04-01 15:46:40.381 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-01 15:46:40.383 +05:30 [INF] Hosting environment: Development
+2026-04-01 15:46:40.385 +05:30 [INF] Content root path: e:\project\oldorgmytown\mytownbackendmysql\mytown
+2026-04-01 15:46:42.577 +05:30 [INF] Application is shutting down...
