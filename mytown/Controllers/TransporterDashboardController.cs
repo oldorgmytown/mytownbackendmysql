@@ -111,11 +111,11 @@ namespace mytown.Controllers
         // =================== ACTIVE DELIVERY ===================
 
         [HttpGet("active-delivery/{transporterRegId}")]
-        public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
-        {
-            var delivery = await _service.GetActiveDeliveryAsync(transporterRegId);
-            return Ok(delivery);
-        }
+public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
+{
+    var deliveries = await _service.GetActiveDeliveryAsync(transporterRegId);
+    return Ok(deliveries);  // ✅ always returns array — frontend handles 1 or many
+}
 
         // Update status (ReachedPickup, PickedUp, InTransit, Delivered)
         [HttpPatch("active-delivery/update-status")]

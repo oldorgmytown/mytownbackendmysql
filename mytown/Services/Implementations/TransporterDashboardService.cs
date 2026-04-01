@@ -52,8 +52,8 @@ namespace mytown.Services.Implementations
         public Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId)
             => _repo.GetPendingRequestsAsync(transporterRegId);
 
-        public Task<ActiveDeliveryDto?> GetActiveDeliveryAsync(int transporterRegId)
-            => _repo.GetActiveDeliveryAsync(transporterRegId);
+        public Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId)
+    => _repo.GetActiveDeliveryAsync(transporterRegId);
 
         public Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId)
             => _repo.AcceptDeliveryRequestAsync(deliveryReqId, transporterRegId);

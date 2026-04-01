@@ -16,7 +16,7 @@ namespace mytown.Services.Interfaces
 
         Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(ShopperDeliveryRequestDto dto);
         Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId);
-        Task<ActiveDeliveryDto?> GetActiveDeliveryAsync(int transporterRegId);
+        Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId);
         Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId);
         Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto);
         Task<List<ActiveDeliveryDto>> GetCompletedDeliveriesAsync(int transporterRegId);

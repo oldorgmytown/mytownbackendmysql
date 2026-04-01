@@ -215,7 +215,8 @@ namespace mytown.DataAccess.Repositories
                 DeliveryFee = dto.DeliveryFee,
                 PackageTags = dto.PackageTags ?? "NA",
                 DeliveryStatus = "Pending",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                DeliveryProofFile = "" 
             };
 
             _context.TransporterDeliveryRequests.Add(request);
