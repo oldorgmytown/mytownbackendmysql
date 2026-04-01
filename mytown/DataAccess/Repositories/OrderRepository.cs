@@ -274,23 +274,21 @@ namespace mytown.DataAccess.Repositories
 
                     // Save ShippingDetails with BranchId = 1 (P2P has no courier branch)
                     var p2pShipping = new ShippingDetails
-                    {
-                        OrderId = newOrder.OrderId,
-                        StoreOrderId = storeOrder.StoreOrderId,
-                        BranchId = 1, // ← use your system's default/dummy branch id OR handle nullable in ShippingDetails
-                        ShippingType = "P2P",
-                        EstimatedDays = estimatedDays,
-                        Cost = p2pCost,
-                        TrackingId = "",
-                        ShippingStatus = "Pending",
-                        DeliveryAddress = deliveryAddress
-                    };
+{
+    OrderId = newOrder.OrderId,
+    StoreOrderId = storeOrder.StoreOrderId,
+    BranchId = 1,
+    ShippingType = "P2P",
+    EstimatedDays = estimatedDays,
+    Cost = p2pCost,
+    TrackingId = "",
+    ShippingStatus = "Pending",
+    DeliveryAddress = deliveryAddress,
+    TransporterRegId = shippingSelection.TransporterRegId,
+    TransporterPlanId = shippingSelection.TransporterPlanId 
+};
 
                     shippingList.Add(p2pShipping);
-
-                    // ✅ Store transporter info on StoreOrder for post-payment use
-                    // Format: "P2P|transporterRegId|planId"  — parsed in PaymentService
-                    storeOrder.CourierType = $"P2P|{shippingSelection.TransporterRegId}|{shippingSelection.TransporterPlanId}";
                 }
                 else
                 {

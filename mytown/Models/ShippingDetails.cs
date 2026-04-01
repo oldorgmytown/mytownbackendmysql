@@ -67,6 +67,13 @@ namespace mytown.Models
         [Column("delivery_address", TypeName = "text")]
         public string DeliveryAddress { get; set; } // new
 
+
+        [Column("transporter_reg_id")]
+        public int? TransporterRegId { get; set; } 
+
+        [Column("transporter_plan_id")]
+        public int? TransporterPlanId { get; set; }
+
         // Delivery proof uploaded by courier
         [Column("delivery_proof_file_name", TypeName = "varchar(255)")]
         public string? DeliveryProofFileName { get; set; }
