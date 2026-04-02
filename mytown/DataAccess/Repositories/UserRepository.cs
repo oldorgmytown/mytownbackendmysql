@@ -784,10 +784,13 @@ namespace mytown.DataAccess.Repositories
             // ---------------- TRANSPORTER LOGIN ----------------
             if (role == "Transporter")
             {
-                var transporter = await _context.TransporterRegisters
-                    .FirstOrDefaultAsync(t => t.Email == email);
+                password = password?.Trim();
 
-                if (transporter != null && BCrypt.Net.BCrypt.Verify(password, transporter.Password))
+                var transporter = await _context.TransporterRegisters
+                    .FirstOrDefaultAsync(t => t.Email.ToLower().Trim() == email.ToLower().Trim());
+
+                if (transporter != null &&
+                    BCrypt.Net.BCrypt.Verify(password, transporter.Password))
                 {
                     // ❗ Optional but recommended: check email verified
                     if (!transporter.IsEmailVerified)
