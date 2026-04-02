@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
+    // [Authorize]
     [ApiController]
     [Route("api/transporter-dashboard")]
     public class TransporterDashboardController : ControllerBase
@@ -21,134 +21,164 @@ namespace mytown.Controllers
             _logger = logger;
         }
 
-        // =================== DASHBOARD ===================
+        // =========================================================
+        // DASHBOARD SUMMARY
+        // =========================================================
 
         [HttpGet("summary/{transporterRegId}")]
         public async Task<IActionResult> GetDashboardSummary(int transporterRegId)
         {
-            var result = await _service.GetDashboardSummaryAsync(transporterRegId);
-            if (result == null) return NotFound("Transporter not found.");
-            return Ok(result);
-        }
-
-        // =================== TRAVEL PLAN ===================
-
-        [HttpGet("travel-plan/{transporterRegId}")]
-        public async Task<IActionResult> GetActivePlan(int transporterRegId)
-        {
-            var plan = await _service.GetActivePlanAsync(transporterRegId);
-            return Ok(plan); // returns null if no active plan (frontend handles it)
-        }
-
-        [HttpPost("travel-plan/save")]
-        public async Task<IActionResult> SaveTravelPlan([FromBody] TravelPlanDto dto)
-        {
             try
             {
-                var result = await _service.SaveTravelPlanAsync(dto);
-                return Ok(new { message = "Travel plan saved successfully.", plan = result });
+                var result = await _service.GetDashboardSummaryAsync(transporterRegId);
+                return Ok(result);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving travel plan");
+                _logger.LogError(ex, "GetDashboardSummary failed for transporter {Id}", transporterRegId);
                 return BadRequest(new { error = ex.Message });
             }
         }
 
-        [HttpPatch("travel-plan/deactivate")]
-        public async Task<IActionResult> DeactivatePlan([FromQuery] int planId, [FromQuery] int transporterRegId)
+        // =========================================================
+        // TRAVEL PLANS
+        // =========================================================
+
+        [HttpGet("travel-plan/active/{transporterRegId}")]
+        public async Task<IActionResult> GetActivePlan(int transporterRegId)
+        {
+            var plan = await _service.GetActivePlanAsync(transporterRegId);
+            if (plan == null) return NotFound(new { message = "No active travel plan found." });
+            return Ok(plan);
+        }
+
+        [HttpGet("travel-plan/all/{transporterRegId}")]
+        public async Task<IActionResult> GetAllPlans(int transporterRegId)
+        {
+            var plans = await _service.GetAllPlansAsync(transporterRegId);
+            return Ok(plans);
+        }
+
+        [HttpPost("travel-plan")]
+        public async Task<IActionResult> SaveTravelPlan([FromBody] TravelPlanDto dto)
+        {
+            try
+            {
+                var saved = await _service.SaveTravelPlanAsync(dto);
+                return Ok(saved);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "SaveTravelPlan failed");
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpPut("travel-plan/{planId}/deactivate/{transporterRegId}")]
+        public async Task<IActionResult> DeactivatePlan(int planId, int transporterRegId)
         {
             var result = await _service.DeactivatePlanAsync(planId, transporterRegId);
-            if (!result) return NotFound("Plan not found.");
+            if (!result) return NotFound(new { message = "Plan not found." });
             return Ok(new { message = "Plan deactivated." });
         }
 
-        // =================== SEARCH TRANSPORTERS (for Shoppers) ===================
+        // =========================================================
+        // SEARCH AVAILABLE TRANSPORTERS (called by shoppers)
+        // =========================================================
 
-        [AllowAnonymous]
         [HttpGet("search")]
-        public async Task<IActionResult> SearchTransporters(
+        public async Task<IActionResult> SearchAvailableTransporters(
             [FromQuery] string from,
             [FromQuery] string to,
             [FromQuery] DateTime date)
         {
-            if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
-                return BadRequest("From and To locations are required.");
-
             var results = await _service.SearchAvailableTransportersAsync(from, to, date);
             return Ok(results);
         }
 
-        // =================== DELIVERY REQUESTS ===================
+        // =========================================================
+        // DELIVERY REQUEST — created by shopper, auto-assigned to transporter
+        // =========================================================
 
-        // Shopper sends delivery request to a transporter's plan
-        [HttpPost("delivery-request/create")]
+        /// <summary>
+        /// POST /api/transporter-dashboard/delivery-request
+        /// Shopper submits request → auto-assigned to the transporter who owns the PlanId.
+        /// No accept step. Status starts as "Assigned".
+        /// </summary>
+        [HttpPost("delivery-request")]
         public async Task<IActionResult> CreateDeliveryRequest([FromBody] ShopperDeliveryRequestDto dto)
         {
-            var (success, message, reqId) = await _service.CreateDeliveryRequestAsync(dto);
-            if (!success) return BadRequest(new { error = message });
-            return Ok(new { message, deliveryReqId = reqId });
+            var (success, message, deliveryReqId) = await _service.CreateDeliveryRequestAsync(dto);
+
+            if (!success)
+                return BadRequest(new { error = message });
+
+            return Ok(new { message, deliveryReqId });
         }
 
-        // Transporter sees pending requests
-        [HttpGet("delivery-request/pending/{transporterRegId}")]
-        public async Task<IActionResult> GetPendingRequests(int transporterRegId)
-        {
-            var list = await _service.GetPendingRequestsAsync(transporterRegId);
-            return Ok(list);
-        }
+        // =========================================================
+        // ACTIVE DELIVERIES (Assigned + ReachedPickup + PickedUp + InTransit)
+        // =========================================================
 
-        // Transporter accepts a request
-        [HttpPatch("delivery-request/accept")]
-        public async Task<IActionResult> AcceptRequest(
-            [FromQuery] int deliveryReqId,
-            [FromQuery] int transporterRegId)
-        {
-            var result = await _service.AcceptDeliveryRequestAsync(deliveryReqId, transporterRegId);
-            if (!result) return BadRequest(new { error = "Request not found or already processed." });
-            return Ok(new { message = "Delivery request accepted." });
-        }
-
-        // =================== ACTIVE DELIVERY ===================
-
-        [HttpGet("active-delivery/{transporterRegId}")]
-        public async Task<IActionResult> GetActiveDelivery(int transporterRegId)
+        [HttpGet("deliveries/active/{transporterRegId}")]
+        public async Task<IActionResult> GetActiveDeliveries(int transporterRegId)
         {
             var deliveries = await _service.GetActiveDeliveryAsync(transporterRegId);
-            return Ok(deliveries);  // ✅ always returns array — frontend handles 1 or many
+            return Ok(deliveries);
         }
 
-        // Update status (ReachedPickup, PickedUp, InTransit, Delivered)
-        [HttpPatch("active-delivery/update-status")]
+        // =========================================================
+        // UPDATE DELIVERY STATUS
+        // Flow: Assigned → ReachedPickup → PickedUp → InTransit → Delivered
+        // =========================================================
+
+        /// <summary>
+        /// PUT /api/transporter-dashboard/deliveries/update-status
+        /// Body: { deliveryReqId, transporterRegId, newStatus }
+        /// Allowed newStatus: ReachedPickup | PickedUp | InTransit | Delivered
+        /// </summary>
+        [HttpPut("deliveries/update-status")]
         public async Task<IActionResult> UpdateDeliveryStatus([FromBody] UpdateDeliveryStatusDto dto)
         {
             var result = await _service.UpdateDeliveryStatusAsync(dto);
-            if (!result) return BadRequest(new { error = "Status update failed." });
-            return Ok(new { message = $"Status updated to {dto.NewStatus}." });
+            if (!result)
+                return BadRequest(new
+                {
+                    error = "Status update failed. Check delivery ID or status transition. " +
+                            "Allowed flow: Assigned → ReachedPickup → PickedUp → InTransit → Delivered"
+                });
+
+            return Ok(new { message = $"Delivery status updated to '{dto.NewStatus}'." });
         }
 
-        // Completed deliveries history
-        [HttpGet("completed-deliveries/{transporterRegId}")]
+        // =========================================================
+        // COMPLETED DELIVERIES
+        // =========================================================
+
+        [HttpGet("deliveries/completed/{transporterRegId}")]
         public async Task<IActionResult> GetCompletedDeliveries(int transporterRegId)
         {
-            var list = await _service.GetCompletedDeliveriesAsync(transporterRegId);
-            return Ok(list);
+            var deliveries = await _service.GetCompletedDeliveriesAsync(transporterRegId);
+            return Ok(deliveries);
         }
 
-        // =================== EXCEPTION REPORTS ===================
+        // =========================================================
+        // EXCEPTION REPORTS
+        // =========================================================
 
         [HttpPost("exception-report")]
         public async Task<IActionResult> SubmitExceptionReport([FromBody] ExceptionReportDto dto)
         {
             var result = await _service.SubmitExceptionReportAsync(dto);
-            if (!result) return BadRequest(new { error = "Failed to submit report." });
+            if (!result) return BadRequest(new { error = "Failed to submit exception report." });
             return Ok(new { message = "Exception report submitted." });
         }
 
-        // =================== VERIFICATION ===================
+        // =========================================================
+        // KYC
+        // =========================================================
 
-        [HttpPost("verify/kyc")]
-        [Consumes("multipart/form-data")]
+        [HttpPost("kyc")]
         public async Task<IActionResult> SubmitKyc([FromForm] TransporterKycDto dto)
         {
             var (success, message) = await _service.SubmitKycAsync(dto);
@@ -156,7 +186,11 @@ namespace mytown.Controllers
             return Ok(new { message });
         }
 
-        [HttpPost("verify/bank")]
+        // =========================================================
+        // BANK DETAILS
+        // =========================================================
+
+        [HttpPost("bank-details")]
         public async Task<IActionResult> SubmitBankDetails([FromBody] TransporterBankDto dto)
         {
             var (success, message) = await _service.SubmitBankDetailsAsync(dto);
@@ -164,71 +198,64 @@ namespace mytown.Controllers
             return Ok(new { message });
         }
 
-        // =================== PROFILE ===================
+        // =========================================================
+        // PROFILE
+        // =========================================================
 
         [HttpGet("profile/{transporterRegId}")]
         public async Task<IActionResult> GetProfile(int transporterRegId)
         {
             var profile = await _service.GetProfileAsync(transporterRegId);
-            if (profile == null) return NotFound("Transporter not found.");
+            if (profile == null) return NotFound(new { message = "Profile not found." });
             return Ok(profile);
         }
-        [HttpGet("travel-plan/all/{transporterRegId}")]
-public async Task<IActionResult> GetAllPlans(int transporterRegId)
-{
-    // ✅ Returns ALL plans (not just the active one)
-    // Used by the My Plans page in the frontend
-    var plans = await _service.GetAllPlansAsync(transporterRegId);
-    return Ok(plans);   // always returns array — empty [] if none
-}
 
-        [HttpPut("profile/update")]
+        [HttpPut("profile")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateTransporterProfileDto dto)
         {
             var result = await _service.UpdateProfileAsync(dto);
-            if (!result) return NotFound("Transporter not found.");
+            if (!result) return NotFound(new { message = "Transporter not found." });
             return Ok(new { message = "Profile updated successfully." });
         }
 
-        [HttpPatch("profile/change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangeTransporterPasswordDto dto)
+        /// <summary>
+        /// PUT /api/transporter-dashboard/profile/change-password
+        /// Body: { transporterRegId, currentPassword, newPassword }
+        /// Uses UpdateTransporterPasswordDto — NOT the shopper UpdatePasswordDto
+        /// </summary>
+        [HttpPut("profile/change-password")]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdateTransporterPasswordDto dto)
         {
             var result = await _service.UpdatePasswordAsync(
-                dto.TransporterRegId, dto.CurrentPassword, dto.NewPassword);
+                dto.TransporterRegId, dto.CurrentPassword, dto.NewPassword);  // ✅ TransporterRegId
+
             if (!result) return BadRequest(new { error = "Password update failed." });
-            return Ok(new { message = "Password changed successfully." });
+            return Ok(new { message = "Password updated successfully." });
         }
 
+        // =========================================================
+        // NOTIFICATIONS
+        // =========================================================
 
-        // get transporter notifications 
-
-        [HttpGet("Gettransporternotifications")]
-        public async Task<IActionResult> GetUnreadNotifications(int trasnporterId)
+        [HttpGet("notifications/{transporterId}")]
+        public async Task<IActionResult> GetUnreadNotifications(int transporterId)
         {
-            var notifications = await _service.GetUnreadNotificationsAsync(trasnporterId);
+            var notifications = await _service.GetUnreadNotificationsAsync(transporterId);
             return Ok(notifications);
         }
 
-        [HttpPost("MarktransporternotificationsAsread")]
-        public async Task<IActionResult> MarkNotificationsAsRead(int trasnporterId)
+        [HttpPut("notifications/mark-all-read/{transporterId}")]
+        public async Task<IActionResult> MarkAllAsRead(int transporterId)
         {
-            await _service.MarkAsReadAsync(trasnporterId);
-            return Ok(new { message = "Notifications marked as read" });
+            await _service.MarkAsReadAsync(transporterId);
+            return Ok(new { message = "All notifications marked as read." });
         }
 
-        [HttpPut("markeach-notification-read")]
-        public async Task<IActionResult> MarkEachNotificationRead(int notificationId)
+        [HttpPut("notifications/mark-read/{notificationId}")]
+        public async Task<IActionResult> MarkNotificationRead(int notificationId)
         {
             await _service.MarkEachNotificationReadAsync(notificationId);
-            return Ok(new { message = "Notification marked as read successfully" });
-        }
-
-        // Small DTO for password change (local to controller file)
-        public class ChangeTransporterPasswordDto
-        {
-            public int TransporterRegId { get; set; }
-            public string CurrentPassword { get; set; }
-            public string NewPassword { get; set; }
+            return Ok(new { message = "Notification marked as read." });
         }
     }
 }

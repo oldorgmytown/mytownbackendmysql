@@ -19,11 +19,15 @@ namespace mytown.DataAccess.Interfaces
             string fromLocation, string toLocation, DateTime travelDate);
 
         // ---- Delivery Requests ----
+        // Creates request and auto-assigns (status = "Assigned") — no Accept step
         Task<TransporterDeliveryRequest> CreateDeliveryRequestAsync(ShopperDeliveryRequestDto dto);
-        Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId);
+
+        // Active deliveries = Assigned + ReachedPickup + PickedUp + InTransit
         Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId);
-        Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId);
+
+        // Status flow: ReachedPickup → PickedUp → InTransit → Delivered
         Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto);
+
         Task<List<ActiveDeliveryDto>> GetCompletedDeliveriesAsync(int transporterRegId);
 
         // ---- Exception Reports ----
@@ -42,8 +46,7 @@ namespace mytown.DataAccess.Interfaces
         Task<bool> UpdateProfileAsync(UpdateTransporterProfileDto dto);
         Task<bool> UpdatePasswordAsync(int transporterRegId, string newHashedPassword);
 
-        // Notifications
-
+        // ---- Notifications ----
         Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
         Task MarkAllAsReadAsync(int transporterId);
         Task MarkEachNotificationReadAsync(int notificationId);

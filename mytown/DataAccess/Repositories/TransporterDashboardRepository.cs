@@ -15,13 +15,18 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        // ========== DASHBOARD SUMMARY ==========
+        // -------------------------------------------------------------------------
+        // DASHBOARD SUMMARY
+        // -------------------------------------------------------------------------
         public async Task<TransporterDashboardDto> GetDashboardSummaryAsync(int transporterRegId)
         {
             var transporter = await _context.TransporterRegisters
                 .FirstOrDefaultAsync(t => t.TransporterRegId == transporterRegId);
 
-            if (transporter == null) return null;
+            if (transporter == null)
+                throw new Exception("Transporter not found.");
+
+            var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
 
             var totalDeliveries = await _context.TransporterDeliveryRequests
                 .Where(d => d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered")
@@ -29,8 +34,7 @@ namespace mytown.DataAccess.Repositories
 
             var activeDeliveries = await _context.TransporterDeliveryRequests
                 .Where(d => d.TransporterRegId == transporterRegId
-                    && d.DeliveryStatus != "Delivered"
-                    && d.DeliveryStatus != "Pending")
+                         && activeStatuses.Contains(d.DeliveryStatus))
                 .CountAsync();
 
             var totalEarned = await _context.TransporterDeliveryRequests
@@ -38,372 +42,366 @@ namespace mytown.DataAccess.Repositories
                 .SumAsync(d => d.DeliveryFee);
 
             var kyc = await _context.TransporterKYCs
-                .FirstOrDefaultAsync(k => k.TransporterRegId == transporterRegId);
+                .Where(k => k.TransporterRegId == transporterRegId)
+                .OrderByDescending(k => k.SubmittedAt)
+                .FirstOrDefaultAsync();
 
             var bank = await _context.TransporterBankDetails
                 .FirstOrDefaultAsync(b => b.TransporterRegId == transporterRegId);
 
-            var activePlan = await _context.TransporterTravelPlans
-                .AnyAsync(p => p.TransporterRegId == transporterRegId && p.IsActive && p.PlanStatus == "Available");
+            var hasActivePlan = await _context.TransporterTravelPlans
+                .AnyAsync(p => p.TransporterRegId == transporterRegId && p.IsActive);
 
             return new TransporterDashboardDto
             {
                 TransporterRegId = transporterRegId,
-                TransporterName  = transporter.TransporterName,
-                TotalDeliveries  = totalDeliveries,
+                TransporterName = transporter.TransporterName,
+                TotalDeliveries = totalDeliveries,
                 ActiveDeliveries = activeDeliveries,
-                TotalEarned      = totalEarned,
-                KycStatus        = kyc?.KycStatus ?? "NotSubmitted",
-                BankVerified     = bank?.IsVerified ?? false,
-                HasActivePlan    = activePlan
+                TotalEarned = totalEarned,
+                KycStatus = kyc?.KycStatus ?? "NotSubmitted",   // ✅ KycStatus not Status
+                BankVerified = bank?.IsVerified ?? false,
+                HasActivePlan = hasActivePlan
             };
         }
 
-        // ========== TRAVEL PLAN ==========
+        // -------------------------------------------------------------------------
+        // TRAVEL PLANS
+        // -------------------------------------------------------------------------
         public async Task<TravelPlanDto?> GetActivePlanAsync(int transporterRegId)
         {
-            var plan = await _context.TransporterTravelPlans
+            return await _context.TransporterTravelPlans
                 .Where(p => p.TransporterRegId == transporterRegId && p.IsActive)
-                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => MapPlanToDto(p))
                 .FirstOrDefaultAsync();
-
-            if (plan == null) return null;
-            return MapPlanToDto(plan);
         }
 
-        public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
+        public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
         {
-            var oldPlans = await _context.TransporterTravelPlans
-                .Where(p => p.TransporterRegId == dto.TransporterRegId && p.IsActive)
+            return await _context.TransporterTravelPlans
+                .Where(p => p.TransporterRegId == transporterRegId)
+                .OrderByDescending(p => p.PlanId)
+                .Select(p => MapPlanToDto(p))
                 .ToListAsync();
-
-            foreach (var old in oldPlans)
-            {
-                old.IsActive   = false;
-                old.PlanStatus = "Cancelled";
-            }
-
-            var plan = new TransporterTravelPlan
-            {
-                TransporterRegId   = dto.TransporterRegId,
-                StartLocation      = dto.StartLocation,
-                Destination        = dto.Destination,
-                PreferredRoute     = dto.PreferredRoute,
-                DistanceKm         = dto.DistanceKm,
-                StartDate          = dto.StartDate,
-                ArrivalDate        = dto.ArrivalDate,
-                VehicleType        = dto.VehicleType,
-                VehicleRegistration = dto.VehicleRegistration,
-                VehicleName        = dto.VehicleName,
-                MaxWeightKg        = dto.MaxWeightKg,
-                PackageSizeL       = dto.PackageSizeL,
-                PackageSizeW       = dto.PackageSizeW,
-                PackageSizeH       = dto.PackageSizeH,
-                NumberOfPackages   = dto.NumberOfPackages,
-                AcceptsFragile     = dto.AcceptsFragile,
-                AcceptsPerishable  = dto.AcceptsPerishable,
-                PreferredContact   = dto.PreferredContact,
-                LanguagePreference = dto.LanguagePreference,
-                NotifyNewOrders    = dto.NotifyNewOrders,
-                NotifyPayments     = dto.NotifyPayments,
-                IsActive           = true,
-                PlanStatus         = "Available",
-                CreatedAt          = DateTime.UtcNow
-            };
-
-            _context.TransporterTravelPlans.Add(plan);
-            await _context.SaveChangesAsync();
-
-            dto.PlanId = plan.PlanId;
-            return dto;
         }
+
+private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
+{
+    bool effectivelyActive = p.IsActive && p.ArrivalDate.Date >= DateTime.UtcNow.Date;
+
+    return new TravelPlanDto
+    {
+        PlanId              = p.PlanId,
+        TransporterRegId    = p.TransporterRegId,
+        IsActive            = effectivelyActive,
+        PlanStatus          = effectivelyActive ? "Available" : "Inactive",
+        StartLocation       = p.StartLocation,
+        Destination         = p.Destination,
+        PreferredRoute      = p.PreferredRoute,
+        DistanceKm          = p.DistanceKm,
+        StartDate           = p.StartDate,
+        ArrivalDate         = p.ArrivalDate,
+        VehicleType         = p.VehicleType,
+        VehicleRegistration = p.VehicleRegistration,
+        VehicleName         = p.VehicleName,
+        MaxWeightKg         = p.MaxWeightKg,
+        PackageSizeL        = p.PackageSizeL,
+        PackageSizeW        = p.PackageSizeW,
+        PackageSizeH        = p.PackageSizeH,
+        NumberOfPackages    = p.NumberOfPackages,
+        AcceptsFragile      = p.AcceptsFragile,
+        AcceptsPerishable   = p.AcceptsPerishable,
+        PreferredContact    = p.PreferredContact,
+        LanguagePreference  = p.LanguagePreference,
+        NotifyNewOrders     = p.NotifyNewOrders,
+        NotifyPayments      = p.NotifyPayments,
+    };
+}
+
+public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
+{
+    // ── Validation 1: Arrival must be after Start ─────────────────────
+    if (dto.ArrivalDate <= dto.StartDate)
+        throw new Exception("Arrival date/time must be after start date/time.");
+
+    // ── Validation 2: No duplicate active plan on same date range ─────
+    // Transporter cannot have 2 active plans whose date ranges overlap.
+    // Two plans overlap if: existingStart < newArrival AND existingArrival > newStart
+    var overlapping = await _context.TransporterTravelPlans
+        .Where(p =>
+            p.TransporterRegId == dto.TransporterRegId &&
+            p.IsActive &&
+            p.StartDate < dto.ArrivalDate &&
+            p.ArrivalDate > dto.StartDate)
+        .AnyAsync();
+
+    if (overlapping)
+        throw new Exception(
+            "You already have an active plan overlapping these dates. " +
+            "Please deactivate it from My Plans before creating a new one.");
+
+    // ── Always create NEW plan — never update existing ────────────────
+    var plan = new TransporterTravelPlan
+    {
+        TransporterRegId    = dto.TransporterRegId,
+        IsActive            = true,
+        StartLocation       = dto.StartLocation,
+        Destination         = dto.Destination,
+        PreferredRoute      = dto.PreferredRoute,
+        DistanceKm          = dto.DistanceKm,
+        StartDate           = dto.StartDate,
+        ArrivalDate         = dto.ArrivalDate,
+        VehicleType         = dto.VehicleType,
+        VehicleRegistration = dto.VehicleRegistration,
+        VehicleName         = dto.VehicleName,
+        MaxWeightKg         = dto.MaxWeightKg,
+        PackageSizeL        = dto.PackageSizeL,
+        PackageSizeW        = dto.PackageSizeW,
+        PackageSizeH        = dto.PackageSizeH,
+        NumberOfPackages    = dto.NumberOfPackages,
+        AcceptsFragile      = dto.AcceptsFragile,
+        AcceptsPerishable   = dto.AcceptsPerishable,
+        PreferredContact    = dto.PreferredContact,
+        LanguagePreference  = dto.LanguagePreference,
+        NotifyNewOrders     = dto.NotifyNewOrders,
+        NotifyPayments      = dto.NotifyPayments,
+    };
+
+    _context.TransporterTravelPlans.Add(plan);
+    await _context.SaveChangesAsync();
+
+    dto.PlanId = plan.PlanId;
+    return dto;
+}
 
         public async Task<bool> DeactivatePlanAsync(int planId, int transporterRegId)
         {
             var plan = await _context.TransporterTravelPlans
-                .FirstOrDefaultAsync(p => p.PlanId == planId && p.TransporterRegId == transporterRegId);
-
+                .FirstOrDefaultAsync(p => p.PlanId == planId
+                                       && p.TransporterRegId == transporterRegId);
             if (plan == null) return false;
 
-            plan.IsActive   = false;
-            plan.PlanStatus = "Cancelled";
+            plan.IsActive = false;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // ========== SEARCH AVAILABLE TRANSPORTERS ==========
+        // -------------------------------------------------------------------------
+        // SEARCH AVAILABLE TRANSPORTERS (for shoppers)
+        // -------------------------------------------------------------------------
         public async Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
             string fromLocation, string toLocation, DateTime travelDate)
         {
-            return await (
-                from p in _context.TransporterTravelPlans
-                join t in _context.TransporterRegisters on p.TransporterRegId equals t.TransporterRegId
-                where p.IsActive
-                    && p.PlanStatus == "Available"
-                    && p.StartDate.Date <= travelDate.Date
-                    && p.ArrivalDate.Date >= travelDate.Date
-                    && EF.Functions.Like(p.StartLocation.ToLower(), $"%{fromLocation.ToLower()}%")
-                    && EF.Functions.Like(p.Destination.ToLower(), $"%{toLocation.ToLower()}%")
-                select new AvailableTransporterDto
+            return await _context.TransporterTravelPlans
+                .Where(p =>
+                    p.IsActive &&
+                    p.ArrivalDate.Date >= DateTime.UtcNow.Date &&
+                    p.StartLocation.Contains(fromLocation) &&
+                    p.Destination.Contains(toLocation) &&
+                    p.StartDate.Date <= travelDate.Date &&
+                    p.ArrivalDate.Date >= travelDate.Date)
+                .Select(p => new AvailableTransporterDto
                 {
-                    PlanId            = p.PlanId,
-                    TransporterRegId  = t.TransporterRegId,
-                    TransporterName   = t.TransporterName,
-                    VehicleType       = p.VehicleType,
-                    VehicleName       = p.VehicleName,
-                    StartLocation     = p.StartLocation,
-                    Destination       = p.Destination,
-                    StartDate         = p.StartDate,
-                    ArrivalDate       = p.ArrivalDate,
-                    MaxWeightKg       = p.MaxWeightKg,
-                    NumberOfPackages  = p.NumberOfPackages,
-                    AcceptsFragile    = p.AcceptsFragile,
+                    PlanId = p.PlanId,
+                    TransporterRegId = p.TransporterRegId,
+                    TransporterName = p.TransporterRegister.TransporterName,
+                    VehicleType = p.VehicleType,
+                    VehicleName = p.VehicleName,
+                    StartLocation = p.StartLocation,
+                    Destination = p.Destination,
+                    StartDate = p.StartDate,
+                    ArrivalDate = p.ArrivalDate,
+                    MaxWeightKg = p.MaxWeightKg,
+                    NumberOfPackages = p.NumberOfPackages,
+                    AcceptsFragile = p.AcceptsFragile,
                     AcceptsPerishable = p.AcceptsPerishable,
-                    PreferredContact  = p.PreferredContact
-                }
-            ).ToListAsync();
+                    PreferredContact = p.PreferredContact
+                })
+                .ToListAsync();
         }
 
-        // ========== DELIVERY REQUESTS ==========
+        // -------------------------------------------------------------------------
+        // CREATE DELIVERY REQUEST — AUTO-ASSIGNED (no Accept step)
+        // -------------------------------------------------------------------------
         public async Task<TransporterDeliveryRequest> CreateDeliveryRequestAsync(ShopperDeliveryRequestDto dto)
         {
             var plan = await _context.TransporterTravelPlans
                 .FirstOrDefaultAsync(p => p.PlanId == dto.PlanId && p.IsActive);
 
             if (plan == null)
-                throw new Exception("Travel plan not found or no longer available.");
+                throw new Exception("Travel plan not found or is no longer active.");
 
-            decimal deliveryFee = dto.PackageWeightKg * 10m;
+            var existing = await _context.TransporterDeliveryRequests
+                .AnyAsync(d =>
+                    d.PlanId == dto.PlanId &&
+                    d.ShopperRegId == dto.ShopperRegId &&
+                    d.OrderId == dto.OrderId);
+
+            if (existing)
+                throw new Exception("A delivery request already exists for this order and plan.");
+
+            string deliveryCode = "DEL-" + new Random().Next(1000, 9999).ToString();
 
             var request = new TransporterDeliveryRequest
             {
-                PlanId           = dto.PlanId,
-                TransporterRegId = plan.TransporterRegId,
-                ShopperRegId     = dto.ShopperRegId,
-                OrderId          = dto.OrderId,
-                PickupLocation   = dto.PickupLocation,
-                DropoffLocation  = dto.DropoffLocation,
-                PackageWeightKg  = dto.PackageWeightKg,
+                PlanId = dto.PlanId,
+                TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
+                ShopperRegId = dto.ShopperRegId,
+                OrderId = dto.OrderId,
+                PickupLocation = dto.PickupLocation,
+                DropoffLocation = dto.DropoffLocation,
+                PackageWeightKg = dto.PackageWeightKg,
                 NumberOfPackages = dto.NumberOfPackages,
-                DeliveryFee      = deliveryFee,
-                PackageTags      = dto.PackageTags ?? "NA",
-                DeliveryStatus   = "Pending",
-                CreatedAt        = DateTime.UtcNow
+                PackageTags = dto.PackageTags ?? "NA",
+                DeliveryStatus = "Assigned",                // straight to Assigned
+                DeliveryCode = deliveryCode,
+                CreatedAt = DateTime.UtcNow,
+                AssignedAt = DateTime.UtcNow,
+                DeliveryProofFile = ""
             };
 
             _context.TransporterDeliveryRequests.Add(request);
+
+            // Notify transporter
+            _context.TransporterDBNotifications.Add(new TransporterDBNotifications
+            {
+                TransporterRegId = plan.TransporterRegId,
+                Title = "New Delivery Assigned",
+                Message = $"A new delivery ({deliveryCode}) has been assigned to you from {dto.PickupLocation} to {dto.DropoffLocation}.",
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow          // ✅ CreatedDate not CreatedAt
+            });
+
             await _context.SaveChangesAsync();
             return request;
         }
 
-        public async Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId)
+        // -------------------------------------------------------------------------
+        // ACTIVE DELIVERIES — Assigned + ReachedPickup + PickedUp + InTransit
+        // -------------------------------------------------------------------------
+        public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId)
         {
-            // ✅ Fetch raw primitives from DB — no string formatting in SQL
-            var raw = await (
-                from d in _context.TransporterDeliveryRequests
-                join s in _context.ShopperRegisters on d.ShopperRegId equals s.ShopperRegId
-                where d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Pending"
-                orderby d.CreatedAt descending
-                select new
+            var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
+
+            return await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && activeStatuses.Contains(d.DeliveryStatus))
+                .OrderByDescending(d => d.CreatedAt)
+                .Select(d => new ActiveDeliveryDto
                 {
-                    d.DeliveryReqId,
-                    d.PlanId,
-                    d.ShopperRegId,
-                    ShopperName      = s.Username,
-                    d.PickupLocation,
-                    d.DropoffLocation,
-                    d.PackageWeightKg,
-                    d.NumberOfPackages,
-                    d.DeliveryFee,
-                    d.PackageTags,
-                    d.DeliveryStatus,
-                    d.CreatedAt
-                }
-            )
-            .AsNoTracking()
-            .ToListAsync();
-
-            // ✅ Map in memory
-            return raw.Select(d => new DeliveryRequestDto
-            {
-                DeliveryReqId    = d.DeliveryReqId,
-                PlanId           = d.PlanId,
-                ShopperRegId     = d.ShopperRegId,
-                ShopperName      = d.ShopperName,
-                PickupLocation   = d.PickupLocation,
-                DropoffLocation  = d.DropoffLocation,
-                PackageWeightKg  = d.PackageWeightKg,
-                NumberOfPackages = d.NumberOfPackages,
-                DeliveryFee      = d.DeliveryFee,
-                PackageTags      = d.PackageTags,
-                DeliveryStatus   = d.DeliveryStatus,
-                CreatedAt        = d.CreatedAt
-            }).ToList();
+                    DeliveryReqId = d.DeliveryReqId,
+                    PlanId = d.PlanId,
+                    DeliveryCode = d.DeliveryCode,
+                    CustomerName = d.ShopperRegister.Username,
+                    PickupLocation = d.PickupLocation,
+                    DropoffLocation = d.DropoffLocation,
+                    NumberOfPackages = d.NumberOfPackages,
+                    PackageWeightKg = d.PackageWeightKg,
+                    DeliveryFee = d.DeliveryFee,
+                    PackageTags = d.PackageTags,
+                    DeliveryStatus = d.DeliveryStatus,
+                    AcceptedAt = d.AssignedAt,
+                    EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
+                })
+                .ToListAsync();
         }
 
-public async Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId)
-{
-    var activeStatuses = new List<string> { "Accepted", "ReachedPickup", "PickedUp", "InTransit" };
-
-    var raw = await (
-        from d in _context.TransporterDeliveryRequests
-        join s in _context.ShopperRegisters on d.ShopperRegId equals s.ShopperRegId
-        where d.TransporterRegId == transporterRegId
-           && activeStatuses.Contains(d.DeliveryStatus)
-        orderby d.AcceptedAt descending
-        select new
-        {
-            d.DeliveryReqId,
-            d.PlanId,
-            d.DeliveryStatus,
-            d.PickupLocation,
-            d.DropoffLocation,
-            d.NumberOfPackages,
-            d.PackageWeightKg,
-            d.DeliveryFee,
-            d.PackageTags,
-            d.AcceptedAt,
-            CustomerName = s.Username
-        }
-    )
-    .AsNoTracking()
-    .ToListAsync();  // ✅ ToList — returns ALL active deliveries
-
-    return raw.Select(d => new ActiveDeliveryDto
-    {
-        DeliveryReqId    = d.DeliveryReqId,
-        PlanId           = d.PlanId,
-        DeliveryCode     = "DEL-" + d.DeliveryReqId.ToString("D4"),
-        CustomerName     = d.CustomerName,
-        PickupLocation   = d.PickupLocation,
-        DropoffLocation  = d.DropoffLocation,
-        NumberOfPackages = d.NumberOfPackages,
-        PackageWeightKg  = d.PackageWeightKg,
-        DeliveryFee      = d.DeliveryFee,
-        PackageTags      = d.PackageTags,
-        DeliveryStatus   = d.DeliveryStatus,
-        AcceptedAt       = d.AcceptedAt,
-        EtaInfo          = "~42 min · 32.4 km"
-    }).ToList();
-}
-
-public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
-{
-    // ✅ Returns ALL plans for this transporter — active, cancelled, completed
-    // NOT just the one active plan. This is what My Plans page needs.
-    var plans = await _context.TransporterTravelPlans
-        .Where(p => p.TransporterRegId == transporterRegId)
-        .OrderByDescending(p => p.CreatedAt)   // newest first
-        .AsNoTracking()
-        .ToListAsync();
- 
-    return plans.Select(MapPlanToDto).ToList();
-}
-
-        public async Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId)
-        {
-            var request = await _context.TransporterDeliveryRequests
-                .FirstOrDefaultAsync(d => d.DeliveryReqId == deliveryReqId
-                    && d.TransporterRegId == transporterRegId
-                    && d.DeliveryStatus == "Pending");
-
-            if (request == null) return false;
-
-            request.DeliveryStatus = "Accepted";
-            request.AcceptedAt     = DateTime.UtcNow;
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
+        // -------------------------------------------------------------------------
+        // UPDATE DELIVERY STATUS — Assigned → ReachedPickup → PickedUp → InTransit → Delivered
+        // -------------------------------------------------------------------------
         public async Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto)
         {
-            var request = await _context.TransporterDeliveryRequests
-                .FirstOrDefaultAsync(d => d.DeliveryReqId == dto.DeliveryReqId
-                    && d.TransporterRegId == dto.TransporterRegId);
+            var allowedStatuses = new List<string> { "ReachedPickup", "PickedUp", "InTransit", "Delivered" };
 
-            if (request == null) return false;
+            if (!allowedStatuses.Contains(dto.NewStatus))
+                return false;
 
-            var now = DateTime.UtcNow;
+            var delivery = await _context.TransporterDeliveryRequests
+                .FirstOrDefaultAsync(d =>
+                    d.DeliveryReqId == dto.DeliveryReqId &&
+                    d.TransporterRegId == dto.TransporterRegId);
 
+            if (delivery == null) return false;
+
+            // Enforce forward-only transitions
+            var validTransitions = new Dictionary<string, string>
+            {
+                { "Assigned",      "ReachedPickup" },
+                { "ReachedPickup", "PickedUp"       },
+                { "PickedUp",      "InTransit"      },
+                { "InTransit",     "Delivered"      }
+            };
+
+            if (!validTransitions.TryGetValue(delivery.DeliveryStatus, out var expected)
+                || expected != dto.NewStatus)
+                return false;
+
+            delivery.DeliveryStatus = dto.NewStatus;
+
+            // Stamp the matching timestamp column
             switch (dto.NewStatus)
             {
-                case "ReachedPickup":
-                    request.DeliveryStatus  = "ReachedPickup";
-                    request.ReachedPickupAt = now;
-                    break;
-                case "PickedUp":
-                    request.DeliveryStatus = "PickedUp";
-                    request.PickedUpAt     = now;
-                    break;
-                case "InTransit":
-                    request.DeliveryStatus = "InTransit";
-                    request.InTransitAt    = now;
-                    break;
-                case "Delivered":
-                    request.DeliveryStatus = "Delivered";
-                    request.DeliveredAt    = now;
-                    break;
-                default:
-                    return false;
+                case "ReachedPickup": delivery.ReachedPickupAt = DateTime.UtcNow; break;
+                case "PickedUp":      delivery.PickedUpAt      = DateTime.UtcNow; break;
+                case "InTransit":     delivery.InTransitAt     = DateTime.UtcNow; break;
+                case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
             }
+
+            _context.TransporterDBNotifications.Add(new TransporterDBNotifications
+            {
+                TransporterRegId = delivery.TransporterRegId,
+                Title = "Delivery Status Updated",
+                Message = $"Delivery {delivery.DeliveryCode} status changed to {dto.NewStatus}.",
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow          // ✅ CreatedDate not CreatedAt
+            });
 
             await _context.SaveChangesAsync();
             return true;
         }
 
+        // -------------------------------------------------------------------------
+        // COMPLETED DELIVERIES
+        // -------------------------------------------------------------------------
         public async Task<List<ActiveDeliveryDto>> GetCompletedDeliveriesAsync(int transporterRegId)
         {
-            // ✅ Fetch raw primitives — no ToString("D4") in SQL
-            var raw = await (
-                from d in _context.TransporterDeliveryRequests
-                join s in _context.ShopperRegisters on d.ShopperRegId equals s.ShopperRegId
-                where d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered"
-                orderby d.DeliveredAt descending
-                select new
+            return await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && d.DeliveryStatus == "Delivered")
+                .OrderByDescending(d => d.DeliveredAt)
+                .Select(d => new ActiveDeliveryDto
                 {
-                    d.DeliveryReqId,
-                    d.DeliveryStatus,
-                    d.PickupLocation,
-                    d.DropoffLocation,
-                    d.NumberOfPackages,
-                    d.PackageWeightKg,
-                    d.DeliveryFee,
-                    d.PackageTags,
-                    d.AcceptedAt,
-                    CustomerName = s.Username
-                }
-            )
-            .AsNoTracking()
-            .ToListAsync();
-
-            // ✅ Map in memory
-            return raw.Select(d => new ActiveDeliveryDto
-            {
-                DeliveryReqId    = d.DeliveryReqId,
-                DeliveryCode     = "DEL-" + d.DeliveryReqId.ToString("D4"),
-                CustomerName     = d.CustomerName,
-                PickupLocation   = d.PickupLocation,
-                DropoffLocation  = d.DropoffLocation,
-                NumberOfPackages = d.NumberOfPackages,
-                PackageWeightKg  = d.PackageWeightKg,
-                DeliveryFee      = d.DeliveryFee,
-                PackageTags      = d.PackageTags,
-                DeliveryStatus   = d.DeliveryStatus,
-                AcceptedAt       = d.AcceptedAt
-            }).ToList();
+                    DeliveryReqId = d.DeliveryReqId,
+                    PlanId = d.PlanId,
+                    DeliveryCode = d.DeliveryCode,
+                    CustomerName = d.ShopperRegister.Username,
+                    PickupLocation = d.PickupLocation,
+                    DropoffLocation = d.DropoffLocation,
+                    NumberOfPackages = d.NumberOfPackages,
+                    PackageWeightKg = d.PackageWeightKg,
+                    DeliveryFee = d.DeliveryFee,
+                    PackageTags = d.PackageTags,
+                    DeliveryStatus = d.DeliveryStatus,
+                    AcceptedAt = d.AssignedAt,
+                    EtaInfo = d.DeliveredAt.HasValue
+                        ? d.DeliveredAt.Value.ToString("dd MMM yyyy")
+                        : ""
+                })
+                .ToListAsync();
         }
 
-        // ========== EXCEPTION REPORTS ==========
+        // -------------------------------------------------------------------------
+        // EXCEPTION REPORTS
+        // -------------------------------------------------------------------------
         public async Task<bool> SubmitExceptionReportAsync(ExceptionReportDto dto)
         {
             var report = new TransporterExceptionReport
             {
-                DeliveryReqId    = dto.DeliveryReqId,
+                DeliveryReqId = dto.DeliveryReqId,
                 TransporterRegId = dto.TransporterRegId,
-                ExceptionType    = dto.ExceptionType,
-                Description      = dto.Description,
-                ReportedAt       = DateTime.UtcNow,
-                IsResolved       = false
+                ExceptionType = dto.ExceptionType,
+                Description = dto.Description,
+                ReportedAt = DateTime.UtcNow
             };
 
             _context.TransporterExceptionReports.Add(report);
@@ -411,11 +409,15 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
             return true;
         }
 
-        // ========== KYC ==========
+        // -------------------------------------------------------------------------
+        // KYC
+        // -------------------------------------------------------------------------
         public async Task<TransporterKYC?> GetKycAsync(int transporterRegId)
         {
             return await _context.TransporterKYCs
-                .FirstOrDefaultAsync(k => k.TransporterRegId == transporterRegId);
+                .Where(k => k.TransporterRegId == transporterRegId)
+                .OrderByDescending(k => k.SubmittedAt)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<TransporterKYC> SubmitKycAsync(
@@ -426,23 +428,23 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
 
             if (existing != null)
             {
-                existing.DocumentType     = docType;
-                existing.DocumentNumber   = docNumber;
+                existing.DocumentType = docType;
+                existing.DocumentNumber = docNumber;
                 existing.DocumentFileName = fileName;
-                existing.KycStatus        = "Pending";
-                existing.SubmittedAt      = DateTime.UtcNow;
+                existing.KycStatus = "Pending";         // ✅ KycStatus not Status
+                existing.SubmittedAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
                 return existing;
             }
 
             var kyc = new TransporterKYC
             {
-                TransporterRegId  = transporterRegId,
-                DocumentType      = docType,
-                DocumentNumber    = docNumber,
-                DocumentFileName  = fileName,
-                KycStatus         = "Pending",
-                SubmittedAt       = DateTime.UtcNow
+                TransporterRegId = transporterRegId,
+                DocumentType = docType,
+                DocumentNumber = docNumber,
+                DocumentFileName = fileName,
+                KycStatus = "Pending",                  // ✅ KycStatus not Status
+                SubmittedAt = DateTime.UtcNow
             };
 
             _context.TransporterKYCs.Add(kyc);
@@ -450,7 +452,9 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
             return kyc;
         }
 
-        // ========== BANK DETAILS ==========
+        // -------------------------------------------------------------------------
+        // BANK DETAILS
+        // -------------------------------------------------------------------------
         public async Task<TransporterBankDetails?> GetBankDetailsAsync(int transporterRegId)
         {
             return await _context.TransporterBankDetails
@@ -464,12 +468,11 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
 
             if (existing != null)
             {
-                existing.BankName      = dto.BankName;
+                existing.BankName = dto.BankName;
                 existing.AccountNumber = dto.AccountNumber;
-                existing.BranchName    = dto.BranchName;
-                existing.IfscCode      = dto.IfscCode;
-                existing.IsVerified    = false;
-                existing.SubmittedAt   = DateTime.UtcNow;
+                existing.BranchName = dto.BranchName;
+                existing.IfscCode = dto.IfscCode;
+                existing.IsVerified = false;
                 await _context.SaveChangesAsync();
                 return existing;
             }
@@ -477,12 +480,11 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
             var bank = new TransporterBankDetails
             {
                 TransporterRegId = dto.TransporterRegId,
-                BankName         = dto.BankName,
-                AccountNumber    = dto.AccountNumber,
-                BranchName       = dto.BranchName,
-                IfscCode         = dto.IfscCode,
-                IsVerified       = false,
-                SubmittedAt      = DateTime.UtcNow
+                BankName = dto.BankName,
+                AccountNumber = dto.AccountNumber,
+                BranchName = dto.BranchName,
+                IfscCode = dto.IfscCode,
+                IsVerified = false
             };
 
             _context.TransporterBankDetails.Add(bank);
@@ -490,15 +492,22 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
             return bank;
         }
 
-        // ========== PROFILE ==========
+        // -------------------------------------------------------------------------
+        // PROFILE — queries KYC and Bank separately (no nav props on TransporterRegister)
+        // -------------------------------------------------------------------------
         public async Task<TransporterProfileDto?> GetProfileAsync(int transporterRegId)
         {
             var t = await _context.TransporterRegisters
                 .FirstOrDefaultAsync(x => x.TransporterRegId == transporterRegId);
+
             if (t == null) return null;
 
-            var kyc  = await _context.TransporterKYCs
-                .FirstOrDefaultAsync(k => k.TransporterRegId == transporterRegId);
+            // Query KYC and Bank separately — TransporterRegister has no nav props for them
+            var kyc = await _context.TransporterKYCs
+                .Where(k => k.TransporterRegId == transporterRegId)
+                .OrderByDescending(k => k.SubmittedAt)
+                .FirstOrDefaultAsync();
+
             var bank = await _context.TransporterBankDetails
                 .FirstOrDefaultAsync(b => b.TransporterRegId == transporterRegId);
 
@@ -516,26 +525,31 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
                 PostalCode         = t.PostalCode,
                 Status             = t.Status,
                 IsEmailVerified    = t.IsEmailVerified,
-                KycStatus          = kyc?.KycStatus ?? "NotSubmitted",
+                KycStatus          = kyc?.KycStatus ?? "NotSubmitted",  // ✅ KycStatus not Status
                 BankVerified       = bank?.IsVerified ?? false,
-                TransporterRegDate = t.TransporeterRegDate
+                TransporterRegDate = t.TransporeterRegDate              // ✅ matches model typo
             };
         }
 
         public async Task<bool> UpdateProfileAsync(UpdateTransporterProfileDto dto)
         {
-            var t = await _context.TransporterRegisters
-                .FirstOrDefaultAsync(x => x.TransporterRegId == dto.TransporterRegId);
-            if (t == null) return false;
+            var transporter = await _context.TransporterRegisters
+                .FirstOrDefaultAsync(t => t.TransporterRegId == dto.TransporterRegId);
 
-            if (!string.IsNullOrWhiteSpace(dto.TransporterName)) t.TransporterName = dto.TransporterName;
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))     t.PhoneNumber     = dto.PhoneNumber;
-            if (dto.Address    != null) t.Address    = dto.Address;
-            if (dto.Town       != null) t.Town       = dto.Town;
-            if (dto.City       != null) t.City       = dto.City;
-            if (dto.State      != null) t.State      = dto.State;
-            if (dto.Country    != null) t.Country    = dto.Country;
-            if (dto.PostalCode != null) t.PostalCode = dto.PostalCode;
+            if (transporter == null) return false;
+
+            if (!string.IsNullOrWhiteSpace(dto.TransporterName))
+                transporter.TransporterName = dto.TransporterName;
+
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                transporter.PhoneNumber = dto.PhoneNumber;
+
+            if (dto.Address != null)    transporter.Address    = dto.Address;
+            if (dto.Town != null)       transporter.Town       = dto.Town;
+            if (dto.City != null)       transporter.City       = dto.City;
+            if (dto.State != null)      transporter.State      = dto.State;
+            if (dto.Country != null)    transporter.Country    = dto.Country;
+            if (dto.PostalCode != null) transporter.PostalCode = dto.PostalCode;
 
             await _context.SaveChangesAsync();
             return true;
@@ -543,54 +557,24 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
 
         public async Task<bool> UpdatePasswordAsync(int transporterRegId, string newHashedPassword)
         {
-            var t = await _context.TransporterRegisters
-                .FirstOrDefaultAsync(x => x.TransporterRegId == transporterRegId);
-            if (t == null) return false;
+            var transporter = await _context.TransporterRegisters
+                .FirstOrDefaultAsync(t => t.TransporterRegId == transporterRegId);
 
-            t.Password = newHashedPassword;
+            if (transporter == null) return false;
+
+            transporter.Password = newHashedPassword;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // ========== HELPERS ==========
-        private static TravelPlanDto MapPlanToDto(TransporterTravelPlan plan) => new TravelPlanDto
-        {
-            PlanId              = plan.PlanId,
-            TransporterRegId    = plan.TransporterRegId,
-            StartLocation       = plan.StartLocation,
-            Destination         = plan.Destination,
-            PreferredRoute      = plan.PreferredRoute,
-            DistanceKm          = plan.DistanceKm,
-            StartDate           = plan.StartDate,
-            ArrivalDate         = plan.ArrivalDate,
-            VehicleType         = plan.VehicleType,
-            VehicleRegistration = plan.VehicleRegistration,
-            VehicleName         = plan.VehicleName,
-            MaxWeightKg         = plan.MaxWeightKg,
-            PackageSizeL        = plan.PackageSizeL,
-            PackageSizeW        = plan.PackageSizeW,
-            PackageSizeH        = plan.PackageSizeH,
-            NumberOfPackages    = plan.NumberOfPackages,
-            AcceptsFragile      = plan.AcceptsFragile,
-            AcceptsPerishable   = plan.AcceptsPerishable,
-            PreferredContact    = plan.PreferredContact,
-            LanguagePreference  = plan.LanguagePreference,
-            NotifyNewOrders     = plan.NotifyNewOrders,
-            NotifyPayments      = plan.NotifyPayments
-        };
-
+        // -------------------------------------------------------------------------
+        // NOTIFICATIONS
+        // -------------------------------------------------------------------------
         public async Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId)
         {
             return await _context.TransporterDBNotifications
                 .Where(n => n.TransporterRegId == transporterId && !n.IsRead)
-                .OrderByDescending(n => n.CreatedDate)
-                .Select(n => new TransporterDBNotifications
-                {
-                    NotificationId = n.NotificationId,
-                    Message = n.Message,
-                    CreatedDate = n.CreatedDate,
-                    IsRead = n.IsRead
-                })
+                .OrderByDescending(n => n.CreatedDate)          // ✅ CreatedDate not CreatedAt
                 .ToListAsync();
         }
 
@@ -600,11 +584,7 @@ public async Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
                 .Where(n => n.TransporterRegId == transporterId && !n.IsRead)
                 .ToListAsync();
 
-            foreach (var notification in notifications)
-            {
-                notification.IsRead = true;
-            }
-
+            notifications.ForEach(n => n.IsRead = true);
             await _context.SaveChangesAsync();
         }
 

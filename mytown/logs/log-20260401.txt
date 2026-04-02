@@ -16055,3 +16055,212 @@ SELECT EXISTS (
 2026-04-01 15:46:40.383 +05:30 [INF] Hosting environment: Development
 2026-04-01 15:46:40.385 +05:30 [INF] Content root path: e:\project\oldorgmytown\mytownbackendmysql\mytown
 2026-04-01 15:46:42.577 +05:30 [INF] Application is shutting down...
+2026-04-01 20:52:30.788 +05:30 [INF] Swagger UI is enabled.
+2026-04-01 20:52:31.144 +05:30 [INF] API is ready and running.
+2026-04-01 20:52:31.176 +05:30 [INF] User profile is available. Using 'C:\Users\DELL\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-01 20:52:31.336 +05:30 [INF] Now listening on: http://localhost:5100
+2026-04-01 20:52:31.338 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-01 20:52:31.339 +05:30 [INF] Hosting environment: Development
+2026-04-01 20:52:31.339 +05:30 [INF] Content root path: e:\project\oldorgmytown\mytownbackendmysql\mytown
+2026-04-01 21:10:35.924 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/index.html - null null
+2026-04-01 21:10:35.956 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-04-01 21:10:36.211 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/index.html - 200 null text/html;charset=utf-8 295.3064ms
+2026-04-01 21:10:36.268 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/index.js - null null
+2026-04-01 21:10:36.287 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/index.js - 200 null application/javascript;charset=utf-8 20.0195ms
+2026-04-01 21:10:36.365 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/v1/swagger.json - null null
+2026-04-01 21:10:36.399 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/favicon-32x32.png - null null
+2026-04-01 21:10:36.428 +05:30 [INF] Sending file. Request path: '/favicon-32x32.png'. Physical path: 'N/A'
+2026-04-01 21:10:36.431 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/favicon-32x32.png - 200 628 image/png 31.7643ms
+2026-04-01 21:10:36.984 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 619.1917ms
+2026-04-01 21:14:39.452 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/Gettransporternotifications?trasnporterId=5 - null null
+2026-04-01 21:14:41.441 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown)'
+2026-04-01 21:14:41.480 +05:30 [INF] Route matched with {action = "GetUnreadNotifications", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUnreadNotifications(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:14:45.232 +05:30 [WRN] The foreign key {'ProdTypeId'} on entity type 'ProductType' targets itself. Consider removing it since it serves no purpose.
+2026-04-01 21:14:47.596 +05:30 [ERR] Failed executing DbCommand (308ms) [Parameters=[@__transporterId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`notification_id` AS `NotificationId`, `t`.`message` AS `Message`, `t`.`created_date` AS `CreatedDate`, `t`.`is_read` AS `IsRead`
+FROM `transporter_db_notifications` AS `t`
+WHERE (`t`.`transporter_reg_id` = @__transporterId_0) AND NOT (`t`.`is_read`)
+ORDER BY `t`.`created_date` DESC
+2026-04-01 21:14:47.646 +05:30 [ERR] An exception occurred while iterating over the results of a query for context type 'mytown.Models.mytown.DataAccess.AppDbContext'.
+MySqlConnector.MySqlException (0x80004005): Table 'mytowndb_new.transporter_db_notifications' doesn't exist
+   at MySqlConnector.Core.ServerSession.ReceiveReplyAsync(IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/ServerSession.cs:line 1081
+   at MySqlConnector.Core.ResultSet.ReadResultSetHeaderAsync(IOBehavior ioBehavior) in /_/src/MySqlConnector/Core/ResultSet.cs:line 37
+   at MySqlConnector.MySqlDataReader.ActivateResultSet(CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 131
+   at MySqlConnector.MySqlDataReader.InitAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, IDictionary`2 cachedProcedures, IMySqlCommand command, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 487
+   at MySqlConnector.Core.CommandExecutor.ExecuteReaderAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/CommandExecutor.cs:line 56
+   at MySqlConnector.MySqlCommand.ExecuteReaderAsync(CommandBehavior behavior, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 357
+   at MySqlConnector.MySqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 350
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Pomelo.EntityFrameworkCore.MySql.Storage.Internal.MySqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+MySqlConnector.MySqlException (0x80004005): Table 'mytowndb_new.transporter_db_notifications' doesn't exist
+   at MySqlConnector.Core.ServerSession.ReceiveReplyAsync(IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/ServerSession.cs:line 1081
+   at MySqlConnector.Core.ResultSet.ReadResultSetHeaderAsync(IOBehavior ioBehavior) in /_/src/MySqlConnector/Core/ResultSet.cs:line 37
+   at MySqlConnector.MySqlDataReader.ActivateResultSet(CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 131
+   at MySqlConnector.MySqlDataReader.InitAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, IDictionary`2 cachedProcedures, IMySqlCommand command, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 487
+   at MySqlConnector.Core.CommandExecutor.ExecuteReaderAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/CommandExecutor.cs:line 56
+   at MySqlConnector.MySqlCommand.ExecuteReaderAsync(CommandBehavior behavior, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 357
+   at MySqlConnector.MySqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 350
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Pomelo.EntityFrameworkCore.MySql.Storage.Internal.MySqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+2026-04-01 21:14:47.657 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown) in 6171.8719ms
+2026-04-01 21:14:47.659 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown)'
+2026-04-01 21:14:47.661 +05:30 [ERR] An unhandled exception has occurred while executing the request.
+MySqlConnector.MySqlException (0x80004005): Table 'mytowndb_new.transporter_db_notifications' doesn't exist
+   at MySqlConnector.Core.ServerSession.ReceiveReplyAsync(IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/ServerSession.cs:line 1081
+   at MySqlConnector.Core.ResultSet.ReadResultSetHeaderAsync(IOBehavior ioBehavior) in /_/src/MySqlConnector/Core/ResultSet.cs:line 37
+   at MySqlConnector.MySqlDataReader.ActivateResultSet(CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 131
+   at MySqlConnector.MySqlDataReader.InitAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, IDictionary`2 cachedProcedures, IMySqlCommand command, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlDataReader.cs:line 487
+   at MySqlConnector.Core.CommandExecutor.ExecuteReaderAsync(CommandListPosition commandListPosition, ICommandPayloadCreator payloadCreator, CommandBehavior behavior, Activity activity, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/Core/CommandExecutor.cs:line 56
+   at MySqlConnector.MySqlCommand.ExecuteReaderAsync(CommandBehavior behavior, IOBehavior ioBehavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 357
+   at MySqlConnector.MySqlCommand.ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken) in /_/src/MySqlConnector/MySqlCommand.cs:line 350
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteReaderAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.InitializeReaderAsync(AsyncEnumerator enumerator, CancellationToken cancellationToken)
+   at Pomelo.EntityFrameworkCore.MySql.Storage.Internal.MySqlExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Query.Internal.SingleQueryingEnumerable`1.AsyncEnumerator.MoveNextAsync()
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
+   at mytown.DataAccess.Repositories.TransporterDashboardRepository.GetUnreadNotificationsAsync(Int32 transporterId) in e:\project\oldorgmytown\mytownbackendmysql\mytown\DataAccess\Repositories\TransporterDashboardRepository.cs:line 584
+   at mytown.Services.Implementations.TransporterDashboardService.GetUnreadNotificationsAsync(Int32 transporterId) in e:\project\oldorgmytown\mytownbackendmysql\mytown\Services\Implementations\TransporterDashboardService.cs:line 125
+   at mytown.Controllers.TransporterDashboardController.GetUnreadNotifications(Int32 trasnporterId) in e:\project\oldorgmytown\mytownbackendmysql\mytown\Controllers\TransporterDashboardController.cs:line 208
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ActionMethodExecutor.TaskOfIActionResultExecutor.Execute(ActionContext actionContext, IActionResultTypeMapper mapper, ObjectMethodExecutor executor, Object controller, Object[] arguments)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeActionMethodAsync>g__Awaited|12_0(ControllerActionInvoker invoker, ValueTask`1 actionResultValueTask)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeNextActionFilterAsync>g__Awaited|10_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Rethrow(ActionExecutedContextSealed context)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.Next(State& next, Scope& scope, Object& state, Boolean& isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ControllerActionInvoker.<InvokeInnerFilterAsync>g__Awaited|13_0(ControllerActionInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeFilterPipelineAsync>g__Awaited|20_0(ResourceInvoker invoker, Task lastTask, State next, Scope scope, Object state, Boolean isCompleted)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Mvc.Infrastructure.ResourceInvoker.<InvokeAsync>g__Logged|17_1(ResourceInvoker invoker)
+   at Microsoft.AspNetCore.Routing.EndpointMiddleware.<Invoke>g__AwaitRequestTask|7_0(Endpoint endpoint, Task requestTask, ILogger logger)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Swashbuckle.AspNetCore.SwaggerUI.SwaggerUIMiddleware.Invoke(HttpContext httpContext)
+   at Swashbuckle.AspNetCore.Swagger.SwaggerMiddleware.Invoke(HttpContext httpContext, ISwaggerProvider swaggerProvider)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+2026-04-01 21:14:47.698 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/Gettransporternotifications?trasnporterId=5 - 500 null text/plain; charset=utf-8 8246.5576ms
+2026-04-01 21:15:12.344 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/summary/5 - null null
+2026-04-01 21:15:12.355 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetDashboardSummary (mytown)'
+2026-04-01 21:15:12.364 +05:30 [INF] Route matched with {action = "GetDashboardSummary", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetDashboardSummary(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:15:14.623 +05:30 [INF] Executed DbCommand (340ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`transporter_reg_id`, `t`.`address`, `t`.`city`, `t`.`country`, `t`.`transporter_email`, `t`.`is_email_verified`, `t`.`password`, `t`.`phone_number`, `t`.`postal_code`, `t`.`state`, `t`.`status`, `t`.`town`, `t`.`transporter_reg_date`, `t`.`transporter_name`
+FROM `transporter_registers` AS `t`
+WHERE `t`.`transporter_reg_id` = @__transporterRegId_0
+LIMIT 1
+2026-04-01 21:15:15.421 +05:30 [INF] Executed DbCommand (322ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `transporter_delivery_requests` AS `t`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND (`t`.`delivery_status` = 'Delivered')
+2026-04-01 21:15:16.058 +05:30 [INF] Executed DbCommand (320ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COUNT(*)
+FROM `transporter_delivery_requests` AS `t`
+WHERE ((`t`.`transporter_reg_id` = @__transporterRegId_0) AND (`t`.`delivery_status` <> 'Delivered')) AND (`t`.`delivery_status` <> 'Pending')
+2026-04-01 21:15:16.688 +05:30 [INF] Executed DbCommand (310ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT COALESCE(SUM(`t`.`delivery_fee`), 0.0)
+FROM `transporter_delivery_requests` AS `t`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND (`t`.`delivery_status` = 'Delivered')
+2026-04-01 21:15:17.339 +05:30 [INF] Executed DbCommand (330ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`kyc_id`, `t`.`document_file_name`, `t`.`document_number`, `t`.`document_type`, `t`.`kyc_status`, `t`.`reviewed_at`, `t`.`submitted_at`, `t`.`transporter_reg_id`
+FROM `transporter_kyc` AS `t`
+WHERE `t`.`transporter_reg_id` = @__transporterRegId_0
+LIMIT 1
+2026-04-01 21:15:17.979 +05:30 [INF] Executed DbCommand (321ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`bank_detail_id`, `t`.`account_number`, `t`.`bank_name`, `t`.`branch_name`, `t`.`ifsc_code`, `t`.`is_verified`, `t`.`submitted_at`, `t`.`transporter_reg_id`
+FROM `transporter_bank_details` AS `t`
+WHERE `t`.`transporter_reg_id` = @__transporterRegId_0
+LIMIT 1
+2026-04-01 21:15:18.625 +05:30 [INF] Executed DbCommand (326ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM `transporter_travel_plans` AS `t`
+    WHERE ((`t`.`transporter_reg_id` = @__transporterRegId_0) AND `t`.`is_active`) AND (`t`.`plan_status` = 'Available'))
+2026-04-01 21:15:18.631 +05:30 [INF] Executing OkObjectResult, writing value of type 'mytown.Models.DTO_s.TransporterDashboardDto'.
+2026-04-01 21:15:18.648 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetDashboardSummary (mytown) in 6281.3793ms
+2026-04-01 21:15:18.649 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetDashboardSummary (mytown)'
+2026-04-01 21:15:18.649 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/summary/5 - 200 null application/json; charset=utf-8 6304.9485ms
+2026-04-01 21:15:29.207 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/travel-plan/5 - null null
+2026-04-01 21:15:29.213 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetActivePlan (mytown)'
+2026-04-01 21:15:29.222 +05:30 [INF] Route matched with {action = "GetActivePlan", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetActivePlan(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:15:31.900 +05:30 [INF] Executed DbCommand (290ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`plan_id`, `t`.`accepts_fragile`, `t`.`accepts_perishable`, `t`.`arrival_date`, `t`.`created_at`, `t`.`destination`, `t`.`distance_km`, `t`.`is_active`, `t`.`language_preference`, `t`.`max_weight_kg`, `t`.`notify_new_orders`, `t`.`notify_payments`, `t`.`number_of_packages`, `t`.`package_size_h`, `t`.`package_size_l`, `t`.`package_size_w`, `t`.`plan_status`, `t`.`preferred_contact`, `t`.`preferred_route`, `t`.`start_date`, `t`.`start_location`, `t`.`transporter_reg_id`, `t`.`vehicle_name`, `t`.`vehicle_registration`, `t`.`vehicle_type`
+FROM `transporter_travel_plans` AS `t`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND `t`.`is_active`
+ORDER BY `t`.`created_at` DESC
+LIMIT 1
+2026-04-01 21:15:31.976 +05:30 [INF] Executing OkObjectResult, writing value of type 'mytown.Models.DTO_s.TravelPlanDto'.
+2026-04-01 21:15:31.992 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetActivePlan (mytown) in 2767.9718ms
+2026-04-01 21:15:31.994 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetActivePlan (mytown)'
+2026-04-01 21:15:31.996 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/travel-plan/5 - 200 null application/json; charset=utf-8 2789.2724ms
+2026-04-01 21:15:49.662 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/delivery-request/pending/5 - null null
+2026-04-01 21:15:49.664 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetPendingRequests (mytown)'
+2026-04-01 21:15:49.672 +05:30 [INF] Route matched with {action = "GetPendingRequests", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetPendingRequests(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:15:51.900 +05:30 [INF] Executed DbCommand (326ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`delivery_req_id` AS `DeliveryReqId`, `t`.`plan_id` AS `PlanId`, `t`.`shopper_reg_id` AS `ShopperRegId`, `s`.`username` AS `ShopperName`, `t`.`pickup_location` AS `PickupLocation`, `t`.`dropoff_location` AS `DropoffLocation`, `t`.`package_weight_kg` AS `PackageWeightKg`, `t`.`number_of_packages` AS `NumberOfPackages`, `t`.`delivery_fee` AS `DeliveryFee`, `t`.`package_tags` AS `PackageTags`, `t`.`delivery_status` AS `DeliveryStatus`, `t`.`created_at` AS `CreatedAt`
+FROM `transporter_delivery_requests` AS `t`
+INNER JOIN `shopper_registers` AS `s` ON `t`.`shopper_reg_id` = `s`.`shopper_reg_id`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND (`t`.`delivery_status` = 'Pending')
+ORDER BY `t`.`created_at` DESC
+2026-04-01 21:15:51.915 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.DeliveryRequestDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-01 21:15:51.946 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetPendingRequests (mytown) in 2271.618ms
+2026-04-01 21:15:51.948 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetPendingRequests (mytown)'
+2026-04-01 21:15:51.949 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/delivery-request/pending/5 - 200 null application/json; charset=utf-8 2286.1869ms
+2026-04-01 21:16:09.606 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/active-delivery/5 - null null
+2026-04-01 21:16:09.611 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetActiveDelivery (mytown)'
+2026-04-01 21:16:09.621 +05:30 [INF] Route matched with {action = "GetActiveDelivery", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetActiveDelivery(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:16:11.730 +05:30 [INF] Executed DbCommand (310ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`delivery_req_id` AS `DeliveryReqId`, `t`.`plan_id` AS `PlanId`, `t`.`delivery_status` AS `DeliveryStatus`, `t`.`pickup_location` AS `PickupLocation`, `t`.`dropoff_location` AS `DropoffLocation`, `t`.`number_of_packages` AS `NumberOfPackages`, `t`.`package_weight_kg` AS `PackageWeightKg`, `t`.`delivery_fee` AS `DeliveryFee`, `t`.`package_tags` AS `PackageTags`, `t`.`accepted_at` AS `AcceptedAt`, `s`.`username` AS `CustomerName`
+FROM `transporter_delivery_requests` AS `t`
+INNER JOIN `shopper_registers` AS `s` ON `t`.`shopper_reg_id` = `s`.`shopper_reg_id`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND `t`.`delivery_status` IN ('Accepted', 'ReachedPickup', 'PickedUp', 'InTransit')
+ORDER BY `t`.`accepted_at` DESC
+2026-04-01 21:16:11.733 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.ActiveDeliveryDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-01 21:16:11.736 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetActiveDelivery (mytown) in 2112.6843ms
+2026-04-01 21:16:11.737 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetActiveDelivery (mytown)'
+2026-04-01 21:16:11.738 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/active-delivery/5 - 200 null application/json; charset=utf-8 2132.1517ms
+2026-04-01 21:16:46.145 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/completed-deliveries/5 - null null
+2026-04-01 21:16:46.148 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetCompletedDeliveries (mytown)'
+2026-04-01 21:16:46.162 +05:30 [INF] Route matched with {action = "GetCompletedDeliveries", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetCompletedDeliveries(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:16:48.380 +05:30 [INF] Executed DbCommand (319ms) [Parameters=[@__transporterRegId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`delivery_req_id` AS `DeliveryReqId`, `t`.`delivery_status` AS `DeliveryStatus`, `t`.`pickup_location` AS `PickupLocation`, `t`.`dropoff_location` AS `DropoffLocation`, `t`.`number_of_packages` AS `NumberOfPackages`, `t`.`package_weight_kg` AS `PackageWeightKg`, `t`.`delivery_fee` AS `DeliveryFee`, `t`.`package_tags` AS `PackageTags`, `t`.`accepted_at` AS `AcceptedAt`, `s`.`username` AS `CustomerName`
+FROM `transporter_delivery_requests` AS `t`
+INNER JOIN `shopper_registers` AS `s` ON `t`.`shopper_reg_id` = `s`.`shopper_reg_id`
+WHERE (`t`.`transporter_reg_id` = @__transporterRegId_0) AND (`t`.`delivery_status` = 'Delivered')
+ORDER BY `t`.`delivered_at` DESC
+2026-04-01 21:16:48.386 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.ActiveDeliveryDto, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-01 21:16:48.388 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetCompletedDeliveries (mytown) in 2224.4725ms
+2026-04-01 21:16:48.389 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetCompletedDeliveries (mytown)'
+2026-04-01 21:16:48.390 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/completed-deliveries/5 - 200 null application/json; charset=utf-8 2245.6806ms
+2026-04-01 21:18:48.919 +05:30 [INF] Application is shutting down...
+2026-04-01 21:25:43.879 +05:30 [INF] Swagger UI is enabled.
+2026-04-01 21:25:44.044 +05:30 [INF] API is ready and running.
+2026-04-01 21:25:44.062 +05:30 [INF] User profile is available. Using 'C:\Users\DELL\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-04-01 21:25:44.157 +05:30 [INF] Now listening on: http://localhost:5100
+2026-04-01 21:25:44.158 +05:30 [INF] Application started. Press Ctrl+C to shut down.
+2026-04-01 21:25:44.160 +05:30 [INF] Hosting environment: Development
+2026-04-01 21:25:44.161 +05:30 [INF] Content root path: e:\project\oldorgmytown\mytownbackendmysql\mytown
+2026-04-01 21:25:45.252 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/index.html - null null
+2026-04-01 21:25:45.263 +05:30 [WRN] Failed to determine the https port for redirect.
+2026-04-01 21:25:45.352 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/index.html - 200 null text/html;charset=utf-8 102.1855ms
+2026-04-01 21:25:45.374 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/index.js - null null
+2026-04-01 21:25:45.395 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/index.js - 200 null application/javascript;charset=utf-8 20.5942ms
+2026-04-01 21:25:45.509 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/swagger/v1/swagger.json - null null
+2026-04-01 21:25:45.704 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 195.5874ms
+2026-04-01 21:26:39.635 +05:30 [INF] Request starting HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/Gettransporternotifications?trasnporterId=5 - null null
+2026-04-01 21:26:39.732 +05:30 [INF] Executing endpoint 'mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown)'
+2026-04-01 21:26:39.763 +05:30 [INF] Route matched with {action = "GetUnreadNotifications", controller = "TransporterDashboard"}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] GetUnreadNotifications(Int32) on controller mytown.Controllers.TransporterDashboardController (mytown).
+2026-04-01 21:26:42.393 +05:30 [WRN] The foreign key {'ProdTypeId'} on entity type 'ProductType' targets itself. Consider removing it since it serves no purpose.
+2026-04-01 21:26:44.558 +05:30 [INF] Executed DbCommand (358ms) [Parameters=[@__transporterId_0='?' (DbType = Int32)], CommandType='"Text"', CommandTimeout='30']
+SELECT `t`.`notification_id` AS `NotificationId`, `t`.`message` AS `Message`, `t`.`created_date` AS `CreatedDate`, `t`.`is_read` AS `IsRead`
+FROM `transporter_db_notifications` AS `t`
+WHERE (`t`.`transporter_reg_id` = @__transporterId_0) AND NOT (`t`.`is_read`)
+ORDER BY `t`.`created_date` DESC
+2026-04-01 21:26:44.593 +05:30 [INF] Executing OkObjectResult, writing value of type 'System.Collections.Generic.List`1[[mytown.Models.DTO_s.TransporterDBNotifications, mytown, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]'.
+2026-04-01 21:26:44.625 +05:30 [INF] Executed action mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown) in 4854.8324ms
+2026-04-01 21:26:44.627 +05:30 [INF] Executed endpoint 'mytown.Controllers.TransporterDashboardController.GetUnreadNotifications (mytown)'
+2026-04-01 21:26:44.634 +05:30 [INF] Request finished HTTP/1.1 GET http://localhost:5100/api/transporter-dashboard/Gettransporternotifications?trasnporterId=5 - 200 null application/json; charset=utf-8 4998.6107ms

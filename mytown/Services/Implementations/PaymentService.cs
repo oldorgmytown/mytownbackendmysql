@@ -189,7 +189,7 @@ public async Task ProcessPostPaymentAsync(int orderId)
             await CreateTransporterNotificationAsync(
                 transporterRegId: transporterRegId,
                 title: "New P2P Delivery Request",
-                message: $"You have a new delivery request for Order #{orderId}. Please check your dashboard to accept."
+                message: $"A new delivery for Order #{orderId} has been assigned to you. Check your dashboard."
             );
 
             await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
