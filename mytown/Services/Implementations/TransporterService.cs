@@ -73,7 +73,7 @@ namespace mytown.Services.Implementations
             {
                 TransporterName = dto.TransporterName,
                 Email = dto.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password.Trim()),
                 Address = dto.Address,
                 Town = dto.Town,
                 City = dto.City,
