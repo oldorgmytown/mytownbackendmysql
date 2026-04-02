@@ -1,0 +1,32 @@
+# Build folders
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Logs
+logs/
+*.log
+
+# VS / VS Code
+.vs/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Publish profiles (optional)
+*.pubxml.user
+
+# Node (if React inside same repo)
+node_modules/
+build/
+dist/
+
+# Environment files
+.env
