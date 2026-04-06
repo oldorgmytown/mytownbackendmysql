@@ -809,6 +809,44 @@ namespace mytown.Migrations
                     b.ToTable("shopper_alternate_address");
                 });
 
+            modelBuilder.Entity("mytown.Models.DTO_s.TransporterDBNotifications", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.Property<int>("TransporterRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_reg_id");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("TransporterRegId");
+
+                    b.ToTable("transporter_db_notifications");
+                });
+
             modelBuilder.Entity("mytown.Models.Design", b =>
                 {
                     b.Property<int>("DesignId")
@@ -1937,9 +1975,9 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("DeliveryReqId"));
 
-                    b.Property<DateTime?>("AcceptedAt")
+                    b.Property<DateTime?>("AssignedAt")
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("accepted_at");
+                        .HasColumnName("assigned_at");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
@@ -1948,6 +1986,11 @@ namespace mytown.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("delivered_at");
+
+                    b.Property<string>("DeliveryCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("delivery_code");
 
                     b.Property<decimal>("DeliveryFee")
                         .HasColumnType("decimal(10,2)")
@@ -2699,6 +2742,17 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("ShopperRegister");
+                });
+
+            modelBuilder.Entity("mytown.Models.DTO_s.TransporterDBNotifications", b =>
+                {
+                    b.HasOne("mytown.Models.TransporterRegister", "TransporterRegister")
+                        .WithMany()
+                        .HasForeignKey("TransporterRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransporterRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.Order", b =>

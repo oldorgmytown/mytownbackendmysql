@@ -221,9 +221,11 @@ namespace mytown.DataAccess.Repositories
                 NumberOfPackages = dto.NumberOfPackages,
                 DeliveryFee = dto.DeliveryFee,
                 PackageTags = dto.PackageTags ?? "NA",
-                DeliveryStatus = "Pending",
+                DeliveryStatus = "Assigned",
+                DeliveryCode = "DEL-" + new Random().Next(1000, 9999).ToString(),
+                AssignedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
-                DeliveryProofFile = "" 
+                DeliveryProofFile = ""
             };
 
             _context.TransporterDeliveryRequests.Add(request);

@@ -1,4 +1,3 @@
-// ===== TransporterDashboardService.cs =====
 using mytown.DataAccess.Interfaces;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -35,13 +34,14 @@ namespace mytown.Services.Implementations
             string fromLocation, string toLocation, DateTime travelDate)
             => _repo.SearchAvailableTransportersAsync(fromLocation, toLocation, travelDate);
 
+        // Request is auto-assigned to the transporter linked to PlanId — no Accept step
         public async Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(
             ShopperDeliveryRequestDto dto)
         {
             try
             {
                 var result = await _repo.CreateDeliveryRequestAsync(dto);
-                return (true, "Delivery request sent to transporter.", result.DeliveryReqId);
+                return (true, "Delivery request auto-assigned to transporter.", result.DeliveryReqId);
             }
             catch (Exception ex)
             {
@@ -49,18 +49,14 @@ namespace mytown.Services.Implementations
             }
         }
 
-        public Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId)
-            => _repo.GetPendingRequestsAsync(transporterRegId);
-
+        // Active = Assigned + ReachedPickup + PickedUp + InTransit
         public Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId)
-    => _repo.GetActiveDeliveryAsync(transporterRegId);
-
-        public Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId)
-            => _repo.AcceptDeliveryRequestAsync(deliveryReqId, transporterRegId);
+            => _repo.GetActiveDeliveryAsync(transporterRegId);
 
         public Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId)
             => _repo.GetAllPlansAsync(transporterRegId);
 
+        // Status flow: ReachedPickup → PickedUp → InTransit → Delivered
         public Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto)
             => _repo.UpdateDeliveryStatusAsync(dto);
 
@@ -75,9 +71,7 @@ namespace mytown.Services.Implementations
             if (dto.DocumentFile == null || dto.DocumentFile.Length == 0)
                 return (false, "Document file is required.");
 
-            // Upload to Azure Blob
             string fileName = await UploadToBlobAsync(dto.DocumentFile, "kyc-docs");
-
             await _repo.SubmitKycAsync(dto.TransporterRegId, dto.DocumentType, dto.DocumentNumber, fileName);
             return (true, "KYC submitted successfully. Pending review.");
         }
@@ -99,8 +93,6 @@ namespace mytown.Services.Implementations
             var profile = await _repo.GetProfileAsync(transporterRegId);
             if (profile == null) return false;
 
-            // Need to verify current password - fetch transporter entity
-            // For now, hash new password and update
             string hashed = BCrypt.Net.BCrypt.HashPassword(newPassword);
             return await _repo.UpdatePasswordAsync(transporterRegId, hashed);
         }
@@ -121,18 +113,12 @@ namespace mytown.Services.Implementations
         }
 
         public async Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId)
-        {
-            return await _repo.GetUnreadNotificationsAsync(transporterId);
-        }
+            => await _repo.GetUnreadNotificationsAsync(transporterId);
 
         public async Task MarkAsReadAsync(int transporterId)
-        {
-            await _repo.MarkAllAsReadAsync(transporterId);
-        }
+            => await _repo.MarkAllAsReadAsync(transporterId);
 
         public async Task MarkEachNotificationReadAsync(int notificationId)
-        {
-            await _repo.MarkEachNotificationReadAsync(notificationId);
-        }
+            => await _repo.MarkEachNotificationReadAsync(notificationId);
     }
 }
