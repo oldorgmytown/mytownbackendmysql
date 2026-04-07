@@ -100,57 +100,57 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task SendEmailToCourier(int branchId, int storeOrderId)
-        {
-            // 1️⃣ Get courier info via branch
-            var courierInfo = await _context.CourierBranches
-                .Where(cb => cb.BranchId == branchId)
-                .Select(cb => new
-                {
-                    cb.CourierServiceName,
-                    CourierEmail = cb.CourierService.CourierEmail
-                })
-                .FirstOrDefaultAsync();
+        //public async Task SendEmailToCourier(int branchId, int storeOrderId)
+        //{
+        //    // 1️⃣ Get courier info via branch
+        //    var courierInfo = await _context.CourierBranches
+        //        .Where(cb => cb.BranchId == branchId)
+        //        .Select(cb => new
+        //        {
+        //            cb.CourierServiceName,
+        //            CourierEmail = cb.CourierService.CourierEmail
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if (courierInfo == null || string.IsNullOrEmpty(courierInfo.CourierEmail))
-                return;
+        //    if (courierInfo == null || string.IsNullOrEmpty(courierInfo.CourierEmail))
+        //        return;
 
-            // 2️⃣ Get store order info
-            var storeOrderInfo = await _context.StoreOrders
-                .Where(so => so.StoreOrderId == storeOrderId)
-                .Select(so => new
-                {
-                    so.StoreOrderId,
-                    StoreName = so.Store.BusinessName
-                })
-                .FirstOrDefaultAsync();
+        //    // 2️⃣ Get store order info
+        //    var storeOrderInfo = await _context.StoreOrders
+        //        .Where(so => so.StoreOrderId == storeOrderId)
+        //        .Select(so => new
+        //        {
+        //            so.StoreOrderId,
+        //            StoreName = so.Store.BusinessName
+        //        })
+        //        .FirstOrDefaultAsync();
 
-            if (storeOrderInfo == null)
-                return;
+        //    if (storeOrderInfo == null)
+        //        return;
 
-            // 3️⃣ Get products for this store order
-            var products = await _context.OrderDetails
-                .Where(od => od.StoreOrderId == storeOrderId)
-                .Select(od => new
-                {
-                    od.Product.ProductName,
-                    od.Quantity
-                })
-                .ToListAsync();
+        //    // 3️⃣ Get products for this store order
+        //    var products = await _context.OrderDetails
+        //        .Where(od => od.StoreOrderId == storeOrderId)
+        //        .Select(od => new
+        //        {
+        //            od.Product.ProductName,
+        //            od.Quantity
+        //        })
+        //        .ToListAsync();
 
-            var productList = products
-                .Select(p => (p.ProductName, p.Quantity))
-                .ToList();
+        //    var productList = products
+        //        .Select(p => (p.ProductName, p.Quantity))
+        //        .ToList();
 
-            // 4️⃣ Send email (ONE email per store order)
-            await _emailService.SendEmailToCourierAsync(
-                courierInfo.CourierEmail,
-                courierInfo.CourierServiceName,
-                storeOrderInfo.StoreOrderId,
-                storeOrderInfo.StoreName,
-                productList
-            );
-        }
+        //    // 4️⃣ Send email (ONE email per store order)
+        //    await _emailService.SendEmailToCourierAsync(
+        //        courierInfo.CourierEmail,
+        //        courierInfo.CourierServiceName,
+        //        storeOrderInfo.StoreOrderId,
+        //        storeOrderInfo.StoreName,
+        //        productList
+        //    );
+        //}
 
         public async Task<int> GetCourierIdByBranchIdAsync(int branchId)
         {

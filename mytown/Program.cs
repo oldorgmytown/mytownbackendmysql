@@ -25,12 +25,14 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Replace the default logging provider with Serilog.
-    Directory.CreateDirectory("logs");
+   // Directory.CreateDirectory("logs");
+    Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "logs"));
     builder.Host.UseSerilog(); // Requires using Serilog.Extensions.Hosting
 
     // Load configuration files.
     builder.Configuration
-        .SetBasePath(Directory.GetCurrentDirectory())
+        //.SetBasePath(Directory.GetCurrentDirectory())
+        .SetBasePath(builder.Environment.ContentRootPath)
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
         .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
         .AddEnvironmentVariables();

@@ -1598,14 +1598,11 @@ public class EmailService : IEmailService
             return false;
         }
     }
-
-    // 📧 Send notification email to courier (ONE email per StoreOrder)
     public async Task SendEmailToCourierAsync(
-        string email,
-        string courierName,
-        int storeOrderId,
-        string storeName,
-        List<(string ProductName, int Quantity)> products)
+      string email,
+      string courierName,
+      OrderConfirmationDto orderdto,
+      StoreOrderConfirmationDto storedto)
     {
         if (!await DomainHasMX(email))
             throw new Exception("The email domain is not valid (no MX records found).");
@@ -1618,49 +1615,18 @@ public class EmailService : IEmailService
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
-                // 🧾 Build product list HTML
-                var productHtml = string.Join("", products.Select(p =>
-                    $"<li>{p.ProductName} × {p.Quantity}</li>"
-                ));
+                // ✅ Use new template (same structure as transporter)
+                string body = BuildCourierNotificationTemplate(
+                    courierName,
+                    orderdto,
+                    storedto
+                );
 
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail),
-                    Subject = "New Store Shipment Assigned",
-                    Body = $@"
-<html>
-  <body style='font-family: Arial, sans-serif; color: #333; line-height: 1.6;'>
-    
-    <h3 style='color: #000;'>📦 New Store Shipment Assigned</h3>
-
-    <p>Hello <strong>{courierName}</strong>,</p>
-
-    <p>
-      A new shipment has been assigned to your branch. Below are the shipment details:
-    </p>
-
-    <p>
-      <strong>Store Order ID:</strong> {storeOrderId}<br />
-      <strong>Store Name:</strong> {storeName}<br />
-      <strong>Assigned Date:</strong> {DateTime.Now:dd-MMM-yyyy hh:mm tt}
-    </p>
-
-    <h4>Products to Ship:</h4>
-    <ul>
-      {productHtml}
-    </ul>
-
-    <p>
-      Please arrange pickup and update the shipment status in the courier portal.
-    </p>
-
-    <p style='margin-top: 30px;'>
-      Best regards,<br />
-      <strong style='color: #004481;'>ItIsMyTown Logistics</strong>
-    </p>
-
-  </body>
-</html>",
+                    Subject = "Delivery Assignment Confirmed",
+                    Body = body,
                     IsBodyHtml = true
                 };
 
@@ -1673,6 +1639,118 @@ public class EmailService : IEmailService
             Console.WriteLine($"Error sending courier email: {ex.Message}");
             throw new Exception("Failed to send courier shipment email.");
         }
+    }
+    private string BuildCourierNotificationTemplate(
+     string courierName,
+     OrderConfirmationDto orderdto,
+     StoreOrderConfirmationDto storedto)
+    {
+        var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
+
+        var productsBuilder = new StringBuilder();
+
+        foreach (var item in storedto.Items)
+        {
+            string imageSrc = string.IsNullOrEmpty(item.ImageUrl)
+                ? "https://via.placeholder.com/80x80?text=No+Image"
+                : item.ImageUrl;
+
+            productsBuilder.Append($@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+       style=""border:1px solid #E5E7EB;border-radius:12px;margin-bottom:12px;"">
+  <tr>
+    <td style=""padding:12px;"">
+
+      <table width=""100%"">
+        <tr>
+          <td width=""80"">
+            <img src=""{imageBaseUrl}/{Uri.EscapeDataString(imageSrc)}""
+                 width=""80"" height=""80""
+                 style=""border-radius:8px;object-fit:cover;"" />
+          </td>
+          <td>
+            <b>{WebUtility.HtmlEncode(item.ProductName)}</b><br/>
+            Qty: {item.Quantity}
+          </td>
+        </tr>
+      </table>
+
+    </td>
+  </tr>
+</table>");
+        }
+
+        return $@"
+<html>
+<body style='margin:0;padding:0;background:#FAFBFC;font-family:Segoe UI;'>
+
+<table width='100%' bgcolor='#FAFBFC'>
+<tr>
+<td align='center'>
+
+<table width='600' style='background:#fff;'>
+
+<!-- HEADER -->
+<tr>
+<td align='center' style='padding:20px;background:#fff;'>
+<img src='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png' height='50'/>
+</td>
+</tr>
+
+<!-- HERO -->
+<tr>
+<td style='padding:30px;text-align:center;background:linear-gradient(180deg,#155E75,#ffffff);'>
+<h2>📦 Delivery Assignment Confirmed</h2>
+<p>Please deliver this order to customer</p>
+</td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+<td style='padding:20px;'>
+
+<p>Hello <b>{WebUtility.HtmlEncode(courierName)}</b>,</p>
+
+<p>
+You have been assigned a delivery from 
+<b>{WebUtility.HtmlEncode(storedto.StoreName)}</b>
+</p>
+
+<p>
+<b>Order ID:</b> ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}<br/>
+<b>Store Order ID:</b> {storedto.StoreOrderId}
+</p>
+
+<h3>Products</h3>
+{productsBuilder}
+
+<h3>Customer Details</h3>
+<p>
+{orderdto.ShopperName}<br/>
+{orderdto.ShopperPhone}<br/>
+{orderdto.DeliveryAddress}
+</p>
+
+<p><b>Deliver by:</b> {storedto.EstimatedDeliveryDate:dd MMM yyyy}</p>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style='background:#f1f1f1;text-align:center;padding:10px;font-size:12px;'>
+© 2026 ItIsMyTown
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+</table>
+
+</body>
+</html>";
     }
 
 
@@ -1945,6 +2023,177 @@ public class EmailService : IEmailService
             Console.WriteLine($"Error sending email: {ex.Message}");
             throw new Exception("Failed to send branch login email.");
         }
+    }
+
+    public async Task SendEmailToTransporterAsync(
+    string email,
+    string transporterName,
+    OrderConfirmationDto orderdto,
+    StoreOrderConfirmationDto storedto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                
+                string body = BuildTransporterNotificationTemplate(
+                    transporterName,
+                    orderdto,
+                    storedto
+                );
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Transport Order Assigned",
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending transporter email: {ex.Message}");
+            throw new Exception("Failed to send transporter email.");
+        }
+    }
+
+    private string BuildTransporterNotificationTemplate(
+    string transporterName,
+    OrderConfirmationDto orderdto,
+    StoreOrderConfirmationDto storedto)
+    {
+        var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
+
+        var productsBuilder = new StringBuilder();
+
+        foreach (var item in storedto.Items)
+        {
+            string imageSrc = string.IsNullOrEmpty(item.ImageUrl)
+                ? "https://via.placeholder.com/80x80?text=No+Image"
+                : $"{imageBaseUrl}/{Uri.EscapeDataString(item.ImageUrl)}";
+
+            productsBuilder.Append($@"
+<tr>
+<td style='padding:10px 0;border-bottom:1px solid #eee;'>
+    <table width='100%'>
+        <tr>
+            <td width='80'>
+                <img src='{imageSrc}' width='70' height='70'
+                     style='border-radius:6px;object-fit:cover;' />
+            </td>
+            <td>
+                <div style='font-weight:600;color:#333;'>
+                    {WebUtility.HtmlEncode(item.ProductName)}
+                </div>
+                <div style='font-size:13px;color:#777;'>
+                    Qty: {item.Quantity}
+                </div>
+            </td>
+            <td align='right' style='font-weight:600;color:#333;'>
+                ₹{item.ItemTotal:F2}
+            </td>
+        </tr>
+    </table>
+</td>
+</tr>");
+        }
+
+        return $@"
+<div style='font-family: Arial, sans-serif; background-color: #f4f6f8; padding: 30px;'>
+
+<div style='max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 10px; 
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15); border-top: 5px solid #004481;'>
+
+    <!-- Logo -->
+    <div style='text-align:center; margin-bottom:20px;'>
+        <img src='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png' 
+             width='120' />
+    </div>
+
+    <!-- Title -->
+    <h2 style='color:#004481; text-align:center;'>Transport Order Assigned</h2>
+
+    <p style='text-align:center; color:#555; font-size:14px;'>
+        You have been assigned a new delivery. Please check the details below.
+    </p>
+
+    <hr style='margin:20px 0;' />
+
+    <!-- Greeting -->
+    <p><strong>Hello {WebUtility.HtmlEncode(transporterName)}</strong>,</p>
+
+    <p>
+        You have been assigned a delivery from 
+        <strong>{WebUtility.HtmlEncode(storedto.StoreName)}</strong>.
+    </p>
+
+    <!-- Order Info -->
+    <div style='background:#f9fafb;padding:15px;border-radius:8px;margin-bottom:20px;'>
+        <p><strong>Order ID:</strong> ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}</p>
+        <p><strong>Order Date:</strong> {orderdto.OrderDate:dd MMM yyyy}</p>
+        <p><strong>Store Order ID:</strong> {storedto.StoreOrderId}</p>
+    </div>
+
+    <!-- Products -->
+    <h3 style='color:#004481;'>Products</h3>
+
+    <table width='100%' cellpadding='0' cellspacing='0'>
+        {productsBuilder}
+    </table>
+
+    <!-- Delivery Info -->
+    <div style='background:#ecfdf5;padding:15px;border-radius:8px;margin-top:20px;'>
+        <p style='margin:0;color:#065f46;font-weight:600;'>
+            Deliver by: {storedto.EstimatedDeliveryDate:dd MMM yyyy}
+        </p>
+    </div>
+
+    <!-- Customer Info -->
+    <h3 style='color:#004481;margin-top:25px;'>Customer Details</h3>
+
+    <div style='background:#f9fafb;padding:15px;border-radius:8px;'>
+        <p><strong>{WebUtility.HtmlEncode(orderdto.ShopperName)}</strong></p>
+        <p>{WebUtility.HtmlEncode(orderdto.ShopperPhone)}</p>
+        <p>{WebUtility.HtmlEncode(orderdto.ShopperEmail)}</p>
+        <p style='margin-top:10px;'>
+            {WebUtility.HtmlEncode(orderdto.DeliveryAddress)}
+        </p>
+    </div>
+
+    <!-- Button -->
+    <div style='text-align:center;margin-top:25px;'>
+        <a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{orderdto.OrderId}'
+           style='background:#004481;color:white;padding:12px 25px;
+                  text-decoration:none;border-radius:6px;display:inline-block;'>
+            View Order
+        </a>
+    </div>
+
+    <hr style='margin:25px 0;' />
+
+    <!-- Footer -->
+    <p style='text-align:center;font-size:12px;color:#777;'>
+        You're receiving this email because you're a transporter on MyTown.
+    </p>
+
+    <p style='text-align:center;font-size:11px;color:#aaa;'>
+        © 2026 MyTown. All rights reserved.
+    </p>
+
+</div>
+</div>";
     }
 
 }

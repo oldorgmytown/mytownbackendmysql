@@ -39,6 +39,7 @@
 
         public string TransporterName {  get; set; } = string.Empty;
         public string TransporterPhone { get; set; } = string.Empty;
+        public string TransporterEmail { get; set; } = string.Empty;
         public string ShippingType { get; set; } = string.Empty;
         public decimal ShippingAmount { get; set; }
 

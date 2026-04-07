@@ -78,25 +78,29 @@ namespace mytown.Services.Implementations
                         store
                     );
                 }
-                // Courier Email (per StoreOrderId ✅)
-
-               
+                // Courier
                 if (!string.IsNullOrEmpty(store.CourierEmail))
                 {
-                    var products = store.Items
-                        .Select(i => (i.ProductName, i.Quantity))
-                        .ToList();
-
                     await _EmailService.SendEmailToCourierAsync(
                         store.CourierEmail,
                         store.CourierName,
-                        store.StoreOrderId,   // important
-                        store.StoreName,
-                        products
+                        orderConfirmation,
+                        store
                     );
                 }
-            
-        }
+
+                // Transporter
+                if (!string.IsNullOrEmpty(store.TransporterEmail))
+                {
+                    await _EmailService.SendEmailToTransporterAsync(
+                        store.TransporterEmail,
+                        store.TransporterName,
+                        orderConfirmation,
+                        store
+                    );
+                }
+
+            }
             //  Return DTO to controller
             return orderConfirmation;
         }
