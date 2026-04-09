@@ -521,41 +521,55 @@ namespace mytown.DataAccess.Repositories
 
             // 2️⃣ Store + Shipping + Business Email + DeliveryAddress
             var stores = await (
-                from so in _context.StoreOrders
-                join sd in _context.ShippingDetails
-                    on so.StoreOrderId equals sd.StoreOrderId
-                join b in _context.BusinessRegisters
-                    on so.StoreId equals b.BusRegId
-                join br in _context.CourierBranches
-                    on sd.BranchId equals br.BranchId
-                join c in _context.CourierService
-                    on br.CourierId equals c.CourierId
-                join t in _context.TransporterRegisters
-                on sd.TransporterRegId equals t.TransporterRegId
-                where so.OrderId == orderId
-                select new StoreOrderConfirmationDto
-                {
-                    StoreOrderId = so.StoreOrderId,
-                    StoreId = so.StoreId,
-                    StoreName = b.BusinessName,
-                    BusinessEmail = b.BusEmail,
+       from so in _context.StoreOrders
 
-                    CourierName = c.CourierServiceName,
-                    CourierEmail = br.BranchEmailId,
-                    CourierPhone = br.BranchPhoneNumber,
+       join sd in _context.ShippingDetails
+           on so.StoreOrderId equals sd.StoreOrderId
 
-                    // ✅ NEW TRANSPORTER DETAILS
-                    TransporterName = t.TransporterName,
-                    TransporterEmail = t.Email,
-                    TransporterPhone = t.PhoneNumber,
+       join b in _context.BusinessRegisters
+           on so.StoreId equals b.BusRegId
 
-                    ShippingType = sd.ShippingType,
-                    ShippingAmount = sd.Cost,
-                    EstimatedDays = sd.EstimatedDays,
-                    EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
-                    ShippingStatus = sd.ShippingStatus
-                }
-            ).ToListAsync();
+       // ✅ LEFT JOIN CourierBranches
+       join br in _context.CourierBranches
+           on sd.BranchId equals br.BranchId into brGroup
+       from br in brGroup.DefaultIfEmpty()
+
+           // ✅ LEFT JOIN CourierService
+       join c in _context.CourierService
+           on br.CourierId equals c.CourierId into cGroup
+       from c in cGroup.DefaultIfEmpty()
+
+           // ✅ LEFT JOIN TransporterRegisters
+       join t in _context.TransporterRegisters
+           on sd.TransporterRegId equals t.TransporterRegId into tGroup
+       from t in tGroup.DefaultIfEmpty()
+
+       where so.OrderId == orderId
+
+       select new StoreOrderConfirmationDto
+       {
+           StoreOrderId = so.StoreOrderId,
+           StoreId = so.StoreId,
+           StoreName = b.BusinessName,
+           BusinessEmail = b.BusEmail,
+
+           // ✅ Courier (only if exists)
+           CourierName = c != null ? c.CourierServiceName : null,
+           CourierEmail = br != null ? br.BranchEmailId : null,
+           CourierPhone = br != null ? br.BranchPhoneNumber : null,
+
+           // ✅ Transporter (only if exists)
+           TransporterName = t != null ? t.TransporterName : null,
+           TransporterEmail = t != null ? t.Email : null,
+           TransporterPhone = t != null ? t.PhoneNumber : null,
+
+           ShippingType = sd.ShippingType,
+           ShippingAmount = sd.Cost,
+           EstimatedDays = sd.EstimatedDays,
+           EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
+           ShippingStatus = sd.ShippingStatus
+       }
+   ).ToListAsync();
 
             // ✅ Get DeliveryAddress from ShippingDetails (any one store is enough)
             var deliveryAddress = await _context.ShippingDetails
