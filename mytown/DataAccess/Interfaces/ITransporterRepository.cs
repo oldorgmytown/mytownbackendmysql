@@ -2,25 +2,16 @@
 
 namespace mytown.DataAccess.Interfaces
 {
-   
-        public interface ITransporterRepository
-        {
-            // ---------------- REGISTER ----------------
-            Task<TransporterRegister> RegisterTransporter(TransporterRegister transporter);
+    public interface ITransporterRepository
+    {
+        Task SavePendingVerification(PendingTransporterVerification pending);
+        Task<PendingTransporterVerification> FindPendingVerificationByToken(string token);
+        Task DeletePendingVerification(string token);
 
-            Task<(bool isTaken, string message)> IsEmailTaken(string email);
+        Task<(bool isTaken, string message)> IsEmailTaken(string email);
 
-            // ---------------- RESEND EMAIL ----------------
-            Task<TransporterVerification> FindPendingVerificationByEmail(string email);
+        Task<TransporterRegister> RegisterTransporter(TransporterRegister transporter);
 
-            Task RemoveVerification(TransporterVerification verification);
-
-            // ---------------- COMMON VERIFICATION ----------------
-            Task SavePendingVerification(PendingTransporterVerification pending);
-
-            Task<PendingTransporterVerification> FindPendingVerificationByToken(string token);
-
-            Task DeletePendingVerification(string token);
-        }
-    
+        Task<PendingTransporterVerification> FindPendingVerificationByEmail(string email);
+    }
 }

@@ -85,6 +85,11 @@ namespace mytown.Models
             public DbSet<TransporterExceptionReport> TransporterExceptionReports { get; set; }
             public DbSet<TransporterDBNotifications> TransporterDBNotifications { get; set; }
 
+            //sender
+            public DbSet<SenderRegister> SenderRegisters { get; set; }
+            public DbSet<PendingSenderVerification> PendingSenderVerifications { get; set; }
+            public DbSet<SenderVerification> SenderVerifications { get; set; }
+
 
 
 

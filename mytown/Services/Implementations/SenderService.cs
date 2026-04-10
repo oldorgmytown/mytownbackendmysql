@@ -1,5 +1,4 @@
-﻿using BCrypt.Net;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
@@ -9,20 +8,20 @@ using System.Text.Json;
 
 namespace mytown.Services.Implementations
 {
-    public class ShopperService : IShopperService
+    public class SenderService : ISenderService
     {
-        private readonly IShopperRepository _repo;
+        private readonly ISenderRepository _repo;
         private readonly IEmailService _emailService;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<ShopperService> _logger;
-        private readonly IVerificationLinkBuilder _verificationLinkBuilder;
+        private readonly ILogger<SenderService> _logger;
+        private readonly IVerficationLinkBuildersender _verificationLinkBuilder;
 
-        public ShopperService(
-            IShopperRepository repo,
+        public SenderService(
+            ISenderRepository repo,
             IEmailService emailService,
             IConfiguration configuration,
-            ILogger<ShopperService> logger,
-            IVerificationLinkBuilder verificationLinkBuilder)
+            ILogger<SenderService> logger,
+            IVerficationLinkBuildersender verificationLinkBuilder)
         {
             _repo = repo;
             _emailService = emailService;
@@ -32,7 +31,7 @@ namespace mytown.Services.Implementations
         }
 
         // ---------------- REGISTER ----------------
-        public async Task<(bool success, string message)> RegisterShopperAsync(ShopperRegisterDto dto)
+        public async Task<(bool success, string message)> RegisterSenderAsync(SenderRegisterDto dto)
         {
             var (isTaken, statusMessage) = await _repo.IsEmailTaken(dto.Email);
 
@@ -48,7 +47,7 @@ namespace mytown.Services.Implementations
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];
             string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
 
-            var pending = new PendingVerification
+            var pending = new PendingSenderVerification
             {
                 Email = dto.Email,
                 Token = token,
@@ -56,25 +55,25 @@ namespace mytown.Services.Implementations
                 JsonPayload = JsonSerializer.Serialize(dto)
             };
 
-            await _repo.SavePendingVerification(pending);
+            await _repo.SavePendingSenderVerification(pending);
             await _emailService.SendVerificationEmail(dto.Email, link);
 
             return (true, "Verification email sent.");
         }
 
         // ---------------- VERIFY EMAIL ----------------
-        public async Task<(bool success, string message, int? shopperRegId)> VerifyEmailAsync(string token)
+        public async Task<(bool success, string message, int? senderRegId)> VerifyEmailAsync(string token)
         {
-            var pending = await _repo.FindPendingVerificationByToken(token);
+            var pending = await _repo.FindPendingSenderVerificationByToken(token);
 
             if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
                 return (false, "Invalid or expired verification link.", null);
 
-            var dto = JsonSerializer.Deserialize<ShopperRegisterDto>(pending.JsonPayload);
+            var dto = JsonSerializer.Deserialize<SenderRegisterDto>(pending.JsonPayload);
 
-            var shopper = new ShopperRegister
+            var sender = new SenderRegister
             {
-                Username = dto.Username,
+                SenderName = dto.SenderName,
                 Email = dto.Email,
                 Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Address = dto.Address,
@@ -84,39 +83,38 @@ namespace mytown.Services.Implementations
                 Country = dto.Country,
                 PostalCode = dto.PostalCode,
                 PhoneNumber = dto.PhoneNumber,
-                PhotoName = dto.PhotoName,
                 IsEmailVerified = true,
                 Status = "Active"
             };
 
-            await _repo.RegisterShopper(shopper);
-            await _repo.DeletePendingVerification(token);
+            await _repo.RegisterSender(sender);
+            await _repo.DeletePendingSenderVerification(token);
 
-            return (true, "Email verified successfully.", shopper.ShopperRegId);
+            return (true, "Email verified successfully.", sender.SenderRegId);
         }
 
         // ---------------- RESEND EMAIL ----------------
         public async Task<(bool success, string message)> ResendVerificationEmailAsync(string email)
         {
-            var existing = await _repo.FindPendingVerificationByEmail(email);
+            var existing = await _repo.FindPendingSenderVerificationByEmail(email);
 
             if (existing == null)
                 return (false, "No pending verification found.");
 
-            await _repo.DeletePendingVerification(existing.Token);
+            await _repo.DeletePendingSenderVerification(existing.Token);
 
             string token = Guid.NewGuid().ToString();
             DateTime expiry = DateTime.UtcNow.AddHours(24);
 
-            var pending = new PendingVerification
+            var pending = new PendingSenderVerification
             {
                 Email = email,
                 Token = token,
                 ExpiryDate = expiry,
-                JsonPayload = existing.JsonPayload  // ← carry forward
+                JsonPayload = existing.JsonPayload
             };
 
-            await _repo.SavePendingVerification(pending);
+            await _repo.SavePendingSenderVerification(pending);
 
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];
             string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
@@ -125,39 +123,5 @@ namespace mytown.Services.Implementations
 
             return (true, "Verification email resent.");
         }
-
-        // ---------------- OTHER DATA ----------------
-        public Task<IEnumerable<object>> GetTownsWithStoreCountByCountryAsync(string country)
-            => _repo.GetTownsWithStoreCountByCountryAsync(country);
-
-        public Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
-            int shopperId, int days, int limit)
-            => _repo.GetRecentlyViewedProductsAsync(shopperId, days, limit);
-
-        // ---------------- ALTERNATE ADDRESS ----------------
-        public Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesAsync(int shopperRegId)
-            => _repo.GetAddressesByShopperIdAsync(shopperRegId);
-
-        public async Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddressDto dto)
-        {
-            var entity = new ShopperAlternateAddress
-            {
-                ShopperRegId = dto.ShopperRegId,
-                AltName = dto.AltName,
-                AltPhoneNumber = dto.AltPhoneNumber,
-                AltAddress = dto.AltAddress,
-                AltTown = dto.AltTown,
-                AltCity = dto.AltCity,
-                AltState = dto.AltState,
-                AltCountry = dto.AltCountry,
-                AltPostalCode = dto.AltPostalCode,
-                DeliveryNotes = dto.DeliveryNotes
-            };
-
-            return await _repo.AddAddressAsync(entity);
-        }
-
-        public Task<bool> DeleteAddressAsync(int id)
-            => _repo.DeleteAddressAsync(id);
     }
 }

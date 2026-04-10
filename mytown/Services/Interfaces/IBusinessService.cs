@@ -11,11 +11,11 @@ namespace mytown.Services.Interfaces
 
         Task<PendingBusinessVerification?> FindPendingVerificationByToken(string token);
 
-        Task<BusinessVerification?> FindPendingVerificationByEmail(string email);
+        Task<PendingBusinessVerification?> FindPendingVerificationByEmail(string email);
 
         Task SavePendingVerification(PendingBusinessVerification pending);
 
-        Task RemoveVerification(BusinessVerification verification);
+      //  Task RemoveVerification(BusinessVerification verification);
 
         Task DeletePendingVerification(string token);
 

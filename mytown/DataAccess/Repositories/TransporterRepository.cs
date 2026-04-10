@@ -81,20 +81,11 @@ namespace mytown.DataAccess.Repositories
 
         // ---------------- RESEND EMAIL ----------------
 
-        public async Task<TransporterVerification> FindPendingVerificationByEmail(string email)
+        public async Task<PendingTransporterVerification> FindPendingVerificationByEmail(string email)
         {
-            return await _context.TransporterVerification
-                .Include(tv => tv.Transporter)
-                .Where(tv => tv.Transporter.Email == email
-                             && !tv.IsUsed
-                             && tv.ExpiryDate > DateTime.UtcNow)
-                .FirstOrDefaultAsync();
-        }
-
-        public async Task RemoveVerification(TransporterVerification verification)
-        {
-            _context.TransporterVerification.Remove(verification);
-            await _context.SaveChangesAsync();
+            return await _context.PendingTransporterVerifications
+                .FirstOrDefaultAsync(p => p.Email.ToLower() == email.ToLower()
+                                       && p.ExpiryDate > DateTime.UtcNow);
         }
     }
 }
