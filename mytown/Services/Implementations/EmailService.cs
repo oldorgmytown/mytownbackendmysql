@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using mytown.Services.Interfaces;
 using mytown.Models.DTO_s;
 using System.Text;
+using Microsoft.AspNetCore.Session;
 
 public class EmailService : IEmailService
 {
@@ -794,24 +795,33 @@ public class EmailService : IEmailService
                style=""background:#fff;border:1px solid rgba(139,139,139,0.08);
                       border-radius:8px;padding:24px;margin-bottom:16px;"">
           <tr>
-            <td>
-              <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:12px;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Shipping method</div>
-              <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {storedto.ShippingType}
-              </p>
-              <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:12px;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">CourierInfo</div>
-              <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {storedto.CourierName}
-              </p>
-                <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {storedto.CourierPhone}
-              </p>
-            </td>
+                    <td>
+          <!-- Shipping Method -->
+          <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:6px;
+                      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+            Shipping Method
+          </div>
+          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0 0 12px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+            {storedto.ShippingType}
+          </p>
+
+          <!-- Courier Info -->
+          <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:6px;
+                      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+            Courier Info
+          </div>
+
+          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0 0 4px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+            <strong>Name:</strong> {storedto.CourierName}
+          </p>
+
+          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+            <strong>Phone:</strong> {storedto.CourierPhone}
+          </p>
+        </td>
           </tr>
         </table>
 
@@ -1283,7 +1293,7 @@ public class EmailService : IEmailService
                     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Shipping method</h2>
         <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-          P2P Delivery
+          Standard
         </p>
       </td>
     </tr>
