@@ -696,7 +696,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Amount</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                &#8377;{storedto.StoreTotal:N2}
+                &#8377;{storedto.StoreItemsTotal:N2}
               </div>
             </td>
           </tr>
