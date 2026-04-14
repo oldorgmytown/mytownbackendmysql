@@ -662,13 +662,63 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 o.ShippingType,
                 sd.DeliveryAddress,
                 sd.EstimatedDays,
-                sd.CourierBranch,
-                sd.TrackingId
+                sd.TrackingId,
+                sd.BranchId,
+                sd.TransporterRegId      // ← include both IDs
             }
         ).FirstOrDefaultAsync();
 
         if (orderData == null)
             return null;
+
+        // 🔹 Get courier details if BranchId exists
+        string courierServiceName = null;
+        string courierPhone = null;
+        string courierBranchContact = null;
+
+        if (orderData.BranchId > 0)
+        {
+            var courierData = await (
+                from cb in _context.CourierBranches
+                join cs in _context.CourierService on cb.CourierId equals cs.CourierId
+                where cb.BranchId == orderData.BranchId
+                select new
+                {
+                    cs.CourierServiceName,
+                    cb.BranchPhoneNumber,
+                    cb.BranchContactPerson
+                }
+            ).FirstOrDefaultAsync();
+
+            if (courierData != null)
+            {
+                courierServiceName = courierData.CourierServiceName;
+                courierPhone = courierData.BranchPhoneNumber;
+                courierBranchContact = courierData.BranchContactPerson;
+            }
+        }
+
+        // 🔹 Get transporter details if TransporterRegId exists
+        string transporterName = null;
+        string transporterPhone = null;
+
+        if (orderData.TransporterRegId.HasValue)
+        {
+            var transporterData = await _context.TransporterRegisters
+                .Where(t => t.TransporterRegId == orderData.TransporterRegId.Value)
+                .Select(t => new
+                {
+                    t.TransporterName,
+                    t.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (transporterData != null)
+            {
+                transporterName = transporterData.TransporterName;
+                transporterPhone = transporterData.PhoneNumber;
+            }
+        }
 
         // 🔹 Get products with image (SKU image preferred)
         var products = await (
@@ -695,7 +745,6 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 Quantity = od.Quantity,
                 UnitPrice = od.Price,
                 Amount = od.Price * od.Quantity,
-                // Added these
                 Weight = sku != null ? sku.Weight : null,
                 Length = sku != null ? sku.Length : null,
                 Width = sku != null ? sku.Width : null,
@@ -706,7 +755,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var productAmount = products.Sum(p => p.Amount);
 
-        // 🔹 Combine everything in a single DTO
+        // 🔹 Combine everything
         return new BusinessOrderDetailsDto
         {
             StoreOrderId = orderData.StoreOrderId,
@@ -726,10 +775,112 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             ShippingMethod = orderData.ShippingType,
             ShippingAddress = orderData.DeliveryAddress,
             EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
-         //   CourierService = orderData.CourierBranch,
-            TrackingId = orderData.TrackingId
+            TrackingId = orderData.TrackingId,
+
+            // Courier (populated if courier handles shipping)
+            CourierServiceName = courierServiceName,
+            CourierBranchPhone = courierPhone,
+            CourierBranchContactname = courierBranchContact,
+
+            // Transporter (populated if transporter handles shipping)
+            TransporterName = transporterName,
+            TransporterPhone = transporterPhone
         };
     }
+
+    //public async Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId)
+    //{
+    //    // 🔹 Get order + shopper + store + shipping info
+    //    var orderData = await (
+    //        from so in _context.StoreOrders
+    //        join o in _context.Orders on so.OrderId equals o.OrderId
+    //        join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+    //        join p in _context.Payments on o.OrderId equals p.OrderId
+    //        join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
+    //        join sh in _context.ShopperRegisters on o.ShopperRegId equals sh.ShopperRegId
+    //        where so.StoreOrderId == storeOrderId
+    //        select new
+    //        {
+    //            so.StoreOrderId,
+    //            o.OrderDate,
+    //            p.PaymentId,
+    //            o.ShopperRegId,
+    //            ShopperName = sh.Username,
+    //            ShopperPhone = sh.PhoneNumber,
+    //            so.StoreId,
+    //            StoreName = s.BusinessName,
+    //            StoreTown = s.Town,
+    //            o.ShippingType,
+    //            sd.DeliveryAddress,
+    //            sd.EstimatedDays,
+    //            sd.CourierBranch,
+    //            sd.TrackingId
+    //        }
+    //    ).FirstOrDefaultAsync();
+
+    //    if (orderData == null)
+    //        return null;
+
+    //    // 🔹 Get products with image (SKU image preferred)
+    //    var products = await (
+    //        from od in _context.OrderDetails
+    //        join pr in _context.products on od.ProductId equals pr.ProductId
+    //        join sku in _context.Sku_ProductVariants on od.SkuId equals sku.SkuId into skuJoin
+    //        from sku in skuJoin.DefaultIfEmpty()
+
+    //        join skuImg in _context.ProductImages
+    //            .Where(i => i.SortOrder == 1)
+    //            on sku.SkuId equals skuImg.SkuId into skuImgJoin
+    //        from skuImg in skuImgJoin.DefaultIfEmpty()
+
+    //        join prodImg in _context.ProductImages
+    //            .Where(i => i.SortOrder == 1 && i.SkuId == null)
+    //            on pr.ProductId equals prodImg.ProductId into prodImgJoin
+    //        from prodImg in prodImgJoin.DefaultIfEmpty()
+
+    //        where od.StoreOrderId == storeOrderId
+    //        select new BusinessOrderProductDto
+    //        {
+    //            ProductId = pr.ProductId,
+    //            ProductName = pr.ProductName,
+    //            Quantity = od.Quantity,
+    //            UnitPrice = od.Price,
+    //            Amount = od.Price * od.Quantity,
+    //            // Added these
+    //            Weight = sku != null ? sku.Weight : null,
+    //            Length = sku != null ? sku.Length : null,
+    //            Width = sku != null ? sku.Width : null,
+    //            Height = sku != null ? sku.Height : null,
+    //            ProductImage = skuImg.FileName ?? prodImg.FileName
+    //        }
+    //    ).ToListAsync();
+
+    //    var productAmount = products.Sum(p => p.Amount);
+
+    //    // 🔹 Combine everything in a single DTO
+    //    return new BusinessOrderDetailsDto
+    //    {
+    //        StoreOrderId = orderData.StoreOrderId,
+    //        OrderDate = orderData.OrderDate,
+    //        TransactionId = orderData.PaymentId,
+    //        ShopperId = orderData.ShopperRegId,
+    //        ShopperName = orderData.ShopperName,
+    //        ShopperPhone = orderData.ShopperPhone,
+
+    //        StoreId = orderData.StoreId,
+    //        StoreName = orderData.StoreName,
+    //        StoreTown = orderData.StoreTown,
+
+    //        Products = products,
+    //        ProductAmount = productAmount,
+
+    //        ShippingMethod = orderData.ShippingType,
+    //        ShippingAddress = orderData.DeliveryAddress,
+    //        EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
+    //     //   CourierService = orderData.CourierBranch,
+    //        TrackingId = orderData.TrackingId
+    //    };
+    //}
 
 
 

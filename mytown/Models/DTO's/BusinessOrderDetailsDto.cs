@@ -28,9 +28,18 @@
     public string CourierService { get; set; }
     public string TrackingId { get; set; }
 
-    // Optional buttons for frontend
-    // Weight, Dimensions, Print Label, Print Invoice
-}
+        // Optional buttons for frontend
+        // Weight, Dimensions, Print Label, Print Invoice
+
+        // Courier details (if courier handles shipping)
+        public string CourierServiceName { get; set; }
+        public string CourierBranchPhone { get; set; }
+        public string CourierBranchContactname { get; set; }
+
+        // Transporter details (if transporter handles shipping)
+        public string TransporterName { get; set; }
+        public string TransporterPhone { get; set; }
+    }
 
 public class BusinessOrderProductDto
 {
