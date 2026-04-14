@@ -90,7 +90,7 @@ public class EmailService : IEmailService
                     IsBodyHtml = true
                 };
                 mailMessage.To.Add(email);
-                                await smtpClient.SendMailAsync(mailMessage);
+                await smtpClient.SendMailAsync(mailMessage);
             }
         }
         catch (Exception ex)
@@ -548,8 +548,8 @@ public class EmailService : IEmailService
       <tr>
         <td width=""64"" style=""padding-right:12px;"" valign=""middle"">
           <img src=""{imageBaseUrl}/{Uri.EscapeDataString(item.ImageUrl)}""
-               width=""64"" height=""64""
-               style=""width:64px;height:64px;border-radius:8px;object-fit:cover;display:block;"" />
+               width=""48"" height=""48""
+               style=""width:48px;height:48px;border-radius:8px;object-fit:cover;display:block;"" />
         </td>
         <td valign=""middle""
             style=""color:#585858;font-size:14px;font-weight:500;line-height:1.4;
@@ -600,9 +600,9 @@ public class EmailService : IEmailService
 
     <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:48px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
+      <td style=""padding:8px 30px 0px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:32px 24px;"">
+               style=""background:#fff;border-radius:8px;padding:10px 24px;"">
           <tr>
             <td align=""center"" style=""padding-bottom:20px;"">
 
@@ -632,7 +632,7 @@ public class EmailService : IEmailService
               </table>
 
               <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:28px;font-weight:600;text-align:center;
+              <h1 style=""color:#182D41;font-size:22px;font-weight:600;text-align:center;
                           margin:0 0 10px 0;
                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                 New Order Received!
@@ -790,40 +790,48 @@ public class EmailService : IEmailService
           </tr>
         </table>
 
-        <!-- ===== SHIPPING METHOD ===== -->
-        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border:1px solid rgba(139,139,139,0.08);
-                      border-radius:8px;padding:24px;margin-bottom:16px;"">
-          <tr>
-                    <td>
-          <!-- Shipping Method -->
-          <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:6px;
-                      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-            Shipping Method
-          </div>
-          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0 0 12px 0;
-                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-            {storedto.ShippingType}
-          </p>
+<!-- ===== SHIPPING METHOD ===== -->
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+       style=""background:#fff;border:1px solid rgba(139,139,139,0.08);
+              border-radius:8px;padding:24px;margin-bottom:16px;"">
+  <tr>
+    <td>
 
-          <!-- Courier Info -->
-          <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:6px;
-                      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-            Courier Info
-          </div>
+      <!-- Shipping Method -->
+      <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        Shipping Method
+      </div>
+      <div style=""color:#000;font-size:15px;font-weight:600;margin-bottom:0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        {storedto.ShippingType}
+      </div>
 
-          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0 0 4px 0;
-                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-            <strong>Name:</strong> {storedto.CourierName}
-          </p>
+      <!-- Divider -->
+      <div style=""height:1px;background:#F1F1F3;margin:16px 0;""></div>
 
-          <p style=""color:#585858;font-size:14px;font-weight:500;margin:0;
-                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-            <strong>Phone:</strong> {storedto.CourierPhone}
-          </p>
-        </td>
-          </tr>
-        </table>
+      <!-- Courier Info -->
+      <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        Courier Name
+      </div>
+      <div style=""color:#000;font-size:15px;font-weight:600;margin-bottom:12px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        {storedto.CourierName}
+      </div>
+
+      <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        Courier Phone
+      </div>
+      <div style=""color:#000;font-size:15px;font-weight:600;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+        {storedto.CourierPhone}
+      </div>
+
+    </td>
+  </tr>
+</table>
 
         <!-- ===== DELIVERY ADDRESS ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -843,7 +851,7 @@ public class EmailService : IEmailService
               </p>
               <table cellpadding=""0"" cellspacing=""0"" border=""0"">
                 <tr>
-                  <td width=""28"" height=""28"" align=""center"" valign=""middle""
+                  <td width=""22"" height=""22"" align=""center"" valign=""middle""
                       style=""background:#F5F5F5;border-radius:50%;width:28px;height:28px;padding-right:8px;"">
                     &#128222;
                   </td>
@@ -944,43 +952,43 @@ public class EmailService : IEmailService
         }
     }
     public async Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto)
-{
-    if (!await DomainHasMX(email))
-        throw new Exception("The email domain is not valid (no MX records found).");
-
-    try
     {
-        var htmlBody = BuildShopperNotificationTemplate(
-            WebUtility.HtmlEncode(shopperName),
-            orderdto);
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
 
-        using (var smtpClient = new SmtpClient(_smtpServer))
+        try
         {
-            smtpClient.Port = _smtpPort;
-            smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
-            smtpClient.EnableSsl = true;
+            var htmlBody = BuildShopperNotificationTemplate(
+                WebUtility.HtmlEncode(shopperName),
+                orderdto);
 
-            using (var mailMessage = new MailMessage
+            using (var smtpClient = new SmtpClient(_smtpServer))
             {
-                From = new MailAddress(_senderEmail, "ITISMYTOWN"),
-                Subject = $"Order Confirmation - {orderdto.OrderId}",
-                Body = htmlBody,
-                IsBodyHtml = true
-            })
-            {
-                mailMessage.To.Add(email);
-                await smtpClient.SendMailAsync(mailMessage);
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"Order Confirmation - {orderdto.OrderId}",
+                    Body = htmlBody,
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(email);
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
             }
-        }
 
-        Console.WriteLine($"Order confirmation email sent to {email}");
+            Console.WriteLine($"Order confirmation email sent to {email}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending shopper notification email: {ex.Message}");
+            throw new Exception("Failed to send shopper notification email.");
+        }
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error sending shopper notification email: {ex.Message}");
-        throw new Exception("Failed to send shopper notification email.");
-    }
-}
 
     private string BuildShopperNotificationTemplate(string shopperName, OrderConfirmationDto orderdto)
     {
@@ -1004,8 +1012,8 @@ public class EmailService : IEmailService
       <tr>
         <td width=""64"" style=""padding-right: 12px;"" valign=""middle"">
           <img src=""{imageBaseUrl}/{Uri.EscapeDataString(imageSrc)}"" alt=""Product""
-               width=""64"" height=""64""
-               style=""width:64px;height:64px;border-radius:6px;object-fit:cover;display:block;"" />
+               width=""48"" height=""48""
+               style=""width:48px;height:48px;border-radius:6px;object-fit:cover;display:block;"" />
         </td>
         <td valign=""middle"" style=""color:#585858;font-size:14px;font-weight:600;line-height:20px;"">
           {WebUtility.HtmlEncode(item.ProductName)}
@@ -1113,17 +1121,17 @@ public class EmailService : IEmailService
 
     <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:48px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
+      <td style=""padding:8px 30px 0px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:32px 24px;"">
+               style=""background:#fff;border-radius:8px;padding:10px 24px;"">
           <tr>
             <td align=""center"">
 
               <!-- ✅ GREEN CIRCLE WITH TICK — TABLE BASED (email-safe) -->
               <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
                 <tr>
-                  <td width=""64"" height=""64"" align=""center"" valign=""middle""
-                      style=""width:64px;height:64px;border-radius:50%;
+                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
+                      style=""width:48px;height:48px;border-radius:50%;
                              background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
                              border:4px solid rgba(16,86,23,0.10);
                              text-align:center;vertical-align:middle;"">
@@ -1137,20 +1145,20 @@ public class EmailService : IEmailService
                     <center>
                     <![endif]-->
                     <img src=""https://img.icons8.com/ios/50/ffffff/checkmark--v1.png""
-                         alt=""✓"" width=""28"" height=""28""
-                         style=""width:28px;height:28px;display:block;margin:0 auto;"" />
+                         alt=""✓"" width=""22"" height=""22""
+                         width:22px;height:22px;display:block;margin:0 auto;"" />
                     <!--[if mso]></center></v:roundrect><![endif]-->
                   </td>
                 </tr>
               </table>
 
               <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:28px;font-weight:600;text-align:center;
-                          margin:20px 0 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              <h1 style=""color:#182D41;font-size:22px;font-weight:600;text-align:center;
+                          margin:10px 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                 Order Confirmed!
               </h1>
               <p style=""color:#7A7A7A;font-size:16px;font-weight:400;text-align:center;
-                         line-height:1.5;margin:0;max-width:400px;
+                         line-height:1.5;margin:0 0 4px 0;max-width:400px;
                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                 Thank you for your purchase! Your order has been successfully placed.
               </p>
@@ -1313,7 +1321,7 @@ public class EmailService : IEmailService
         </p>
         <table cellpadding=""0"" cellspacing=""0"" border=""0"">
           <tr>
-            <td width=""28"" height=""28"" align=""center"" valign=""middle""
+            <td width=""22"" height=""22"" align=""center"" valign=""middle""
                 style=""background:#F5F5F5;border-radius:50%;width:28px;height:28px;padding-right:8px;"">
               &#128222;
             </td>
@@ -2052,7 +2060,7 @@ You have been assigned a delivery from
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
-                
+
                 string body = BuildTransporterNotificationTemplate(
                     transporterName,
                     orderdto,
