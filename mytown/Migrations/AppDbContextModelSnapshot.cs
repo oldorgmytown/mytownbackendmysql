@@ -17,7 +17,7 @@ namespace mytown.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -809,6 +809,44 @@ namespace mytown.Migrations
                     b.ToTable("shopper_alternate_address");
                 });
 
+            modelBuilder.Entity("mytown.Models.DTO_s.TransporterDBNotifications", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.Property<int>("TransporterRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_reg_id");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("TransporterRegId");
+
+                    b.ToTable("transporter_db_notifications");
+                });
+
             modelBuilder.Entity("mytown.Models.Design", b =>
                 {
                     b.Property<int>("DesignId")
@@ -1046,6 +1084,39 @@ namespace mytown.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("pending_courier_verifications");
+                });
+
+            modelBuilder.Entity("mytown.Models.PendingSenderVerification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<string>("JsonPayload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("json_payload");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("pending_sender_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingTransporterVerification", b =>
@@ -1474,6 +1545,129 @@ namespace mytown.Migrations
                     b.ToTable("registrations");
                 });
 
+            modelBuilder.Entity("mytown.Models.SenderRegister", b =>
+                {
+                    b.Property<int>("SenderRegId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("sender_reg_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SenderRegId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("country");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("sender_email");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_email_verified");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("password");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("SenderName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("sender_name");
+
+                    b.Property<DateTime>("SenderRegDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sender_reg_date");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Town")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("town");
+
+                    b.HasKey("SenderRegId");
+
+                    b.ToTable("sender_registers");
+                });
+
+            modelBuilder.Entity("mytown.Models.SenderVerification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_used");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_id");
+
+                    b.Property<string>("VerificationToken")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("verification_token");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("sender_verification");
+                });
+
             modelBuilder.Entity("mytown.Models.Service", b =>
                 {
                     b.Property<int>("ServiceId")
@@ -1591,6 +1785,14 @@ namespace mytown.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("tracking_id");
+
+                    b.Property<int?>("TransporterPlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_plan_id");
+
+                    b.Property<int?>("TransporterRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_reg_id");
 
                     b.HasKey("ShippingDetailId");
 
@@ -1929,9 +2131,9 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("DeliveryReqId"));
 
-                    b.Property<DateTime?>("AcceptedAt")
+                    b.Property<DateTime?>("AssignedAt")
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("accepted_at");
+                        .HasColumnName("assigned_at");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
@@ -1940,6 +2142,11 @@ namespace mytown.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("delivered_at");
+
+                    b.Property<string>("DeliveryCode")
+                        .IsRequired()
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("delivery_code");
 
                     b.Property<decimal>("DeliveryFee")
                         .HasColumnType("decimal(10,2)")
@@ -2693,6 +2900,17 @@ namespace mytown.Migrations
                     b.Navigation("ShopperRegister");
                 });
 
+            modelBuilder.Entity("mytown.Models.DTO_s.TransporterDBNotifications", b =>
+                {
+                    b.HasOne("mytown.Models.TransporterRegister", "TransporterRegister")
+                        .WithMany()
+                        .HasForeignKey("TransporterRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("TransporterRegister");
+                });
+
             modelBuilder.Entity("mytown.Models.Order", b =>
                 {
                     b.HasOne("mytown.Models.DTO_s.ShopperAlternateAddress", "SelectedAlternateAddress")
@@ -2798,6 +3016,17 @@ namespace mytown.Migrations
                     b.Navigation("Fabric");
 
                     b.Navigation("ProductType");
+                });
+
+            modelBuilder.Entity("mytown.Models.SenderVerification", b =>
+                {
+                    b.HasOne("mytown.Models.SenderRegister", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("mytown.Models.ShippingDetails", b =>

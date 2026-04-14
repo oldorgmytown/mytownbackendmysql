@@ -26,7 +26,7 @@ namespace mytown.Services
             return _repo.FindPendingVerificationByToken(token);
         }
 
-        public async Task<BusinessVerification?> FindPendingVerificationByEmail(string email)
+        public async Task<PendingBusinessVerification?> FindPendingVerificationByEmail(string email)
         {
             var verification = await _repo.FindPendingVerificationByEmail(email);
             return verification; 
@@ -39,10 +39,11 @@ namespace mytown.Services
             return _repo.SavePendingVerification(pending);
         }
 
-        public Task RemoveVerification(BusinessVerification verification)
-        {
-            return _repo.RemoveVerification(verification);
-        }
+
+        //public Task RemoveVerification(BusinessVerification verification)
+        //{
+        //    return _repo.RemoveVerification(verification);
+        //}
 
         public Task DeletePendingVerification(string token)
         {

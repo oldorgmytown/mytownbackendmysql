@@ -24,7 +24,11 @@ namespace mytown.Models
         public int ShopperRegId { get; set; }
 
         [Column("order_id")]
-        public int? OrderId { get; set; } // optional link to store order
+        public int? OrderId { get; set; }
+
+        // ── NEW: human-readable code shown on both sides e.g. DEL-4821 ──
+        [Column("delivery_code", TypeName = "varchar(20)")]
+        public string DeliveryCode { get; set; } = string.Empty;
 
         // Package info
         [Column("pickup_location", TypeName = "varchar(300)")]
@@ -45,13 +49,16 @@ namespace mytown.Models
         [Column("package_tags", TypeName = "varchar(100)")]
         public string PackageTags { get; set; } // NA / Fragile / Perishable
 
-        // Status flow: Pending -> Accepted -> ReachedPickup -> PickedUp -> InTransit -> Delivered
+        // Status flow: Assigned → ReachedPickup → PickedUp → InTransit → Delivered
+        // (No Pending / Accepted steps — request is auto-assigned on creation)
         [Column("delivery_status", TypeName = "varchar(50)")]
-        public string DeliveryStatus { get; set; } = "Pending";
+        public string DeliveryStatus { get; set; } = "Assigned";
 
-        [Column("accepted_at")]
-        public DateTime? AcceptedAt { get; set; }
+        // ── NEW: when the request was auto-assigned (set at creation) ──
+        [Column("assigned_at")]
+        public DateTime? AssignedAt { get; set; }
 
+        // Existing timestamp columns — kept exactly as-is
         [Column("reached_pickup_at")]
         public DateTime? ReachedPickupAt { get; set; }
 

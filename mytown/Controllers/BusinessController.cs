@@ -212,7 +212,7 @@ namespace mytown.Controllers
                 if (pending == null)
                     return NotFound(new { error = "No pending verification found. Please register again." });
 
-                await _businessService.RemoveVerification(pending);
+                await _businessService.DeletePendingVerification(pending.Token);
 
                 string token = Guid.NewGuid().ToString();
                 DateTime expiry = DateTime.UtcNow.AddHours(24);
@@ -222,7 +222,7 @@ namespace mytown.Controllers
                     Email = model.Email,
                     Token = token,
                     ExpiryDate = expiry,
-                   // JsonPayload = pending.JsonPayload
+                    JsonPayload = pending.JsonPayload  // ← uncommented, carry forward
                 };
 
                 await _businessService.SavePendingVerification(newPending);

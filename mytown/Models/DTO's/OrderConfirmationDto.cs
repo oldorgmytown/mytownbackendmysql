@@ -33,6 +33,13 @@
         //courier email
         public string CourierName { get; set; } = string.Empty;
         public string CourierEmail { get; set; } = string.Empty;
+        public string CourierPhone { get; set;  } = string.Empty;
+
+        // Transporter details
+
+        public string TransporterName {  get; set; } = string.Empty;
+        public string TransporterPhone { get; set; } = string.Empty;
+        public string TransporterEmail { get; set; } = string.Empty;
         public string ShippingType { get; set; } = string.Empty;
         public decimal ShippingAmount { get; set; }
 

@@ -6,6 +6,9 @@ namespace mytown.Models.DTO_s
         public int PlanId { get; set; }
         public int TransporterRegId { get; set; }
 
+        public bool IsActive { get; set; }
+        public string PlanStatus { get; set; }
+
         // Route
         public string StartLocation { get; set; }
         public string Destination { get; set; }
@@ -81,6 +84,7 @@ namespace mytown.Models.DTO_s
     public class ActiveDeliveryDto
     {
         public int DeliveryReqId { get; set; }
+        public int PlanId { get; set; }
         public string DeliveryCode { get; set; } // DEL-XXXX
         public string CustomerName { get; set; }
         public string PickupLocation { get; set; }
@@ -102,7 +106,7 @@ namespace mytown.Models.DTO_s
     {
         public int DeliveryReqId { get; set; }
         public int TransporterRegId { get; set; }
-        public string NewStatus { get; set; } // Accepted / ReachedPickup / PickedUp / InTransit / Delivered
+        public string NewStatus { get; set; } = string.Empty;
     }
 }
 

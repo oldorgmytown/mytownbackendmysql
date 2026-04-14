@@ -20,12 +20,16 @@ namespace mytown.Services.Interfaces
         Task SendShopperDeactivationEmailAsync(string email, string shopperName);
 
         Task SendEmailToCourierAsync(
-         string email,
-         string courierName,
-         int storeOrderId,
-         string storeName,
-         List<(string ProductName, int Quantity)> products);
+       string email,
+       string courierName,
+       OrderConfirmationDto orderdto,
+       StoreOrderConfirmationDto storedto);
 
+        Task SendEmailToTransporterAsync(
+    string email,
+    string transporterName,
+    OrderConfirmationDto orderdto,
+    StoreOrderConfirmationDto storedto);
         Task SendShopperReactivationEmailAsync(string email, string shopperName);
 
         // send email to all branches for login credentials

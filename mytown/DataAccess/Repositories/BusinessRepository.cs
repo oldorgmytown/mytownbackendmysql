@@ -51,25 +51,27 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        // resend email verfication
-        public async Task<BusinessVerification> FindPendingVerificationByEmail(string email)
+        // resend email verification
+        public async Task<PendingBusinessVerification> FindPendingVerificationByEmail(string email)
         {
-            return await _context.BusinessVerification
-                .Include(bv => bv.BusinessRegister)
-                .Where(bv => bv.BusinessRegister.BusEmail == email && !bv.IsUsed && bv.ExpiryDate > DateTime.UtcNow)
-                .FirstOrDefaultAsync();
+            return await _context.PendingBusinessVerifications
+                .FirstOrDefaultAsync(p => p.Email.ToLower() == email.ToLower()
+                                        && p.ExpiryDate > DateTime.UtcNow);
         }
 
+        //public async Task DeletePendingVerification(string token)
+        //{
+        //    var pending = await _context.PendingBusinessVerifications
+        //        .FirstOrDefaultAsync(p => p.Token == token);
 
-        public async Task RemoveVerification(BusinessVerification verification)
-        {
-            _context.BusinessVerification.Remove(verification);
-            await _context.SaveChangesAsync();
-        }
+        //    if (pending != null)
+        //    {
+        //        _context.PendingBusinessVerifications.Remove(pending);
+        //        await _context.SaveChangesAsync();
+        //    }
+        //}
 
-      
 
-       
 
         //get business owner home page with busregid
         public async Task<BusinessRegister> GetBusinessByIdAsync(int busRegId)

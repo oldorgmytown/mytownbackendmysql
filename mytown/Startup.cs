@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
+using mytown.DataAccess.Implementations;
 
 
 
@@ -73,6 +74,7 @@ public class Startup
         services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>(); //latest
         services.AddScoped<ITransporterRepository, TransporterRepository>();
         services.AddScoped<ITransporterDashboardRepository, TransporterDashboardRepository>();
+        services.AddScoped<ISenderRepository, SenderRepository>();
 
 
         services.AddScoped<ITokenService, TokenService>();
@@ -93,6 +95,8 @@ public class Startup
         services.AddScoped<IShopperDashboardService, ShopperDashboardService>();
         services.AddScoped<ICourierDashboardService, CourierDashboardService>();
         services.AddScoped<ITransporterService, TransporterService>();
+        services.AddScoped<ISenderService, SenderService>();
+        services.AddScoped<IVerficationLinkBuildersender, VerificationLinkBuildersender>();
         services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
 
     }

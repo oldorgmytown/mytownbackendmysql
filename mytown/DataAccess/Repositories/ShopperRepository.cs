@@ -19,103 +19,7 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        //public async Task<ShopperRegister> RegisterShopper(ShopperRegister shopper)
-        //{
-        //    if (await IsEmailTaken(shopper.Email))
-        //        return null;
-        //    //throw new Exception("Email is already in use.");
-        //    shopper.IsEmailVerified = false;
-
-        //    _context.ShopperRegisters.Add(shopper);
-        //    await _context.SaveChangesAsync();
-
-        //    return shopper;
-        //}
-
-        //public async Task<bool> IsEmailTaken(string email)
-        //{
-        //    return await _context.ShopperRegisters.AnyAsync(s => s.Email == email);
-        //}
-
-        ////public async Task<ShopperVerification> GenerateEmailVerification(string email)
-        ////{
-        ////    var shopper = await _context.ShopperRegisters.FirstOrDefaultAsync(s => s.Email == email);
-        ////    if (shopper == null) throw new Exception("User not found.");
-
-        ////    var token = Guid.NewGuid().ToString();
-        ////    var expiryDate = DateTime.UtcNow.AddHours(24);
-
-        ////    var verification = new ShopperVerification
-        ////    {
-        ////        Email = email,
-        ////        VerificationToken = token,
-        ////        ExpiryDate = expiryDate,
-        ////        IsVerified = false
-        ////    };
-
-        ////    _context.ShopperVerification.Add(verification);
-        ////    await _context.SaveChangesAsync();
-
-        ////    return verification;
-        ////}
-
-        //public async Task SaveVerificationToken(int shopperId, string token, DateTime expiryDate)
-        //{
-        //    var verificationToken = new ShopperVerification
-        //    {
-        //        ShopperId = shopperId,
-        //        VerificationToken = token,
-        //        ExpiryDate = expiryDate,
-        //        IsUsed = false,
-        //        CreatedAt = DateTime.UtcNow
-        //    };
-
-        //    _context.ShopperVerification.Add(verificationToken);
-        //    await _context.SaveChangesAsync();
-        //}
-
-
-        //public async Task<bool> VerifyEmail(string token)
-        //{
-        //    // Look up the verification token
-        //    var verification = await _context.ShopperVerification
-        //        .FirstOrDefaultAsync(v => v.VerificationToken == token && !v.IsUsed);
-
-        //    if (verification == null || verification.ExpiryDate < DateTime.UtcNow)
-        //        return false;
-
-        //    // Find the associated shopper
-        //    var shopper = await _context.ShopperRegisters
-        //        .FirstOrDefaultAsync(s => s.ShopperRegId == verification.ShopperId);
-
-        //    if (shopper == null)
-        //        return false;
-
-        //    // Mark email as verified
-        //    shopper.IsEmailVerified = true;
-        //    _context.ShopperRegisters.Update(shopper);
-
-        //    // Mark the token as used
-        //    verification.IsUsed = true;
-        //    _context.ShopperVerification.Update(verification);
-
-        //    await _context.SaveChangesAsync();
-        //    return true;
-        //}
-
-
-        //public async Task<ShopperVerification> FindVerificationByToken(string token)
-        //{
-        //    return await _context.ShopperVerification.FirstOrDefaultAsync(v => v.VerificationToken == token);
-        //}
-
-        //public async Task RemoveVerification(ShopperVerification verification)
-        //{
-        //    _context.ShopperVerification.Remove(verification);
-        //    await _context.SaveChangesAsync();
-        //}
-
-
+        
         public async Task SavePendingVerification(PendingVerification pending)
         {
             _context.PendingVerifications.Add(pending);
@@ -127,6 +31,7 @@ namespace mytown.DataAccess.Repositories
             return await _context.PendingVerifications
                 .FirstOrDefaultAsync(p => p.Token == token);
         }
+       
 
         public async Task DeletePendingVerification(string token)
         {
@@ -182,12 +87,11 @@ namespace mytown.DataAccess.Repositories
 
 
         // resend email verfication
-        public async Task<ShopperVerification> FindPendingVerificationByEmail(string email)
+        public async Task<PendingVerification> FindPendingVerificationByEmail(string email)
         {
-            return await _context.ShopperVerification
-                .Include(sv => sv.Shopper)
-                .Where(sv => sv.Shopper.Email == email && !sv.IsUsed && sv.ExpiryDate > DateTime.UtcNow)
-                .FirstOrDefaultAsync();
+            return await _context.PendingVerifications
+                .FirstOrDefaultAsync(p => p.Email.ToLower() == email.ToLower()
+                                        && p.ExpiryDate > DateTime.UtcNow);
         }
 
 

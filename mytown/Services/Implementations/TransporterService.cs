@@ -73,7 +73,7 @@ namespace mytown.Services.Implementations
             {
                 TransporterName = dto.TransporterName,
                 Email = dto.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+                Password = BCrypt.Net.BCrypt.HashPassword(dto.Password.Trim()),
                 Address = dto.Address,
                 Town = dto.Town,
                 City = dto.City,
@@ -100,7 +100,7 @@ namespace mytown.Services.Implementations
             if (existing == null)
                 return (false, "No pending verification found.");
 
-            await _repo.RemoveVerification(existing);
+            await _repo.DeletePendingVerification(existing.Token);  // was: RemoveVerification(existing)
 
             string token = Guid.NewGuid().ToString();
             DateTime expiry = DateTime.UtcNow.AddHours(24);
@@ -109,7 +109,8 @@ namespace mytown.Services.Implementations
             {
                 Email = email,
                 Token = token,
-                ExpiryDate = expiry
+                ExpiryDate = expiry,
+                JsonPayload = existing.JsonPayload  // was: missing — crashes VerifyEmailAsync without this
             };
 
             await _repo.SavePendingVerification(pending);

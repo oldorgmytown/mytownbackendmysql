@@ -12,7 +12,7 @@ namespace mytown.DataAccess.Interfaces
         List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId);
         List<ShippingDetails> GetShippingDetailsByOrderId(int orderId);
 
-        Task SendEmailToCourier(int branchId, int storeOrderId);
+      //  Task SendEmailToCourier(int branchId, int storeOrderId);
 
         ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);
 
@@ -52,5 +52,7 @@ namespace mytown.DataAccess.Interfaces
 
         // Update order status
         Task UpdateOrderStatusAsync(int orderId, string status);
+
+        Task AddTransporterNotificationAsync(TransporterDBNotifications notification);
     }
 }

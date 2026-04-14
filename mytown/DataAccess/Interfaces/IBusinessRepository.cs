@@ -15,8 +15,8 @@ namespace mytown.DataAccess
         Task RegisterBusiness(BusinessRegister business);
 
         //FOR resend email verifcation
-        Task<BusinessVerification> FindPendingVerificationByEmail(string email);
-        Task RemoveVerification(BusinessVerification verification);
+        Task<PendingBusinessVerification> FindPendingVerificationByEmail(string email);
+       // Task RemoveVerification(BusinessVerification verification);
         Task<BusinessRegister> GetBusinessByIdAsync(int busRegId);
 
         //add profile after email verification

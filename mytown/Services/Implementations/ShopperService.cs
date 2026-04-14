@@ -103,7 +103,7 @@ namespace mytown.Services.Implementations
             if (existing == null)
                 return (false, "No pending verification found.");
 
-            await _repo.RemoveVerification(existing);
+            await _repo.DeletePendingVerification(existing.Token);
 
             string token = Guid.NewGuid().ToString();
             DateTime expiry = DateTime.UtcNow.AddHours(24);
@@ -112,7 +112,8 @@ namespace mytown.Services.Implementations
             {
                 Email = email,
                 Token = token,
-                ExpiryDate = expiry
+                ExpiryDate = expiry,
+                JsonPayload = existing.JsonPayload  // ← carry forward
             };
 
             await _repo.SavePendingVerification(pending);

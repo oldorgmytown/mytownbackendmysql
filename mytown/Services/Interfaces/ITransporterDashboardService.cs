@@ -1,4 +1,4 @@
-// ===== ITransporterDashboardService.cs =====
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
@@ -14,12 +14,17 @@ namespace mytown.Services.Interfaces
         Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
             string fromLocation, string toLocation, DateTime travelDate);
 
+        // Shopper creates request → auto-assigned to transporter linked via PlanId
         Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(ShopperDeliveryRequestDto dto);
-        Task<List<DeliveryRequestDto>> GetPendingRequestsAsync(int transporterRegId);
-        Task<ActiveDeliveryDto?> GetActiveDeliveryAsync(int transporterRegId);
-        Task<bool> AcceptDeliveryRequestAsync(int deliveryReqId, int transporterRegId);
+
+        // Active = Assigned + ReachedPickup + PickedUp + InTransit
+        Task<List<ActiveDeliveryDto>> GetActiveDeliveryAsync(int transporterRegId);
+
+        // Transporter updates status: ReachedPickup → PickedUp → InTransit → Delivered
         Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto);
+
         Task<List<ActiveDeliveryDto>> GetCompletedDeliveriesAsync(int transporterRegId);
+        Task<List<TravelPlanDto>> GetAllPlansAsync(int transporterRegId);
 
         Task<bool> SubmitExceptionReportAsync(ExceptionReportDto dto);
 
@@ -29,5 +34,9 @@ namespace mytown.Services.Interfaces
         Task<TransporterProfileDto?> GetProfileAsync(int transporterRegId);
         Task<bool> UpdateProfileAsync(UpdateTransporterProfileDto dto);
         Task<bool> UpdatePasswordAsync(int transporterRegId, string currentPassword, string newPassword);
+
+        Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
+        Task MarkAsReadAsync(int transporterId);
+        Task MarkEachNotificationReadAsync(int notificationId);
     }
 }
