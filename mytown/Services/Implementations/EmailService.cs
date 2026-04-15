@@ -1074,7 +1074,13 @@ public class EmailService : IEmailService
     <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:12px;"">
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:6px;"">Store Order ID</td>
-        <td align=""right"" style=""color:#585858;font-size:16px;font-weight:500;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:6px;"">{store.StoreOrderId}</td>
+        <td align=""right"" style=""padding-bottom:6px;"">
+  <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
+     style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+    {store.StoreOrderId}
+  </a>
+</td>
       </tr>
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Estimated Date of Delivery</td>
@@ -1206,12 +1212,11 @@ public class EmailService : IEmailService
           <tr>
             <td style=""padding-right:16px;"">
               <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
-              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
-   style=""color:#004481;font-size:16px;font-weight:600;text-decoration:underline;
-          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
+<div style=""color:#585858;font-size:16px;font-weight:600;
+             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
   ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}
-</a>
+</div>
             </td>
             <td style=""padding-right:16px;"">
               <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
