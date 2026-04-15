@@ -680,7 +680,11 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {storedto.StoreOrderId}
+                <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/biz/orders/{storedto.StoreOrderId}""
+                   style=""color:#004481;text-decoration:underline;font-weight:600;
+                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                  {storedto.StoreOrderId}
+                </a>
               </div>
             </td>
             <td style=""padding-right:12px;"">
@@ -885,7 +889,7 @@ public class EmailService : IEmailService
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
           <tr>
             <td align=""center"" style=""padding:8px 0 0 0;"">
-              <a href=""#""
+              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/biz/orders/{storedto.StoreOrderId}""
                  style=""display:inline-block;background:#004481;color:#fff;
                         border:1px solid #004481;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
@@ -951,6 +955,20 @@ public class EmailService : IEmailService
             throw new Exception("Failed to send business notification email.");
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     public async Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto)
     {
         if (!await DomainHasMX(email))
@@ -1189,10 +1207,11 @@ public class EmailService : IEmailService
             <td style=""padding-right:16px;"">
               <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
-              <div style=""color:#585858;font-size:16px;font-weight:600;
-                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}
-              </div>
+              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
+   style=""color:#004481;font-size:16px;font-weight:600;text-decoration:underline;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+  ITMT-{orderdto.OrderDate.Year}-{orderdto.OrderId:D6}
+</a>
             </td>
             <td style=""padding-right:16px;"">
               <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
@@ -1337,7 +1356,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}""
+        <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -1400,207 +1419,7 @@ public class EmailService : IEmailService
 </html>";
     }
 
-    //private string BuildShopperNotificationTemplate(string shopperName, OrderConfirmationDto orderdto)
-    //{
-    //    var storesBuilder = new StringBuilder();
 
-    //    foreach (var store in orderdto.Stores)
-    //    {
-    //        var itemsBuilder = new StringBuilder();
-
-    //        foreach (var item in store.Items)
-    //        {
-    //            string imageSrc = string.IsNullOrEmpty(item.ImageUrl) ? "https://via.placeholder.com/64x64?text=No+Image" : item.ImageUrl;
-    //            itemsBuilder.Append($@"
-    //<div style='display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid #E5E7EB;'>
-    //    <img src='{imageSrc}' alt='Product' style='width: 64px; height: 64px; border-radius: 6px; object-fit: cover; flex-shrink: 0;' />
-    //    <div style='flex: 1; min-width: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px;'>
-    //        <span style='color: #585858; font-size: 14px; font-weight: 600; line-height: 20px; flex: 1;'>{WebUtility.HtmlEncode(item.ProductName)}</span>
-    //        <span style='color: #585858; font-size: 14px; font-weight: 500; white-space: nowrap;'>Qty: {item.Quantity}</span>
-    //        <span style='color: #585858; font-size: 14px; font-weight: 600; white-space: nowrap;'>₹{item.ItemTotal:F2}</span>
-    //    </div>
-    //</div>");
-    //        }
-
-    //        storesBuilder.Append($@"
-    //<div style='background: #FFF; padding: 20px 24px; border-bottom: 1px solid #E5E7EB;'>
-    //    <div style='display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 16px; flex-wrap: wrap;'>
-    //        <div>
-    //            <h3 style='color: #000; font-size: 20px; font-weight: 600; margin-bottom: 4px;'>{WebUtility.HtmlEncode(store.StoreName)}</h3>
-    //        </div>
-    //        <div style='display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right;'>
-    //            <span style='color: #000; font-size: 16px; font-weight: 400;'>Store Total</span>
-    //            <span style='color: #585858; font-size: 16px; font-weight: 700;'>₹{store.StoreTotal:F2}</span>
-    //        </div>
-    //    </div>
-
-    //    <div style='display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;'>
-    //        <div style='display: flex; justify-content: space-between; align-items: center;'>
-    //            <span style='color: #000; font-size: 16px; font-weight: 400;'>Store Order ID</span>
-    //            <span style='color: #585858; font-size: 16px; font-weight: 500; text-align: right;'>{store.StoreOrderId}</span>
-    //        </div>
-    //        <div style='display: flex; justify-content: space-between; align-items: center;'>
-    //            <span style='color: #000; font-size: 16px; font-weight: 400;'>Estimated Date of Delivery</span>
-    //            <span style='color: #585858; font-size: 16px; font-weight: 500; text-align: right;'>{store.EstimatedDeliveryDate:MMMM dd, yyyy}</span>
-    //        </div>
-    //    </div>
-
-    //    <h4 style='color: #000; font-size: 18px; font-weight: 500; margin-bottom: 12px; margin-top: 12px;'>Items in your order</h4>
-    //    <div style='border: 1px solid #E5E7EB; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 12px;'>
-    //        {itemsBuilder}
-    //    </div>
-
-    //    <div style='background: #F0FFF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 12px; margin-bottom: 12px;'>
-    //        <p style='color: #166534; font-size: 14px; font-weight: 500; line-height: 1.5; margin: 0;'>
-    //            <strong>{WebUtility.HtmlEncode(store.ShippingStatus)}</strong><br/>
-    //            Expected delivery by {store.EstimatedDeliveryDate:MMMM dd, yyyy}
-    //        </p>
-    //    </div>
-    //</div>");
-    //    }
-
-    //    // Assuming subtotal is total amount, shipping and tax are included or 0
-    //    decimal subtotal = orderdto.TotalAmount;
-    //    decimal shipping = 0; // Placeholder
-    //    decimal tax = 0; // Placeholder
-
-    //    return $@"
-    //<!DOCTYPE html>
-    //<html lang='en'>
-    //<head>
-    //    <meta charset='UTF-8'>
-    //    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-    //    <title>Order Confirmation - ITISMYTOWN</title>
-    //</head>
-    //<body style='margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; line-height: 1.5; background: #FAFBFC;'>
-
-    //<div style='max-width: 600px; margin: 0 auto; background: #FAFBFC;'>
-
-    //    <!-- Header -->
-    //    <div style='padding: 20px 30px; border-bottom: 1px solid #F1F1F3; display: flex; align-items: center;'>
-    //        <img src='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png' alt='ITISMYTOWN' style='height: 55px; width: auto;' />
-    //    </div>
-
-    //    <!-- Hero Section -->
-    //    <div style='padding: 48px 30px; background: linear-gradient(180deg, #285A8C 0%, #FFF 100%); display: flex; flex-direction: column; align-items: center; gap: 16px;'>
-    //        <div style='background: #FFF; border-radius: 8px; padding: 24px; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 24px;'>
-    //            <div style='width: 64px; height: 64px; border-radius: 100px; background: linear-gradient(180deg, #105617 0%, #2F7C37 100%); border: 4px solid rgba(16, 86, 23, 0.10); display: flex; align-items: center; justify-content: center; flex-shrink: 0;'>
-    //                <svg width='32' height='32' viewBox='0 0 32 32' fill='none' xmlns='http://www.w3.org/2000/svg' style='width: 32px; height: 32px;'>
-    //                    <path d='M2.66699 15.9023L11.3809 24.63L29.3337 6.66797' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>
-    //                </svg>
-    //            </div>
-    //            <div style='display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%;'>
-    //                <h1 style='color: #182D41; font-size: 28px; font-weight: 600; text-align: center; margin: 0;'>Order Confirmed!</h1>
-    //                <p style='color: #7A7A7A; font-size: 16px; font-weight: 400; text-align: center; line-height: 150%; margin: 0;'>Thank you for your purchase! Your order has been successfully placed.</p>
-    //            </div>
-    //        </div>
-    //    </div>
-
-    //    <!-- Content -->
-    //    <div style='padding: 20px 30px; border-bottom: 1px solid #FFF;'>
-    //        <div style='margin-bottom: 16px;'>
-    //            <h2 style='color: #000; font-size: 16px; font-weight: 700; line-height: 150%; margin-bottom: 8px;'>Hello {WebUtility.HtmlEncode(shopperName)},</h2>
-    //            <p style='color: #000; font-size: 16px; font-weight: 400; line-height: 150%; margin: 0;'>Your order has been confirmed and will be shipping soon.</p>
-    //        </div>
-
-    //        <!-- Order Info -->
-    //        <div style='background: #FFF; border: 1px solid rgba(139, 139, 139, 0.08); border-radius: 4px; padding: 24px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 24px;'>
-    //            <div style='flex: 1; min-width: 120px;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Order ID</span>
-    //                <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}</span>
-    //            </div>
-    //            <div style='flex: 1; min-width: 120px;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Order Date</span>
-    //                <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>{orderdto.OrderDate:MMMM dd, yyyy}</span>
-    //            </div>
-    //            <div style='flex: 1; min-width: 120px;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px; display: block; margin-bottom: 4px; white-space: nowrap;'>Total Amount</span>
-    //                <span style='color: #585858; font-size: 16px; font-weight: 600; line-height: 20px;'>₹{orderdto.TotalAmount:F2}</span>
-    //            </div>
-    //        </div>
-
-    //        <!-- Stores -->
-    //        <div style='border: 1px solid rgba(139, 139, 139, 0.08); border-radius: 4px; overflow: hidden;'>
-    //            {storesBuilder}
-    //        </div>
-    //    </div>
-
-    //    <!-- Order Summary -->
-    //    <div style='padding: 24px 30px;'>
-    //        <h2 style='color: #000; font-size: 18px; font-weight: 500; margin-bottom: 16px;'>Order Summary</h2>
-    //        <div style='border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 16px;'>
-    //            <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>Order ID</span>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}</span>
-    //            </div>
-    //            <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>Subtotal</span>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>₹{subtotal:F2}</span>
-    //            </div>
-    //            <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>Shipping</span>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>₹{shipping:F2}</span>
-    //            </div>
-    //            <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>Tax</span>
-    //                <span style='color: #585858; font-size: 14px; font-weight: 500; line-height: 20px;'>₹{tax:F2}</span>
-    //            </div>
-    //            <div style='height: 1px; background: #D9D9D9;'></div>
-    //            <div style='display: flex; justify-content: space-between; align-items: flex-start;'>
-    //                <span style='color: #000; font-size: 16px; font-weight: 600;'>Total Amount</span>
-    //                <span style='color: #000; font-size: 16px; font-weight: 600;'>₹{orderdto.TotalAmount:F2}</span>
-    //            </div>
-    //        </div>
-    //    </div>
-
-    //    <!-- Payment -->
-    //    <div style='padding: 24px 30px; border-top: 1px solid #F1F1F3;'>
-    //        <h2 style='color: #000; font-size: 18px; font-weight: 500; margin-bottom: 12px;'>Payment Method</h2>
-    //        <p style='color: #585858; font-size: 14px; font-weight: 500; margin-bottom: 4px;'>{WebUtility.HtmlEncode(orderdto.PaymentMethod)}</p>
-    //        <p style='color: #16A34A; font-size: 14px; font-weight: 500;'>Payment successful</p>
-    //    </div>
-
-    //    <!-- Shipping -->
-    //    <div style='padding: 24px 30px; border-top: 1px solid #F1F1F3;'>
-    //        <h2 style='color: #000; font-size: 18px; font-weight: 500; margin-bottom: 12px;'>Shipping method</h2>
-    //        <p style='color: #585858; font-size: 14px; font-weight: 500;'>P2P Delivery</p>
-    //    </div>
-
-    //    <!-- Delivery Address -->
-    //    <div style='padding: 24px 30px; border-top: 1px solid #F1F1F3;'>
-    //        <h2 style='color: #000; font-size: 18px; font-weight: 500; margin-bottom: 12px;'>Delivery Address</h2>
-    //        <p style='color: #000; font-size: 14px; font-weight: 600; margin-bottom: 4px;'>{WebUtility.HtmlEncode(orderdto.ShopperName)}</p>
-    //        <p style='color: #585858; font-size: 14px; font-weight: 500; line-height: 150%; margin-bottom: 8px;'>{WebUtility.HtmlEncode(orderdto.DeliveryAddress)}</p>
-    //        <div style='display: flex; align-items: center; gap: 8px; color: #585858; font-size: 14px; font-weight: 500;'>
-    //            <div style='width: 28px; height: 28px; border-radius: 100px; background: #F5F5F5; display: flex; align-items: center; justify-content: center; flex-shrink: 0;'>
-    //                <span style='font-size: 12px;'>📞</span>
-    //            </div>
-    //            <span>{WebUtility.HtmlEncode(orderdto.ShopperPhone)}</span>
-    //        </div>
-    //    </div>
-
-    //    <!-- CTA Button -->
-    //    <div style='padding: 24px 30px; display: flex; justify-content: center;'>
-    //        <a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/orders/{WebUtility.HtmlEncode(orderdto.OrderId.ToString())}' style='background: #004481; color: white; border: 1px solid #004481; border-radius: 8px; padding: 16px 32px; font-size: 16px; font-weight: 400; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif; transition: background 0.2s;'>View Order</a>
-    //    </div>
-
-    //    <!-- Footer -->
-    //    <div style='padding: 20px 30px; background: rgba(139, 139, 139, 0.08);'>
-    //        <div style='display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; margin-bottom: 8px;'>
-    //            <a href='#' style='color: #004481; font-size: 16px; font-weight: 400; text-decoration: none;'>Continue Shopping</a>
-    //            <a href='#' style='color: #004481; font-size: 16px; font-weight: 400; text-decoration: none;'>My Account</a>
-    //            <a href='#' style='color: #004481; font-size: 16px; font-weight: 400; text-decoration: none;'>Help Center</a>
-    //        </div>
-    //        <p style='color: #585858; font-size: 12px; font-weight: 400; text-align: center; line-height: 150%; margin: 8px 0;'>You're receiving this email because you placed an order with us.</p>
-    //        <p style='color: #585858; font-size: 12px; font-weight: 400; text-align: center; line-height: 150%; margin: 8px 0;'>© 2026 itismytown. All rights reserved.</p>
-    //        <a href='#' style='color: #004481; font-size: 12px; font-weight: 400; text-align: center; text-decoration: underline; display: block; margin-top: 8px;'>Unsubscribe from marketing emails</a>
-    //    </div>
-
-    //</div>
-
-    //</body>
-    //</html>";
-    //}
 
     private async Task<bool> DomainHasMX(string email)
     {
