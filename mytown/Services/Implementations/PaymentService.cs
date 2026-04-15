@@ -117,6 +117,9 @@ namespace mytown.Services.Implementations
 
             order.OrderStatus = "Paid";
 
+            //  Update cart status after successful payment
+            await _paymentRepo.UpdateCartStatusAsync(orderId);
+
             return payment;
         }
 

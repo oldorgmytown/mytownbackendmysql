@@ -44,6 +44,29 @@ namespace mytown.DataAccess.Repositories
             return payment;
         }
 
+        public async Task<bool> UpdateCartStatusAsync(int orderId)
+        {
+            // Find the order using OrderId
+            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
+            if (order == null) return false; // Order not found
+
+            // Get cart items for the shopper related to the order
+            var cartItems = await _context.addtocart
+                .Where(c => c.ShopperRegId == order.ShopperRegId && c.orderstatus == "cart")
+                .ToListAsync();
+
+            if (!cartItems.Any()) return false; // No cart items to update
+
+            // Update cart status
+            foreach (var item in cartItems)
+            {
+                item.orderstatus = "Ordered";
+            }
+
+            // Save changes
+            await _context.SaveChangesAsync();
+            return true;
+        }
         public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
             var storeDetails = _context.OrderDetails

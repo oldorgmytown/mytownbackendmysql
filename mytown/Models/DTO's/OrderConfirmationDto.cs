@@ -29,6 +29,9 @@
 
         public string StoreName { get; set; } = string.Empty;
         public string BusinessEmail { get; set; } = string.Empty;
+        public string BusinessPhone { get; set; } = string.Empty;
+
+        public string StoreAddress { get; set; } = string.Empty;
 
         //courier email
         public string CourierName { get; set; } = string.Empty;
@@ -63,6 +66,8 @@
     public class OrderItemDto
     {
         public string ProductName { get; set; } = string.Empty;
+
+        public string Productdesc {  get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal FinalPrice { get; set; }
         public decimal OriginalPrice { get; set; }
