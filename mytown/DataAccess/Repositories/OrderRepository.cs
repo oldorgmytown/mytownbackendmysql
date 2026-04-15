@@ -552,6 +552,13 @@ namespace mytown.DataAccess.Repositories
            StoreId = so.StoreId,
            StoreName = b.BusinessName,
            BusinessEmail = b.BusEmail,
+           StoreAddress = b.Address1 + ", " +
+               (string.IsNullOrEmpty(b.Address2) ? "" : b.Address2 + ", ") +
+               b.BusinessCity + ", " +
+               b.BusinessState + ", " +
+               b.BusinessCountry +
+               (string.IsNullOrEmpty(b.PostalCode) ? "" : " - " + b.PostalCode),
+           BusinessPhone = b.BusMobileNo,
 
            // ✅ Courier (only if exists)
            CourierName = c != null ? c.CourierServiceName : null,
@@ -590,6 +597,7 @@ namespace mytown.DataAccess.Repositories
                     select new OrderItemDto
                     {
                         ProductName = p.ProductName,
+                        Productdesc = p.ProductDescription,
                         Quantity = oi.Quantity,
                         FinalPrice = oi.Price,
                         OriginalPrice = v.Sku_Cost,
