@@ -46,24 +46,20 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<bool> UpdateCartStatusAsync(int orderId)
         {
-            // Find the order using OrderId
-            var order = await _context.Orders.FirstOrDefaultAsync(o => o.OrderId == orderId);
-            if (order == null) return false; // Order not found
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
-            // Get cart items for the shopper related to the order
+            if (order == null) return false;
+
             var cartItems = await _context.addtocart
                 .Where(c => c.ShopperRegId == order.ShopperRegId && c.orderstatus == "cart")
                 .ToListAsync();
 
-            if (!cartItems.Any()) return false; // No cart items to update
+            if (!cartItems.Any()) return false;
 
-            // Update cart status
-            foreach (var item in cartItems)
-            {
-                item.orderstatus = "Ordered";
-            }
+            //  Remove cart items after order placed
+            _context.addtocart.RemoveRange(cartItems);
 
-            // Save changes
             await _context.SaveChangesAsync();
             return true;
         }

@@ -362,7 +362,7 @@ namespace mytown.DataAccess.Repositories
         {
             // Get cart items for this shopper where the order status is still "In Cart"
             var cartItems = await _context.addtocart
-                .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "In Cart")
+                .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "cart")
                 .ToListAsync();
 
             if (!cartItems.Any()) return false; // No cart items to update
