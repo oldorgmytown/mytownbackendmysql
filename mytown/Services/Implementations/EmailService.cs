@@ -607,25 +607,24 @@ public class EmailService : IEmailService
             <td align=""center"" style=""padding-bottom:20px;"">
 
               <!-- ✅ GREEN CIRCLE WITH TICK — EMAIL-SAFE TABLE LAYOUT -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto 20px auto;"">
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
                 <tr>
-                  <td width=""72"" height=""72"" align=""center"" valign=""middle""
-                      bgcolor=""#105617""
-                      style=""width:72px;height:72px;border-radius:50%;
-                             background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                             border:4px solid rgba(16,86,23,0.10);
-                             text-align:center;vertical-align:middle;"">
+                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
+                      style=""width:48px;height:48px;border-radius:50%;
+                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
+                            border:4px solid rgba(16,86,23,0.10);
+                            text-align:center;vertical-align:middle;"">
                     <!--[if mso]>
                     <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
                       xmlns:w=""urn:schemas-microsoft-com:office:word""
-                      style=""height:72px;v-text-anchor:middle;width:72px;""
-                      arcsize=""50%"" strokecolor=""transparent"" fillcolor=""#105617"">
+                      style=""height:64px;v-text-anchor:middle;width:64px;""
+                      arcsize=""50%"" strokecolor=""transparent""
+                      fillcolor=""#105617"">
                     <w:anchorlock/>
                     <center>
                     <![endif]-->
-                    <img src=""https://img.icons8.com/ios/50/ffffff/checkmark--v1.png""
-                         alt=""Order Confirmed"" width=""32"" height=""32""
-                         style=""width:32px;height:32px;display:block;margin:0 auto;"" />
+                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
+                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
                     <!--[if mso]></center></v:roundrect><![endif]-->
                   </td>
                 </tr>
@@ -1151,30 +1150,29 @@ public class EmailService : IEmailService
           <tr>
             <td align=""center"">
 
-              <!-- ✅ GREEN CIRCLE WITH TICK — TABLE BASED (email-safe) -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
-                <tr>
-                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
-                      style=""width:48px;height:48px;border-radius:50%;
-                             background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                             border:4px solid rgba(16,86,23,0.10);
-                             text-align:center;vertical-align:middle;"">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
-                      xmlns:w=""urn:schemas-microsoft-com:office:word""
-                      style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent""
-                      fillcolor=""#105617"">
-                    <w:anchorlock/>
-                    <center>
-                    <![endif]-->
-                    <img src=""https://img.icons8.com/ios/50/ffffff/checkmark--v1.png""
-                         alt=""✓"" width=""22"" height=""22""
-                         width:22px;height:22px;display:block;margin:0 auto;"" />
-                    <!--[if mso]></center></v:roundrect><![endif]-->
-                  </td>
-                </tr>
-              </table>
+                <!-- ✅ GREEN CIRCLE WITH TICK — TABLE BASED (email-safe) -->
+                <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
+                  <tr>
+                    <td width=""48"" height=""48"" align=""center"" valign=""middle""
+                        style=""width:48px;height:48px;border-radius:50%;
+                              background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
+                              border:4px solid rgba(16,86,23,0.10);
+                              text-align:center;vertical-align:middle;"">
+                      <!--[if mso]>
+                      <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
+                        xmlns:w=""urn:schemas-microsoft-com:office:word""
+                        style=""height:64px;v-text-anchor:middle;width:64px;""
+                        arcsize=""50%"" strokecolor=""transparent""
+                        fillcolor=""#105617"">
+                      <w:anchorlock/>
+                      <center>
+                      <![endif]-->
+                      <span style=""color:#ffffff;font-size:26px;font-weight:900;
+                                  font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
+                      <!--[if mso]></center></v:roundrect><![endif]-->
+                    </td>
+                  </tr>
+                </table>
 
               <!-- Heading -->
               <h1 style=""color:#182D41;font-size:22px;font-weight:600;text-align:center;
@@ -1211,7 +1209,7 @@ public class EmailService : IEmailService
                style=""background:#fff;border:1px solid rgba(139,139,139,0.08);border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
 <div style=""color:#585858;font-size:16px;font-weight:600;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -1219,7 +1217,7 @@ public class EmailService : IEmailService
 </div>
             </td>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -1227,7 +1225,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Amount</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -1581,25 +1579,24 @@ public class EmailService : IEmailService
             <td align=""center"">
 
               <!-- GREEN CIRCLE WITH TICK -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto 20px auto;"">
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
                 <tr>
-                  <td width=""64"" height=""64"" align=""center"" valign=""middle""
-                      bgcolor=""#105617""
-                      style=""width:64px;height:64px;border-radius:50%;
-                             background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                             border:4px solid rgba(16,86,23,0.10);
-                             text-align:center;vertical-align:middle;"">
+                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
+                      style=""width:48px;height:48px;border-radius:50%;
+                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
+                            border:4px solid rgba(16,86,23,0.10);
+                            text-align:center;vertical-align:middle;"">
                     <!--[if mso]>
                     <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
                       xmlns:w=""urn:schemas-microsoft-com:office:word""
                       style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent"" fillcolor=""#105617"">
+                      arcsize=""50%"" strokecolor=""transparent""
+                      fillcolor=""#105617"">
                     <w:anchorlock/>
                     <center>
                     <![endif]-->
-                    <img src=""https://img.icons8.com/ios/50/ffffff/checkmark--v1.png""
-                         alt=""✓"" width=""28"" height=""28""
-                         style=""width:28px;height:28px;display:block;margin:0 auto;"" />
+                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
+                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
                     <!--[if mso]></center></v:roundrect><![endif]-->
                   </td>
                 </tr>
@@ -2291,25 +2288,24 @@ public class EmailService : IEmailService
             <td align=""center"">
 
               <!-- GREEN CIRCLE WITH TICK -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto 20px auto;"">
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
                 <tr>
-                  <td width=""64"" height=""64"" align=""center"" valign=""middle""
-                      bgcolor=""#105617""
-                      style=""width:64px;height:64px;border-radius:50%;
-                             background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                             border:4px solid rgba(16,86,23,0.10);
-                             text-align:center;vertical-align:middle;"">
+                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
+                      style=""width:48px;height:48px;border-radius:50%;
+                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
+                            border:4px solid rgba(16,86,23,0.10);
+                            text-align:center;vertical-align:middle;"">
                     <!--[if mso]>
                     <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
                       xmlns:w=""urn:schemas-microsoft-com:office:word""
                       style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent"" fillcolor=""#105617"">
+                      arcsize=""50%"" strokecolor=""transparent""
+                      fillcolor=""#105617"">
                     <w:anchorlock/>
                     <center>
                     <![endif]-->
-                    <img src=""https://img.icons8.com/ios/50/ffffff/checkmark--v1.png""
-                         alt=""✓"" width=""28"" height=""28""
-                         style=""width:28px;height:28px;display:block;margin:0 auto;"" />
+                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
+                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
                     <!--[if mso]></center></v:roundrect><![endif]-->
                   </td>
                 </tr>
