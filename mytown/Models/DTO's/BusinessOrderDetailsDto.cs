@@ -35,10 +35,12 @@
         public string CourierServiceName { get; set; }
         public string CourierBranchPhone { get; set; }
         public string CourierBranchContactname { get; set; }
+        public string CourierEmail { get; set; }
 
         // Transporter details (if transporter handles shipping)
         public string TransporterName { get; set; }
         public string TransporterPhone { get; set; }
+        public string TransporterEmail { get; set; }
     }
 
 public class BusinessOrderProductDto

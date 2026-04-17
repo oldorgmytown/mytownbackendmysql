@@ -199,15 +199,19 @@ public async Task ProcessPostPaymentAsync(int orderId)
         }
         else
         {
-            var courierId = await _paymentRepo.GetCourierIdByBranchIdAsync(shipping.BranchId);
+                    if (shipping.BranchId.HasValue)
+                    {
+                        var courierId = await _paymentRepo
+                            .GetCourierIdByBranchIdAsync(shipping.BranchId.Value);
 
-            await AddCourierNotificationAsync(
-                courierId: courierId,
-                branchId: shipping.BranchId,
-                title: "New Order Assigned",
-                message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
-            );
-        }
+                        await AddCourierNotificationAsync(
+                            courierId: courierId,
+                            branchId: shipping.BranchId.Value,
+                            title: "New Order Assigned",
+                            message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+                        );
+                    }
+                }
     }
 }
 

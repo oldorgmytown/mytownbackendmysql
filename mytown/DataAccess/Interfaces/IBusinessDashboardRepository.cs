@@ -105,6 +105,7 @@ namespace mytown.DataAccess.Interfaces
         Task UpdateShippingStatusAsync(int storeOrderId, string status);
         Task UpdateStoreOrderStatusAsync(int storeOrderId, string status);
         Task AddCourierNotificationAsync(CourierDBNotifications notification);
+        Task AddTransporterNotificationAsync(TransporterDBNotifications notification);
         Task SaveChangesAsync();
 
         //sales history

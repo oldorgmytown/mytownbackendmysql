@@ -1319,7 +1319,7 @@ public class EmailService : IEmailService
                       border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
 
               <div style=""color:#585858;font-size:16px;font-weight:600;
@@ -1549,6 +1549,237 @@ public class EmailService : IEmailService
 
   </table>
   </td>
+</tr>
+</table>
+
+</body>
+</html>";
+    }
+
+
+
+    // ================================
+    // READY TO SHIP EMAIL TO COURIER
+    // ================================
+    public async Task SendPackagerdyEmailToCourierAsync(
+        string email,
+        string courierName,
+        BusinessOrderDetailsDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("Invalid email domain.");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials =
+                    new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                string body =
+                    BuildReadyToShipCourierTemplate(courierName, dto);
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Package Ready for Pickup",
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw new Exception("Failed to send courier email.");
+        }
+    }
+
+    private string BuildReadyToShipCourierTemplate(
+        string courierName,
+        BusinessOrderDetailsDto dto)
+    {
+        return $@"
+<!DOCTYPE html>
+<html>
+<body style='margin:0;padding:0;background:#F8FAFC;font-family:Segoe UI,Arial,sans-serif;'>
+
+<table width='100%' cellpadding='0' cellspacing='0'>
+<tr>
+<td align='center'>
+
+<table width='620' cellpadding='0' cellspacing='0'
+style='background:#ffffff;margin-top:20px;border-radius:12px;overflow:hidden;'>
+
+<!-- HEADER -->
+<tr>
+<td align='center'
+style='padding:22px;background:#0C4A6E;color:#fff;font-size:28px;font-weight:700;'>
+ITISMYTOWN
+</td>
+</tr>
+
+<!-- HERO -->
+<tr>
+<td style='padding:35px;background:linear-gradient(180deg,#155E75 0%,#ffffff 100%);'>
+
+<table width='100%' cellpadding='0' cellspacing='0'
+style='background:#fff;border-radius:10px;padding:30px;'>
+
+<tr>
+<td align='center'>
+
+<div style='font-size:54px;'>📦</div>
+
+<h1 style='margin:10px 0 8px;color:#182D41;font-size:28px;'>
+Package Ready for Pickup
+</h1>
+
+<p style='margin:0;color:#6B7280;font-size:15px;line-height:24px;'>
+Store has packed the order. Please collect and deliver.
+</p>
+
+</td>
+</tr>
+
+</table>
+
+</td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+<td style='padding:28px;'>
+
+<p style='font-size:16px;margin:0 0 18px;'>
+Hello <b>{WebUtility.HtmlEncode(courierName)}</b>,
+</p>
+
+<p style='font-size:15px;color:#444;line-height:24px;margin:0 0 20px;'>
+A shipment is ready for pickup.
+</p>
+
+<!-- ORDER CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
+Order Information
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Store Order ID</td>
+<td align='right'><b>{dto.StoreOrderId}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Tracking ID</td>
+<td align='right'><b>{dto.TrackingId}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Order Date</td>
+<td align='right'><b>{dto.OrderDate:dd MMM yyyy}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Expected Delivery</td>
+<td align='right'><b>{dto.EstimatedDeliveryDate:dd MMM yyyy}</b></td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+
+<!-- STORE CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
+Store Pickup Details
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Store Name</td>
+<td align='right'><b>{WebUtility.HtmlEncode(dto.StoreName)}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Town</td>
+<td align='right'><b>{WebUtility.HtmlEncode(dto.StoreTown)}</b></td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+
+<!-- CUSTOMER CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
+Delivery Details
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Customer</td>
+<td align='right'><b>{WebUtility.HtmlEncode(dto.ShopperName)}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Phone</td>
+<td align='right'><b>{WebUtility.HtmlEncode(dto.ShopperPhone)}</b></td>
+</tr>
+</table>
+<!-- Shipping Address Heading -->
+<div style='margin-top:14px;font-size:14px;font-weight:700;color:#111827;'>
+Shipping Address
+</div>
+
+<div style='margin-top:12px;color:#374151;line-height:24px;'>
+{WebUtility.HtmlEncode(dto.ShippingAddress)}
+</div>
+
+</td></tr>
+</table>
+
+<!-- BUTTON -->
+<div align='center' style='margin-top:26px;'>
+
+<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{dto.StoreOrderId}'
+style='background:#0C4A6E;color:#fff;text-decoration:none;
+padding:14px 34px;border-radius:8px;display:inline-block;font-size:15px;'>
+View Order
+</a>
+
+</div>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td align='center'
+style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
+© 2026 itismytown. All rights reserved.
+</td>
+</tr>
+
+</table>
+
+</td>
 </tr>
 </table>
 
@@ -2255,6 +2486,298 @@ public class EmailService : IEmailService
 
   </table>
   </td>
+</tr>
+</table>
+
+</body>
+</html>";
+    }
+
+
+
+    // ========================================
+    // READY TO SHIP EMAIL TO TRANSPORTER
+    // ========================================
+    public async Task SendPackagerdyEmailToTransporterAsync(
+        string email,
+        string transporterName,
+        BusinessOrderDetailsDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("Invalid email domain.");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials =
+                    new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                string body =
+                    BuildReadyToShipTransporterTemplate(
+                        transporterName,
+                        dto
+                    );
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Package Ready for Pickup",
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw new Exception(
+                "Failed to send transporter email."
+            );
+        }
+    }
+
+    private string BuildReadyToShipTransporterTemplate(
+        string transporterName,
+        BusinessOrderDetailsDto dto)
+    {
+        return $@"
+<!DOCTYPE html>
+<html>
+<body style='margin:0;padding:0;background:#F8FAFC;
+font-family:Segoe UI,Arial,sans-serif;'>
+
+<table width='100%' cellpadding='0' cellspacing='0'>
+<tr>
+<td align='center'>
+
+<table width='620' cellpadding='0' cellspacing='0'
+style='background:#ffffff;margin-top:20px;
+border-radius:12px;overflow:hidden;'>
+
+<!-- HEADER -->
+<tr>
+<td align='center'
+style='padding:22px;background:#0C4A6E;
+color:#fff;font-size:28px;font-weight:700;'>
+ITISMYTOWN
+</td>
+</tr>
+
+<!-- HERO -->
+<tr>
+<td style='padding:35px;
+background:linear-gradient(180deg,#155E75 0%,#ffffff 100%);'>
+
+<table width='100%' cellpadding='0' cellspacing='0'
+style='background:#fff;border-radius:10px;
+padding:30px;'>
+
+<tr>
+<td align='center'>
+
+<div style='font-size:54px;'>🚚</div>
+
+<h1 style='margin:10px 0 8px;
+color:#182D41;font-size:28px;'>
+Package Ready for Pickup
+</h1>
+
+<p style='margin:0;color:#6B7280;
+font-size:15px;line-height:24px;'>
+Store has packed the shipment.
+Please collect and deliver.
+</p>
+
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+
+<!-- CONTENT -->
+<tr>
+<td style='padding:28px;'>
+
+<p style='font-size:16px;margin:0 0 18px;'>
+Hello <b>{WebUtility.HtmlEncode(transporterName)}</b>,
+</p>
+
+<p style='font-size:15px;color:#444;
+line-height:24px;margin:0 0 20px;'>
+A shipment is ready for pickup.
+</p>
+
+<!-- ORDER CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;
+border-radius:10px;padding:18px;
+margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;
+font-weight:700;margin-bottom:14px;
+color:#111827;'>
+Order Information
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Store Order ID
+</td>
+<td align='right'>
+<b>{dto.StoreOrderId}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Tracking ID
+</td>
+<td align='right'>
+<b>{dto.TrackingId}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Order Date
+</td>
+<td align='right'>
+<b>{dto.OrderDate:dd MMM yyyy}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Expected Delivery
+</td>
+<td align='right'>
+<b>{dto.EstimatedDeliveryDate:dd MMM yyyy}</b>
+</td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+
+<!-- STORE CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;
+border-radius:10px;padding:18px;
+margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;
+font-weight:700;margin-bottom:14px;
+color:#111827;'>
+Pickup Details
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Store Name
+</td>
+<td align='right'>
+<b>{WebUtility.HtmlEncode(dto.StoreName)}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Town
+</td>
+<td align='right'>
+<b>{WebUtility.HtmlEncode(dto.StoreTown)}</b>
+</td>
+</tr>
+</table>
+
+</td></tr>
+</table>
+
+<!-- CUSTOMER CARD -->
+<table width='100%' cellpadding='0' cellspacing='0'
+style='border:1px solid #E5E7EB;
+border-radius:10px;padding:18px;
+margin-bottom:18px;'>
+<tr><td>
+
+<div style='font-size:18px;
+font-weight:700;margin-bottom:14px;
+color:#111827;'>
+Delivery Details
+</div>
+
+<table width='100%'>
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Customer
+</td>
+<td align='right'>
+<b>{WebUtility.HtmlEncode(dto.ShopperName)}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>
+Phone
+</td>
+<td align='right'>
+<b>{WebUtility.HtmlEncode(dto.ShopperPhone)}</b>
+</td>
+</tr>
+</table>
+
+<div style='margin-top:12px;
+color:#374151;line-height:24px;'>
+{WebUtility.HtmlEncode(dto.ShippingAddress)}
+</div>
+
+</td></tr>
+</table>
+
+<!-- BUTTON -->
+<div align='center'
+style='margin-top:26px;'>
+
+<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/transporter/my-plans'
+style='background:#0C4A6E;color:#fff;
+text-decoration:none;padding:14px 34px;
+border-radius:8px;display:inline-block;
+font-size:15px;'>
+View Order
+</a>
+
+</div>
+
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td align='center'
+style='padding:20px;color:#6B7280;
+font-size:12px;background:#F3F4F6;'>
+
+© 2026 itismytown.
+All rights reserved.
+
+</td>
+</tr>
+
+</table>
+
+</td>
 </tr>
 </table>
 

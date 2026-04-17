@@ -672,21 +672,24 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             return null;
 
         // 🔹 Get courier details if BranchId exists
+        // 🔹 Courier details
         string courierServiceName = null;
         string courierPhone = null;
         string courierBranchContact = null;
+        string courierEmail = null;
 
-        if (orderData.BranchId > 0)
+        if (orderData.BranchId.HasValue)
         {
             var courierData = await (
                 from cb in _context.CourierBranches
                 join cs in _context.CourierService on cb.CourierId equals cs.CourierId
-                where cb.BranchId == orderData.BranchId
+                where cb.BranchId == orderData.BranchId.Value
                 select new
                 {
                     cs.CourierServiceName,
                     cb.BranchPhoneNumber,
-                    cb.BranchContactPerson
+                    cb.BranchContactPerson,
+                    cb.BranchEmailId
                 }
             ).FirstOrDefaultAsync();
 
@@ -695,12 +698,14 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 courierServiceName = courierData.CourierServiceName;
                 courierPhone = courierData.BranchPhoneNumber;
                 courierBranchContact = courierData.BranchContactPerson;
+                courierEmail = courierData.BranchEmailId;
             }
         }
 
-        // 🔹 Get transporter details if TransporterRegId exists
+        // 🔹 Transporter details
         string transporterName = null;
         string transporterPhone = null;
+        string transporterEmail = null;
 
         if (orderData.TransporterRegId.HasValue)
         {
@@ -709,7 +714,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 .Select(t => new
                 {
                     t.TransporterName,
-                    t.PhoneNumber
+                    t.PhoneNumber,
+                    t.Email
                 })
                 .FirstOrDefaultAsync();
 
@@ -717,6 +723,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             {
                 transporterName = transporterData.TransporterName;
                 transporterPhone = transporterData.PhoneNumber;
+                transporterEmail = transporterData.Email;
             }
         }
 
@@ -781,10 +788,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             CourierServiceName = courierServiceName,
             CourierBranchPhone = courierPhone,
             CourierBranchContactname = courierBranchContact,
+            CourierEmail = courierEmail,
 
-            // Transporter (populated if transporter handles shipping)
             TransporterName = transporterName,
-            TransporterPhone = transporterPhone
+            TransporterPhone = transporterPhone,
+            TransporterEmail = transporterEmail
         };
     }
 
@@ -884,20 +892,25 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
 
 
+    // public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
     public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
-        int storeId,
-        string? search,
-        int pageNumber,
-        int pageSize)
+     int storeId,
+     string? search,
+     int pageNumber,
+     int pageSize)
     {
         var query = _context.products
             .Where(p => p.BusRegId == storeId);
 
+        // 🔍 Search
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(p =>
                 p.ProductName.Contains(search) ||
-                p.SupplierName.Contains(search));
+                p.SupplierName.Contains(search) ||
+                (p.ProductSubCategory != null && p.ProductSubCategory.ProdSubcatName.Contains(search)) ||
+                (p.ProductType != null && p.ProductType.ProdTypeName.Contains(search))
+            );
         }
 
         return await query
@@ -909,20 +922,33 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 ProductId = p.ProductId,
                 ProductName = p.ProductName,
 
-                CategoryName = p.BusinessRegister.BusinessCategory.BusinessCategoryName,
-                ProductType = p.ProductType != null ? p.ProductType.ProdTypeName : null,
+                CategoryName = p.ProductSubCategory != null
+                    ? p.ProductSubCategory.ProdSubcatName
+                    : null,
 
-                Fabric = p.Fabric != null ? p.Fabric.FabricName : null,
-                Design = p.Design != null ? p.Design.DesignName : null,
+                ProductType = p.ProductType != null
+                    ? p.ProductType.ProdTypeName
+                    : null,
+
+                Fabric = p.Fabric != null
+                    ? p.Fabric.FabricName
+                    : null,
+
+                Design = p.Design != null
+                    ? p.Design.DesignName
+                    : null,
 
                 Supplier = p.SupplierName,
                 ProductDescription = p.ProductDescription,
 
-                ProductAmount = p.Sku_ProductVariants.Min(v => v.DiscountPrice ?? v.Sku_Cost),
+                ProductAmount = p.Sku_ProductVariants
+                    .Min(v => v.DiscountPrice ?? v.Sku_Cost),
 
-                InStock = p.Sku_ProductVariants.Sum(v => (int)v.Quantity),
+                InStock = p.Sku_ProductVariants
+                    .Sum(v => (int)v.Quantity),
 
-                Discount = p.Sku_ProductVariants.Max(v => v.Discount),
+                Discount = p.Sku_ProductVariants
+                    .Max(v => v.Discount),
 
                 NoOfPurchased = _context.OrderDetails
                     .Where(od => od.ProductId == p.ProductId)
@@ -942,9 +968,6 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             })
             .ToListAsync();
     }
-
-
-
     private IQueryable<StoreOrder> GetDeliveredPaidOrders(int storeId)
     {
         var query =
@@ -1276,6 +1299,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     {
         return await _context.ShippingDetails
             .Include(sd => sd.CourierBranch)
+            .Include(sd => sd.TransporterRegister)
             .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
     }
 
@@ -1302,6 +1326,10 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         await _context.CourierDBNotifications.AddAsync(notification);
     }
 
+    public async Task AddTransporterNotificationAsync(TransporterDBNotifications notification)
+    {
+        await _context.TransporterDBNotifications.AddAsync(notification);
+    }
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

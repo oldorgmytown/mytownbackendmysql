@@ -3,16 +3,19 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 //using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
+using mytown.Services.Implementations;
 
 namespace mytown.Services.Implementations
 {
     public class BusinessDashboardService : IBusinessDashboardService
     {
         private readonly IBusinessDashboardRepository _repository;
+        private readonly IEmailService _emailService;
 
-        public BusinessDashboardService(IBusinessDashboardRepository repository)
+        public BusinessDashboardService(IBusinessDashboardRepository repository,IEmailService emailService)
         {
             _repository = repository;
+            _emailService = emailService; // Consider using DI for better testability
         }
 
         public Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
@@ -110,7 +113,8 @@ namespace mytown.Services.Implementations
             return await _repository.GetTopProductsAsync(storeId, topCount);
         }
 
-        //Notification to coueir - Reday to ship 
+        //Notification and email  to coueir and transporter - Reday to ship 
+
         public async Task MarkReadyToShipAsync(int storeOrderId)
         {
             // 1️⃣ Update shipping status
@@ -119,31 +123,114 @@ namespace mytown.Services.Implementations
                 "Ready to Ship"
             );
 
-            // 2️⃣ Update store order status (recommended)
+            // 2️⃣ Update store order status
             await _repository.UpdateStoreOrderStatusAsync(
                 storeOrderId,
                 "Ready to Ship"
             );
 
-            // 3️⃣ Get shipping to notify courier
+            // 3️⃣ Get shipping details
             var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
             if (shipping == null)
                 return;
 
-            // 4️⃣ Create courier notification
-            var notification = new CourierDBNotifications
+            // 4️⃣ Courier notification
+            if (shipping.BranchId.HasValue && shipping.CourierBranch != null)
             {
-                CourierId = shipping.CourierBranch.CourierId,
-                BranchId = shipping.BranchId,
-                Title = "Order Ready to Ship",
-                Message = $"StoreOrder #{storeOrderId} is ready for pickup."
-            };
+                var notification = new CourierDBNotifications
+                {
+                    CourierId = shipping.CourierBranch.CourierId,
+                    BranchId = shipping.BranchId.Value,
+                    Title = "Order Ready to Ship",
+                    Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+                };
 
-            await _repository.AddCourierNotificationAsync(notification);
+                await _repository.AddCourierNotificationAsync(notification);
+            }
 
-            // 5️⃣ Persist everything
+            // 5️⃣ Save DB changes
             await _repository.SaveChangesAsync();
+
+            // 5️⃣ Transporter notification
+            if (shipping.TransporterRegId.HasValue &&
+                shipping.TransporterRegister != null)
+            {
+                var transporterNotification =
+                    new TransporterDBNotifications
+                    {
+                        TransporterRegId =
+                            shipping.TransporterRegId.Value,
+
+                        Title = "Order Ready to Ship",
+
+                        Message =
+                            $"StoreOrder #{storeOrderId} is ready for pickup."
+                    };
+
+                await _repository
+                    .AddTransporterNotificationAsync(
+                        transporterNotification
+                    );
+            }
+
+            // 6️⃣ Save DB changes
+            await _repository.SaveChangesAsync();
+
+
+            // 6️⃣ Send emails
+            var orderDetails = await _repository.GetBusinessOrderDetailsAsync(storeOrderId);
+
+            if (orderDetails != null && shipping.BranchId.HasValue && shipping.CourierBranch != null)
+            {
+                await _emailService.SendPackagerdyEmailToCourierAsync(
+                    orderDetails.CourierEmail,
+                    orderDetails.CourierServiceName,
+                    orderDetails
+                );
+            }
+
+            if (orderDetails != null && shipping.TransporterRegId.HasValue && shipping.TransporterRegister != null)
+            {
+                await _emailService.SendPackagerdyEmailToTransporterAsync(
+                    orderDetails.TransporterEmail,
+                    orderDetails.TransporterName,
+                    orderDetails
+                );
+            }
         }
+        //public async Task MarkReadyToShipAsync(int storeOrderId)
+        //{
+        //    // 1️⃣ Update shipping status
+        //    await _repository.UpdateShippingStatusAsync(
+        //        storeOrderId,
+        //        "Ready to Ship"
+        //    );
+
+        //    // 2️⃣ Update store order status (recommended)
+        //    await _repository.UpdateStoreOrderStatusAsync(
+        //        storeOrderId,
+        //        "Ready to Ship"
+        //    );
+
+        //    // 3️⃣ Get shipping to notify courier
+        //    var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
+        //    if (shipping == null)
+        //        return;
+
+        //    // 4️⃣ Create courier notification
+        //    var notification = new CourierDBNotifications
+        //    {
+        //        CourierId = shipping.CourierBranch.CourierId,
+        //        BranchId = shipping.BranchId,
+        //        Title = "Order Ready to Ship",
+        //        Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+        //    };
+
+        //    await _repository.AddCourierNotificationAsync(notification);
+
+        //    // 5️⃣ Persist everything
+        //    await _repository.SaveChangesAsync();
+        //}
 
 
         // Get monthly Revenue for summary page

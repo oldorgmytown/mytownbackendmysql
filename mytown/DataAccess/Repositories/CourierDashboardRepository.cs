@@ -60,7 +60,7 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    BranchId = sd.BranchId,
+                    BranchId = sd.BranchId ?? 0,
 
                     Orderdate = DateOnly.FromDateTime(
                         sd.StoreOrder.Order.OrderDate
@@ -121,7 +121,7 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    BranchId = sd.BranchId,
+                    BranchId = sd.BranchId??0,
 
                     Orderdate = DateOnly.FromDateTime(
                         sd.StoreOrder.Order.OrderDate

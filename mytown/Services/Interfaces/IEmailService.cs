@@ -25,6 +25,18 @@ namespace mytown.Services.Interfaces
        OrderConfirmationDto orderdto,
        StoreOrderConfirmationDto storedto);
 
+        //package rdy email to courier
+
+        Task SendPackagerdyEmailToCourierAsync(
+        string email,
+        string courierName,
+        BusinessOrderDetailsDto dto);
+
+        Task SendPackagerdyEmailToTransporterAsync(
+       string email,
+       string transporterName,
+       BusinessOrderDetailsDto dto);
+
         Task SendEmailToTransporterAsync(
     string email,
     string transporterName,
