@@ -345,7 +345,7 @@ public class EmailService : IEmailService
                       border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;
+              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -353,7 +353,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;
+              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -365,7 +365,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;
+              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -373,7 +373,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;
+              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Amount</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -752,7 +752,7 @@ public class EmailService : IEmailService
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:6px;"">Store Order ID</td>
         <td align=""right"" style=""padding-bottom:6px;"">
-  <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
+  <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{store.StoreOrderId}""
      style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
     {store.StoreOrderId}
@@ -1037,7 +1037,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/order-details/{orderdto.OrderId}""
+        <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/shopper/orders""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -1372,10 +1372,10 @@ public class EmailService : IEmailService
                           Store Order ID
                         </td>
                         <td align=""right"" style=""padding-bottom:6px;"">
-                              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{{orderdto.OrderId}}""
+                              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{orderdto.OrderId}""
                                  style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
                                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                                {{storedto.StoreOrderId}}
+                                {storedto.StoreOrderId}
                               </a>
                             </td>
                       
