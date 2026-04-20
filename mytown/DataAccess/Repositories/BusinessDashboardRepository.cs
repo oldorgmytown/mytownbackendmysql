@@ -775,7 +775,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         return new BusinessOrderDetailsDto
         {
             StoreOrderId = orderData.StoreOrderId,
-            OrderId = orderData.OrderId,
+            OrderId = orderData.OrderId, //new
             OrderDate = orderData.OrderDate,
             TransactionId = orderData.PaymentId,
             ShopperId = orderData.ShopperRegId,
@@ -789,7 +789,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             Products = products,
             ProductAmount = productAmount,
 
-            ShippingMethod = orderData.ShippingType,
+            ShippingMethod = orderData.ShippingType, //updated
             ShippingAddress = orderData.DeliveryAddress,
             EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
             TrackingId = orderData.TrackingId,
@@ -1427,6 +1427,5 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         return result;
     }
 }
-
 
 
