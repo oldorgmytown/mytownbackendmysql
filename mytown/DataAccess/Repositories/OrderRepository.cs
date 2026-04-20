@@ -319,7 +319,12 @@ namespace mytown.DataAccess.Repositories
                         OrderId = newOrder.OrderId,
                         StoreOrderId = storeOrder.StoreOrderId,
                         BranchId = branch.BranchId,
-                        ShippingType = shippingSelection.ShippingType,
+                        ShippingType = shippingSelection.ShippingType?.Trim().ToLower() switch
+                        {
+                            "standard" => "Standard",
+                            "express" => "Express",
+                            _ => shippingSelection.ShippingType
+                        },
                         EstimatedDays = service.EstimateDays ?? 0,
                         Cost = service.Charges,
                         TrackingId = "",

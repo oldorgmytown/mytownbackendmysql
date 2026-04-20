@@ -651,6 +651,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             select new
             {
                 so.StoreOrderId,
+                o.OrderId,
                 o.OrderDate,
                 p.PaymentId,
                 o.ShopperRegId,
@@ -659,7 +660,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 so.StoreId,
                 StoreName = s.BusinessName,
                 StoreTown = s.Town,
-                o.ShippingType,
+                sd.ShippingType,
                 sd.DeliveryAddress,
                 sd.EstimatedDays,
                 sd.TrackingId,
@@ -766,6 +767,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         return new BusinessOrderDetailsDto
         {
             StoreOrderId = orderData.StoreOrderId,
+            OrderId = orderData.OrderId,
             OrderDate = orderData.OrderDate,
             TransactionId = orderData.PaymentId,
             ShopperId = orderData.ShopperRegId,

@@ -3,6 +3,7 @@
     public class BusinessOrderDetailsDto
 {
     public int StoreOrderId { get; set; }
+        public int OrderId { get; set; }
     public DateTime OrderDate { get; set; }
         public int TransactionId { get; set; }
 
