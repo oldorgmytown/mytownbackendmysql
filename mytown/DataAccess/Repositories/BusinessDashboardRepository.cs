@@ -510,7 +510,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -519,6 +520,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Take(pageSize)
             .Select(x => new BusinessOrderListDto
             {
+                OrderId = x.Order.OrderId,
                 StoreOrderId = x.StoreOrder.StoreOrderId,
                 Status = "New",
                 EstimatedDeliveryDate =
@@ -547,7 +549,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -557,6 +560,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "Pending",
                 EstimatedDeliveryDate =
                     x.Shipping != null
@@ -584,7 +588,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+        x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -594,6 +599,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "In Progress",
                 EstimatedDeliveryDate =
                     x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
@@ -618,7 +624,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -628,6 +635,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "Delivered",
                 DeliveredDate = x.Shipping.DeliveredDate
             })
