@@ -276,53 +276,12 @@ public class EmailService : IEmailService
       </td>
     </tr>
 
-    <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:8px 30px 0px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
-        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:10px 24px;"">
-          <tr>
-            <td align=""center"" style=""padding-bottom:20px;"">
-
-              <!-- ✅ GREEN CIRCLE WITH TICK — EMAIL-SAFE TABLE LAYOUT -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
-                <tr>
-                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
-                      style=""width:48px;height:48px;border-radius:50%;
-                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                            border:4px solid rgba(16,86,23,0.10);
-                            text-align:center;vertical-align:middle;"">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
-                      xmlns:w=""urn:schemas-microsoft-com:office:word""
-                      style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent""
-                      fillcolor=""#105617"">
-                    <w:anchorlock/>
-                    <center>
-                    <![endif]-->
-                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
-                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
-                    <!--[if mso]></center></v:roundrect><![endif]-->
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:22px;font-weight:600;text-align:center;
-                          margin:0 0 10px 0;
-                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                New Order Received!
-              </h1>
-              <p style=""color:#7A7A7A;font-size:16px;font-weight:400;text-align:center;
-                         line-height:1.5;margin:0;max-width:420px;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                You have received a new order. Please review and process it as soon as possible.
-              </p>
-
-            </td>
-          </tr>
-        </table>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+            alt=""Order Confirmed""
+            width=""600""
+            style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
     </tr>
 
@@ -820,52 +779,12 @@ public class EmailService : IEmailService
       </td>
     </tr>
 
-    <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:8px 30px 0px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
-        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:10px 24px;"">
-          <tr>
-            <td align=""center"">
-
-                <!-- ✅ GREEN CIRCLE WITH TICK — TABLE BASED (email-safe) -->
-                <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
-                  <tr>
-                    <td width=""48"" height=""48"" align=""center"" valign=""middle""
-                        style=""width:48px;height:48px;border-radius:50%;
-                              background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                              border:4px solid rgba(16,86,23,0.10);
-                              text-align:center;vertical-align:middle;"">
-                      <!--[if mso]>
-                      <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
-                        xmlns:w=""urn:schemas-microsoft-com:office:word""
-                        style=""height:64px;v-text-anchor:middle;width:64px;""
-                        arcsize=""50%"" strokecolor=""transparent""
-                        fillcolor=""#105617"">
-                      <w:anchorlock/>
-                      <center>
-                      <![endif]-->
-                      <span style=""color:#ffffff;font-size:26px;font-weight:900;
-                                  font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
-                      <!--[if mso]></center></v:roundrect><![endif]-->
-                    </td>
-                  </tr>
-                </table>
-
-              <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:22px;font-weight:600;text-align:center;
-                          margin:10px 0 6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                Order Confirmed!
-              </h1>
-              <p style=""color:#7A7A7A;font-size:16px;font-weight:400;text-align:center;
-                         line-height:1.5;margin:0 0 4px 0;max-width:400px;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                Thank you for your purchase! Your order has been successfully placed.
-              </p>
-
-            </td>
-          </tr>
-        </table>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+            alt=""Order Confirmed""
+            width=""600""
+            style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
     </tr>
 
@@ -1248,53 +1167,12 @@ public class EmailService : IEmailService
       </td>
     </tr>
 
-    <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:48px 28px;background:linear-gradient(180deg,#155E75 0%,#ffffff 100%);"">
-        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:32px 24px;"">
-          <tr>
-            <td align=""center"">
-
-              <!-- GREEN CIRCLE WITH TICK -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
-                <tr>
-                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
-                      style=""width:48px;height:48px;border-radius:50%;
-                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                            border:4px solid rgba(16,86,23,0.10);
-                            text-align:center;vertical-align:middle;"">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
-                      xmlns:w=""urn:schemas-microsoft-com:office:word""
-                      style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent""
-                      fillcolor=""#105617"">
-                    <w:anchorlock/>
-                    <center>
-                    <![endif]-->
-                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
-                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
-                    <!--[if mso]></center></v:roundrect><![endif]-->
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:28px;font-weight:600;text-align:center;
-                          margin:0 0 8px 0;
-                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                Delivery Assignment Confirmed!
-              </h1>
-              <p style=""color:#6B7280;font-size:16px;font-weight:400;text-align:center;
-                         line-height:1.5;margin:0;max-width:420px;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                Please pick up the package from the store and deliver it to the customer address.
-              </p>
-
-            </td>
-          </tr>
-        </table>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+            alt=""Order Confirmed""
+            width=""600""
+            style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
     </tr>
 
@@ -2192,54 +2070,12 @@ style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
       </td>
     </tr>
 
-    <!-- ===== HERO GRADIENT SECTION ===== -->
     <tr>
-      <td style=""padding:48px 30px;background:linear-gradient(180deg,#285A8C 0%,#ffffff 100%);"">
-        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
-               style=""background:#fff;border-radius:8px;padding:32px 24px;"">
-          <tr>
-            <td align=""center"">
-
-              <!-- GREEN CIRCLE WITH TICK -->
-              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 auto;"">
-                <tr>
-                  <td width=""48"" height=""48"" align=""center"" valign=""middle""
-                      style=""width:48px;height:48px;border-radius:50%;
-                            background:linear-gradient(180deg,#105617 0%,#2F7C37 100%);
-                            border:4px solid rgba(16,86,23,0.10);
-                            text-align:center;vertical-align:middle;"">
-                    <!--[if mso]>
-                    <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml""
-                      xmlns:w=""urn:schemas-microsoft-com:office:word""
-                      style=""height:64px;v-text-anchor:middle;width:64px;""
-                      arcsize=""50%"" strokecolor=""transparent""
-                      fillcolor=""#105617"">
-                    <w:anchorlock/>
-                    <center>
-                    <![endif]-->
-                    <span style=""color:#ffffff;font-size:26px;font-weight:900;
-                                font-family:Arial,sans-serif;line-height:1;"">&#10003;</span>
-                    <!--[if mso]></center></v:roundrect><![endif]-->
-                  </td>
-                </tr>
-              </table>
-
-              <!-- Heading -->
-              <h1 style=""color:#182D41;font-size:28px;font-weight:600;text-align:center;
-                          margin:0 0 8px 0;
-                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                Transport Order Confirmed!
-              </h1>
-              <p style=""color:#6B7280;font-size:16px;font-weight:400;text-align:center;
-                         line-height:1.5;margin:0;max-width:420px;
-                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                You have been successfully assigned to deliver this order.
-                Please review the details below.
-              </p>
-
-            </td>
-          </tr>
-        </table>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+            alt=""Order Confirmed""
+            width=""600""
+            style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
     </tr>
 
