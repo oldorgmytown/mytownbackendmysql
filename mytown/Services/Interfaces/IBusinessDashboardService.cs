@@ -29,9 +29,10 @@ namespace mytown.Services.Interfaces
 
         Task<List<BusinessNotificationDto>> GetNotificationsAsync(
        int busRegId,
-       bool onlyUnread
-   );
+       bool onlyUnread   );
+
         Task MarkeachNotificationAsReadAsync(int notificationId);
+        Task MarkReadyToShipAsync(ReadyToShipDto dto);
         Task MarkAllAsReadAsync(int busRegId);
         //  Task GetNotificationsAsync(int busRegId, bool onlyUnread);
 
@@ -58,7 +59,7 @@ namespace mytown.Services.Interfaces
 
         //notification to coueir - ready to ship
 
-        Task MarkReadyToShipAsync(int storeOrderId);
+     //   Task MarkReadyToShipAsync(int storeOrderId);
         // get monthly Revenue - for summary page
 
         Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(int storeId, int? year, int? month, string? currency);

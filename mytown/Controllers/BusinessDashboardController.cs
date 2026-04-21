@@ -260,15 +260,27 @@ namespace mytown.Controllers
 
         // Notificatio to courier - Ready to ship
 
+        // Controller
         [HttpPost("ready-to-ship_NotificationtoCourier")]
-        public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        public async Task<IActionResult> MarkReadyToShip([FromBody] ReadyToShipDto dto)
         {
-            await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+            await _dasboardservice.MarkReadyToShipAsync(dto);
+
             return Ok(new
             {
                 message = "Order marked as Ready to Ship"
             });
         }
+
+        //[HttpPost("ready-to-ship_NotificationtoCourier")]
+        //public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        //{
+        //    await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+        //    return Ok(new
+        //    {
+        //        message = "Order marked as Ready to Ship"
+        //    });
+        //}
 
         //sales history
 

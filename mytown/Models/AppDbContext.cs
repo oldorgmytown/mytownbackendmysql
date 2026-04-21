@@ -90,6 +90,9 @@ namespace mytown.Models
             public DbSet<PendingSenderVerification> PendingSenderVerifications { get; set; }
             public DbSet<SenderVerification> SenderVerifications { get; set; }
 
+            //package dimensions
+            public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; }
+
 
 
 

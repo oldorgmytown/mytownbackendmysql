@@ -1442,7 +1442,8 @@ public class EmailService : IEmailService
     public async Task SendPackagerdyEmailToCourierAsync(
         string email,
         string courierName,
-        BusinessOrderDetailsDto dto)
+        BusinessOrderDetailsDto dto,
+        string packageSummary)
     {
         if (!await DomainHasMX(email))
             throw new Exception("Invalid email domain.");
@@ -1457,7 +1458,7 @@ public class EmailService : IEmailService
                 smtpClient.EnableSsl = true;
 
                 string body =
-                    BuildReadyToShipCourierTemplate(courierName, dto);
+                    BuildReadyToShipCourierTemplate(courierName, dto,packageSummary);
 
                 var mailMessage = new MailMessage
                 {
@@ -1481,7 +1482,8 @@ public class EmailService : IEmailService
 
     private string BuildReadyToShipCourierTemplate(
         string courierName,
-        BusinessOrderDetailsDto dto)
+        BusinessOrderDetailsDto dto,
+        string packageSummary)
     {
         return $@"
 <!DOCTYPE html>
@@ -1571,6 +1573,13 @@ Order Information
 <tr>
 <td style='padding:6px 0;color:#6B7280;'>Expected Delivery</td>
 <td align='right'><b>{dto.EstimatedDeliveryDate:dd MMM yyyy}</b></td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Package Details</td>
+<td align='right'>
+<b>{packageSummary}</b>
+</td>
 </tr>
 </table>
 
@@ -2337,7 +2346,8 @@ style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
     public async Task SendPackagerdyEmailToTransporterAsync(
         string email,
         string transporterName,
-        BusinessOrderDetailsDto dto)
+        BusinessOrderDetailsDto dto,
+        string packageSummary)
     {
         if (!await DomainHasMX(email))
             throw new Exception("Invalid email domain.");
@@ -2354,7 +2364,7 @@ style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
                 string body =
                     BuildReadyToShipTransporterTemplate(
                         transporterName,
-                        dto
+                        dto, packageSummary
                     );
 
                 var mailMessage = new MailMessage
@@ -2381,7 +2391,8 @@ style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
 
     private string BuildReadyToShipTransporterTemplate(
         string transporterName,
-        BusinessOrderDetailsDto dto)
+        BusinessOrderDetailsDto dto,
+        string packageSummary)
     {
         return $@"
 <!DOCTYPE html>
@@ -2498,6 +2509,13 @@ Expected Delivery
 </td>
 <td align='right'>
 <b>{dto.EstimatedDeliveryDate:dd MMM yyyy}</b>
+</td>
+</tr>
+
+<tr>
+<td style='padding:6px 0;color:#6B7280;'>Package Details</td>
+<td align='right'>
+<b>{packageSummary}</b>
 </td>
 </tr>
 </table>

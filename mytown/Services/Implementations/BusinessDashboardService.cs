@@ -115,8 +115,11 @@ namespace mytown.Services.Implementations
 
         //Notification and email  to coueir and transporter - Reday to ship 
 
-        public async Task MarkReadyToShipAsync(int storeOrderId)
+        // Service
+        public async Task MarkReadyToShipAsync(ReadyToShipDto dto)
         {
+            int storeOrderId = dto.StoreOrderId;
+
             // 1️⃣ Update shipping status
             await _repository.UpdateShippingStatusAsync(
                 storeOrderId,
@@ -134,7 +137,22 @@ namespace mytown.Services.Implementations
             if (shipping == null)
                 return;
 
-            // 4️⃣ Courier notification
+            // 4️⃣ Save package details
+            await _repository.AddShippingPackageDetailsAsync(new ShippingPackageDetails
+            {
+                ShippingDetailId = shipping.ShippingDetailId,
+                StoreOrderId = storeOrderId,
+
+                PackageLength = dto.PackageLength,
+                PackageWidth = dto.PackageWidth,
+                PackageHeight = dto.PackageHeight,
+                PackageWeight = dto.PackageWeight,
+
+                DimensionUnit = dto.DimensionUnit ?? "cm",
+                WeightUnit = dto.WeightUnit ?? "kg"
+            });
+
+            // 5️⃣ Courier notification
             if (shipping.BranchId.HasValue && shipping.CourierBranch != null)
             {
                 var notification = new CourierDBNotifications
@@ -148,53 +166,50 @@ namespace mytown.Services.Implementations
                 await _repository.AddCourierNotificationAsync(notification);
             }
 
-            // 5️⃣ Save DB changes
-            await _repository.SaveChangesAsync();
-
-            // 5️⃣ Transporter notification
+            // 6️⃣ Transporter notification
             if (shipping.TransporterRegId.HasValue &&
                 shipping.TransporterRegister != null)
             {
-                var transporterNotification =
-                    new TransporterDBNotifications
-                    {
-                        TransporterRegId =
-                            shipping.TransporterRegId.Value,
+                var transporterNotification = new TransporterDBNotifications
+                {
+                    TransporterRegId = shipping.TransporterRegId.Value,
+                    Title = "Order Ready to Ship",
+                    Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+                };
 
-                        Title = "Order Ready to Ship",
-
-                        Message =
-                            $"StoreOrder #{storeOrderId} is ready for pickup."
-                    };
-
-                await _repository
-                    .AddTransporterNotificationAsync(
-                        transporterNotification
-                    );
+                await _repository.AddTransporterNotificationAsync(
+                    transporterNotification
+                );
             }
 
-            // 6️⃣ Save DB changes
+            // 7️⃣ Save all DB changes once
             await _repository.SaveChangesAsync();
 
-
-            // 6️⃣ Send emails
+            // 8️⃣ Send emails
             var orderDetails = await _repository.GetBusinessOrderDetailsAsync(storeOrderId);
+            string packageSummary =
+                $"{dto.PackageLength} × {dto.PackageWidth} × {dto.PackageHeight} {dto.DimensionUnit}, " +
+                $"{dto.PackageWeight} {dto.WeightUnit}";
 
-            if (orderDetails != null && shipping.BranchId.HasValue && shipping.CourierBranch != null)
+            if (orderDetails != null &&
+                shipping.BranchId.HasValue &&
+                shipping.CourierBranch != null)
             {
                 await _emailService.SendPackagerdyEmailToCourierAsync(
                     orderDetails.CourierEmail,
                     orderDetails.CourierServiceName,
-                    orderDetails
+                    orderDetails, packageSummary
                 );
             }
 
-            if (orderDetails != null && shipping.TransporterRegId.HasValue && shipping.TransporterRegister != null)
+            if (orderDetails != null &&
+                shipping.TransporterRegId.HasValue &&
+                shipping.TransporterRegister != null)
             {
                 await _emailService.SendPackagerdyEmailToTransporterAsync(
                     orderDetails.TransporterEmail,
                     orderDetails.TransporterName,
-                    orderDetails
+                    orderDetails,packageSummary
                 );
             }
         }

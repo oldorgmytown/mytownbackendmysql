@@ -1426,6 +1426,14 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         return result;
     }
+
+    // store package dimensions and weight details for courier
+    // Repository
+    public async Task AddShippingPackageDetailsAsync(
+        ShippingPackageDetails packageDetails)
+    {
+        await _context.ShippingPackageDetails.AddAsync(packageDetails);
+    }
 }
 
 

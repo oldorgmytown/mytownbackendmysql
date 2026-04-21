@@ -115,5 +115,8 @@ namespace mytown.DataAccess.Interfaces
         //sales trend graph
 
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
+
+        // store package details
+        Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
     }
 }

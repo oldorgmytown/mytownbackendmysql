@@ -28,14 +28,15 @@ namespace mytown.Services.Interfaces
         //package rdy email to courier
 
         Task SendPackagerdyEmailToCourierAsync(
-        string email,
-        string courierName,
-        BusinessOrderDetailsDto dto);
+       string email,
+       string courierName,
+       BusinessOrderDetailsDto dto,
+       string packageSummary);
 
         Task SendPackagerdyEmailToTransporterAsync(
        string email,
        string transporterName,
-       BusinessOrderDetailsDto dto);
+       BusinessOrderDetailsDto dto,string packageSummary);
 
         Task SendEmailToTransporterAsync(
     string email,
