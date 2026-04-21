@@ -49,7 +49,8 @@ namespace mytown.DataAccess.Repositories
                     sd.StoreOrder.Store.Town.Contains(search) ||
                     sd.StoreOrder.Store.BusMobileNo.Contains(search) ||
                     sd.TrackingId.Contains(search) ||
-                    sd.StoreOrderId.ToString().Contains(search)
+                    sd.StoreOrderId.ToString().Contains(search) ||
+                    sd.OrderId.ToString().Contains(search)
                 );
             }
 
@@ -60,6 +61,7 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
+                    OrderId = sd.OrderId,
                     BranchId = sd.BranchId ?? 0,
 
                     Orderdate = DateOnly.FromDateTime(
@@ -110,7 +112,8 @@ namespace mytown.DataAccess.Repositories
                     sd.StoreOrder.Store.BusinessName.Contains(search) ||
                     sd.StoreOrder.Store.Town.Contains(search) ||
                     sd.TrackingId.Contains(search) ||
-                    sd.StoreOrderId.ToString().Contains(search)
+                    sd.StoreOrderId.ToString().Contains(search) ||
+                    sd.OrderId.ToString().Contains(search)
                 );
             }
 
@@ -121,6 +124,7 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
+                    OrderId = sd.OrderId,
                     BranchId = sd.BranchId??0,
 
                     Orderdate = DateOnly.FromDateTime(
@@ -209,6 +213,7 @@ namespace mytown.DataAccess.Repositories
             return new CourierOrderDetailDto
             {
                 StoreOrderId = storeOrder.StoreOrderId,
+                OrderId = storeOrder.OrderId,
                 OrderDate = storeOrder.Order.OrderDate,
 
                 ShopperId = storeOrder.Order.ShopperRegId,
@@ -217,8 +222,13 @@ namespace mytown.DataAccess.Repositories
 
                 StoreId = storeOrder.StoreId,
                 StoreName = storeOrder.Store.BusinessName,
-                StoreTown = storeOrder.Store.Town,
-
+                //StoreTown = storeOrder.Store.Town,
+                StoreTown =
+                    (storeOrder.Store.Address1 ?? "") + ", " +
+                    (storeOrder.Store.Town ?? "") + ", " +
+                    (storeOrder.Store.BusinessCity ?? "") + ", " +
+                    (storeOrder.Store.BusinessState ?? "") + ", " +
+                    (storeOrder.Store.BusinessCountry ?? ""),
                 ShippingMethod = shipping?.ShippingType,
                 ShippingCost = shippingCost,
                 ShippingAddress = shipping?.DeliveryAddress,

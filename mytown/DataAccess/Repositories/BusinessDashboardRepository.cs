@@ -667,7 +667,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 ShopperPhone = sh.PhoneNumber,
                 so.StoreId,
                 StoreName = s.BusinessName,
-                StoreTown = s.Town,
+                StoreTown =
+                    (s.Address1 ?? "") + ", " +
+                    (s.Town ?? "") + ", " +
+                    (s.BusinessCity ?? "") + ", " +
+                    (s.BusinessState ?? "") + ", " +
+                    (s.BusinessCountry ?? ""),
                 sd.ShippingType,
                 sd.DeliveryAddress,
                 sd.EstimatedDays,

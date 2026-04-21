@@ -4,6 +4,7 @@
     {
         // Order Info
         public int StoreOrderId { get; set; }
+        public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }
 
         // Shopper Info
@@ -15,6 +16,8 @@
         public int StoreId { get; set; }
         public string StoreName { get; set; }
         public string StoreTown { get; set; }
+
+        public string StoreAddress { get; set; }
 
         // Shipping Info
         public string ShippingMethod { get; set; }

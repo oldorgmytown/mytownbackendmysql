@@ -1683,11 +1683,6 @@ Order Information
 </tr>
 
 <tr>
-<td style='padding:6px 0;color:#6B7280;'>Tracking ID</td>
-<td align='right'><b>{dto.TrackingId}</b></td>
-</tr>
-
-<tr>
 <td style='padding:6px 0;color:#6B7280;'>Order Date</td>
 <td align='right'><b>{dto.OrderDate:dd MMM yyyy}</b></td>
 </tr>
