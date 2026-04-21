@@ -1548,14 +1548,7 @@ public class EmailService : IEmailService
               {dto.StoreOrderId}
             </td>
           </tr>
-          <tr>
-            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
-                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Tracking ID</td>
-            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
-                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {dto.TrackingId}
-            </td>
-          </tr>
+
           <tr>
             <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</td>
@@ -1601,7 +1594,7 @@ public class EmailService : IEmailService
           </tr>
           <tr>
             <td style=""color:#585858;font-size:14px;font-weight:500;
-                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Town</td>
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
               {WebUtility.HtmlEncode(dto.StoreTown)}
@@ -2473,14 +2466,7 @@ public class EmailService : IEmailService
               {dto.StoreOrderId}
             </td>
           </tr>
-          <tr>
-            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
-                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Tracking ID</td>
-            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
-                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {dto.TrackingId}
-            </td>
-          </tr>
+          
           <tr>
             <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</td>
@@ -2526,7 +2512,7 @@ public class EmailService : IEmailService
           </tr>
           <tr>
             <td style=""color:#585858;font-size:14px;font-weight:500;
-                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Town</td>
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
               {WebUtility.HtmlEncode(dto.StoreTown)}
