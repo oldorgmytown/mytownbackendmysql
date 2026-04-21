@@ -6,7 +6,11 @@ namespace mytown.Services.Interfaces
     {
         Task SendVerificationEmail(string email, string verificationLink);
         Task SendPasswordResetEmail(string email, string resetLink);
+
+        //bussiness conformation email to shopper
         Task SendBusinessnotificationforOrderCnf(string email, string businessname,OrderConfirmationDto orderdto, StoreOrderConfirmationDto storedto);
+        
+        //shopper conformation email to shopper
 
         Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto);
         
@@ -18,6 +22,7 @@ namespace mytown.Services.Interfaces
         Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status);
 
         Task SendShopperDeactivationEmailAsync(string email, string shopperName);
+        //courconformation email to courier
 
         Task SendEmailToCourierAsync(
        string email,
@@ -33,10 +38,13 @@ namespace mytown.Services.Interfaces
        BusinessOrderDetailsDto dto,
        string packageSummary);
 
+       //package rdy email to transporter
+
         Task SendPackagerdyEmailToTransporterAsync(
        string email,
        string transporterName,
        BusinessOrderDetailsDto dto,string packageSummary);
+       //transporter conformation email to email
 
         Task SendEmailToTransporterAsync(
     string email,
