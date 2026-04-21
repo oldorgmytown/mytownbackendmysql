@@ -278,7 +278,7 @@ public class EmailService : IEmailService
 
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
-        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/order_recive.png""
             alt=""Order Confirmed""
             width=""600""
             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
@@ -1169,7 +1169,7 @@ public class EmailService : IEmailService
 
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
-        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/order_conform.jpeg""
             alt=""Order Confirmed""
             width=""600""
             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
@@ -1481,199 +1481,216 @@ public class EmailService : IEmailService
     }
 
     private string BuildReadyToShipCourierTemplate(
-        string courierName,
-        BusinessOrderDetailsDto dto,
-        string packageSummary)
-    {
-        return $@"
+    string courierName,
+    BusinessOrderDetailsDto dto,
+    string packageSummary)
+{
+    return $@"
 <!DOCTYPE html>
-<html>
-<body style='margin:0;padding:0;background:#F8FAFC;font-family:Segoe UI,Arial,sans-serif;'>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Package Ready for Pickup - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
 
-<table width='100%' cellpadding='0' cellspacing='0'>
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
 <tr>
-<td align='center'>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#FAFBFC;"">
 
-<table width='620' cellpadding='0' cellspacing='0'
-style='background:#ffffff;margin-top:20px;border-radius:12px;overflow:hidden;'>
+    <!-- ===== HEADER (LOGO) ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <img src=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/images/mainlogoblue.png""
+             alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
 
-<!-- HEADER -->
-<tr>
-<td align='center'
-style='padding:22px;background:#0C4A6E;color:#fff;font-size:28px;font-weight:700;'>
-ITISMYTOWN
-</td>
-</tr>
+    <!-- ===== BANNER IMAGE ===== -->
+    <tr>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+             alt=""Package Ready for Pickup""
+             width=""600""
+             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
+      </td>
+    </tr>
 
-<!-- HERO -->
-<tr>
-<td style='padding:35px;background:linear-gradient(180deg,#155E75 0%,#ffffff 100%);'>
+    <!-- ===== HELLO + INTRO ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <p style=""color:#000;font-size:16px;font-weight:700;line-height:1.5;margin:0 0 8px 0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          Hello {WebUtility.HtmlEncode(courierName)},
+        </p>
+        <p style=""color:#585858;font-size:16px;font-weight:400;line-height:1.5;margin:0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          A shipment is ready for pickup. Please collect from the store and deliver to the customer.
+        </p>
+      </td>
+    </tr>
 
-<table width='100%' cellpadding='0' cellspacing='0'
-style='background:#fff;border-radius:10px;padding:30px;'>
+    <!-- ===== ORDER INFORMATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Information</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""border:1px solid #E5E7EB;border-radius:12px;padding:20px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.StoreOrderId}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Tracking ID</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.TrackingId}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.OrderDate:dd MMM yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Expected Delivery</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.EstimatedDeliveryDate:dd MMM yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Package Details</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(packageSummary)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-<tr>
-<td align='center'>
+    <!-- ===== STORE PICKUP DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-top:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Pickup Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""border:1px solid #E5E7EB;border-radius:12px;padding:20px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Name</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.StoreName)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Town</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.StoreTown)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-<div style='font-size:54px;'>📦</div>
+    <!-- ===== DELIVERY DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-top:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Delivery Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""border:1px solid #E5E7EB;border-radius:12px;padding:20px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Customer</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.ShopperName)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Phone</td>
+            <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.ShopperPhone)}
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:12px;"">
+              <div style=""height:1px;background:#D9D9D9;""></div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"">
+              <div style=""color:#000;font-size:14px;font-weight:600;margin-bottom:8px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                Shipping Address
+              </div>
+              <div style=""color:#585858;font-size:14px;font-weight:500;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.ShippingAddress)}
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-<h1 style='margin:10px 0 8px;color:#182D41;font-size:28px;'>
-Package Ready for Pickup
-</h1>
+    <!-- ===== VIEW ORDER BUTTON ===== -->
+    <tr>
+      <td align=""center"" style=""padding:24px 30px;"">
+        <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{dto.StoreOrderId}""
+           style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
+                  border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
+                  text-decoration:none;text-align:center;
+                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          View Order
+        </a>
+      </td>
+    </tr>
 
-<p style='margin:0;color:#6B7280;font-size:15px;line-height:24px;'>
-Store has packed the order. Please collect and deliver.
-</p>
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td align=""center"" style=""color:#585858;font-size:12px;font-weight:400;line-height:1.5;
+                                        padding-bottom:6px;
+                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &copy; 2026 itismytown. All rights reserved.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
 
-</td>
-</tr>
-
-</table>
-
-</td>
-</tr>
-
-<!-- CONTENT -->
-<tr>
-<td style='padding:28px;'>
-
-<p style='font-size:16px;margin:0 0 18px;'>
-Hello <b>{WebUtility.HtmlEncode(courierName)}</b>,
-</p>
-
-<p style='font-size:15px;color:#444;line-height:24px;margin:0 0 20px;'>
-A shipment is ready for pickup.
-</p>
-
-<!-- ORDER CARD -->
-<table width='100%' cellpadding='0' cellspacing='0'
-style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
-<tr><td>
-
-<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
-Order Information
-</div>
-
-<table width='100%'>
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Store Order ID</td>
-<td align='right'><b>{dto.StoreOrderId}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Tracking ID</td>
-<td align='right'><b>{dto.TrackingId}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Order Date</td>
-<td align='right'><b>{dto.OrderDate:dd MMM yyyy}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Expected Delivery</td>
-<td align='right'><b>{dto.EstimatedDeliveryDate:dd MMM yyyy}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Package Details</td>
-<td align='right'>
-<b>{packageSummary}</b>
-</td>
-</tr>
-</table>
-
-</td></tr>
-</table>
-
-<!-- STORE CARD -->
-<table width='100%' cellpadding='0' cellspacing='0'
-style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
-<tr><td>
-
-<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
-Store Pickup Details
-</div>
-
-<table width='100%'>
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Store Name</td>
-<td align='right'><b>{WebUtility.HtmlEncode(dto.StoreName)}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Town</td>
-<td align='right'><b>{WebUtility.HtmlEncode(dto.StoreTown)}</b></td>
-</tr>
-</table>
-
-</td></tr>
-</table>
-
-<!-- CUSTOMER CARD -->
-<table width='100%' cellpadding='0' cellspacing='0'
-style='border:1px solid #E5E7EB;border-radius:10px;padding:18px;margin-bottom:18px;'>
-<tr><td>
-
-<div style='font-size:18px;font-weight:700;margin-bottom:14px;color:#111827;'>
-Delivery Details
-</div>
-
-<table width='100%'>
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Customer</td>
-<td align='right'><b>{WebUtility.HtmlEncode(dto.ShopperName)}</b></td>
-</tr>
-
-<tr>
-<td style='padding:6px 0;color:#6B7280;'>Phone</td>
-<td align='right'><b>{WebUtility.HtmlEncode(dto.ShopperPhone)}</b></td>
-</tr>
-</table>
-<!-- Shipping Address Heading -->
-<div style='margin-top:14px;font-size:14px;font-weight:700;color:#111827;'>
-Shipping Address
-</div>
-
-<div style='margin-top:12px;color:#374151;line-height:24px;'>
-{WebUtility.HtmlEncode(dto.ShippingAddress)}
-</div>
-
-</td></tr>
-</table>
-
-<!-- BUTTON -->
-<div align='center' style='margin-top:26px;'>
-
-<a href='https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{dto.StoreOrderId}'
-style='background:#0C4A6E;color:#fff;text-decoration:none;
-padding:14px 34px;border-radius:8px;display:inline-block;font-size:15px;'>
-View Order
-</a>
-
-</div>
-
-</td>
-</tr>
-
-<!-- FOOTER -->
-<tr>
-<td align='center'
-style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
-© 2026 itismytown. All rights reserved.
-</td>
-</tr>
-
-</table>
-
-</td>
+  </table>
+  </td>
 </tr>
 </table>
 
 </body>
 </html>";
-    }
-
+}
     //Admin Approval or Rejection of submitted business profile
 
     public async Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status)
@@ -2081,7 +2098,7 @@ style='padding:20px;color:#6B7280;font-size:12px;background:#F3F4F6;'>
 
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
-        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/shopper_email.png""
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/deliver_comform.jpeg""
             alt=""Order Confirmed""
             width=""600""
             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
