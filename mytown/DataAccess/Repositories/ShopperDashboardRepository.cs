@@ -32,6 +32,7 @@ namespace mytown.DataAccess.Repositories
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
+                    OrderId = o.OrderId,
                     ExpectedDeliveryDate = o.OrderDate.AddDays(sd.EstimatedDays),
                     ShippingStatus = sd.ShippingStatus
                 };
@@ -40,7 +41,10 @@ namespace mytown.DataAccess.Repositories
             {
                 query = query.Where(x =>
                     x.StoreOrderId.ToString().Contains(search) ||
-                    x.ShippingStatus.Contains(search));
+                    x.ShippingStatus.Contains(search) ||
+                    x.OrderId.ToString().Contains(search));
+
+
             }
 
             return await query
@@ -67,13 +71,14 @@ namespace mytown.DataAccess.Repositories
                 select new
                 {
                     so.StoreOrderId,
+                    o.OrderId,
                     p.PaymentId,
                     o.OrderDate,
                     o.ShopperRegId,
                     so.StoreId,
                     StoreName = s.BusinessName,
                     StoreTown = s.Town,
-                    o.ShippingType,
+                    sd.ShippingType,
                     sd.Cost,
                     sd.EstimatedDays,
                     sd.TrackingId,
@@ -153,6 +158,7 @@ namespace mytown.DataAccess.Repositories
             return new ShopperOrderDetailsDto
             {
                 StoreOrderId = orderData.StoreOrderId,
+                OrderId = orderData.OrderId,
                 TransactionId = orderData.PaymentId,
                 OrderDate = orderData.OrderDate,
                 ShopperId = orderData.ShopperRegId,
