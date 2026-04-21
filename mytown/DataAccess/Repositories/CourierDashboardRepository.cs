@@ -199,6 +199,9 @@ namespace mytown.DataAccess.Repositories
                 .Include(sd => sd.CourierBranch)
                     .ThenInclude(cb => cb.CourierService)
                 .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
+            //package dimensions
+            var package = await _context.ShippingPackageDetails
+    .FirstOrDefaultAsync(p => p.StoreOrderId == storeOrderId);
 
             int estimateDays = shipping?.EstimatedDays ?? 0;
 
@@ -237,6 +240,15 @@ namespace mytown.DataAccess.Repositories
 
                 CourierServiceName = shipping?.CourierBranch?.CourierService?.CourierServiceName,
                 TrackingId = shipping?.TrackingId,
+
+                //package dimensions
+                PackageLength = package?.PackageLength,
+                PackageWidth = package?.PackageWidth,
+                PackageHeight = package?.PackageHeight,
+                PackageWeight = package?.PackageWeight,
+
+                DimensionUnit = package?.DimensionUnit,
+                WeightUnit = package?.WeightUnit,
 
                 Products = storeOrder.OrderDetails.Select(od => new CourierOrderProductDto
                 {
