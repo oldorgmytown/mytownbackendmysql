@@ -678,7 +678,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 sd.EstimatedDays,
                 sd.TrackingId,
                 sd.BranchId,
-                sd.TransporterRegId      // ← include both IDs
+                sd.TransporterRegId ,
+                sd.ShippingStatus// ← include both IDs
             }
         ).FirstOrDefaultAsync();
 
@@ -761,7 +762,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             where od.StoreOrderId == storeOrderId
             select new BusinessOrderProductDto
             {
-                ProductId = pr.ProductId,
+                ProductId = sku.SkuId,
                 ProductName = pr.ProductName,
                 Quantity = od.Quantity,
                 UnitPrice = od.Price,
@@ -798,6 +799,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             ShippingAddress = orderData.DeliveryAddress,
             EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
             TrackingId = orderData.TrackingId,
+            ShippingStatus = orderData.ShippingStatus,
 
             // Courier (populated if courier handles shipping)
             CourierServiceName = courierServiceName,

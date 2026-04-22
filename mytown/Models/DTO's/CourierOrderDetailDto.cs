@@ -23,6 +23,7 @@
         public string ShippingMethod { get; set; }
         public decimal ShippingCost { get; set; }
         public string ShippingAddress { get; set; }
+        public string ShippingStatus { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
         public string CourierServiceName { get; set; }
         public string TrackingId { get; set; }

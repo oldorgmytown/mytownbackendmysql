@@ -235,6 +235,7 @@ namespace mytown.DataAccess.Repositories
                 ShippingMethod = shipping?.ShippingType,
                 ShippingCost = shippingCost,
                 ShippingAddress = shipping?.DeliveryAddress,
+                ShippingStatus = shipping?.ShippingStatus,
 
                 EstimatedDeliveryDate = estimatedDeliveryDate,
 
