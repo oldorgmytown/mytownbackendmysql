@@ -11,8 +11,8 @@ namespace mytown.Models
         [Column("package_detail_id")]
         public int PackageDetailId { get; set; }
 
-        [Column("shipping_detail_id")]
-        public int ShippingDetailId { get; set; }
+        //[Column("shipping_detail_id")]
+        //public int ShippingDetailId { get; set; }
 
         [Column("store_order_id")]
         public int StoreOrderId { get; set; }

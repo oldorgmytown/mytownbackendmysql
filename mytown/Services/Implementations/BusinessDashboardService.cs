@@ -4,6 +4,7 @@ using mytown.Models.DTO_s;
 //using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
+using Microsoft.EntityFrameworkCore;
 
 namespace mytown.Services.Implementations
 {
@@ -113,6 +114,61 @@ namespace mytown.Services.Implementations
             return await _repository.GetTopProductsAsync(storeId, topCount);
         }
 
+
+        //  Saving package details
+
+        public async Task<ShippingPackageDetailsDto> SavePackageDetailsAsync(ShippingPackageDetailsDto dto)
+        {
+            var model = new ShippingPackageDetails
+            {
+                StoreOrderId = dto.StoreOrderId,
+
+                PackageLength = dto.PackageLength,
+                PackageWidth = dto.PackageWidth,
+                PackageHeight = dto.PackageHeight,
+                PackageWeight = dto.PackageWeight,
+
+                DimensionUnit = dto.DimensionUnit ?? "cm",
+                WeightUnit = dto.WeightUnit ?? "kg"
+            };
+
+            var result = await _repository.AddShippingPackageDetailsAsync(model);
+
+            return new ShippingPackageDetailsDto
+            {
+                StoreOrderId = result.StoreOrderId,
+
+                PackageLength = result.PackageLength,
+                PackageWidth = result.PackageWidth,
+                PackageHeight = result.PackageHeight,
+                PackageWeight = result.PackageWeight,
+
+                DimensionUnit = result.DimensionUnit,
+                WeightUnit = result.WeightUnit
+            };
+        }
+
+        public async Task<ShippingPackageDetailsDto?> GetPackageDetailsAsync(int storeOrderId)
+        {
+            var result = await _repository.GetShippingPackageDetailsByStoreOrderIdAsync(storeOrderId);
+
+            if (result == null)
+                return null;
+
+            return new ShippingPackageDetailsDto
+            {
+                StoreOrderId = result.StoreOrderId,
+
+                PackageLength = result.PackageLength,
+                PackageWidth = result.PackageWidth,
+                PackageHeight = result.PackageHeight,
+                PackageWeight = result.PackageWeight,
+
+                DimensionUnit = result.DimensionUnit,
+                WeightUnit = result.WeightUnit
+            };
+        }
+
         //Notification and email  to coueir and transporter - Reday to ship 
 
         // Service
@@ -137,20 +193,20 @@ namespace mytown.Services.Implementations
             if (shipping == null)
                 return;
 
-            // 4️⃣ Save package details
-            await _repository.AddShippingPackageDetailsAsync(new ShippingPackageDetails
-            {
-                ShippingDetailId = shipping.ShippingDetailId,
-                StoreOrderId = storeOrderId,
+            //// 4️⃣ Save package details
+            //await _repository.AddShippingPackageDetailsAsync(new ShippingPackageDetails
+            //{
+            //    ShippingDetailId = shipping.ShippingDetailId,
+            //    StoreOrderId = storeOrderId,
 
-                PackageLength = dto.PackageLength,
-                PackageWidth = dto.PackageWidth,
-                PackageHeight = dto.PackageHeight,
-                PackageWeight = dto.PackageWeight,
+            //    PackageLength = dto.PackageLength,
+            //    PackageWidth = dto.PackageWidth,
+            //    PackageHeight = dto.PackageHeight,
+            //    PackageWeight = dto.PackageWeight,
 
-                DimensionUnit = dto.DimensionUnit ?? "cm",
-                WeightUnit = dto.WeightUnit ?? "kg"
-            });
+            //    DimensionUnit = dto.DimensionUnit ?? "cm",
+            //    WeightUnit = dto.WeightUnit ?? "kg"
+            //});
 
             // 5️⃣ Courier notification
             if (shipping.BranchId.HasValue && shipping.CourierBranch != null)

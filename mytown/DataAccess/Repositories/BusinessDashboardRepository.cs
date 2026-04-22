@@ -3,6 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using static BusinessDashboardRepository;
 
 
 public class BusinessDashboardRepository : IBusinessDashboardRepository
@@ -1436,11 +1437,20 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
     // store package dimensions and weight details for courier
     // Repository
-    public async Task AddShippingPackageDetailsAsync(
-        ShippingPackageDetails packageDetails)
-    {
-        await _context.ShippingPackageDetails.AddAsync(packageDetails);
+   
+        public async Task<ShippingPackageDetails> AddShippingPackageDetailsAsync(ShippingPackageDetails model)
+        {
+            _context.ShippingPackageDetails.Add(model);
+            await _context.SaveChangesAsync();
+            return model;
+        }
+
+        public async Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId)
+        {
+            return await _context.ShippingPackageDetails
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+        }
     }
-}
+
 
 

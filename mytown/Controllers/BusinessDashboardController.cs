@@ -257,6 +257,25 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        // Save package dimensions
+        [HttpPost("save-package-dimensions")]
+        public async Task<IActionResult> SavePackageDimensions([FromBody] ShippingPackageDetailsDto dto)
+        {
+            var result = await _dasboardservice.SavePackageDetailsAsync(dto);
+            return Ok(result);
+        }
+
+        // Get package details by StoreOrderId
+        [HttpGet("get-package-dimensions")]
+        public async Task<IActionResult> GetPackageDetails(int storeOrderId)
+        {
+            var result = await _dasboardservice.GetPackageDetailsAsync(storeOrderId);
+
+            if (result == null)
+                return NotFound("Package details not found");
+
+            return Ok(result);
+        }
 
         // Notificatio to courier - Ready to ship
 

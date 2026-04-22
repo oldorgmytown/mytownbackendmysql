@@ -99,6 +99,9 @@ namespace mytown.DataAccess.Interfaces
         Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount);
 
 
+        // packacge details saving
+        Task<ShippingPackageDetails> AddShippingPackageDetailsAsync(ShippingPackageDetails model);
+        Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId);
         //Notofication to courier -  Ready to ship 
 
         Task<ShippingDetails?> GetShippingByStoreOrderIdAsync(int storeOrderId);
@@ -117,6 +120,6 @@ namespace mytown.DataAccess.Interfaces
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
 
         // store package details
-        Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
+        //Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
     }
 }

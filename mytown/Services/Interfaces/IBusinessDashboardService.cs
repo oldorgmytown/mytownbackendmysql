@@ -32,6 +32,11 @@ namespace mytown.Services.Interfaces
        bool onlyUnread   );
 
         Task MarkeachNotificationAsReadAsync(int notificationId);
+
+        // saving package dimensions
+        Task<ShippingPackageDetailsDto> SavePackageDetailsAsync(ShippingPackageDetailsDto dto);
+        Task<ShippingPackageDetailsDto?> GetPackageDetailsAsync(int storeOrderId);
+
         Task MarkReadyToShipAsync(ReadyToShipDto dto);
         Task MarkAllAsReadAsync(int busRegId);
         //  Task GetNotificationsAsync(int busRegId, bool onlyUnread);

@@ -1456,6 +1456,8 @@ namespace mytown.Migrations
 
                     b.HasIndex("FabricId");
 
+                    b.HasIndex("ProdSubcatId");
+
                     b.HasIndex("ProductTypeId");
 
                     b.ToTable("products");
@@ -1738,7 +1740,7 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShippingDetailId"));
 
-                    b.Property<int>("BranchId")
+                    b.Property<int?>("BranchId")
                         .HasColumnType("int")
                         .HasColumnName("branch_id");
 
@@ -1802,7 +1804,53 @@ namespace mytown.Migrations
 
                     b.HasIndex("StoreOrderId");
 
+                    b.HasIndex("TransporterRegId");
+
                     b.ToTable("shipping_details");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShippingPackageDetails", b =>
+                {
+                    b.Property<int>("PackageDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("package_detail_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PackageDetailId"));
+
+                    b.Property<string>("DimensionUnit")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("dimension_unit");
+
+                    b.Property<decimal?>("PackageHeight")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("package_height");
+
+                    b.Property<decimal?>("PackageLength")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("package_length");
+
+                    b.Property<decimal?>("PackageWeight")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("package_weight");
+
+                    b.Property<decimal?>("PackageWidth")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("package_width");
+
+                    b.Property<int>("StoreOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("store_order_id");
+
+                    b.Property<string>("WeightUnit")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("weight_unit");
+
+                    b.HasKey("PackageDetailId");
+
+                    b.ToTable("shipping_package_details");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
@@ -3005,6 +3053,12 @@ namespace mytown.Migrations
                         .WithMany()
                         .HasForeignKey("FabricId");
 
+                    b.HasOne("mytown.Models.ProductSubCategory", "ProductSubCategory")
+                        .WithMany()
+                        .HasForeignKey("ProdSubcatId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("mytown.Models.ProductType", "ProductType")
                         .WithMany()
                         .HasForeignKey("ProductTypeId");
@@ -3014,6 +3068,8 @@ namespace mytown.Migrations
                     b.Navigation("Design");
 
                     b.Navigation("Fabric");
+
+                    b.Navigation("ProductSubCategory");
 
                     b.Navigation("ProductType");
                 });
@@ -3033,9 +3089,7 @@ namespace mytown.Migrations
                 {
                     b.HasOne("mytown.Models.CourierBranch", "CourierBranch")
                         .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BranchId");
 
                     b.HasOne("mytown.Models.Order", "Order")
                         .WithMany("ShippingDetails")
@@ -3049,11 +3103,17 @@ namespace mytown.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("mytown.Models.TransporterRegister", "TransporterRegister")
+                        .WithMany()
+                        .HasForeignKey("TransporterRegId");
+
                     b.Navigation("CourierBranch");
 
                     b.Navigation("Order");
 
                     b.Navigation("StoreOrder");
+
+                    b.Navigation("TransporterRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
