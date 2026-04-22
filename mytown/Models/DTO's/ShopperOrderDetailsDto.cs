@@ -21,6 +21,7 @@
 
         public string ShippingMethod { get; set; }
         public string ShippingAddress { get; set; }
+        public string ShippingStatus { get; set; }
 
         public DateTime ExpectedDeliveryDate { get; set; }
         public string CourierService { get; set; }

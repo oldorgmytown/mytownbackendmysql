@@ -28,7 +28,7 @@ namespace mytown.DataAccess.Repositories
                 join so in _context.StoreOrders on o.OrderId equals so.OrderId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                    //  && sd.ShippingStatus == "Pending"
+                    && o.OrderStatus == "Paid"
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
@@ -65,9 +65,11 @@ namespace mytown.DataAccess.Repositories
                 from so in _context.StoreOrders
                 join o in _context.Orders on so.OrderId equals o.OrderId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+                join cb in _context.CourierBranches on sd.CourierBranch.BranchId equals cb.BranchId
+                join cs in _context.CourierService on cb.CourierId equals cs.CourierId
                 join p in _context.Payments on o.OrderId equals p.OrderId
                 join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
-                where so.StoreOrderId == storeOrderId
+                where so.StoreOrderId == storeOrderId 
                 select new
                 {
                     so.StoreOrderId,
@@ -77,12 +79,19 @@ namespace mytown.DataAccess.Repositories
                     o.ShopperRegId,
                     so.StoreId,
                     StoreName = s.BusinessName,
-                    StoreTown = s.Town,
+                    StoreTown =
+                    (s.Address1 ?? "") + ", " +
+                    (s.Town ?? "") + ", " +
+                    (s.BusinessCity ?? "") + ", " +
+                    (s.BusinessState ?? "") + ", " +
+                    (s.BusinessCountry ?? ""),
                     sd.ShippingType,
                     sd.Cost,
                     sd.EstimatedDays,
                     sd.TrackingId,
-                    sd.DeliveryAddress
+                    sd.ShippingStatus,
+                    sd.DeliveryAddress,
+                    cs.CourierServiceName
                 }
             ).FirstOrDefaultAsync();
 
@@ -175,10 +184,11 @@ namespace mytown.DataAccess.Repositories
                 ShippingMethod = orderData.ShippingType,
                 ExpectedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
 
-                CourierService = orderData.ShippingType,
+                CourierService = orderData.CourierServiceName,
                 TrackingId = orderData.TrackingId,
 
-                ShippingAddress = orderData.DeliveryAddress
+                ShippingAddress = orderData.DeliveryAddress,
+                ShippingStatus = orderData.ShippingStatus
             };
         }
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(

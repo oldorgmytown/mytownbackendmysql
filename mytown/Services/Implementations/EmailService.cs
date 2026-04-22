@@ -1250,7 +1250,7 @@ public class EmailService : IEmailService
                           Store Order ID
                         </td>
                         <td align=""right"" style=""padding-bottom:6px;"">
-                              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{orderdto.OrderId}""
+                              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{storedto.StoreOrderId}""
                                  style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
                                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                                 {storedto.StoreOrderId}
@@ -1374,7 +1374,7 @@ public class EmailService : IEmailService
           <tr>
             <td align=""center"" style=""padding:8px 0 0 0;"">
 
-              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{orderdto.OrderId}""
+              <a href=""https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/courier/orders/{storedto.StoreOrderId}""
                  style=""display:inline-block;background:#0C4A6E;color:#fff;
                         border:1px solid #0C4A6E;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
