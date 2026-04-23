@@ -76,6 +76,169 @@ namespace mytown.DataAccess.Repositories
 
         //Upload CVS file for courier branches
 
+        //public async Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file)
+        //{
+        //    var result = new List<CourierBranchCsvRowDto>();
+
+        //    // Load courier services once
+        //    var courierServices = await _context.CourierService
+        //        .Where(c => !string.IsNullOrWhiteSpace(c.CourierServiceName))
+        //        .GroupBy(c => c.CourierServiceName.ToLower().Trim())
+        //        .Select(g => new
+        //        {
+        //            Name = g.Key,
+        //            CourierId = g.First().CourierId
+        //        })
+        //        .ToDictionaryAsync(x => x.Name, x => x.CourierId);
+
+        //    using var stream = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+
+        //    int rowNumber = 0;
+
+        //    while (!stream.EndOfStream)
+        //    {
+        //        string line = await stream.ReadLineAsync();
+
+        //        // Skip blank lines
+        //        if (string.IsNullOrWhiteSpace(line))
+        //            continue;
+
+        //        // Remove BOM if present
+        //        line = line.Trim('\uFEFF');
+
+        //        rowNumber++;
+
+        //        // Skip header row
+        //        if (rowNumber == 1)
+        //            continue;
+
+        //        // Detect delimiter automatically
+        //        char delimiter = DetectDelimiter(line);
+
+        //        var raw = SplitDelimitedLine(line, delimiter)
+        //            .Select(x => x.Trim())
+        //            .ToList();
+
+        //        // Skip fully empty rows
+        //        if (raw.All(string.IsNullOrWhiteSpace))
+        //            continue;
+
+        //        // Must contain 15 columns
+        //        if (raw.Count != 15)
+        //        {
+        //            result.Add(new CourierBranchCsvRowDto
+        //            {
+        //                RowNumber = rowNumber,
+        //                IsValid = false
+        //            });
+
+        //            continue;
+        //        }
+
+        //        var dto = new CourierBranchCsvRowDto
+        //        {
+        //            RowNumber = rowNumber,
+        //            CourierServiceName = raw[0],
+        //            Country = raw[1],
+        //            State = raw[2],
+        //            City = raw[3],
+        //            Town = raw[4],
+        //            BranchAddress = raw[5],
+        //            BranchPhoneNumber = raw[6],
+        //            BranchEmailId = raw[7],
+        //            BranchContactPerson = raw[8],
+        //            Destinations = raw[9],
+        //            ShippingMode = raw[10],
+        //            DistanceRange = raw[11],
+        //            WeightRange = raw[12],
+        //            Charges = decimal.TryParse(raw[13], out var charges) ? charges : 0,
+        //            EstimateDaysRaw = raw[14],
+        //            EstimateDays = CsvValidationHelper.ExtractMaxDays(raw[14])
+        //        };
+
+        //        // Courier exists check
+        //        bool courierExists = courierServices.TryGetValue(
+        //            dto.CourierServiceName.ToLower().Trim(),
+        //            out int courierId
+        //        );
+
+        //        if (courierExists)
+        //            dto.CourierId = courierId;
+
+        //        dto.IsValid =
+        //            courierExists &&
+        //            !string.IsNullOrWhiteSpace(dto.CourierServiceName) &&
+        //            !string.IsNullOrWhiteSpace(dto.Country) &&
+        //            !string.IsNullOrWhiteSpace(dto.State) &&
+        //            !string.IsNullOrWhiteSpace(dto.City) &&
+        //            !string.IsNullOrWhiteSpace(dto.Town) &&
+        //            !string.IsNullOrWhiteSpace(dto.BranchAddress) &&
+        //            CsvValidationHelper.IsValidPhone(dto.BranchPhoneNumber) &&
+        //            CsvValidationHelper.IsValidEmail(dto.BranchEmailId) &&
+        //            CsvValidationHelper.IsCommaSeparatedList(dto.Destinations) &&
+        //            (
+        //                dto.ShippingMode.Equals("air", StringComparison.OrdinalIgnoreCase) ||
+        //                dto.ShippingMode.Equals("surface", StringComparison.OrdinalIgnoreCase)
+        //            ) &&
+        //            dto.Charges > 0 &&
+        //            dto.EstimateDays > 0;
+
+        //        result.Add(dto);
+        //    }
+
+        //    return result;
+        //}
+
+        //private static char DetectDelimiter(string line)
+        //{
+        //    if (line.Contains('\t'))
+        //        return '\t';
+
+        //    if (line.Contains(';'))
+        //        return ';';
+
+        //    return ',';
+        //}
+
+        //private static List<string> SplitDelimitedLine(string line, char delimiter)
+        //{
+        //    var result = new List<string>();
+        //    var current = new StringBuilder();
+
+        //    bool inQuotes = false;
+
+        //    for (int i = 0; i < line.Length; i++)
+        //    {
+        //        char c = line[i];
+
+        //        if (c == '"')
+        //        {
+        //            // Escaped quote ""
+        //            if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+        //            {
+        //                current.Append('"');
+        //                i++;
+        //            }
+        //            else
+        //            {
+        //                inQuotes = !inQuotes;
+        //            }
+        //        }
+        //        else if (c == delimiter && !inQuotes)
+        //        {
+        //            result.Add(current.ToString().Trim());
+        //            current.Clear();
+        //        }
+        //        else
+        //        {
+        //            current.Append(c);
+        //        }
+        //    }
+
+        //    result.Add(current.ToString().Trim());
+
+        //    return result;
+        //}
 
 
         public async Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsv(IFormFile file)
@@ -201,10 +364,10 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-     
 
 
-       public async Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
+
+        public async Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows)
 {
     if (rows == null || !rows.Any())
         throw new Exception("No data received.");

@@ -1581,7 +1581,7 @@ public class EmailService : IEmailService
     <tr>
       <td style=""padding:24px 30px;border-top:1px solid #F1F1F3;"">
         <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
-                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Pickup Details</h2>
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Details</h2>
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
                style=""border:1px solid #E5E7EB;border-radius:12px;padding:20px;"">
           <tr>

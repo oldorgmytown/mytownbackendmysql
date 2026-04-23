@@ -29,12 +29,14 @@ namespace mytown.DataAccess.Repositories
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
                     && o.OrderStatus == "Paid"
+                    && sd.ShippingStatus != "Delivered"
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
                     OrderId = o.OrderId,
                     ExpectedDeliveryDate = o.OrderDate.AddDays(sd.EstimatedDays),
-                    ShippingStatus = sd.ShippingStatus
+                    ShippingStatus = sd.ShippingStatus,
+                    TrackingId = sd.TrackingId
                 };
 
             if (!string.IsNullOrEmpty(search))
@@ -42,7 +44,8 @@ namespace mytown.DataAccess.Repositories
                 query = query.Where(x =>
                     x.StoreOrderId.ToString().Contains(search) ||
                     x.ShippingStatus.Contains(search) ||
-                    x.OrderId.ToString().Contains(search));
+                    x.OrderId.ToString().Contains(search)||
+                    x.TrackingId.Contains(search));
 
 
             }
@@ -116,11 +119,13 @@ namespace mytown.DataAccess.Repositories
                     on od.SkuId equals skuImg.SkuId into skuImages
                 from skuImg in skuImages.DefaultIfEmpty()
 
-                    // Product image fallback
-                join prodImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1)
-                    on pr.ProductId equals prodImg.ProductId into prodImages
-                from prodImg in prodImages.DefaultIfEmpty()
+                 
+
+                //    // Product image fallback
+                //join prodImg in _context.ProductImages
+                //    .Where(i => i.SortOrder == 1)
+                //    on pr.ProductId equals prodImg.ProductId into prodImages
+                //from prodImg in prodImages.DefaultIfEmpty()
 
                 where od.StoreOrderId == storeOrderId
 
@@ -139,10 +144,8 @@ namespace mytown.DataAccess.Repositories
                     Weight = v.Weight,
 
                     ProductImage = skuImg != null
-                        ? skuImg.FileName
-                        : prodImg != null
-                            ? prodImg.FileName
-                            : null
+                    ? skuImg.FileName
+                    : null
                 };
 
 
