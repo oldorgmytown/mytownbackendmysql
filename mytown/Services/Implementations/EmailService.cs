@@ -304,7 +304,7 @@ public class EmailService : IEmailService
                       border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -312,7 +312,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -324,7 +324,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td style=""padding-right:12px;"">
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -332,7 +332,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Amount</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -806,7 +806,7 @@ public class EmailService : IEmailService
                style=""background:#fff;border:1px solid rgba(139,139,139,0.08);border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
 <div style=""color:#585858;font-size:16px;font-weight:600;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -814,7 +814,7 @@ public class EmailService : IEmailService
 </div>
             </td>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -822,7 +822,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Amount</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -1197,7 +1197,7 @@ public class EmailService : IEmailService
                       border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
 
               <div style=""color:#585858;font-size:16px;font-weight:600;
@@ -1206,7 +1206,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -2119,7 +2119,7 @@ public class EmailService : IEmailService
                       border-radius:4px;padding:24px;margin-bottom:16px;"">
           <tr>
             <td style=""padding-right:16px;"">
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
@@ -2127,7 +2127,7 @@ public class EmailService : IEmailService
               </div>
             </td>
             <td>
-              <div style=""color:#585858B;font-size:14px;font-weight:900;margin-bottom:4px;
+              <div style=""color:#585858B;font-size:14px;font-weight:500;margin-bottom:4px;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Date</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
