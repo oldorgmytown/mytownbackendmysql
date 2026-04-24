@@ -615,16 +615,50 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
             return count;
         }
 
-        public async Task<(IEnumerable<CourierService> records, int totalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize)
+
+        public async Task<(IEnumerable<CourierService> records, int totalRecords)>
+GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
-            var totalRecords = await _context.CourierService.CountAsync();
-            var records = await _context.CourierService
+            var query = _context.CourierService.AsQueryable();
+
+            // 🔍 SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower();
+
+                query = query.Where(x =>
+                    (x.CourierServiceName ?? "").ToLower().Contains(search) ||
+                    (x.CourierEmail ?? "").ToLower().Contains(search) ||
+                    (x.CourierPhone ?? "").ToLower().Contains(search) ||
+                    (x.Town ?? "").ToLower().Contains(search) ||
+                    (x.City ?? "").ToLower().Contains(search) ||
+                    (x.State ?? "").ToLower().Contains(search) ||
+                    (x.Country ?? "").ToLower().Contains(search) ||
+                    (x.PostalCode ?? "").ToLower().Contains(search) ||
+                    (x.ProfileStatus ?? "").ToLower().Contains(search)
+                );
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var records = await query
+                .OrderByDescending(x => x.CourierId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
             return (records, totalRecords);
         }
+        //public async Task<(IEnumerable<CourierService> records, int totalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize)
+        //{
+        //    var totalRecords = await _context.CourierService.CountAsync();
+        //    var records = await _context.CourierService
+        //        .Skip((page - 1) * pageSize)
+        //        .Take(pageSize)
+        //        .ToListAsync();
+
+        //    return (records, totalRecords);
+        //}
 
 
         // landing page

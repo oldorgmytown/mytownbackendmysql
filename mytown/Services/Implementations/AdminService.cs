@@ -137,7 +137,7 @@ namespace mytown.Services.Implementations
         //    if (shopper == null)
         //        return false;
 
-           
+
         //        await _emailService.SendShopperReactivationEmailAsync(
         //            shopper.Email,
         //            shopper.Username
@@ -148,9 +148,9 @@ namespace mytown.Services.Implementations
         //}
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
-            GetCourierRegistersPaginatedAsync(int page, int pageSize)
+  GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
-            return await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize);
+            return await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize, search);
         }
 
         public async Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync()

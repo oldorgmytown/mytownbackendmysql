@@ -268,16 +268,45 @@ namespace mytown.Controllers
         }
 
       //  [Authorize]
+        //[HttpGet("getCourierRegistersPaginated")]
+        //public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
+        //{
+        //    if (page <= 0 || pageSize <= 0)
+        //        return BadRequest(new { message = "Page and page size must be greater than 0." });
+
+        //    var (courierRegisters, totalRecords) = await _adminService.GetCourierRegistersPaginatedAsync(page, pageSize);
+
+        //    if (courierRegisters == null || !courierRegisters.Any())
+        //        return Ok(new { data = new List<object>(), message = "No courier registers found.", totalRecords = 0 });
+
+        //    return Ok(new
+        //    {
+        //        data = courierRegisters,
+        //        totalRecords,
+        //        currentPage = page,
+        //        pageSize
+        //    });
+        //}
+
         [HttpGet("getCourierRegistersPaginated")]
-        public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetCourierRegistersPaginated(
+    int page = 1,
+    int pageSize = 10,
+    string? search = null)
         {
             if (page <= 0 || pageSize <= 0)
                 return BadRequest(new { message = "Page and page size must be greater than 0." });
 
-            var (courierRegisters, totalRecords) = await _adminService.GetCourierRegistersPaginatedAsync(page, pageSize);
+            var (courierRegisters, totalRecords) =
+                await _adminService.GetCourierRegistersPaginatedAsync(page, pageSize, search);
 
             if (courierRegisters == null || !courierRegisters.Any())
-                return Ok(new { data = new List<object>(), message = "No courier registers found.", totalRecords = 0 });
+                return Ok(new
+                {
+                    data = new List<object>(),
+                    message = "No courier registers found.",
+                    totalRecords = 0
+                });
 
             return Ok(new
             {
