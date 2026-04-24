@@ -289,10 +289,10 @@ namespace mytown.Controllers
         //}
 
         [HttpGet("getCourierRegistersPaginated")]
-        public async Task<IActionResult> GetCourierRegistersPaginated(
+        public async Task<IActionResult> GetCourierRegistersPaginated(string? search = null,
     int page = 1,
-    int pageSize = 10,
-    string? search = null)
+    int pageSize = 10
+   )
         {
             if (page <= 0 || pageSize <= 0)
                 return BadRequest(new { message = "Page and page size must be greater than 0." });
