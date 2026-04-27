@@ -311,15 +311,15 @@ namespace mytown.Controllers
         }
 
         //sales trend graph
-        [HttpGet("sales-trend-graph")]
-        public async Task<IActionResult> GetSalesTrend(
-    int storeId,
-    DateTime? fromDate,
-    DateTime? toDate)
-        {
-            var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
-            return Ok(result);
-        }
+    //    [HttpGet("sales-trend-graph")]
+    //    public async Task<IActionResult> GetSalesTrend(
+    //int storeId,
+    //DateTime? fromDate,
+    //DateTime? toDate)
+    //    {
+    //        var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
+    //        return Ok(result);
+    //    }
     }
 
 
