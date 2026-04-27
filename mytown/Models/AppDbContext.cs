@@ -69,6 +69,8 @@ namespace mytown.Models
             public DbSet<BusinessDBNotifications> BusinessDBNotifications { get; set; }
             public DbSet<CourierDBNotifications> CourierDBNotifications { get; set; }
 
+            public DbSet<ShopperDBNotifications> ShopperDBNotifications { get; set; }
+
             public DbSet<CourierBranchService> CourierBranchServices { get; set; } // latest table
 
             public DbSet<Wishlist> Wishlist { get; set; }// new
@@ -91,7 +93,9 @@ namespace mytown.Models
             public DbSet<SenderVerification> SenderVerifications { get; set; }
 
             //package dimensions
-            public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; }
+            public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; } 
+
+
 
 
 

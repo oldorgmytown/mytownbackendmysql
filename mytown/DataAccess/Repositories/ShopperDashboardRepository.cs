@@ -476,6 +476,47 @@ namespace mytown.DataAccess.Repositories
             return true;
         }
 
+        // Get notifications
+        public async Task<List<ShopperDBNotifications>> GetShopperNotificationsAsync(
+            int shopperId, bool onlyUnread)
+        {
+            var query = _context.ShopperDBNotifications
+                .Where(n => n.ShopperRegId == shopperId);
 
+            if (onlyUnread)
+            {
+                query = query.Where(n => !n.IsRead);
+            }
+
+            return await query
+                .OrderByDescending(n => n.CreatedDate)
+                .ToListAsync();
+        }
+
+        // Mark all as read
+        public async Task MarkAllShopperAsReadAsync(int shopperId)
+        {
+            var unreadNotifications = await _context.ShopperDBNotifications
+                .Where(n => n.ShopperRegId == shopperId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var n in unreadNotifications)
+                n.IsRead = true;
+
+            await _context.SaveChangesAsync();
+        }
+
+        // Mark single as read
+        public async Task MarkEachShopperNotificationAsReadAsync(int notificationId)
+        {
+            var notification = await _context.ShopperDBNotifications
+                .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+
+            if (notification != null && !notification.IsRead)
+            {
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

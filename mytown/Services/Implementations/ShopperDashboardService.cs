@@ -117,6 +117,34 @@ namespace mytown.Services.Implementations
 
         //    return await _shopperRepository.UpdatePasswordAsync(shopper);
         //}
+
+        // Get notifications
+        public async Task<List<ShopperNotificationDto>> GetShopperNotificationsAsync(
+            int shopperId, bool onlyUnread)
+        {
+            var notifications = await _shopperdashboardRepository.GetShopperNotificationsAsync(shopperId, onlyUnread);
+
+            return notifications.Select(n => new ShopperNotificationDto
+            {
+                NotificationId = n.NotificationId,
+                Title = n.Title,
+                Message = n.Message,
+                IsRead = n.IsRead,
+                CreatedAt = n.CreatedDate
+            }).ToList();
+        }
+
+        // Mark all as read
+        public async Task MarkAllShopperAsReadAsync(int shopperId)
+        {
+            await _shopperdashboardRepository.MarkAllShopperAsReadAsync(shopperId);
+        }
+
+        // Mark single as read
+        public async Task MarkEachShopperNotificationAsReadAsync(int notificationId)
+        {
+            await _shopperdashboardRepository.MarkEachShopperNotificationAsReadAsync(notificationId);
+        }
     }
 }
 

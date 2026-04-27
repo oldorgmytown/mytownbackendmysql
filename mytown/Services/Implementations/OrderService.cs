@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -56,6 +57,21 @@ namespace mytown.Services.Implementations
 
             if (orderConfirmation == null)
                 return null;
+
+            // Shopper notification
+            if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+            {
+                var shopperNotification = new ShopperDBNotifications
+                {
+                    ShopperRegId = orderConfirmation.ShopperRegId,
+                    Title = "Order Confirmation",
+                    Message = $"Your order #{orderId} has been successfully placed.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddShopperNotificationAsync(shopperNotification);
+            }
 
             // 2️⃣ Send email using data already present in DTO
             if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))

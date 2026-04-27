@@ -639,5 +639,10 @@ namespace mytown.DataAccess.Repositories
                 Stores = stores
             };
         }
+
+        public async Task AddShopperNotificationAsync(ShopperDBNotifications notification)
+        {
+            await _context.ShopperDBNotifications.AddAsync(notification);
+        }
     }
 }

@@ -861,7 +861,8 @@ namespace mytown.DataAccess.Repositories
                             State = transporter.State,
                             Country = transporter.Country,
                             PostalCode = transporter.PostalCode,
-                            Status = transporter.Status,
+                            Status = string.IsNullOrWhiteSpace(transporter.Status) ? "Pending" : transporter.Status,
+                           // Status = transporter.Status,
                            // IsEmailVerified = transporter.IsEmailVerified.ToString(), // ⚠️ since your DTO has string
                             TransporterRegDate = transporter.TransporeterRegDate
                         }
