@@ -4,7 +4,7 @@
     {
         public int ProductId { get; set; }
         public string ProductName { get; set; }
-
+         public int SkuId { get; set; }
         public string CategoryName { get; set; }
         public string ProductType { get; set; }
         public string Fabric { get; set; }
