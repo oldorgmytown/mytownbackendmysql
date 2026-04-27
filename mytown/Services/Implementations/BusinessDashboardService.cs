@@ -132,8 +132,7 @@ namespace mytown.Services.Implementations
                 WeightUnit = dto.WeightUnit ?? "kg"
             };
 
-            var result = await _repository.AddShippingPackageDetailsAsync(model);
-
+            var result = await _repository.AddOrUpdateShippingPackageDetailsAsync(model);
             return new ShippingPackageDetailsDto
             {
                 StoreOrderId = result.StoreOrderId,
@@ -165,7 +164,8 @@ namespace mytown.Services.Implementations
                 PackageWeight = result.PackageWeight,
 
                 DimensionUnit = result.DimensionUnit,
-                WeightUnit = result.WeightUnit
+                WeightUnit = result.WeightUnit,
+                Notified = result.Notified
             };
         }
 
@@ -193,20 +193,7 @@ namespace mytown.Services.Implementations
             if (shipping == null)
                 return;
 
-            //// 4️⃣ Save package details
-            //await _repository.AddShippingPackageDetailsAsync(new ShippingPackageDetails
-            //{
-            //    ShippingDetailId = shipping.ShippingDetailId,
-            //    StoreOrderId = storeOrderId,
-
-            //    PackageLength = dto.PackageLength,
-            //    PackageWidth = dto.PackageWidth,
-            //    PackageHeight = dto.PackageHeight,
-            //    PackageWeight = dto.PackageWeight,
-
-            //    DimensionUnit = dto.DimensionUnit ?? "cm",
-            //    WeightUnit = dto.WeightUnit ?? "kg"
-            //});
+           
 
             // 5️⃣ Courier notification
             if (shipping.BranchId.HasValue && shipping.CourierBranch != null)
@@ -238,6 +225,9 @@ namespace mytown.Services.Implementations
                 );
             }
 
+
+            //  mark notified for thia package 
+            await _repository.MarkPackageNotifiedByOrderIdAsync(storeOrderId);
             // 7️⃣ Save all DB changes once
             await _repository.SaveChangesAsync();
 

@@ -1061,6 +1061,18 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (storeOrder != null)
             storeOrder.Storeorder_Status = status;
     }
+    // update notification sent status to courier
+
+    public async Task MarkPackageNotifiedByOrderIdAsync(int storeOrderId)
+    {
+        var package = await _context.ShippingPackageDetails
+            .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+        if (package != null)
+        {
+            package.Notified = true;
+        }
+    }
 
     public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
     {
@@ -1160,15 +1172,35 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
     // store package dimensions and weight details for courier
     // Repository
-   
-        public async Task<ShippingPackageDetails> AddShippingPackageDetailsAsync(ShippingPackageDetails model)
+
+    public async Task<ShippingPackageDetails> AddOrUpdateShippingPackageDetailsAsync(ShippingPackageDetails model)
+    {
+        var existing = await _context.ShippingPackageDetails
+            .FirstOrDefaultAsync(x => x.StoreOrderId == model.StoreOrderId);
+
+        if (existing != null)
         {
-            _context.ShippingPackageDetails.Add(model);
-            await _context.SaveChangesAsync();
-            return model;
+            existing.PackageLength = model.PackageLength;
+            existing.PackageWidth = model.PackageWidth;
+            existing.PackageHeight = model.PackageHeight;
+            existing.PackageWeight = model.PackageWeight;
+            existing.DimensionUnit = model.DimensionUnit;
+            existing.WeightUnit = model.WeightUnit;
+
+            // optional: reset notification
+            existing.Notified = false;
+        }
+        else
+        {
+            await _context.ShippingPackageDetails.AddAsync(model);
+            existing = model;
         }
 
-        public async Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId)
+        await _context.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId)
         {
             return await _context.ShippingPackageDetails
                 .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);

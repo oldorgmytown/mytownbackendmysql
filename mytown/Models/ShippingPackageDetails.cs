@@ -34,5 +34,8 @@ namespace mytown.Models
 
         [Column("weight_unit")]
         public string WeightUnit { get; set; }
+
+        [Column("notified")]
+        public bool Notified { get; set; } = false;
     }
 }

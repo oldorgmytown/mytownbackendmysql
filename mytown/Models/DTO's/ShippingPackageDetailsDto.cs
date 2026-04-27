@@ -11,5 +11,7 @@
 
         public string DimensionUnit { get; set; } = "cm";
         public string WeightUnit { get; set; } = "kg";
+        public bool Notified { get; set; } = false;
+
     }
 }

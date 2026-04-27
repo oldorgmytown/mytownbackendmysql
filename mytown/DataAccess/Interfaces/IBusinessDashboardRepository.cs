@@ -100,10 +100,11 @@ namespace mytown.DataAccess.Interfaces
 
 
         // packacge details saving
-        Task<ShippingPackageDetails> AddShippingPackageDetailsAsync(ShippingPackageDetails model);
+        Task<ShippingPackageDetails> AddOrUpdateShippingPackageDetailsAsync(ShippingPackageDetails model);
         Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId);
         //Notofication to courier -  Ready to ship 
 
+        Task MarkPackageNotifiedByOrderIdAsync(int storeOrderId);
         Task<ShippingDetails?> GetShippingByStoreOrderIdAsync(int storeOrderId);
         Task UpdateShippingStatusAsync(int storeOrderId, string status);
         Task UpdateStoreOrderStatusAsync(int storeOrderId, string status);
