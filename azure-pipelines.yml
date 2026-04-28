@@ -23,7 +23,7 @@ stages:
         containerRegistry: 'ACR-Service-Connection'
         repository: 'mytown-app'
         command: 'buildAndPush'
-        Dockerfile: 'Dockerfile'
+        Dockerfile: '**/Dockerfile'
         tags: |
           latest
 
