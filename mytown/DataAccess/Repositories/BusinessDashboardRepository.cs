@@ -231,10 +231,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(od => od.StoreId == storeId &&
                          (od.Order.Payments.Any() || od.Order.ShippingDetails.Any()))
             .Select(od => new
-            {
+            { 
+                od.Order.ShopperRegister.ShopperRegId,
                 od.Order.ShopperRegister.Username,
                 od.Order.ShopperRegister.PhoneNumber,
-                od.Order.ShopperRegister.Town
+                od.Order.ShopperRegister.Town,
+                od.Order.ShopperRegister.City
             })
             .Distinct();
 
@@ -256,9 +258,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var customersWhoPurchased = await customersWhoPurchasedQuery
             .Select(c => new CustomerDto
             {
+                CustomerId = c.ShopperRegId,
                 Name = c.Username,
                 PhoneNumber = c.PhoneNumber,
-                Town = c.Town
+                Town = c.Town,
+                City = c.City
             })
             .ToListAsync();
 
