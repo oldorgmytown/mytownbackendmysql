@@ -8,5 +8,7 @@
         public string Status { get; set; }
         public DateTime? EstimatedDeliveryDate { get; set; }
         public DateTime? DeliveredDate { get; set; }
+
+        public string? TrackingId { get; set; }
     }
 }

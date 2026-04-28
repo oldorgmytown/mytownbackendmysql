@@ -323,7 +323,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate >= today &&
                 x.Order.OrderDate < today.AddDays(1) &&
-                x.Order.OrderStatus == "Paid");
+                x.Order.OrderStatus == "Paid" &&
+                x.Shipping.ShippingStatus == "Pending");
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -362,7 +363,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate < today &&
-                x.Order.OrderStatus == "Paid");
+                x.Order.OrderStatus == "Paid" &&
+                x.Shipping.ShippingStatus == "Pending");
 
         if (!string.IsNullOrEmpty(search))
         {
@@ -420,7 +422,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 OrderId = x.Order.OrderId,
                 Status = "In Progress",
                 EstimatedDeliveryDate =
-                    x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
+                    x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays),
+                TrackingId = x.Shipping.TrackingId
             })
             .ToListAsync();
     }
@@ -455,7 +458,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 StoreOrderId = x.StoreOrder.StoreOrderId,
                 OrderId = x.Order.OrderId,
                 Status = "Delivered",
-                DeliveredDate = x.Shipping.DeliveredDate
+                DeliveredDate = x.Shipping.DeliveredDate,
+                TrackingId = x.Shipping.TrackingId
             })
             .ToListAsync();
     }

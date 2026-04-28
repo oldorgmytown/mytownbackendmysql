@@ -85,18 +85,6 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //[HttpGet("dashboardproducts")]
-        //public async Task<IActionResult> GetProductsByStore(
-        //int busRegId,
-        //[FromQuery] string searchText = null,
-        //[FromQuery] string sortBy = "id",
-        //[FromQuery] string sortDirection = "asc",
-        //[FromQuery] int page = 1,
-        //[FromQuery] int pageSize = 10)
-        //{
-        //  //  var products = await _dashboardRepository.GetProductsWithPurchasedCountAsync(busRegId, searchText, sortBy, sortDirection, page, pageSize);
-        //   // return Ok(products);
-        //}
 
 
         [HttpGet("GetCustomerAnalytics")]
