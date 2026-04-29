@@ -151,7 +151,8 @@ public class Startup
             "http://localhost:3000", // Local frontend
             "http://localhost:3001",
             "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net" ,// Production frontend
-            "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net" // new webapp service
+            "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
+                "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
         };
         services.AddCors(options =>
         {
