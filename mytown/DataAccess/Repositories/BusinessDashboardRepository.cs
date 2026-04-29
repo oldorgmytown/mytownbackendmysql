@@ -407,8 +407,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Shipping != null &&
-                x.Shipping.ShippingStatus == "In Progress");
-
+                (x.Shipping.ShippingStatus == "In Progress" ||
+                x.Shipping.ShippingStatus == "Ready to Ship"));
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
