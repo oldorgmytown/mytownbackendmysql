@@ -65,39 +65,58 @@ namespace mytown.DataAccess.Repositories
        int pageSize)
         {
             var orderData = await (
-                from so in _context.StoreOrders
-                join o in _context.Orders on so.OrderId equals o.OrderId
-                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
-                join cb in _context.CourierBranches on sd.CourierBranch.BranchId equals cb.BranchId
-                join cs in _context.CourierService on cb.CourierId equals cs.CourierId
-                join p in _context.Payments on o.OrderId equals p.OrderId
-                join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
-                where so.StoreOrderId == storeOrderId 
-                select new
-                {
-                    so.StoreOrderId,
-                    o.OrderId,
-                    p.PaymentId,
-                    o.OrderDate,
-                    o.ShopperRegId,
-                    so.StoreId,
-                    StoreName = s.BusinessName,
-                    StoreTown =
-                    (s.Address1 ?? "") + ", " +
-                    (s.Town ?? "") + ", " +
-                    (s.BusinessCity ?? "") + ", " +
-                    (s.BusinessState ?? "") + ", " +
-                    (s.BusinessCountry ?? ""),
-                    sd.ShippingType,
-                    sd.Cost,
-                    sd.EstimatedDays,
-                    sd.TrackingId,
-                    sd.ShippingStatus,
-                    sd.DeliveryAddress,
-                    cs.CourierServiceName
-                }
-            ).FirstOrDefaultAsync();
+     from so in _context.StoreOrders
+     join o in _context.Orders on so.OrderId equals o.OrderId
+     join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
 
+     // LEFT JOIN Courier
+     join cb in _context.CourierBranches
+         on sd.CourierBranch.BranchId equals cb.BranchId into cbGroup
+     from cb in cbGroup.DefaultIfEmpty()
+
+     join cs in _context.CourierService
+         on cb.CourierId equals cs.CourierId into csGroup
+     from cs in csGroup.DefaultIfEmpty()
+
+         // LEFT JOIN Transporter
+     join tp in _context.TransporterRegisters
+         on sd.TransporterRegId equals tp.TransporterRegId into tpGroup
+     from tp in tpGroup.DefaultIfEmpty()
+
+     join p in _context.Payments on o.OrderId equals p.OrderId
+     join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
+
+     where so.StoreOrderId == storeOrderId
+
+     select new
+     {
+         so.StoreOrderId,
+         o.OrderId,
+         p.PaymentId,
+         o.OrderDate,
+         o.ShopperRegId,
+         so.StoreId,
+
+         StoreName = s.BusinessName,
+         StoreTown = (s.Address1 ?? "") + ", " +
+                     (s.Town ?? "") + ", " +
+                     (s.BusinessCity ?? "") + ", " +
+                     (s.BusinessState ?? "") + ", " +
+                     (s.BusinessCountry ?? ""),
+
+         sd.ShippingType,
+         sd.Cost,
+         sd.EstimatedDays,
+         sd.TrackingId,
+         sd.ShippingStatus,
+         sd.DeliveryAddress,
+
+         CourierServiceName = cs != null ? cs.CourierServiceName : null,
+
+         TransporterName = tp != null ? tp.TransporterName : null,
+         TransporterPhone = tp != null ? tp.PhoneNumber : null
+     }
+ ).FirstOrDefaultAsync();
             if (orderData == null)
                 return null;
 
@@ -191,7 +210,9 @@ namespace mytown.DataAccess.Repositories
                 TrackingId = orderData.TrackingId,
 
                 ShippingAddress = orderData.DeliveryAddress,
-                ShippingStatus = orderData.ShippingStatus
+                ShippingStatus = orderData.ShippingStatus,
+                TransporterName = orderData.TransporterName,
+                TransporterPhone = orderData.TransporterPhone
             };
         }
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(

@@ -26,5 +26,9 @@
         public DateTime ExpectedDeliveryDate { get; set; }
         public string CourierService { get; set; }
         public string TrackingId { get; set; }
+
+        public string? TransporterName { get; set; }
+        public string? TransporterPhone { get; set; }
+        public string? TransporterEmail { get; set; }
     }
 }

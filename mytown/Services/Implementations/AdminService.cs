@@ -153,6 +153,11 @@ namespace mytown.Services.Implementations
             return await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize, search);
         }
 
+        public async Task<(IEnumerable<object> Records, int TotalRecords)>
+    GetTransporterRegistersPaginatedAsync(int page, int pageSize, string? search)
+        {
+            return await _adminRepo.GetTransporterRegistersPaginatedAsync(page, pageSize, search);
+        }
         public async Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync()
         {
             return await _adminRepo.GetLocationsWithCompletedStoresAsync();

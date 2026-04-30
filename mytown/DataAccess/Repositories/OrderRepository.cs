@@ -277,7 +277,7 @@ namespace mytown.DataAccess.Repositories
 {
     OrderId = newOrder.OrderId,
     StoreOrderId = storeOrder.StoreOrderId,
-    BranchId = 1,
+    BranchId = null,
     ShippingType = "P2P",
     EstimatedDays = estimatedDays,
     Cost = p2pCost,

@@ -317,6 +317,35 @@ namespace mytown.Controllers
             });
         }
 
+
+        [HttpGet("getTransporterRegistersPaginated")]
+        public async Task<IActionResult> GetTransporterRegistersPaginated(
+    string? search = null,
+    int page = 1,
+    int pageSize = 10)
+        {
+            if (page <= 0 || pageSize <= 0)
+                return BadRequest(new { message = "Page and page size must be greater than 0." });
+
+            var (records, totalRecords) =
+                await _adminService.GetTransporterRegistersPaginatedAsync(page, pageSize, search);
+
+            if (records == null || !records.Any())
+                return Ok(new
+                {
+                    data = new List<object>(),
+                    message = "No transporter registers found.",
+                    totalRecords = 0
+                });
+
+            return Ok(new
+            {
+                data = records,
+                totalRecords,
+                currentPage = page,
+                pageSize
+            });
+        }
         [HttpGet("business/completed-stores-in-locations")]
         public async Task<IActionResult> GetLocationsWithCompletedStores()
         {

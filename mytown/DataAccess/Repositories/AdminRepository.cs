@@ -10,6 +10,7 @@ using mytown.Services.Interfaces;
 using MyTown.Models;
 using System.Data;
 using System.Diagnostics;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 //using MySql.Data.MySqlClient; 
 
 
@@ -645,6 +646,57 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 .OrderByDescending(x => x.CourierId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .ToListAsync();
+
+            return (records, totalRecords);
+        }
+
+        public async Task<(IEnumerable<TransporterRegisterDto> records, int totalRecords)>
+      GetTransporterRegistersPaginatedAsync(int page, int pageSize, string? search)
+        {
+            var query = _context.TransporterRegisters.AsQueryable();
+
+            // 🔍 SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower();
+
+                query = query.Where(x =>
+                    (x.TransporterName ?? "").ToLower().Contains(search) ||
+                    (x.Email ?? "").ToLower().Contains(search) ||
+                    (x.PhoneNumber ?? "").ToLower().Contains(search) ||
+                    (x.Town ?? "").ToLower().Contains(search) ||
+                    (x.City ?? "").ToLower().Contains(search) ||
+                    (x.State ?? "").ToLower().Contains(search) ||
+                    (x.Country ?? "").ToLower().Contains(search) ||
+                    (x.PostalCode ?? "").ToLower().Contains(search) ||
+                    (x.Status ?? "").ToLower().Contains(search)
+                );
+            }
+
+
+            var totalRecords = await query.CountAsync();
+
+            var records = await query
+                .OrderByDescending(x => x.TransporterRegId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new TransporterRegisterDto
+                {
+                    TransporterId = x.TransporterRegId,
+                    TransporterName = x.TransporterName,
+                    Email = x.Email,
+                    Address = x.Address,
+                    Town = x.Town,
+                    City = x.City,
+                    State = x.State,
+                    Country = x.Country,
+                    PostalCode = x.PostalCode,
+                    PhoneNumber = x.PhoneNumber,
+                    Status = x.Status,
+                    IsEmailVerified = x.IsEmailVerified,
+                    TransporterRegDate = x.TransporeterRegDate
+                })
                 .ToListAsync();
 
             return (records, totalRecords);

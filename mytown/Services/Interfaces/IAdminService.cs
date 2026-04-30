@@ -31,6 +31,9 @@ namespace mytown.Services.Interfaces
         Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status);
         Task<(IEnumerable<object> Records, int TotalRecords)>
   GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
+
+        Task<(IEnumerable<object> Records, int TotalRecords)>
+   GetTransporterRegistersPaginatedAsync(int page, int pageSize, string? search);
         Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync();
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_DapperAsync();
         Task<List<LocationStoresDto>> GetLocationsWithCompletedStores_EFAsync();

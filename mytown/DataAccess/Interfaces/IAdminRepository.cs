@@ -37,6 +37,9 @@ namespace mytown.DataAccess.Interfaces
         Task<int> GetCourierserviceCountAsync();
         Task<(IEnumerable<CourierService> records, int totalRecords)>
 GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
+
+        Task<(IEnumerable<TransporterRegisterDto> records, int totalRecords)>
+     GetTransporterRegistersPaginatedAsync(int page, int pageSize, string? search);
         // shopper tab
         Task<bool> DeactivateShopperAsync(int shopperRegId);
         //landing page
