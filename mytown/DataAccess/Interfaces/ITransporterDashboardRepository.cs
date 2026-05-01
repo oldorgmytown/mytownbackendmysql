@@ -50,5 +50,8 @@ namespace mytown.DataAccess.Interfaces
         Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
         Task MarkAllAsReadAsync(int transporterId);
         Task MarkEachNotificationReadAsync(int notificationId);
+
+        // mark as delivered
+        Task<string> MarkAsDeliveredAsync(int storeOrderId);
     }
 }

@@ -257,5 +257,21 @@ namespace mytown.Controllers
             await _service.MarkEachNotificationReadAsync(notificationId);
             return Ok(new { message = "Notification marked as read." });
         }
+
+        // mark package as delivered
+
+        [HttpPost("mark-delivered/{storeOrderId}")]
+        public async Task<IActionResult> MarkAsDelivered(int storeOrderId)
+        {
+            try
+            {
+                var result = await _service.MarkAsDeliveredAsync(storeOrderId);
+                return Ok(new { message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
     }
 }

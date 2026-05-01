@@ -120,5 +120,14 @@ namespace mytown.Services.Implementations
 
         public async Task MarkEachNotificationReadAsync(int notificationId)
             => await _repo.MarkEachNotificationReadAsync(notificationId);
+
+        // packaged marked as Delivered
+
+       
+
+        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            return await _repo.MarkAsDeliveredAsync(storeOrderId);
+        }
     }
 }

@@ -91,6 +91,10 @@ namespace mytown.Models.DTO_s
         public string DropoffLocation { get; set; }
         public int NumberOfPackages { get; set; }
         public decimal PackageWeightKg { get; set; }
+        public decimal? PackageLengthCm { get; set; }
+        public decimal? PackageWidthCm { get; set; }
+        public decimal? PackageHeightCm { get; set; }
+
         public decimal DeliveryFee { get; set; }
         public string PackageTags { get; set; }
         public string DeliveryStatus { get; set; }
@@ -217,6 +221,7 @@ namespace mytown.Models.DTO_s
         public int PlanId { get; set; }
         public int ShopperRegId { get; set; }
         public int? OrderId { get; set; }
+         public int StoreOrderId { get; set; } // link to store order for easier tracking
         public string PickupLocation { get; set; }
         public string DropoffLocation { get; set; }
         public decimal PackageWeightKg { get; set; }

@@ -235,7 +235,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 .AnyAsync(d =>
                     d.PlanId == dto.PlanId &&
                     d.ShopperRegId == dto.ShopperRegId &&
-                    d.OrderId == dto.OrderId);
+                    d.OrderId == dto.OrderId &&
+                    d.StoreOrderId == dto.StoreOrderId);
 
             if (existing)
                 throw new Exception("A delivery request already exists for this order and plan.");
@@ -248,6 +249,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
                 ShopperRegId = dto.ShopperRegId,
                 OrderId = dto.OrderId,
+                StoreOrderId = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
                 DropoffLocation = dto.DropoffLocation,
                 PackageWeightKg = dto.PackageWeightKg,
@@ -283,11 +285,17 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         {
             var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
 
-            return await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId
-                         && activeStatuses.Contains(d.DeliveryStatus))
-                .OrderByDescending(d => d.CreatedAt)
-                .Select(d => new ActiveDeliveryDto
+            var result = await (
+                from d in _context.TransporterDeliveryRequests
+                join p in _context.ShippingPackageDetails
+                    on d.StoreOrderId equals p.StoreOrderId
+
+                where d.TransporterRegId == transporterRegId
+                   && activeStatuses.Contains(d.DeliveryStatus)
+
+                orderby d.CreatedAt descending
+
+                select new ActiveDeliveryDto
                 {
                     DeliveryReqId = d.DeliveryReqId,
                     PlanId = d.PlanId,
@@ -297,13 +305,21 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     DropoffLocation = d.DropoffLocation,
                     NumberOfPackages = d.NumberOfPackages,
                     PackageWeightKg = d.PackageWeightKg,
+
+                    // ✅ From ShippingPackageDetails
+                    PackageLengthCm = p.PackageLength,
+                    PackageWidthCm = p.PackageWidth,
+                    PackageHeightCm = p.PackageHeight,
+
                     DeliveryFee = d.DeliveryFee,
                     PackageTags = d.PackageTags,
                     DeliveryStatus = d.DeliveryStatus,
                     AcceptedAt = d.AssignedAt,
                     EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
-                })
-                .ToListAsync();
+                }
+            ).ToListAsync();
+
+            return result;
         }
 
         // -------------------------------------------------------------------------
@@ -598,6 +614,26 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 notification.IsRead = true;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // mark delivered status
+        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            var shipping = await _context.ShippingDetails
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            if (shipping == null)
+                throw new Exception("Shipping record not found");
+
+            // No file upload
+
+            // Update status
+            shipping.ShippingStatus = "Delivered";
+            shipping.DeliveredDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return "Delivery marked as completed";
         }
     }
 }

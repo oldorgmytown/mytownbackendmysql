@@ -38,5 +38,9 @@ namespace mytown.Services.Interfaces
         Task<List<TransporterDBNotifications>> GetUnreadNotificationsAsync(int transporterId);
         Task MarkAsReadAsync(int transporterId);
         Task MarkEachNotificationReadAsync(int notificationId);
+
+        //package delivered
+
+        Task<string> MarkAsDeliveredAsync(int storeOrderId);
     }
 }
