@@ -234,6 +234,7 @@ namespace mytown.DataAccess.Repositories
                 TransporterRegId = dto.TransporterRegId,
                 ShopperRegId = dto.ShopperRegId,
                 OrderId = dto.OrderId,
+                StoreOrderId     = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
                 DropoffLocation = dto.DropoffLocation,
                 PackageWeightKg = dto.PackageWeightKg,

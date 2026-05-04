@@ -1823,6 +1823,10 @@ namespace mytown.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("dimension_unit");
 
+                    b.Property<bool>("Notified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("notified");
+
                     b.Property<decimal?>("PackageHeight")
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("package_height");
@@ -1851,6 +1855,44 @@ namespace mytown.Migrations
                     b.HasKey("PackageDetailId");
 
                     b.ToTable("shipping_package_details");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperDBNotifications", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("message");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("title");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("ShopperRegId");
+
+                    b.ToTable("shopper_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
@@ -2257,6 +2299,10 @@ namespace mytown.Migrations
                         .HasColumnType("int")
                         .HasColumnName("shopper_reg_id");
 
+                    b.Property<int?>("StoreOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("store_order_id");
+
                     b.Property<int>("TransporterRegId")
                         .HasColumnType("int")
                         .HasColumnName("transporter_reg_id");
@@ -2266,6 +2312,8 @@ namespace mytown.Migrations
                     b.HasIndex("PlanId");
 
                     b.HasIndex("ShopperRegId");
+
+                    b.HasIndex("StoreOrderId");
 
                     b.HasIndex("TransporterRegId");
 
@@ -3116,6 +3164,17 @@ namespace mytown.Migrations
                     b.Navigation("TransporterRegister");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperDBNotifications", b =>
+                {
+                    b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
+                        .WithMany()
+                        .HasForeignKey("ShopperRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopperRegister");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
                 {
                     b.HasOne("mytown.Models.Products", "Product")
@@ -3207,6 +3266,10 @@ namespace mytown.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("mytown.Models.StoreOrder", "StoreOrder")
+                        .WithMany()
+                        .HasForeignKey("StoreOrderId");
+
                     b.HasOne("mytown.Models.TransporterRegister", "TransporterRegister")
                         .WithMany()
                         .HasForeignKey("TransporterRegId")
@@ -3214,6 +3277,8 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("ShopperRegister");
+
+                    b.Navigation("StoreOrder");
 
                     b.Navigation("TransporterRegister");
 
