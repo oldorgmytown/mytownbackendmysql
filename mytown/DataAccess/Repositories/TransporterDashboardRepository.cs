@@ -288,7 +288,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             var result = await (
                 from d in _context.TransporterDeliveryRequests
                 join p in _context.ShippingPackageDetails
-                    on d.StoreOrderId equals p.StoreOrderId
+                    on d.StoreOrderId equals p.StoreOrderId into packageGroup
+                from p in packageGroup.DefaultIfEmpty()
 
                 where d.TransporterRegId == transporterRegId
                    && activeStatuses.Contains(d.DeliveryStatus)
@@ -299,6 +300,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 {
                     DeliveryReqId = d.DeliveryReqId,
                     PlanId = d.PlanId,
+                    StoreOrderId     = d.StoreOrderId,   // ← ADD THIS
+                    OrderId          = d.OrderId,
                     DeliveryCode = d.DeliveryCode,
                     CustomerName = d.ShopperRegister.Username,
                     PickupLocation = d.PickupLocation,
@@ -307,9 +310,9 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     PackageWeightKg = d.PackageWeightKg,
 
                     // ✅ From ShippingPackageDetails
-                    PackageLengthCm = p.PackageLength,
-                    PackageWidthCm = p.PackageWidth,
-                    PackageHeightCm = p.PackageHeight,
+                    PackageLengthCm = p != null ? p.PackageLength : null,
+                    PackageWidthCm  = p != null ? p.PackageWidth  : null,
+                    PackageHeightCm = p != null ? p.PackageHeight : null,
 
                     DeliveryFee = d.DeliveryFee,
                     PackageTags = d.PackageTags,
@@ -363,13 +366,46 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
             }
 
+            // ── SYNC ShippingDetails so shopper sees updated status ──
+            if (delivery.StoreOrderId.HasValue)
+            {
+                var shipping = await _context.ShippingDetails
+                    .FirstOrDefaultAsync(s => s.StoreOrderId == delivery.StoreOrderId.Value);
+
+                if (shipping != null)
+                {
+                    shipping.ShippingStatus = dto.NewStatus switch
+                    {
+                        "ReachedPickup" => "ReachedPickup",
+                        "PickedUp"      => "PickedUp",
+                        "InTransit"     => "InTransit",
+                        "Delivered"     => "Delivered",
+                        _               => shipping.ShippingStatus
+                    };
+
+                    if (dto.NewStatus == "Delivered")
+                        shipping.DeliveredDate = DateTime.UtcNow;
+                }
+            }
+
+            // ── NOTIFY SHOPPER ──
+            _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+            {
+                ShopperRegId = delivery.ShopperRegId,
+                Title = "Delivery Update",
+                Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow
+            });
+
+            // ── NOTIFY TRANSPORTER ──
             _context.TransporterDBNotifications.Add(new TransporterDBNotifications
             {
                 TransporterRegId = delivery.TransporterRegId,
                 Title = "Delivery Status Updated",
                 Message = $"Delivery {delivery.DeliveryCode} status changed to {dto.NewStatus}.",
                 IsRead = false,
-                CreatedDate = DateTime.UtcNow          // ✅ CreatedDate not CreatedAt
+                CreatedDate = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
@@ -389,6 +425,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 {
                     DeliveryReqId = d.DeliveryReqId,
                     PlanId = d.PlanId,
+                    StoreOrderId     = d.StoreOrderId,   // ← ADD THIS
+                    OrderId          = d.OrderId,        // ← ADD THIS
                     DeliveryCode = d.DeliveryCode,
                     CustomerName = d.ShopperRegister.Username,
                     PickupLocation = d.PickupLocation,
