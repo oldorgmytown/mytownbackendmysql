@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mytown.DTOs;
 using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
@@ -96,6 +97,74 @@ namespace mytown.Controllers
                     error = ex.Message
                 });
             }
+        }
+
+        // ---------------- CREATE SENDER ORDER ----------------
+
+        [HttpPost("CreateOrder")]
+        public async Task<IActionResult> Create(
+       [FromBody] CreateSenderOrderDto dto)
+        {
+            var senderOrderId =
+                await _senderService.CreateSenderOrderAsync(dto);
+
+            return Ok(new
+            {
+                SenderOrderId = senderOrderId,
+                Message = "Sender order created successfully"
+            });
+        }
+
+        // ---------------- GET MATCHING TRANSPORTERS ----------------
+        [HttpGet("matching-transporters/{senderOrderId}")]
+        public async Task<IActionResult>
+    GetMatchingTransporters(int senderOrderId)
+        {
+            var result =
+                await _senderService
+                .GetMatchingTransportersAsync(senderOrderId);
+
+            return Ok(result);
+        }
+
+        [HttpPost("summary")]
+        public async Task<IActionResult>
+    GetSummary(
+        [FromBody]
+        SenderOrderSummaryRequestDto dto)
+        {
+            var result =
+                await _senderService
+                .GetOrderSummaryAsync(dto);
+
+            return Ok(result);
+        }
+
+        [HttpPost("create-payment-intent/{senderOrderId}")]
+        public async Task<IActionResult>
+    CreatePaymentIntent(int senderOrderId)
+        {
+            var result =
+                await _senderService
+                .CreatePaymentIntentAsync(
+                    senderOrderId);
+
+            return Ok(result);
+        }
+
+        [HttpPost("confirm-payment")]
+        public async Task<IActionResult>
+    ConfirmPayment(
+        [FromBody]
+        ConfirmSenderPaymentDto dto)
+        {
+            await _senderService
+                .ConfirmPaymentAsync(dto);
+
+            return Ok(new
+            {
+                Message = "Payment successful"
+            });
         }
     }
 }

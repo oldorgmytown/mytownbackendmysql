@@ -1,4 +1,6 @@
-﻿using mytown.Models;
+﻿using mytown.DTOs;
+using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -14,5 +16,29 @@ namespace mytown.DataAccess.Interfaces
         Task<SenderRegister> RegisterSender(SenderRegister sender);
 
         Task<SenderRegister> GetSenderByIdAsync(int senderRegId);
+
+        // Sender Orders
+
+        Task<int> CreateSenderOrderAsync(CreateSenderOrderDto dto);
+
+        Task<List<MatchingTransporterDto>>
+   GetMatchingTransportersAsync(int senderOrderId);
+
+        Task<SenderOrderSummaryDto>
+    GetOrderSummaryAsync(
+        SenderOrderSummaryRequestDto dto);
+
+        Task<bool> SelectTransporterAsync(
+    SelectTransporterDto dto);
+
+        // sender payment
+
+        Task<SenderOrder>
+           GetSenderOrderAsync(int senderOrderId);
+
+        Task AddSenderOrderPaymentAsync(
+            SenderOrderPayment payment);
+
+        Task SaveChangesAsync();
     }
 }

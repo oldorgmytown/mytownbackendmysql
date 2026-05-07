@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using mytown.DataAccess.Interfaces;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Text.Json;
 
 namespace mytown.Services.Implementations
@@ -122,6 +124,166 @@ namespace mytown.Services.Implementations
             await _emailService.SendVerificationEmail(email, link);
 
             return (true, "Verification email resent.");
+        }
+
+        // ---------------- SENDER ORDERS ----------------
+
+        public async Task<int> CreateSenderOrderAsync(CreateSenderOrderDto dto)
+        {
+            return await _repo.CreateSenderOrderAsync(dto);
+        }
+
+        /// ---------------- MATCHING TRANSPORTERS ----------------
+        public async Task<List<MatchingTransporterDto>>
+    GetMatchingTransportersAsync(int senderOrderId)
+        {
+            return await _repo
+                .GetMatchingTransportersAsync(senderOrderId);
+        }
+
+        // odrer summary
+
+        public async Task<SenderOrderSummaryDto>
+    GetOrderSummaryAsync(
+        SenderOrderSummaryRequestDto dto)
+        {
+            return await _repo
+                .GetOrderSummaryAsync(dto);
+        }
+
+   
+
+     
+
+        // sender payment
+
+        public async Task
+           <SenderPaymentIntentResponseDto>
+           CreatePaymentIntentAsync(
+               int senderOrderId)
+        {
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    senderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            decimal amount = 50;
+
+            decimal gstAmount =
+                amount * 0.18m;
+
+            decimal totalAmount =
+                amount + gstAmount;
+
+            long stripeAmount =
+                (long)(totalAmount * 100);
+
+            var options =
+                new PaymentIntentCreateOptions
+                {
+                    Amount = stripeAmount,
+
+                    Currency = "inr",
+
+                    AutomaticPaymentMethods =
+                        new PaymentIntentAutomaticPaymentMethodsOptions
+                        {
+                            Enabled = true
+                        },
+
+                    Metadata =
+                        new Dictionary<string, string>
+                        {
+                            {
+                                "senderOrderId",
+                                senderOrderId
+                                .ToString()
+                            }
+                        }
+                };
+
+            var service =
+                new PaymentIntentService();
+
+            var paymentIntent =
+                await service
+                .CreateAsync(options);
+
+            return new
+                SenderPaymentIntentResponseDto
+            {
+                ClientSecret =
+                    paymentIntent.ClientSecret,
+
+                PaymentIntentId =
+                    paymentIntent.Id
+            };
+        }
+
+        public async Task<bool>
+            ConfirmPaymentAsync(
+                ConfirmSenderPaymentDto dto)
+        {
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    dto.SenderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            decimal amount = 50;
+
+            decimal gstAmount =
+                amount * 0.18m;
+
+            decimal totalAmount =
+                amount + gstAmount;
+
+            var payment =
+                new SenderOrderPayment
+                {
+                    SenderOrderId =
+                        dto.SenderOrderId,
+
+                    StripePaymentIntentId =
+                        dto.StripePaymentIntentId,
+
+                    Amount =
+                        amount,
+
+                    GstAmount =
+                        gstAmount,
+
+                    TotalAmount =
+                        totalAmount,
+
+                    PaymentMethod =
+                        dto.PaymentMethod,
+
+                    PaymentStatus =
+                        "Paid",
+
+                    PaidAt =
+                        DateTime.UtcNow
+                };
+
+            await _repo
+                .AddSenderOrderPaymentAsync(
+                    payment);
+
+            order.OrderStatus =
+                "Booked";
+
+            await _repo
+                .SaveChangesAsync();
+
+            return true;
         }
     }
 }

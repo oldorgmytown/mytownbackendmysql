@@ -93,7 +93,11 @@ namespace mytown.Models
             public DbSet<SenderVerification> SenderVerifications { get; set; }
 
             //package dimensions
-            public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; } 
+            public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; }
+
+            //Senderorder
+            public DbSet<SenderOrder> SenderOrders { get; set; }
+             public DbSet<SenderOrderPayment> SenderOrderPayments { get; set; }
 
 
 
