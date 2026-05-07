@@ -28,5 +28,16 @@ namespace mytown.Services.Interfaces
         Task<bool>
             ConfirmPaymentAsync(
                 ConfirmSenderPaymentDto dto);
+
+        //sender order confirmation
+
+        Task<SenderOrderConfirmationDto>
+    GetOrderConfirmationAsync(
+        int senderOrderId);
+
+        // sender package delivery status
+        Task<bool> UpdateSenderPackageDeliveryStatusAsync(
+    UpdateSenderPackageDeliveryStatusDto dto);
     }
+
 }

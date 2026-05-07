@@ -166,5 +166,33 @@ namespace mytown.Controllers
                 Message = "Payment successful"
             });
         }
+
+        [HttpGet("senderorderconfirmation/{senderOrderId}")]
+        public async Task<IActionResult>
+    GetConfirmation(
+        int senderOrderId)
+        {
+            var result =
+                await _senderService
+                .GetOrderConfirmationAsync(
+                    senderOrderId);
+
+            return Ok(result);
+        }
+
+        [HttpPut("update-delivery-status")]
+        public async Task<IActionResult>
+    UpdateSenderPackageDeliveryStatus(
+        [FromBody]
+        UpdateSenderPackageDeliveryStatusDto dto)
+        {
+            await _senderService
+                .UpdateSenderPackageDeliveryStatusAsync(dto);
+
+            return Ok(new
+            {
+                Message = "Status updated"
+            });
+        }
     }
 }

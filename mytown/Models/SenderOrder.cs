@@ -110,5 +110,9 @@ namespace mytown.Models
 
         [Column("transporter_plan_id")]
         public int? TransporterPlanId { get; set; }
+
+        [Column("delivery_status")]
+        public string DeliveryStatus { get; set; }
+    = "Pending";
     }
 }

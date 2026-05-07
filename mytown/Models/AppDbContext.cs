@@ -98,6 +98,7 @@ namespace mytown.Models
             //Senderorder
             public DbSet<SenderOrder> SenderOrders { get; set; }
              public DbSet<SenderOrderPayment> SenderOrderPayments { get; set; }
+            public DbSet<SenderDBNotifications> SenderDBNotifications { get; set; }
 
 
 

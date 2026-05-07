@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using mytown.DataAccess.Interfaces;
 using mytown.DTOs;
@@ -284,6 +285,86 @@ namespace mytown.Services.Implementations
                 .SaveChangesAsync();
 
             return true;
+        }
+
+        // sender order confirmation
+
+        public async Task
+     <SenderOrderConfirmationDto>
+     GetOrderConfirmationAsync(
+         int senderOrderId)
+        {
+            var result =
+                await _repo
+                .GetOrderConfirmationAsync(
+                    senderOrderId);
+
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    senderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            if (!order.TransporterRegId.HasValue)
+                throw new Exception(
+                    "Transporter not assigned");
+
+            // Notify Sender
+
+            await _repo.AddSenderNotificationAsync(
+                new SenderDBNotifications
+                {
+                    SenderRegId =
+                        order.SenderRegId,
+
+                    Title =
+                        "Booking Confirmed",
+
+                    Message =
+                        $"Your shipment #{order.SenderOrderId} has been booked successfully.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            // Notify Transporter
+
+            await _repo.AddTransporterNotificationAsync(
+                new TransporterDBNotifications
+                {
+                    TransporterRegId =
+                        order.TransporterRegId.Value,
+
+                    Title =
+                        "New Shipment Assigned",
+
+                    Message =
+                        $"New shipment #{order.SenderOrderId} has been assigned to you.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            await _repo.SaveChangesAsync();
+
+            return result;
+        }
+
+        // sender package delivery status
+
+        public async Task<bool>
+    UpdateSenderPackageDeliveryStatusAsync(
+        UpdateSenderPackageDeliveryStatusDto dto)
+        {
+            return await _repo
+                .UpdateSenderPackageDeliveryStatusAsync(dto);
         }
     }
 }

@@ -28,6 +28,8 @@ namespace mytown.DataAccess.Interfaces
     GetOrderSummaryAsync(
         SenderOrderSummaryRequestDto dto);
 
+
+
         Task<bool> SelectTransporterAsync(
     SelectTransporterDto dto);
 
@@ -40,5 +42,24 @@ namespace mytown.DataAccess.Interfaces
             SenderOrderPayment payment);
 
         Task SaveChangesAsync();
+
+        //sender order confirmation
+
+        Task<SenderOrderConfirmationDto>
+    GetOrderConfirmationAsync(
+        int senderOrderId);
+
+        // sender package delivery status 
+        Task<bool> UpdateSenderPackageDeliveryStatusAsync(
+    UpdateSenderPackageDeliveryStatusDto dto);
+
+        // update notifcations
+
+        Task AddSenderNotificationAsync(
+    SenderDBNotifications notification);
+
+        Task AddTransporterNotificationAsync(
+            TransporterDBNotifications notification);
+
     }
 }

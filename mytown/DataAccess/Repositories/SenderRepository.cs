@@ -234,11 +234,10 @@ namespace mytown.DataAccess.Implementations
         }
 
         public async Task<SenderOrderSummaryDto>
-    GetOrderSummaryAsync(
-        SenderOrderSummaryRequestDto dto)
+        GetOrderSummaryAsync(
+            SenderOrderSummaryRequestDto dto)
         {
-            var order =
-                await _context.SenderOrders
+            var order = await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
                     x.SenderOrderId ==
                     dto.SenderOrderId);
@@ -246,14 +245,16 @@ namespace mytown.DataAccess.Implementations
             if (order == null)
                 throw new Exception("Order not found");
 
+            var sender = await _context.SenderRegisters
+                .FirstOrDefaultAsync(x =>
+                    x.SenderRegId ==
+                    order.SenderRegId);
+
             var transporter =
                 await _context.TransporterRegisters
                 .FirstOrDefaultAsync(x =>
                     x.TransporterRegId ==
                     dto.TransporterRegId);
-
-            if (transporter == null)
-                throw new Exception("Transporter not found");
 
             var plan =
                 await _context.TransporterTravelPlans
@@ -261,31 +262,34 @@ namespace mytown.DataAccess.Implementations
                     x.PlanId ==
                     dto.TransporterPlanId);
 
-            if (plan == null)
-                throw new Exception("Plan not found");
-
-            // Example pricing
-            decimal weight =
-                order.PackageWeight ?? 1;
-
-            decimal baseAmount =
-                weight * 20;
+            decimal transportCharge = 50;
 
             decimal gstAmount =
-                (baseAmount * 18) / 100;
+                transportCharge * 0.18m;
 
             decimal totalAmount =
-                baseAmount + gstAmount;
-
-            var sender =
-                await _context.SenderRegisters
-                .FirstOrDefaultAsync(x =>
-                    x.SenderRegId ==
-                    order.SenderRegId);
+                transportCharge + gstAmount;
 
             return new SenderOrderSummaryDto
             {
-                // Sender
+                ProductName =
+                    order.ProductName,
+
+                ProductCost =
+                    order.ProductCost,
+
+                PackageLength =
+                    order.PackageLength,
+
+                PackageWidth =
+                    order.PackageWidth,
+
+                PackageHeight =
+                    order.PackageHeight,
+
+                PackageWeight =
+                    order.PackageWeight,
+
                 SenderName =
                     sender.SenderName,
 
@@ -295,7 +299,12 @@ namespace mytown.DataAccess.Implementations
                 PickupAddress =
                     order.PickupAddress,
 
-                // Receiver
+                PickupDate =
+                    order.PickupDate,
+
+                PickupTime =
+                    order.PickupTime,
+
                 ReceiverName =
                     order.ReceiverName,
 
@@ -305,28 +314,11 @@ namespace mytown.DataAccess.Implementations
                 ReceiverAddress =
                     order.ReceiverAddress,
 
-                // Product
-                ProductName =
-                    order.ProductName,
+                TransporterRegId =
+                    transporter.TransporterRegId,
 
-                ProductCost =
-                    order.ProductCost,
-
-                PackageWeight =
-                    order.PackageWeight,
-
-                IsFragile =
-                    order.IsFragile,
-
-                IsPerishable =
-                    order.IsPerishable,
-
-                // Transporter
                 TransporterName =
                     transporter.TransporterName,
-
-                TransporterEmail =
-                    transporter.Email,
 
                 TransporterPhone =
                     transporter.PhoneNumber,
@@ -334,12 +326,14 @@ namespace mytown.DataAccess.Implementations
                 VehicleType =
                     plan.VehicleType,
 
-                VehicleName =
-                    plan.VehicleName,
+                StartLocation =
+                    plan.StartLocation,
 
-                // Charges
-                BaseAmount =
-                    baseAmount,
+                Destination =
+                    plan.Destination,
+
+                TransportCharge =
+                    transportCharge,
 
                 GstAmount =
                     gstAmount,
@@ -348,6 +342,8 @@ namespace mytown.DataAccess.Implementations
                     totalAmount
             };
         }
+
+
 
         // select transporter
         public async Task<bool> SelectTransporterAsync(
@@ -398,6 +394,144 @@ namespace mytown.DataAccess.Implementations
         public async Task SaveChangesAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        //sender order confirmation
+        public async Task<SenderOrderConfirmationDto>
+    GetOrderConfirmationAsync(
+        int senderOrderId)
+        {
+            var order =
+                await _context.SenderOrders
+                .FirstOrDefaultAsync(x =>
+                    x.SenderOrderId ==
+                    senderOrderId);
+
+            if (order == null)
+                throw new Exception("Order not found");
+
+            var transporter =
+                await _context.TransporterRegisters
+                .FirstOrDefaultAsync(x =>
+                    x.TransporterRegId ==
+                    order.TransporterRegId);
+
+            var plan =
+                await _context.TransporterTravelPlans
+                .FirstOrDefaultAsync(x =>
+                    x.PlanId ==
+                    order.TransporterPlanId);
+
+            return new
+                SenderOrderConfirmationDto
+            {
+                SenderOrderId =
+                    order.SenderOrderId,
+
+                ProductName =
+                    order.ProductName,
+
+                PickupDate =
+                    order.PickupDate,
+
+                PickupTime =
+                    order.PickupTime,
+
+                EstimatedDeliveryDate =
+                    plan.ArrivalDate,
+
+                TransporterName =
+                    transporter.TransporterName,
+
+                TransporterPhone =
+                    transporter.PhoneNumber
+            };
+        }
+
+        // sender package delivery status
+
+        public async Task<bool>
+        UpdateSenderPackageDeliveryStatusAsync(
+            UpdateSenderPackageDeliveryStatusDto dto)
+        {
+            var order =
+                await _context.SenderOrders
+                .FirstOrDefaultAsync(x =>
+                    x.SenderOrderId ==
+                    dto.SenderOrderId);
+
+            if (order == null)
+                throw new Exception("Order not found");
+
+            if (!order.TransporterRegId.HasValue)
+                throw new Exception(
+                    "Transporter not assigned");
+
+            if (order.DeliveryStatus ==
+                dto.DeliveryStatus)
+                throw new Exception(
+                    "Status already updated");
+
+            order.DeliveryStatus =
+                dto.DeliveryStatus;
+
+            _context.SenderDBNotifications.Add(
+                new SenderDBNotifications
+                {
+                    SenderRegId =
+                        order.SenderRegId,
+
+                    Title =
+                        "Shipment Status Updated",
+
+                    Message =
+                        $"Your shipment #{order.SenderOrderId} is now {dto.DeliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            _context.TransporterDBNotifications.Add(
+                new TransporterDBNotifications
+                {
+                    TransporterRegId =
+                        order.TransporterRegId.Value,
+
+                    Title =
+                        "Shipment Status Updated",
+
+                    Message =
+                        $"Shipment #{order.SenderOrderId} status updated to {dto.DeliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        // update notifications
+
+        public async Task AddSenderNotificationAsync(
+    SenderDBNotifications notification)
+        {
+            await _context
+                .SenderDBNotifications
+                .AddAsync(notification);
+        }
+
+        public async Task AddTransporterNotificationAsync(
+    TransporterDBNotifications notification)
+        {
+            await _context
+                .TransporterDBNotifications
+                .AddAsync(notification);
         }
     }
 }
