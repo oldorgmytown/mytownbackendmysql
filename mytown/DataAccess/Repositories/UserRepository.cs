@@ -940,9 +940,9 @@ namespace mytown.DataAccess.Repositories
                     return new
                     {
                         userType = "Sender",
-                        senderId = sender.SenderRegId,
                         token,
                         sessionId = newSession.SessionGuid,
+
                         sender = new SenderRegisterDto
                         {
                             SenderId = sender.SenderRegId,
@@ -955,9 +955,8 @@ namespace mytown.DataAccess.Repositories
                             State = sender.State,
                             Country = sender.Country,
                             PostalCode = sender.PostalCode,
-                            Status = string.IsNullOrWhiteSpace(sender.Status)
-                                     ? "Active"
-                                     : sender.Status,
+                            Status = sender.Status,
+                            IsEmailVerified = sender.IsEmailVerified,
                             SenderRegDate = sender.SenderRegDate
                         }
                     };

@@ -14,8 +14,9 @@
         public string PostalCode { get; set; }
         public string PhoneNumber { get; set; }
 
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         public DateTime SenderRegDate { get; set; }
+        public bool IsEmailVerified { get; set; }
     }
     }
