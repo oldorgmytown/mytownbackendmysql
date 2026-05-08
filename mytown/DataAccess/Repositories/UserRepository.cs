@@ -871,6 +871,100 @@ namespace mytown.DataAccess.Repositories
 
                 return null;
             }
+
+            // ---------------- SENDER LOGIN ----------------
+            if (role == "Sender")
+            {
+                password = password?.Trim();
+
+                var sender = await _context.SenderRegisters
+                    .FirstOrDefaultAsync(s =>
+                        s.Email.ToLower().Trim() ==
+                        email.ToLower().Trim());
+
+                if (sender != null &&
+                    BCrypt.Net.BCrypt.Verify(password, sender.Password))
+                {
+                    // ❗ Email verification check
+                    if (!sender.IsEmailVerified)
+                    {
+                        return new
+                        {
+                            error = "Please verify your email before logging in."
+                        };
+                    }
+
+                    // ❗ Optional: status check (if you have Status column)
+                    if (sender.Status == "Blocked")
+                    {
+                        return new
+                        {
+                            error = "Your account is blocked. Contact support."
+                        };
+                    }
+
+                    // ---------------- SESSION HANDLING ----------------
+                    var oldSession = await _context.UserSessions
+                        .Where(s => s.UserId == sender.SenderRegId
+                                 && s.UserType == "Sender"
+                                 && s.IsActive)
+                        .FirstOrDefaultAsync();
+
+                    if (oldSession != null)
+                    {
+                        oldSession.IsActive = false;
+                        _context.UserSessions.Update(oldSession);
+                    }
+
+                    var newSession = new UserSession
+                    {
+                        UserId = sender.SenderRegId,
+                        UserType = "Sender",
+                        SessionGuid = Guid.NewGuid().ToString(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.UserSessions.Add(newSession);
+                    await _context.SaveChangesAsync();
+
+                    // ---------------- TOKEN ----------------
+                    var token = _tokenService.GenerateToken(
+                        sender.SenderRegId,
+                        sender.Email,
+                        "Sender",
+                        newSession.SessionGuid
+                    );
+
+                    // ---------------- RESPONSE ----------------
+                    return new
+                    {
+                        userType = "Sender",
+                        senderId = sender.SenderRegId,
+                        token,
+                        sessionId = newSession.SessionGuid,
+                        sender = new SenderRegisterDto
+                        {
+                            SenderId = sender.SenderRegId,
+                            SenderName = sender.SenderName,
+                            Email = sender.Email,
+                            PhoneNumber = sender.PhoneNumber,
+                            Address = sender.Address,
+                            Town = sender.Town,
+                            City = sender.City,
+                            State = sender.State,
+                            Country = sender.Country,
+                            PostalCode = sender.PostalCode,
+                            Status = string.IsNullOrWhiteSpace(sender.Status)
+                                     ? "Active"
+                                     : sender.Status,
+                            SenderRegDate = sender.SenderRegDate
+                        }
+                    };
+                }
+
+                return null;
+            }
             return null;
         }
 
