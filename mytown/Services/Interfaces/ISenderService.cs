@@ -38,6 +38,12 @@ namespace mytown.Services.Interfaces
         // sender package delivery status
         Task<bool> UpdateSenderPackageDeliveryStatusAsync(
     UpdateSenderPackageDeliveryStatusDto dto);
-    }
+
+
+        Task<List<SenderOrdersTabDto>>
+      GetSenderOrdersAsync(
+          int senderId,
+          string orderType);
+    } 
 
 }

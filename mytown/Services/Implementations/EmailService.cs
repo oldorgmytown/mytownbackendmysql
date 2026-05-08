@@ -2597,4 +2597,883 @@ public class EmailService : IEmailService
 </html>";
 }
 
+    // ============================================================
+    // METHOD 1: Sender Order Confirmation Email
+    // ============================================================
+    public async Task SendSenderOrderConfirmationAsync(
+        string email,
+        string senderName,
+        SenderOrderConfirmationDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                string body = BuildSenderOrderConfirmationTemplate(
+                    WebUtility.HtmlEncode(senderName),
+                    dto);
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"Shipment Booking Confirmed - {dto.SenderOrderId}",
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+
+            Console.WriteLine($"Shipment booking confirmation email sent to {email}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending shipment booking confirmation email: {ex.Message}");
+            throw new Exception("Failed to send shipment booking confirmation email.");
+        }
+    }
+
+    private string BuildSenderOrderConfirmationTemplate(
+        string senderName,
+        SenderOrderConfirmationDto dto)
+    {
+        decimal gst = dto.TransportationCharge * 0.18m;
+        decimal totalPaid = dto.TransportationCharge + gst;
+
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Shipment Booking Confirmed - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+ 
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#FAFBFC;"">
+ 
+    <!-- ===== HEADER (LOGO) ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+             alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+ 
+    <!-- ===== BANNER IMAGE ===== -->
+    <tr>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
+             alt=""Package Ready for Pickup""
+             width=""600""
+             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
+      </td>
+    </tr>
+ 
+    <!-- ===== HELLO + INTRO ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <p style=""color:#000;font-size:16px;font-weight:700;line-height:1.5;margin:0 0 8px 0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          Hello {senderName},
+        </p>
+        <p style=""color:#000;font-size:16px;font-weight:400;line-height:1.5;margin:0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          Your shipment booking has been confirmed! Your order is now ready for pickup.
+        </p>
+      </td>
+    </tr>
+ 
+    <!-- ===== ORDER DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.SenderOrderId}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Booking Date:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.BookingDate:MMMM d, yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Status:</td>
+            <td align=""right"" style=""color:#16A34A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              Confirmed
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PACKAGE INFORMATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Package Information</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Product:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.ProductName)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Dimensions:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.Dimensions)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Weight:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.Weight)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Value:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{dto.DeclaredValue:N2}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PICKUP DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Pickup Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:4px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.PickupAddress)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Pickup Date:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.PickupDate:MMMM d, yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Time Slot:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.PickupTime)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== DELIVERY DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Delivery Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:4px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Receiver:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.ReceiverName)}
+              </div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:4px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.DeliveryAddress)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Est. Delivery:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.EstimatedDeliveryDate:MMMM d, yyyy}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== TRANSPORTER INFORMATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Transporter Information</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Name:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.TransporterName)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.TransporterPhone)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Vehicle:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.VehicleType)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PAYMENT SUMMARY ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Payment Summary</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#EFF6FF;border:1px solid #BFDBFE;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Transportation Charge:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{dto.TransportationCharge:N2}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">GST (18%):</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{gst:N2}
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""height:1px;background:#93C5FD;""></div>
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#0A0A0A;font-size:14px;font-weight:600;padding-bottom:6px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Total Paid:</td>
+            <td align=""right"" style=""color:#1E3A5F;font-size:14px;font-weight:700;padding-bottom:6px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{totalPaid:N2}
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""color:#585858;font-size:12px;font-weight:400;padding-bottom:2px;
+                                     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              Payment Status: Successful
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""color:#585858;font-size:12px;font-weight:400;
+                                     font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              Payment Method: {WebUtility.HtmlEncode(dto.PaymentMethod)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== TRACK YOUR SHIPMENT ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#F3F4F6;border-radius:10px;padding:16px;"">
+          <tr>
+            <td>
+              <div style=""color:#374151;font-size:14px;font-weight:700;margin-bottom:8px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                Track Your Shipment:
+              </div>
+              <div style=""color:#585858;font-size:14px;font-weight:400;line-height:1.5;margin-bottom:4px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                You can track your shipment status anytime from your dashboard under &quot;Active Orders&quot;.
+              </div>
+              <div style=""color:#585858;font-size:14px;font-weight:400;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                You&apos;ll receive notifications at each stage: Pickup &#8594; In Transit &#8594; Delivered
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== VIEW ORDER BUTTON ===== -->
+    <tr>
+      <td align=""center"" style=""padding:24px 30px;"">
+        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/shopper/orders""
+           style=""display:inline-block;background:#0C4A6E;color:#fff;border:1px solid #0C4A6E;
+                  border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
+                  text-decoration:none;text-align:center;
+                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          View Order
+        </a>
+      </td>
+    </tr>
+ 
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td align=""center"" style=""padding-bottom:12px;"">
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Continue Shopping</a>
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">My Account</a>
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Help Center</a>
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"" style=""color:#585858;font-size:12px;font-weight:400;line-height:1.5;padding-bottom:6px;
+                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              You&#39;re receiving this email because you placed an order with us.
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"" style=""color:#585858;font-size:12px;font-weight:400;line-height:1.5;padding-bottom:6px;
+                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &copy; 2026 itismytown. All rights reserved.
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"">
+              <a href=""#"" style=""color:#0C4A6E;font-size:12px;font-weight:400;text-decoration:underline;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                Unsubscribe from marketing emails
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+  </table>
+  </td>
+</tr>
+</table>
+ 
+</body>
+</html>";
+    }
+
+
+    // ============================================================
+    // METHOD 2: Transporter New Shipment Assignment Email
+    // ============================================================
+    public async Task SendTransporterAssignmentAsync(
+        string email,
+        string transporterName,
+        SenderOrderConfirmationDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                string body = BuildTransporterShipmentAssignmentTemplate(
+                    WebUtility.HtmlEncode(transporterName),
+                    dto);
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"New Shipment Assignment - {dto.SenderOrderId}",
+                    Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+
+            Console.WriteLine($"Transporter assignment email sent to {email}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending transporter assignment email: {ex.Message}");
+            throw new Exception("Failed to send transporter assignment email.");
+        }
+    }
+
+    private string BuildTransporterShipmentAssignmentTemplate(
+        string transporterName,
+        SenderOrderConfirmationDto dto)
+    {
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>New Shipment Assignment - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+ 
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#FAFBFC;"">
+ 
+    <!-- ===== HEADER (LOGO) ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+             alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+ 
+    <!-- ===== BANNER IMAGE ===== -->
+    <tr>
+      <td align=""center"" style=""padding:0;background:#FAFBFC;"">
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
+             alt=""Package Ready for Pickup""
+             width=""600""
+             style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
+      </td>
+    </tr>
+ 
+    <!-- ===== HELLO + INTRO ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <p style=""color:#000;font-size:16px;font-weight:700;line-height:1.5;margin:0 0 8px 0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          Hello {transporterName},
+        </p>
+        <p style=""color:#000;font-size:16px;font-weight:400;line-height:1.5;margin:0;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          You have been assigned a new shipment. Please review the details below and ensure timely pickup and delivery.
+        </p>
+      </td>
+    </tr>
+ 
+    <!-- ===== ASSIGNMENT DETAILS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Assignment Details</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Order ID:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.SenderOrderId}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Assignment Date:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.PickupDate:MMMM d, yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Status:</td>
+            <td align=""right"" style=""color:#2563EB;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              Assigned
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PACKAGE INFORMATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Package Information</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Product:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.ProductName)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Package Type:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.PackageType)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Dimensions:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.Dimensions)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Weight:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.Weight)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Declared Value:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{dto.DeclaredValue:N2}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PICKUP LOCATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#128205; Pickup Location</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:16px;"">
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:2px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Sender:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.SenderName)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:2px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.PickupAddress)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.SenderPhone)}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Pickup Date:</td>
+            <td align=""right"" style=""color:#15803D;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.PickupDate:MMMM d, yyyy}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Time Slot:</td>
+            <td align=""right"" style=""color:#15803D;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.PickupTime)}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== DELIVERY LOCATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#128205; Delivery Location</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#FFF7ED;border:1px solid #FED7AA;border-radius:10px;padding:16px;"">
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:2px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Receiver:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.ReceiverName)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:2px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"" style=""padding-bottom:8px;"">
+              <div style=""color:#585858;font-size:14px;font-weight:400;margin-bottom:2px;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
+              <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                {WebUtility.HtmlEncode(dto.DeliveryAddress)}
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Expected Delivery:</td>
+            <td align=""right"" style=""color:#C2410C;font-size:14px;font-weight:500;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {dto.EstimatedDeliveryDate:MMMM d, yyyy}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== PAYMENT INFORMATION ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Payment Information</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:16px;"">
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Transportation Fee:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &#8377;{dto.TransportationCharge:N2}
+            </td>
+          </tr>
+          <tr>
+            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
+                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Payment Method:</td>
+            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
+                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              {WebUtility.HtmlEncode(dto.PaymentMethod)}
+            </td>
+          </tr>
+          <tr>
+            <td colspan=""2"">
+              <div style=""height:1px;background:#E5E7EB;margin-bottom:8px;""></div>
+              <div style=""color:#6B7280;font-size:12px;font-weight:400;line-height:1.5;
+                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                * Payment will be processed by ITISMYTOWN within 48 hours after successful delivery confirmation.
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== IMPORTANT INSTRUCTIONS ===== -->
+    <tr>
+      <td style=""padding:24px 30px;border-bottom:1px solid #F1F1F3;"">
+        <h2 style=""color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;
+                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#9888;&#65039; Important Instructions</h2>
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#FEFCE8;border:1px solid #FDE68A;border-radius:10px;padding:16px;"">
+          <tr>
+            <td>
+              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td width=""12"" valign=""top"" style=""color:#374151;font-size:14px;padding-bottom:8px;padding-right:8px;
+                                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#8226;</td>
+                  <td style=""color:#374151;font-size:14px;font-weight:400;padding-bottom:8px;line-height:1.4;
+                               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                    Please arrive at the pickup location during the scheduled time slot
+                  </td>
+                </tr>
+                <tr>
+                  <td width=""12"" valign=""top"" style=""color:#374151;font-size:14px;padding-bottom:8px;padding-right:8px;
+                                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#8226;</td>
+                  <td style=""color:#374151;font-size:14px;font-weight:400;padding-bottom:8px;line-height:1.4;
+                               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                    Verify package contents and dimensions before pickup
+                  </td>
+                </tr>
+                <tr>
+                  <td width=""12"" valign=""top"" style=""color:#374151;font-size:14px;padding-bottom:8px;padding-right:8px;
+                                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#8226;</td>
+                  <td style=""color:#374151;font-size:14px;font-weight:400;padding-bottom:8px;line-height:1.4;
+                               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                    Update shipment status in the app: Picked Up &#8594; In Transit &#8594; Delivered
+                  </td>
+                </tr>
+                <tr>
+                  <td width=""12"" valign=""top"" style=""color:#374151;font-size:14px;padding-bottom:8px;padding-right:8px;
+                                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#8226;</td>
+                  <td style=""color:#374151;font-size:14px;font-weight:400;padding-bottom:8px;line-height:1.4;
+                               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                    Handle with care - {WebUtility.HtmlEncode(dto.ProductName)} (Fragile items)
+                  </td>
+                </tr>
+                <tr>
+                  <td width=""12"" valign=""top"" style=""color:#374151;font-size:14px;padding-right:8px;
+                                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">&#8226;</td>
+                  <td style=""color:#374151;font-size:14px;font-weight:400;line-height:1.4;
+                               font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                    Contact receiver before delivery attempt
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- ===== VIEW ORDER BUTTON ===== -->
+    <tr>
+      <td align=""center"" style=""padding:24px 30px;"">
+        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/transporter/my-plans""
+           style=""display:inline-block;background:#0C4A6E;color:#fff;border:1px solid #0C4A6E;
+                  border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
+                  text-decoration:none;text-align:center;
+                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+          View Order
+        </a>
+      </td>
+    </tr>
+ 
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td align=""center"" style=""padding-bottom:12px;"">
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Continue Shopping</a>
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">My Account</a>
+              <a href=""#"" style=""color:#0C4A6E;font-size:16px;font-weight:400;text-decoration:none;margin:0 12px;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Help Center</a>
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"" style=""color:#585858;font-size:12px;font-weight:400;line-height:1.5;padding-bottom:6px;
+                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              You&#39;re receiving this email because you placed an order with us.
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"" style=""color:#585858;font-size:12px;font-weight:400;line-height:1.5;padding-bottom:6px;
+                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+              &copy; 2026 itismytown. All rights reserved.
+            </td>
+          </tr>
+          <tr>
+            <td align=""center"">
+              <a href=""#"" style=""color:#0C4A6E;font-size:12px;font-weight:400;text-decoration:underline;
+                                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+                Unsubscribe from marketing emails
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+
+
+
+    </tr>
+ 
+  </table>
+  </td>
+</tr>
+</table>
+ 
+</body>
+</html>";
+}
+
+
 }

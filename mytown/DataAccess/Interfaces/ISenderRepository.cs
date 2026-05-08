@@ -60,6 +60,11 @@ namespace mytown.DataAccess.Interfaces
 
         Task AddTransporterNotificationAsync(
             TransporterDBNotifications notification);
+        Task<TransporterEmailDto> GetTransporterByIdAsync(
+    int transporterId);
+
+        Task<List<SenderOrdersTabDto>>
+GetSenderOrdersAsync(int senderId, string orderType);
 
     }
 }

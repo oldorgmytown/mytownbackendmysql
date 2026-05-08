@@ -194,5 +194,19 @@ namespace mytown.Controllers
                 Message = "Status updated"
             });
         }
+
+        [HttpGet("sender/orders")]
+        public async Task<IActionResult>
+GetSenderOrders(
+    int senderId,
+    string orderType)
+        {
+            var result =
+                await _senderService.GetSenderOrdersAsync(
+                    senderId,
+                    orderType);
+
+            return Ok(result);
+        }
     }
 }

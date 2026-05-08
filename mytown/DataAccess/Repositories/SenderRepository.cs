@@ -5,6 +5,7 @@ using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using Stripe;
 
 namespace mytown.DataAccess.Implementations
 {
@@ -146,7 +147,7 @@ namespace mytown.DataAccess.Implementations
 
         // geting transorter matching
         public async Task<List<MatchingTransporterDto>>
-     GetMatchingTransportersAsync(int senderOrderId)
+ GetMatchingTransportersAsync(int senderOrderId)
         {
             var order = await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
@@ -155,40 +156,48 @@ namespace mytown.DataAccess.Implementations
             if (order == null)
                 throw new Exception("Sender order not found");
 
+            string pickupLocation =
+                $"{order.PickupTown}, {order.PickupCity}, {order.PickupState}, {order.PickupCountry}";
+
+            string deliveryLocation =
+                $"{order.ReceiverTown}, {order.ReceiverCity}, {order.ReceiverState}, {order.ReceiverCountry}";
+
             var transporters =
                 await _context.TransporterTravelPlans
                 .Include(x => x.TransporterRegister)
 
-                // active plan only
+                // active
                 .Where(x => x.IsActive)
 
-                // available only
-                .Where(x =>
-                    x.PlanStatus == "Available")
+                // available
+                .Where(x => x.PlanStatus == "Available")
 
-                // pickup city match
+                // route matching
                 .Where(x =>
-                    x.StartLocation.Contains(order.PickupCity))
+                    x.StartLocation.Contains(order.PickupCity) &&
+                    x.StartLocation.Contains(order.PickupState) &&
+                    x.StartLocation.Contains(order.PickupCountry))
 
-                // destination city match
                 .Where(x =>
-                    x.Destination.Contains(order.ReceiverCity))
+                    x.Destination.Contains(order.ReceiverCity) &&
+                    x.Destination.Contains(order.ReceiverState) &&
+                    x.Destination.Contains(order.ReceiverCountry))
 
-                // weight check
+                // weight
                 .Where(x =>
                     x.MaxWeightKg >= order.PackageWeight)
 
-                // fragile check
+                // fragile
                 .Where(x =>
                     !order.IsFragile ||
                     x.AcceptsFragile)
 
-                // perishable check
+                // perishable
                 .Where(x =>
                     !order.IsPerishable ||
                     x.AcceptsPerishable)
 
-                // date check
+                // date
                 .Where(x =>
                     order.PickupDate >= x.StartDate &&
                     order.PickupDate <= x.ArrivalDate)
@@ -196,43 +205,21 @@ namespace mytown.DataAccess.Implementations
                 .Select(x => new MatchingTransporterDto
                 {
                     PlanId = x.PlanId,
-
-                    TransporterRegId =
-                        x.TransporterRegId,
-
-                    TransporterName =
-                        x.TransporterRegister.TransporterName,
-
-                    Email =
-                        x.TransporterRegister.Email,
-
-                    PhoneNumber =
-                        x.TransporterRegister.PhoneNumber,
-
-                    VehicleType =
-                        x.VehicleType,
-
-                    VehicleName =
-                        x.VehicleName,
-
-                    MaxWeightKg =
-                        x.MaxWeightKg,
-
-                    StartDate =
-                        x.StartDate,
-
-                    ArrivalDate =
-                        x.ArrivalDate,
-
-                    PreferredContact =
-                        x.PreferredContact
+                    TransporterRegId = x.TransporterRegId,
+                    TransporterName = x.TransporterRegister.TransporterName,
+                    Email = x.TransporterRegister.Email,
+                    PhoneNumber = x.TransporterRegister.PhoneNumber,
+                    VehicleType = x.VehicleType,
+                    VehicleName = x.VehicleName,
+                    MaxWeightKg = x.MaxWeightKg,
+                    StartDate = x.StartDate,
+                    ArrivalDate = x.ArrivalDate,
+                    PreferredContact = x.PreferredContact
                 })
-
                 .ToListAsync();
 
             return transporters;
         }
-
         public async Task<SenderOrderSummaryDto>
         GetOrderSummaryAsync(
             SenderOrderSummaryRequestDto dto)
@@ -396,16 +383,14 @@ namespace mytown.DataAccess.Implementations
             await _context.SaveChangesAsync();
         }
 
-        //sender order confirmation
         public async Task<SenderOrderConfirmationDto>
-    GetOrderConfirmationAsync(
-        int senderOrderId)
+      GetOrderConfirmationAsync(
+          int senderOrderId)
         {
             var order =
                 await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
-                    x.SenderOrderId ==
-                    senderOrderId);
+                    x.SenderOrderId == senderOrderId);
 
             if (order == null)
                 throw new Exception("Order not found");
@@ -413,38 +398,47 @@ namespace mytown.DataAccess.Implementations
             var transporter =
                 await _context.TransporterRegisters
                 .FirstOrDefaultAsync(x =>
-                    x.TransporterRegId ==
-                    order.TransporterRegId);
+                    x.TransporterRegId == order.TransporterRegId);
+
+            var sender =
+                await _context.SenderRegisters
+                .FirstOrDefaultAsync(x =>
+                    x.SenderRegId == order.SenderRegId);
 
             var plan =
                 await _context.TransporterTravelPlans
                 .FirstOrDefaultAsync(x =>
-                    x.PlanId ==
-                    order.TransporterPlanId);
+                    x.PlanId == order.TransporterPlanId);
 
-            return new
-                SenderOrderConfirmationDto
+            return new SenderOrderConfirmationDto
             {
-                SenderOrderId =
-                    order.SenderOrderId,
+                SenderOrderId = order.SenderOrderId,
+                BookingDate = order.CreatedAt,
 
-                ProductName =
-                    order.ProductName,
+                ProductName = order.ProductName,
+                Dimensions = $"{order.PackageLength ?? 0} x {order.PackageWidth ?? 0} x {order.PackageHeight ?? 0} cm",
+                Weight = $"{order.PackageWeight ?? 0} kg",
+                DeclaredValue = order.ProductCost,
 
-                PickupDate =
-                    order.PickupDate,
+                PickupAddress = order.PickupAddress,
+                PickupDate = order.PickupDate,
+                PickupTime = order.PickupTime,
 
-                PickupTime =
-                    order.PickupTime,
+                ReceiverName = order.ReceiverName,
+                ReceiverPhone = order.ReceiverPhone,
+                DeliveryAddress = order.ReceiverAddress,
 
-                EstimatedDeliveryDate =
-                    plan.ArrivalDate,
+                EstimatedDeliveryDate = plan.ArrivalDate,
 
-                TransporterName =
-                    transporter.TransporterName,
+                TransporterName = transporter.TransporterName,
+                TransporterPhone = transporter.PhoneNumber,
+                VehicleType = plan.VehicleType,
 
-                TransporterPhone =
-                    transporter.PhoneNumber
+                TransportationCharge = 50,
+                PaymentMethod = "Online Payment",
+
+                SenderName = sender.SenderName,
+                SenderPhone = sender.PhoneNumber
             };
         }
 
@@ -532,6 +526,93 @@ namespace mytown.DataAccess.Implementations
             await _context
                 .TransporterDBNotifications
                 .AddAsync(notification);
+        }
+
+        // get trasprter email
+        public async Task<TransporterEmailDto>
+GetTransporterByIdAsync(int transporterId)
+        {
+            return await _context.TransporterRegisters
+                .Where(t => t.TransporterRegId == transporterId)
+                .Select(t => new TransporterEmailDto
+                {
+                    TransporterId = t.TransporterRegId,
+                    TransporterName = t.TransporterName,
+                    Email = t.Email
+                })
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<SenderOrdersTabDto>>
+GetSenderOrdersAsync(int senderId, string orderType)
+        {
+            var query =
+                from o in _context.SenderOrders
+
+                join t in _context.TransporterRegisters
+                on o.TransporterRegId equals t.TransporterRegId
+                into transporterGroup
+
+                from transporter in transporterGroup.DefaultIfEmpty()
+
+                where o.SenderRegId == senderId
+
+                select new SenderOrdersTabDto
+                {
+                    SenderOrderId = o.SenderOrderId,
+
+                    ProductName = o.ProductName,
+
+                    BookingDate = o.CreatedAt,
+
+                    PickupLocation =
+                        o.PickupAddress,
+
+                    DeliveryLocation =
+                        o.ReceiverAddress,
+
+                    DeliveryStatus =
+                        o.DeliveryStatus,
+
+                    OrderType =
+                        o.DeliveryStatus == "Pending"
+                            ? "New"
+                            : o.DeliveryStatus == "Delivered"
+                                ? "Delivered"
+                                : "InProgress",
+
+                    TransporterName =
+                        transporter != null
+                            ? transporter.TransporterName
+                            : null,
+
+                    TransporterPhone =
+                        transporter != null
+                            ? transporter.PhoneNumber
+                            : null,
+
+                   
+                };
+
+            if (orderType == "New")
+            {
+                query = query.Where(x =>
+                    x.OrderType == "New");
+            }
+            else if (orderType == "InProgress")
+            {
+                query = query.Where(x =>
+                    x.OrderType == "InProgress");
+            }
+            else if (orderType == "Delivered")
+            {
+                query = query.Where(x =>
+                    x.OrderType == "Delivered");
+            }
+
+            return await query
+                .OrderByDescending(x => x.BookingDate)
+                .ToListAsync();
         }
     }
 }

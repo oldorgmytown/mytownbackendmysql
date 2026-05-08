@@ -57,6 +57,16 @@ namespace mytown.Services.Interfaces
         Task SendBranchLoginEmailAsync(string email, string password);
 
 
+        Task SendSenderOrderConfirmationAsync(
+        string email,
+        string shopperName,
+        SenderOrderConfirmationDto dto);
 
+        Task SendTransporterAssignmentAsync(
+        string email,
+        string transporterName,
+        SenderOrderConfirmationDto dto);
     }
+
+
 }

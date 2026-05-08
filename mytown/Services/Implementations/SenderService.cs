@@ -8,6 +8,7 @@ using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Stripe;
 using System.Text.Json;
+using static mytown.Services.Implementations.SenderService;
 
 namespace mytown.Services.Implementations
 {
@@ -354,6 +355,40 @@ namespace mytown.Services.Implementations
 
             await _repo.SaveChangesAsync();
 
+
+            // EMAIL TRIGGER
+            try
+            {
+                var sender =
+                    await _repo.GetSenderByIdAsync(order.SenderRegId);
+
+                var transporter =
+                    await _repo.GetTransporterByIdAsync(
+                        order.TransporterRegId.Value);
+
+                // Sender mail
+                await _emailService.SendSenderOrderConfirmationAsync(
+                    sender.Email,
+                    sender.SenderName,
+                    result
+                );
+
+                // Transporter mail
+                await _emailService.SendTransporterAssignmentAsync(
+                    transporter.Email,
+                    transporter.TransporterName,
+                    result
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+       ex,
+       "Failed to send order confirmation emails for SenderOrderId: {SenderOrderId}",
+       senderOrderId
+   );
+            }
+
             return result;
         }
 
@@ -366,5 +401,19 @@ namespace mytown.Services.Implementations
             return await _repo
                 .UpdateSenderPackageDeliveryStatusAsync(dto);
         }
+
+       
+
+            public async Task<List<SenderOrdersTabDto>>
+            GetSenderOrdersAsync(
+                int senderId,
+                string orderType)
+            {
+                return await _repo
+                    .GetSenderOrdersAsync(
+                        senderId,
+                        orderType);
+            }
+        
     }
 }
