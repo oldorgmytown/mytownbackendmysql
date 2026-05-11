@@ -12,7 +12,7 @@ namespace mytown.Services.Interfaces
         // Sender Orders
 
         Task<int> CreateSenderOrderAsync(CreateSenderOrderDto dto);
-        Task<List<MatchingTransporterDto>>
+        Task<MatchingTransporterDto>
     GetMatchingTransportersAsync(int senderOrderId);
 
         Task<SenderOrderSummaryDto>

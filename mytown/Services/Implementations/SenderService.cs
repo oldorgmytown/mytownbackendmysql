@@ -136,7 +136,7 @@ namespace mytown.Services.Implementations
         }
 
         /// ---------------- MATCHING TRANSPORTERS ----------------
-        public async Task<List<MatchingTransporterDto>>
+        public async Task<MatchingTransporterDto>
     GetMatchingTransportersAsync(int senderOrderId)
         {
             return await _repo

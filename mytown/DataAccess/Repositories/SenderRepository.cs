@@ -146,8 +146,8 @@ namespace mytown.DataAccess.Implementations
         }
 
         // geting transorter matching
-        public async Task<List<MatchingTransporterDto>>
- GetMatchingTransportersAsync(int senderOrderId)
+        public async Task<MatchingTransporterDto?>
+GetMatchingTransportersAsync(int senderOrderId)
         {
             var order = await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
@@ -156,23 +156,18 @@ namespace mytown.DataAccess.Implementations
             if (order == null)
                 throw new Exception("Sender order not found");
 
-            string pickupLocation =
-                $"{order.PickupTown}, {order.PickupCity}, {order.PickupState}, {order.PickupCountry}";
 
-            string deliveryLocation =
-                $"{order.ReceiverTown}, {order.ReceiverCity}, {order.ReceiverState}, {order.ReceiverCountry}";
-
-            var transporters =
+            var bestTransporter =
                 await _context.TransporterTravelPlans
                 .Include(x => x.TransporterRegister)
 
-                // active
+                // Active plans only
                 .Where(x => x.IsActive)
 
-                // available
+                // Available plans only
                 .Where(x => x.PlanStatus == "Available")
 
-                // route matching
+                // City + State + Country match
                 .Where(x =>
                     x.StartLocation.Contains(order.PickupCity) &&
                     x.StartLocation.Contains(order.PickupState) &&
@@ -183,42 +178,78 @@ namespace mytown.DataAccess.Implementations
                     x.Destination.Contains(order.ReceiverState) &&
                     x.Destination.Contains(order.ReceiverCountry))
 
-                // weight
+                // Weight check
                 .Where(x =>
                     x.MaxWeightKg >= order.PackageWeight)
 
-                // fragile
+                // Fragile
                 .Where(x =>
                     !order.IsFragile ||
                     x.AcceptsFragile)
 
-                // perishable
+                // Perishable
                 .Where(x =>
                     !order.IsPerishable ||
                     x.AcceptsPerishable)
 
-                // date
-                .Where(x =>
-                    order.PickupDate >= x.StartDate &&
-                    order.PickupDate <= x.ArrivalDate)
+                 // Pickup date within travel dates
+                 .Where(x =>
+                     order.PickupDate >= x.StartDate &&
+                     order.PickupDate <= x.ArrivalDate)
+
+                 // Sorting Logic
+
+                 // 1. Exact town match gets highest priority
+                 .OrderByDescending(x =>
+                     x.StartLocation.Contains(order.PickupTown) &&
+                     x.Destination.Contains(order.ReceiverTown))
+
+                 // 2. Least delivery duration gets priority
+                 .ThenBy(x =>
+                     (x.ArrivalDate - x.StartDate).TotalMinutes)
+
+                 // 3. Oldest created plan wins if above are same
+                 .ThenBy(x =>
+                     x.CreatedAt)
 
                 .Select(x => new MatchingTransporterDto
                 {
                     PlanId = x.PlanId,
-                    TransporterRegId = x.TransporterRegId,
-                    TransporterName = x.TransporterRegister.TransporterName,
-                    Email = x.TransporterRegister.Email,
-                    PhoneNumber = x.TransporterRegister.PhoneNumber,
-                    VehicleType = x.VehicleType,
-                    VehicleName = x.VehicleName,
-                    MaxWeightKg = x.MaxWeightKg,
-                    StartDate = x.StartDate,
-                    ArrivalDate = x.ArrivalDate,
-                    PreferredContact = x.PreferredContact
-                })
-                .ToListAsync();
 
-            return transporters;
+                    TransporterRegId =
+                        x.TransporterRegId,
+
+                    TransporterName =
+                        x.TransporterRegister.TransporterName,
+
+                    Email =
+                        x.TransporterRegister.Email,
+
+                    PhoneNumber =
+                        x.TransporterRegister.PhoneNumber,
+
+                    VehicleType =
+                        x.VehicleType,
+
+                    VehicleName =
+                        x.VehicleName,
+
+                    MaxWeightKg =
+                        x.MaxWeightKg,
+
+                    StartDate =
+                        x.StartDate,
+
+                    ArrivalDate =
+                        x.ArrivalDate,
+
+                    PreferredContact =
+                        x.PreferredContact
+                })
+
+                .FirstOrDefaultAsync();
+
+            return bestTransporter;
         }
         public async Task<SenderOrderSummaryDto>
         GetOrderSummaryAsync(

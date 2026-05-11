@@ -21,7 +21,7 @@ namespace mytown.DataAccess.Interfaces
 
         Task<int> CreateSenderOrderAsync(CreateSenderOrderDto dto);
 
-        Task<List<MatchingTransporterDto>>
+        Task<MatchingTransporterDto>
    GetMatchingTransportersAsync(int senderOrderId);
 
         Task<SenderOrderSummaryDto>
