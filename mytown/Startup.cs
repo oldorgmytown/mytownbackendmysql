@@ -14,6 +14,7 @@ using System.Text;
 using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
 using mytown.DataAccess.Implementations;
+using Stripe;
 
 
 
@@ -47,9 +48,10 @@ public class Startup
     }
 
     // Consolidates all AddScoped registrations.
-    private void RegisterApplicationServices(IServiceCollection services)
-    {
-        services.AddScoped<IUserRepository, UserRepository>();
+private void RegisterApplicationServices(IServiceCollection services)
+{
+    StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
+    services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IShopperRegistrationValidator, ShopperRegistrationValidator>();

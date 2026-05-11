@@ -208,8 +208,9 @@ namespace mytown.Services.Implementations
                         }
                 };
 
-            var service =
-                new PaymentIntentService();
+            var stripeSecretKey = _configuration["Stripe:SecretKey"];
+var stripeClient = new StripeClient(stripeSecretKey);
+var service = new PaymentIntentService(stripeClient);
 
             var paymentIntent =
                 await service

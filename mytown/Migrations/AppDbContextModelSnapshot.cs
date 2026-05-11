@@ -1547,6 +1547,253 @@ namespace mytown.Migrations
                     b.ToTable("registrations");
                 });
 
+            modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("notification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("message");
+
+                    b.Property<int>("SenderRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_reg_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("title");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("SenderRegId");
+
+                    b.ToTable("sender_db_notifications");
+                });
+
+            modelBuilder.Entity("mytown.Models.SenderOrder", b =>
+                {
+                    b.Property<int>("SenderOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("sender_order_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SenderOrderId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DeliveryStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("delivery_status");
+
+                    b.Property<bool>("IsFragile")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_fragile");
+
+                    b.Property<bool>("IsPerishable")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_perishable");
+
+                    b.Property<string>("OrderStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("order_status");
+
+                    b.Property<decimal?>("PackageHeight")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("package_height");
+
+                    b.Property<decimal?>("PackageLength")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("package_length");
+
+                    b.Property<decimal?>("PackageWeight")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("package_weight");
+
+                    b.Property<decimal?>("PackageWidth")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("package_width");
+
+                    b.Property<string>("PickupAddress")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_address");
+
+                    b.Property<string>("PickupCity")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_city");
+
+                    b.Property<string>("PickupCountry")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_country");
+
+                    b.Property<DateTime>("PickupDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("pickup_date");
+
+                    b.Property<string>("PickupPincode")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_pincode");
+
+                    b.Property<string>("PickupState")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_state");
+
+                    b.Property<string>("PickupTime")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_time");
+
+                    b.Property<string>("PickupTown")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("pickup_town");
+
+                    b.Property<decimal>("ProductCost")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("product_cost");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("product_name");
+
+                    b.Property<string>("ReceiverAddress")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_address");
+
+                    b.Property<string>("ReceiverCity")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_city");
+
+                    b.Property<string>("ReceiverCountry")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_country");
+
+                    b.Property<string>("ReceiverName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_name");
+
+                    b.Property<string>("ReceiverPhone")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_phone");
+
+                    b.Property<string>("ReceiverPincode")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_pincode");
+
+                    b.Property<string>("ReceiverState")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_state");
+
+                    b.Property<string>("ReceiverTown")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("receiver_town");
+
+                    b.Property<int>("SenderRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_id");
+
+                    b.Property<string>("SpecialInstructions")
+                        .HasColumnType("longtext")
+                        .HasColumnName("special_instructions");
+
+                    b.Property<int?>("TransporterPlanId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_plan_id");
+
+                    b.Property<int?>("TransporterRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("transporter_reg_id");
+
+                    b.HasKey("SenderOrderId");
+
+                    b.ToTable("sender_orders");
+                });
+
+            modelBuilder.Entity("mytown.Models.SenderOrderPayment", b =>
+                {
+                    b.Property<int>("SenderPaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("sender_payment_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("SenderPaymentId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("amount");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("GstAmount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("gst_amount");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payment_method");
+
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payment_status");
+
+                    b.Property<int>("SenderOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_order_id");
+
+                    b.Property<string>("StripePaymentIntentId")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("stripe_payment_intent_id");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("total_amount");
+
+                    b.HasKey("SenderPaymentId");
+
+                    b.ToTable("sender_order_payments");
+                });
+
             modelBuilder.Entity("mytown.Models.SenderRegister", b =>
                 {
                     b.Property<int>("SenderRegId")
@@ -3120,6 +3367,17 @@ namespace mytown.Migrations
                     b.Navigation("ProductSubCategory");
 
                     b.Navigation("ProductType");
+                });
+
+            modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
+                {
+                    b.HasOne("mytown.Models.SenderRegister", "SenderRegister")
+                        .WithMany()
+                        .HasForeignKey("SenderRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SenderRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderVerification", b =>
