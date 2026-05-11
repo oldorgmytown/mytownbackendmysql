@@ -41,6 +41,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true; // Ensure SSL/TLS is enabled
 
@@ -93,11 +94,17 @@ public class EmailService : IEmailService
                 await smtpClient.SendMailAsync(mailMessage);
             }
         }
-        catch (Exception ex)
+
+         catch (Exception ex)
         {
-            Console.WriteLine($"Error sending email: {ex.Message}");
-            throw new Exception("Failed to send verification email.");
+            Console.WriteLine(ex.ToString());
+            throw;
         }
+        //catch (Exception ex)
+        //{
+        //    Console.WriteLine($"Error sending email: {ex.Message}");
+        //    throw new Exception("Failed to send verification email.");
+        //}
     }
 
     //<!-- Additional Success Button -->
@@ -119,8 +126,16 @@ public class EmailService : IEmailService
         {
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
+
                 smtpClient.Port = _smtpPort;
-                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+
+                smtpClient.UseDefaultCredentials = false;   // Important for Microsoft SMTP
+
+                smtpClient.Credentials = new NetworkCredential(
+                    _smtpUser,
+                    _smtpPass
+                );
+
                 smtpClient.EnableSsl = true;
 
                 var mailMessage = new MailMessage
@@ -199,7 +214,14 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
-                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+
+                smtpClient.UseDefaultCredentials = false;   // Important for Microsoft SMTP
+
+                smtpClient.Credentials = new NetworkCredential(
+                    _smtpUser,
+                    _smtpPass
+                );
+
                 smtpClient.EnableSsl = true;
 
                 var mailMessage = new MailMessage
@@ -619,6 +641,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1043,6 +1066,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1447,6 +1471,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials =
                     new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
@@ -1690,6 +1715,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1774,6 +1800,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1836,6 +1863,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1897,6 +1925,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -1963,6 +1992,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -2361,6 +2391,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials =
                     new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
@@ -2613,6 +2644,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
@@ -3050,6 +3082,7 @@ public class EmailService : IEmailService
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
 
