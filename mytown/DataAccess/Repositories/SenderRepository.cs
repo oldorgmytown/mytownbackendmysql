@@ -147,7 +147,7 @@ namespace mytown.DataAccess.Implementations
 
         // geting transorter matching
         public async Task<MatchingTransporterDto?>
-GetMatchingTransportersAsync(int senderOrderId)
+   GetMatchingTransportersAsync(int senderOrderId)
         {
             var order = await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
@@ -157,7 +157,7 @@ GetMatchingTransportersAsync(int senderOrderId)
                 throw new Exception("Sender order not found");
 
 
-            var bestTransporter =
+            var transporterPlans =
                 await _context.TransporterTravelPlans
                 .Include(x => x.TransporterRegister)
 
@@ -182,72 +182,57 @@ GetMatchingTransportersAsync(int senderOrderId)
                 .Where(x =>
                     x.MaxWeightKg >= order.PackageWeight)
 
-                // Fragile
+                // Fragile check
                 .Where(x =>
                     !order.IsFragile ||
                     x.AcceptsFragile)
 
-                // Perishable
+                // Perishable check
                 .Where(x =>
                     !order.IsPerishable ||
                     x.AcceptsPerishable)
 
-                 // Pickup date within travel dates
-                 .Where(x =>
-                     order.PickupDate >= x.StartDate &&
-                     order.PickupDate <= x.ArrivalDate)
+                // Pickup date check
+                .Where(x =>
+                    order.PickupDate >= x.StartDate &&
+                    order.PickupDate <= x.ArrivalDate)
 
-                 // Sorting Logic
+                .ToListAsync();
 
-                 // 1. Exact town match gets highest priority
-                 .OrderByDescending(x =>
-                     x.StartLocation.Contains(order.PickupTown) &&
-                     x.Destination.Contains(order.ReceiverTown))
 
-                 // 2. Least delivery duration gets priority
-                 .ThenBy(x =>
-                     (x.ArrivalDate - x.StartDate).TotalMinutes)
+            var bestTransporter =
+                transporterPlans
 
-                 // 3. Oldest created plan wins if above are same
-                 .ThenBy(x =>
-                     x.CreatedAt)
+                // 1. Town match gets highest priority
+                .OrderByDescending(x =>
+                    x.StartLocation.Contains(order.PickupTown ?? "") &&
+                    x.Destination.Contains(order.ReceiverTown ?? ""))
+
+                // 2. Least delivery duration
+                .ThenBy(x =>
+                    (x.ArrivalDate - x.StartDate).TotalMinutes)
+
+                // 3. Oldest plan created
+                .ThenBy(x =>
+                    x.CreatedAt)
 
                 .Select(x => new MatchingTransporterDto
                 {
                     PlanId = x.PlanId,
-
-                    TransporterRegId =
-                        x.TransporterRegId,
-
-                    TransporterName =
-                        x.TransporterRegister.TransporterName,
-
-                    Email =
-                        x.TransporterRegister.Email,
-
-                    PhoneNumber =
-                        x.TransporterRegister.PhoneNumber,
-
-                    VehicleType =
-                        x.VehicleType,
-
-                    VehicleName =
-                        x.VehicleName,
-
-                    MaxWeightKg =
-                        x.MaxWeightKg,
-
-                    StartDate =
-                        x.StartDate,
-
-                    ArrivalDate =
-                        x.ArrivalDate,
-
-                    PreferredContact =
-                        x.PreferredContact
+                    TransporterRegId = x.TransporterRegId,
+                    TransporterName = x.TransporterRegister.TransporterName,
+                    Email = x.TransporterRegister.Email,
+                    PhoneNumber = x.TransporterRegister.PhoneNumber,
+                    VehicleType = x.VehicleType,
+                    VehicleName = x.VehicleName,
+                    MaxWeightKg = x.MaxWeightKg,
+                    StartDate = x.StartDate,
+                    ArrivalDate = x.ArrivalDate,
+                    PreferredContact = x.PreferredContact
                 })
 
-                .FirstOrDefaultAsync();
+                .FirstOrDefault();
+
 
             return bestTransporter;
         }
