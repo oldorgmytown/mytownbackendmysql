@@ -276,12 +276,13 @@ var service = new PaymentIntentService(stripeClient);
                         DateTime.UtcNow
                 };
 
-            await _repo
+await _repo
                 .AddSenderOrderPaymentAsync(
                     payment);
 
-            order.OrderStatus =
-                "Booked";
+            order.TransporterRegId = dto.TransporterRegId;
+            order.TransporterPlanId = dto.TransporterPlanId;
+            order.OrderStatus = "Booked";
 
             await _repo
                 .SaveChangesAsync();

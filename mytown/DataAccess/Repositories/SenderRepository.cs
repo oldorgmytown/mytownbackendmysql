@@ -421,10 +421,17 @@ namespace mytown.DataAccess.Implementations
                 .FirstOrDefaultAsync(x =>
                     x.SenderRegId == order.SenderRegId);
 
-            var plan =
+var plan =
                 await _context.TransporterTravelPlans
                 .FirstOrDefaultAsync(x =>
                     x.PlanId == order.TransporterPlanId);
+
+            if (transporter == null)
+                throw new Exception("Transporter record not found.");
+            if (plan == null)
+                throw new Exception("Travel plan not found.");
+            if (sender == null)
+                throw new Exception("Sender record not found.");
 
             return new SenderOrderConfirmationDto
             {
