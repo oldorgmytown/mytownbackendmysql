@@ -66,5 +66,7 @@ namespace mytown.DataAccess.Interfaces
         Task<List<SenderOrdersTabDto>>
 GetSenderOrdersAsync(int senderId, string orderType);
 
+        Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId);
+
     }
 }

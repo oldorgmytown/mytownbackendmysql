@@ -630,5 +630,33 @@ GetSenderOrdersAsync(int senderId, string orderType)
                 .OrderByDescending(x => x.BookingDate)
                 .ToListAsync();
         }
+
+        public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
+        {
+            return await _context.SenderRegisters
+                .Where(x => x.SenderRegId == senderRegId)
+                .Select(x => new SenderRegisterDto
+                {
+                    SenderId = x.SenderRegId,
+                    SenderName = x.SenderName,
+                    Email = x.Email,
+
+                    // Usually don't expose password in API
+                    Password = "",
+
+                    Address = x.Address,
+                    Town = x.Town,
+                    City = x.City,
+                    State = x.State,
+                    Country = x.Country,
+                    PostalCode = x.PostalCode,
+                    PhoneNumber = x.PhoneNumber,
+
+                    Status = x.Status,
+                    SenderRegDate = x.SenderRegDate,
+                    IsEmailVerified = x.IsEmailVerified
+                })
+                .FirstOrDefaultAsync();
+        }
     }
 }

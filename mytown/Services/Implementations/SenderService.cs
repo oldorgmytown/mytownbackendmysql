@@ -414,6 +414,11 @@ namespace mytown.Services.Implementations
                         senderId,
                         orderType);
             }
-        
+
+        public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
+        {
+            return await _repo.GetSenderProfileAsync(senderRegId);
+        }
+
     }
 }

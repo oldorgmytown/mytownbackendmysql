@@ -208,5 +208,17 @@ GetSenderOrders(
 
             return Ok(result);
         }
+
+        [HttpGet("sender-profile/{senderRegId}")]
+        public async Task<IActionResult> GetSenderProfile(int senderRegId)
+        {
+            var result = await _senderService
+                .GetSenderProfileAsync(senderRegId);
+
+            if (result == null)
+                return NotFound("Sender not found");
+
+            return Ok(result);
+        }
     }
 }
