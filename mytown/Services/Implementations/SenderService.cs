@@ -208,8 +208,9 @@ namespace mytown.Services.Implementations
                         }
                 };
 
-            var service =
-                new PaymentIntentService();
+            var stripeSecretKey = _configuration["Stripe:SecretKey"];
+var stripeClient = new StripeClient(stripeSecretKey);
+var service = new PaymentIntentService(stripeClient);
 
             var paymentIntent =
                 await service
@@ -275,12 +276,13 @@ namespace mytown.Services.Implementations
                         DateTime.UtcNow
                 };
 
-            await _repo
+await _repo
                 .AddSenderOrderPaymentAsync(
                     payment);
 
-            order.OrderStatus =
-                "Booked";
+            order.TransporterRegId = dto.TransporterRegId;
+            order.TransporterPlanId = dto.TransporterPlanId;
+            order.OrderStatus = "Booked";
 
             await _repo
                 .SaveChangesAsync();
