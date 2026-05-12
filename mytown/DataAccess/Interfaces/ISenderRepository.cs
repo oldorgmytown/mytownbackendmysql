@@ -78,5 +78,14 @@ GetSenderOrdersAsync(int senderId, string orderType);
 
         Task MarkEachNotificationReadAsync(int notificationId);
 
+        Task<IEnumerable<SenderAlternateAddressDto>>
+    GetAddressesBySenderIdAsync(int senderRegId);
+
+        Task<SenderAlternateAddressDto>
+            AddAddressAsync(SenderAlternateAddress address);
+
+        Task<bool>
+            DeleteAddressAsync(int id);
+
     }
 }

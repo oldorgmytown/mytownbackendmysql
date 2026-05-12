@@ -57,6 +57,15 @@ namespace mytown.Services.Interfaces
         Task MarkAsReadAsync(int senderId);
 
         Task MarkEachNotificationReadAsync(int notificationId);
+
+        Task<IEnumerable<SenderAlternateAddressDto>>
+    GetAddressesAsync(int senderRegId);
+
+        Task<SenderAlternateAddressDto>
+            AddAddressAsync(SenderAlternateAddressDto dto);
+
+        Task<bool>
+            DeleteAddressAsync(int id);
     } 
 
 }

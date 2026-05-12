@@ -441,5 +441,36 @@ GetUnreadNotificationsAsync(int senderId)
         public async Task MarkEachNotificationReadAsync(int notificationId)
             => await _repo.MarkEachNotificationReadAsync(notificationId);
 
+        // ---------------- ALTERNATE ADDRESS ----------------
+
+        public Task<IEnumerable<SenderAlternateAddressDto>>
+        GetAddressesAsync(int senderRegId)
+            => _repo.GetAddressesBySenderIdAsync(senderRegId);
+
+        public async Task<SenderAlternateAddressDto>
+        AddAddressAsync(SenderAlternateAddressDto dto)
+        {
+            var entity = new SenderAlternateAddress
+            {
+                AltAddressId = dto.AltAddressId,
+                SenderRegId = dto.SenderRegId,
+                AltName = dto.AltName,
+                AltPhoneNumber = dto.AltPhoneNumber,
+                AltAddress = dto.AltAddress,
+                AltTown = dto.AltTown,
+                AltCity = dto.AltCity,
+                AltState = dto.AltState,
+                AltCountry = dto.AltCountry,
+                AltPostalCode = dto.AltPostalCode,
+                DeliveryNotes = dto.DeliveryNotes
+            };
+
+            return await _repo.AddAddressAsync(entity);
+        }
+
+        public Task<bool>
+        DeleteAddressAsync(int id)
+            => _repo.DeleteAddressAsync(id);
+
     }
 }

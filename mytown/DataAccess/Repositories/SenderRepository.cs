@@ -735,5 +735,101 @@ GetSenderOrdersAsync(int senderId, string orderType)
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<IEnumerable<SenderAlternateAddressDto>>
+GetAddressesBySenderIdAsync(int senderRegId)
+        {
+            return await _context.SenderAlternateAddresses
+                .Where(x =>
+                    x.SenderRegId == senderRegId &&
+                    !x.IsDeleted)
+
+                .Select(x => new SenderAlternateAddressDto
+                {
+                    AltAddressId = x.AltAddressId,
+                    SenderRegId = x.SenderRegId,
+                    AltName = x.AltName,
+                    AltPhoneNumber = x.AltPhoneNumber,
+                    AltAddress = x.AltAddress,
+                    AltTown = x.AltTown,
+                    AltCity = x.AltCity,
+                    AltState = x.AltState,
+                    AltCountry = x.AltCountry,
+                    AltPostalCode = x.AltPostalCode,
+                    DeliveryNotes = x.DeliveryNotes
+                })
+                .ToListAsync();
+        }
+
+
+        public async Task<SenderAlternateAddressDto>
+        AddAddressAsync(SenderAlternateAddress address)
+        {
+            SenderAlternateAddress entity;
+
+            if (address.AltAddressId > 0)
+            {
+                entity = await _context.SenderAlternateAddresses
+                    .FirstOrDefaultAsync(x =>
+                        x.AltAddressId == address.AltAddressId &&
+                        x.SenderRegId == address.SenderRegId)
+
+                    ?? throw new Exception("Address not found");
+
+                entity.AltName = address.AltName;
+                entity.AltPhoneNumber = address.AltPhoneNumber;
+                entity.AltAddress = address.AltAddress;
+                entity.AltTown = address.AltTown;
+                entity.AltCity = address.AltCity;
+                entity.AltState = address.AltState;
+                entity.AltCountry = address.AltCountry;
+                entity.AltPostalCode = address.AltPostalCode;
+                entity.DeliveryNotes = address.DeliveryNotes;
+            }
+            else
+            {
+                entity = address;
+
+                _context.SenderAlternateAddresses
+                    .Add(entity);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return new SenderAlternateAddressDto
+            {
+                AltAddressId = entity.AltAddressId,
+                SenderRegId = entity.SenderRegId,
+                AltName = entity.AltName,
+                AltPhoneNumber = entity.AltPhoneNumber,
+                AltAddress = entity.AltAddress,
+                AltTown = entity.AltTown,
+                AltCity = entity.AltCity,
+                AltState = entity.AltState,
+                AltCountry = entity.AltCountry,
+                AltPostalCode = entity.AltPostalCode,
+                DeliveryNotes = entity.DeliveryNotes
+            };
+        }
+
+
+        public async Task<bool>
+        DeleteAddressAsync(int id)
+        {
+            var address =
+                await _context.SenderAlternateAddresses
+                .FirstOrDefaultAsync(x =>
+                    x.AltAddressId == id &&
+                    !x.IsDeleted);
+
+            if (address == null)
+                return false;
+
+            address.IsDeleted = true;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

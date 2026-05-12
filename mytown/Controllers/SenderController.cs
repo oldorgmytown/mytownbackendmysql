@@ -271,5 +271,44 @@ GetSenderOrders(
                 message = "Notification marked as read."
             });
         }
+
+        // ---------------- ALTERNATE ADDRESSES ----------------
+
+        
+        [HttpGet("GetSenderAltAddress")]
+        public async Task<IActionResult> GetAddresses(int senderRegId)
+        {
+            var addresses =
+                await _senderService.GetAddressesAsync(senderRegId);
+
+            return Ok(addresses);
+        }
+
+        //[Authorize]
+        [HttpPost("AddSenderAltAddress")]
+        public async Task<IActionResult> AddAddress(
+            [FromBody] SenderAlternateAddressDto dto)
+        {
+            var result =
+                await _senderService.AddAddressAsync(dto);
+
+            return Ok(result);
+        }
+
+       // [Authorize]
+        [HttpDelete("DeleteSenderAltAddress/{id}")]
+        public async Task<IActionResult> DeleteAddress(int id)
+        {
+            var deleted =
+                await _senderService.DeleteAddressAsync(id);
+
+            if (!deleted)
+                return NotFound();
+
+            return Ok(new
+            {
+                message = "Address deleted successfully"
+            });
+        }
     }
 }
