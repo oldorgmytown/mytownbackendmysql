@@ -68,5 +68,15 @@ GetSenderOrdersAsync(int senderId, string orderType);
 
         Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId);
 
+        Task<bool> UpdateSenderProfileAsync(
+    int senderRegId,
+    UpdateSenderProfileDto dto);
+
+        Task<List<SenderDBNotifications>> GetUnreadNotificationsAsync(int senderId);
+
+        Task MarkAllAsReadAsync(int senderId);
+
+        Task MarkEachNotificationReadAsync(int notificationId);
+
     }
 }

@@ -665,5 +665,75 @@ GetSenderOrdersAsync(int senderId, string orderType)
                 })
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> UpdateSenderProfileAsync(
+    int senderRegId,
+    UpdateSenderProfileDto dto)
+        {
+            var sender = await _context.SenderRegisters
+                .FirstOrDefaultAsync(x =>
+                    x.SenderRegId == senderRegId);
+
+            if (sender == null)
+                return false;
+
+            sender.SenderName = dto.SenderName;
+            sender.Address = dto.Address;
+            sender.Town = dto.Town;
+            sender.City = dto.City;
+            sender.State = dto.State;
+            sender.Country = dto.Country;
+            sender.PostalCode = dto.PostalCode;
+            sender.PhoneNumber = dto.PhoneNumber;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        // -------------------------------------------------------------------------
+        // NOTIFICATIONS
+        // -------------------------------------------------------------------------
+
+        public async Task<List<SenderDBNotifications>>
+        GetUnreadNotificationsAsync(int senderId)
+        {
+            return await _context.SenderDBNotifications
+                .Where(n =>
+                    n.SenderRegId == senderId &&
+                    !n.IsRead)
+                .OrderByDescending(n => n.CreatedDate)
+                .ToListAsync();
+        }
+
+        public async Task MarkAllAsReadAsync(int senderId)
+        {
+            var notifications =
+                await _context.SenderDBNotifications
+                .Where(n =>
+                    n.SenderRegId == senderId &&
+                    !n.IsRead)
+                .ToListAsync();
+
+            notifications.ForEach(n =>
+                n.IsRead = true);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task MarkEachNotificationReadAsync(int notificationId)
+        {
+            var notification =
+                await _context.SenderDBNotifications
+                .FirstOrDefaultAsync(n =>
+                    n.NotificationId == notificationId);
+
+            if (notification != null)
+            {
+                notification.IsRead = true;
+
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

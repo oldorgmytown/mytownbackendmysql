@@ -422,5 +422,24 @@ await _repo
             return await _repo.GetSenderProfileAsync(senderRegId);
         }
 
+        public async Task<bool> UpdateSenderProfileAsync(
+    int senderRegId,
+    UpdateSenderProfileDto dto)
+        {
+            return await _repo.UpdateSenderProfileAsync(
+                senderRegId,
+                dto);
+        }
+
+        public async Task<List<SenderDBNotifications>>
+GetUnreadNotificationsAsync(int senderId)
+    => await _repo.GetUnreadNotificationsAsync(senderId);
+
+        public async Task MarkAsReadAsync(int senderId)
+            => await _repo.MarkAllAsReadAsync(senderId);
+
+        public async Task MarkEachNotificationReadAsync(int notificationId)
+            => await _repo.MarkEachNotificationReadAsync(notificationId);
+
     }
 }

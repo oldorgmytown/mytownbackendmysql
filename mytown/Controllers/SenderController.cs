@@ -220,5 +220,56 @@ GetSenderOrders(
 
             return Ok(result);
         }
+
+        [HttpPut("update-sender-profile/{senderRegId}")]
+        public async Task<IActionResult> UpdateSenderProfile(
+    int senderRegId,
+    [FromBody] UpdateSenderProfileDto dto)
+        {
+            var updated =
+                await _senderService.UpdateSenderProfileAsync(
+                    senderRegId,
+                    dto);
+
+            if (!updated)
+                return NotFound("Sender not found");
+
+            return Ok("Profile updated successfully");
+        }
+
+        // =========================================================
+        // NOTIFICATIONS
+        // =========================================================
+
+        [HttpGet("notifications/{senderId}")]
+        public async Task<IActionResult> GetUnreadNotifications(int senderId)
+        {
+            var notifications =
+                await _senderService.GetUnreadNotificationsAsync(senderId);
+
+            return Ok(notifications);
+        }
+
+        [HttpPut("notifications/mark-all-read/{senderId}")]
+        public async Task<IActionResult> MarkAllAsRead(int senderId)
+        {
+            await _senderService.MarkAsReadAsync(senderId);
+
+            return Ok(new
+            {
+                message = "All notifications marked as read."
+            });
+        }
+
+        [HttpPut("notifications/mark-read/{notificationId}")]
+        public async Task<IActionResult> MarkNotificationRead(int notificationId)
+        {
+            await _senderService.MarkEachNotificationReadAsync(notificationId);
+
+            return Ok(new
+            {
+                message = "Notification marked as read."
+            });
+        }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using mytown.DTOs;
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
@@ -46,6 +47,16 @@ namespace mytown.Services.Interfaces
           string orderType);
 
         Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId);
+
+        Task<bool> UpdateSenderProfileAsync(
+    int senderRegId,
+    UpdateSenderProfileDto dto);
+
+        Task<List<SenderDBNotifications>> GetUnreadNotificationsAsync(int senderId);
+
+        Task MarkAsReadAsync(int senderId);
+
+        Task MarkEachNotificationReadAsync(int notificationId);
     } 
 
 }
