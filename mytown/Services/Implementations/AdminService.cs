@@ -231,5 +231,18 @@ namespace mytown.Services.Implementations
             return await _adminRepo.GetBranchAsync(branchId);
         }
 
+        public async Task<(IEnumerable<object> Records, int TotalRecords)>
+GetSenderRegistersPaginatedAsync(
+    int page,
+    int pageSize,
+    string? search)
+        {
+            return await _adminRepo
+                .GetSenderRegistersPaginatedAsync(
+                    page,
+                    pageSize,
+                    search);
+        }
+
     }
 }

@@ -966,5 +966,55 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         }
 
 
+        public async Task<(IEnumerable<SenderRegisterDto> records, int totalRecords)>
+ GetSenderRegistersPaginatedAsync(int page, int pageSize, string? search)
+        {
+            var query = _context.SenderRegisters.AsQueryable();
+
+            // SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                search = search.ToLower();
+
+                query = query.Where(x =>
+                    (x.SenderName ?? "").ToLower().Contains(search) ||
+                    (x.Email ?? "").ToLower().Contains(search) ||
+                    (x.PhoneNumber ?? "").ToLower().Contains(search) ||
+                    (x.Town ?? "").ToLower().Contains(search) ||
+                    (x.City ?? "").ToLower().Contains(search) ||
+                    (x.State ?? "").ToLower().Contains(search) ||
+                    (x.Country ?? "").ToLower().Contains(search) ||
+                    (x.PostalCode ?? "").ToLower().Contains(search) ||
+                    (x.Status ?? "").ToLower().Contains(search)
+                );
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var records = await query
+                .OrderByDescending(x => x.SenderRegId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new SenderRegisterDto
+                {
+                    SenderId = x.SenderRegId,
+                    SenderName = x.SenderName,
+                    Email = x.Email,
+                    Address = x.Address,
+                    Town = x.Town,
+                    City = x.City,
+                    State = x.State,
+                    Country = x.Country,
+                    PostalCode = x.PostalCode,
+                    PhoneNumber = x.PhoneNumber,
+                    Status = x.Status,
+                    IsEmailVerified = x.IsEmailVerified,
+                    SenderRegDate = x.SenderRegDate
+                })
+                .ToListAsync();
+
+            return (records, totalRecords);
+        }
+
     }
 }

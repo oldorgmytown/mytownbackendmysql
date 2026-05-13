@@ -57,6 +57,12 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
         Task<List<BranchBasicDto>> GetBasicBranches(int courierId);       
 
         Task<CourierBranchDto> GetBranchAsync(int branchId);
+
+        Task<(IEnumerable<SenderRegisterDto> records, int totalRecords)>
+    GetSenderRegistersPaginatedAsync(
+        int page,
+        int pageSize,
+        string? search);
     }
 }
 

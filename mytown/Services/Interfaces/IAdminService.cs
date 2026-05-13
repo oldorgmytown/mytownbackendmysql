@@ -46,5 +46,11 @@ namespace mytown.Services.Interfaces
 
         //for branches 
         Task<CourierBranchDto> GetBranchAsync(int branchId);
+
+        Task<(IEnumerable<object> Records, int TotalRecords)>
+    GetSenderRegistersPaginatedAsync(
+        int page,
+        int pageSize,
+        string? search);
     }
 }
