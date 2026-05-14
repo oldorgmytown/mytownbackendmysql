@@ -89,6 +89,10 @@ namespace mytown.Services.Implementations
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
             => _repo.GetProductSubCategoriesByBusRegId(busRegId);
 
+        public List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId)
+        {
+            return _repo.GetProductSubCategoriesByBusCatId(busCatId);
+        }
         // ------------------- BUSINESS PROFILES -------------------
         public Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync()
             => _repo.GetAllBusinessProfilesAsync();

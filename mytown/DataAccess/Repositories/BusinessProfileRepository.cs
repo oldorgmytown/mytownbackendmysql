@@ -289,6 +289,14 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
+      //  get prodct sub catgeories by business category id
+        public List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId)
+        {
+            return _context.product_sub_categories
+                .Where(x => x.BuscatId == busCatId)
+                .ToList();
+        }
+
         // //get product category details like type, fabric,design on add product form
 
         public async Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId)
