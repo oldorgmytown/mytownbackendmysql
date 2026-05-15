@@ -1,4 +1,4 @@
-name: Build and deploy container app to Azure Web App - mytown-webapp
+name: Build and deploy ASP.Net Core app
 
 on:
   push:
@@ -11,87 +11,83 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to container registry
-        uses: docker/login-action@v2
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
         with:
-          registry: mytownacr.azurecr.io
-          username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME }}
-          password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD }}
+          dotnet-version: '8.x'   # update if needed
 
-      - name: Build and push container image
-        uses: docker/build-push-action@v3
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release
+
+      - name: Publish
+        run: dotnet publish -c Release -o publish
+
+      - uses: actions/upload-artifact@v4
         with:
-          context: .
-          push: true
-          tags: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
+          name: app
+          path: publish
 
 # -------- DEV --------
   deploy-dev:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.ref == 'refs/heads/transport-backed'
 
     steps:
-      - name: Login to Azure
-        uses: azure/login@v2
+      - uses: actions/download-artifact@v4
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          name: app
 
       - name: Deploy to Dev Slot
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
-          app-name: mytown-webapp
+          app-name: mytown-webapp   # 🔥 CHECK THIS
           slot-name: dev
-          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
+          package: .
 
-# -------- QA (STAGING) --------
+# -------- QA --------
   deploy-qa:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.ref == 'refs/heads/backend-QA'
 
     steps:
-      - name: Login to Azure
-        uses: azure/login@v2
+      - uses: actions/download-artifact@v4
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          name: app
 
       - name: Deploy to Staging Slot
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: mytown-webapp
           slot-name: staging
-          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
+          package: .
 
 # -------- PROD --------
   deploy-prod:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     if: github.ref == 'refs/heads/backend-PROD'
 
     steps:
-      - name: Login to Azure
-        uses: azure/login@v2
+      - uses: actions/download-artifact@v4
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          name: app
 
       - name: Deploy to Production
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: mytown-webapp
           slot-name: Production
-          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: .
