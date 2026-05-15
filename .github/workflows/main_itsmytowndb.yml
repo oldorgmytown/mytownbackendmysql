@@ -6,6 +6,7 @@ on:
       - transport-backed
       - backend-QA
       - backend-PROD
+  workflow_dispatch:
 
 jobs:
 
@@ -18,7 +19,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1'
+          dotnet-version: '8.x'   # update if needed
+
+      - name: Restore
+        run: dotnet restore
 
       - name: Build
         run: dotnet build --configuration Release
@@ -45,12 +49,12 @@ jobs:
       - name: Deploy to Dev Slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp   # 🔥 CHECK THIS
           slot-name: dev
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
           package: .
 
-# -------- QA (STAGING) --------
+# -------- QA --------
   deploy-qa:
     needs: build
     runs-on: windows-latest
@@ -64,7 +68,7 @@ jobs:
       - name: Deploy to Staging Slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp
           slot-name: staging
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
           package: .
@@ -83,7 +87,7 @@ jobs:
       - name: Deploy to Production
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
           package: .
