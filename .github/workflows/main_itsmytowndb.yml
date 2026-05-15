@@ -1,65 +1,89 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy ASP.Net Core app to Azure Web App - itsmytowndb
+name: Build and deploy ASP.Net Core app
 
 on:
   push:
     branches:
-      - main
-  workflow_dispatch:
+      - transport-backed
+      - backend-QA
+      - backend-PROD
 
 jobs:
+
   build:
     runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up .NET Core
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '3.1'
 
-      - name: Build with dotnet
+      - name: Build
         run: dotnet build --configuration Release
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+      - name: Publish
+        run: dotnet publish -c Release -o publish
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: app
+          path: publish
 
-  deploy:
-    runs-on: windows-latest
+# -------- DEV --------
+  deploy-dev:
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/transport-backed'
 
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
-          name: .net-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2B27E35D4C0B4178A1381126C42924DF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_A7976908DCAA409B8B0776F53CB19657 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_4FD4942D35204AF488A86AEFC26854DD }}
+          name: app
 
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Deploy to Dev Slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'itsmytowndb'
-          slot-name: 'Production'
+          app-name: itsmytowndb
+          slot-name: dev
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
           package: .
-          
+
+# -------- QA (STAGING) --------
+  deploy-qa:
+    needs: build
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/backend-QA'
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+
+      - name: Deploy to Staging Slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: itsmytowndb
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
+          package: .
+
+# -------- PROD --------
+  deploy-prod:
+    needs: build
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/backend-PROD'
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+
+      - name: Deploy to Production
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: itsmytowndb
+          slot-name: Production
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: .
