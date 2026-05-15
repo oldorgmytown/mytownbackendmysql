@@ -156,6 +156,7 @@ private void RegisterApplicationServices(IServiceCollection services)
             "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
                 "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
                 "https://www.itismytown.com"
+
         };
         services.AddCors(options =>
         {
