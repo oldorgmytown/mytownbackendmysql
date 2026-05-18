@@ -1,12 +1,11 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy container app to Azure Web App - mytown-webapp
 
 on:
   push:
     branches:
       - transport-backed
+      - backend-QA
+      - backend-PROD
   workflow_dispatch:
 
 jobs:
@@ -43,9 +42,9 @@ jobs:
       contents: read #This is required for actions/checkout
 
     needs: build
-    
+
     steps:
-      
+
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -60,4 +59,3 @@ jobs:
           app-name: 'mytown-webapp'
           slot-name: 'Production'
           images: 'mytownacr.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_54D4782667834534A27B73A2F1F02450 }}/mytown-app:${{ github.sha }}'
-          
