@@ -146,75 +146,46 @@ namespace mytown.DataAccess.Implementations
         }
 
         // geting transorter matching
-        public async Task<MatchingTransporterDto?>
-   GetMatchingTransportersAsync(int senderOrderId)
+        public async Task<MatchingTransporterDto?> GetMatchingTransportersAsync(int senderOrderId)
         {
             var order = await _context.SenderOrders
-                .FirstOrDefaultAsync(x =>
-                    x.SenderOrderId == senderOrderId);
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
 
             if (order == null)
                 throw new Exception("Sender order not found");
 
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
 
-            var transporterPlans =
-                await _context.TransporterTravelPlans
+            var bestTransporter = await _context.TransporterTravelPlans
                 .Include(x => x.TransporterRegister)
 
-                // Active plans only
-                .Where(x => x.IsActive)
-
-                // Available plans only
-                .Where(x => x.PlanStatus == "Available")
-
-                // City + State + Country match
                 .Where(x =>
-                    x.StartLocation.Contains(order.PickupCity) &&
-                    x.StartLocation.Contains(order.PickupState) &&
-                    x.StartLocation.Contains(order.PickupCountry))
+                    x.IsActive &&
+                    x.PlanStatus == "Available" &&
+                    x.StartDate > bookingDateTime &&
 
-                .Where(x =>
-                    x.Destination.Contains(order.ReceiverCity) &&
-                    x.Destination.Contains(order.ReceiverState) &&
-                    x.Destination.Contains(order.ReceiverCountry))
+                    x.StartTown.ToLower() == order.PickupTown.ToLower() &&
+                    x.StartCity.ToLower() == order.PickupCity.ToLower() &&
+                    x.StartState.ToLower() == order.PickupState.ToLower() &&
+                    x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
 
-                // Weight check
-                .Where(x =>
-                    x.MaxWeightKg >= order.PackageWeight)
+                    x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
+                    x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
+                    x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
+                    x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
 
-                // Fragile check
-                .Where(x =>
-                    !order.IsFragile ||
-                    x.AcceptsFragile)
+                    x.MaxWeightKg >= order.PackageWeight &&
 
-                // Perishable check
-                .Where(x =>
-                    !order.IsPerishable ||
-                    x.AcceptsPerishable)
+                    (!order.IsFragile || x.AcceptsFragile) &&
 
-                // Pickup date check
-                .Where(x =>
-                    order.PickupDate >= x.StartDate &&
-                    order.PickupDate <= x.ArrivalDate)
+                    (!order.IsPerishable || x.AcceptsPerishable)
+                )
 
-                .ToListAsync();
-
-
-            var bestTransporter =
-                transporterPlans
-
-                // 1. Town match gets highest priority
-                .OrderByDescending(x =>
-                    x.StartLocation.Contains(order.PickupTown ?? "") &&
-                    x.Destination.Contains(order.ReceiverTown ?? ""))
-
-                // 2. Least delivery duration
-                .ThenBy(x =>
-                    (x.ArrivalDate - x.StartDate).TotalMinutes)
-
-                // 3. Oldest plan created
-                .ThenBy(x =>
-                    x.CreatedAt)
+                // oldest created plan gets priority
+                .OrderBy(x => x.CreatedAt)
 
                 .Select(x => new MatchingTransporterDto
                 {
@@ -231,121 +202,75 @@ namespace mytown.DataAccess.Implementations
                     PreferredContact = x.PreferredContact
                 })
 
-                .FirstOrDefault();
-
+                .FirstOrDefaultAsync();
 
             return bestTransporter;
         }
-        public async Task<SenderOrderSummaryDto>
-        GetOrderSummaryAsync(
-            SenderOrderSummaryRequestDto dto)
+        // changed as per transporetr columns - town, city, state, country
+
+        public async Task<SenderOrderSummaryDto> GetOrderSummaryAsync(
+    SenderOrderSummaryRequestDto dto)
         {
             var order = await _context.SenderOrders
-                .FirstOrDefaultAsync(x =>
-                    x.SenderOrderId ==
-                    dto.SenderOrderId);
+                .FirstOrDefaultAsync(x => x.SenderOrderId == dto.SenderOrderId);
 
             if (order == null)
                 throw new Exception("Order not found");
 
             var sender = await _context.SenderRegisters
-                .FirstOrDefaultAsync(x =>
-                    x.SenderRegId ==
-                    order.SenderRegId);
+                .FirstOrDefaultAsync(x => x.SenderRegId == order.SenderRegId);
 
-            var transporter =
-                await _context.TransporterRegisters
-                .FirstOrDefaultAsync(x =>
-                    x.TransporterRegId ==
-                    dto.TransporterRegId);
+            var transporter = await _context.TransporterRegisters
+                .FirstOrDefaultAsync(x => x.TransporterRegId == dto.TransporterRegId);
 
-            var plan =
-                await _context.TransporterTravelPlans
-                .FirstOrDefaultAsync(x =>
-                    x.PlanId ==
-                    dto.TransporterPlanId);
+            var plan = await _context.TransporterTravelPlans
+                .FirstOrDefaultAsync(x => x.PlanId == dto.TransporterPlanId);
 
             decimal transportCharge = 50;
+            decimal gstAmount = transportCharge * 0.18m;
+            decimal totalAmount = transportCharge + gstAmount;
 
-            decimal gstAmount =
-                transportCharge * 0.18m;
+            string startLocation =
+                $"{plan.StartTown}, {plan.StartCity}, {plan.StartState}, {plan.StartCountry}";
 
-            decimal totalAmount =
-                transportCharge + gstAmount;
+            string destinationLocation =
+                $"{plan.DestinationTown}, {plan.DestinationCity}, {plan.DestinationState}, {plan.DestinationCountry}";
 
             return new SenderOrderSummaryDto
             {
-                ProductName =
-                    order.ProductName,
+                ProductName = order.ProductName,
+                ProductCost = order.ProductCost,
 
-                ProductCost =
-                    order.ProductCost,
+                PackageLength = order.PackageLength,
+                PackageWidth = order.PackageWidth,
+                PackageHeight = order.PackageHeight,
+                PackageWeight = order.PackageWeight,
 
-                PackageLength =
-                    order.PackageLength,
+                SenderName = sender.SenderName,
+                SenderPhone = sender.PhoneNumber,
 
-                PackageWidth =
-                    order.PackageWidth,
+                PickupAddress = order.PickupAddress,
+                PickupDate = order.PickupDate,
+                PickupTime = order.PickupTime,
 
-                PackageHeight =
-                    order.PackageHeight,
+                ReceiverName = order.ReceiverName,
+                ReceiverPhone = order.ReceiverPhone,
+                ReceiverAddress = order.ReceiverAddress,
 
-                PackageWeight =
-                    order.PackageWeight,
+                TransporterRegId = transporter.TransporterRegId,
+                TransporterName = transporter.TransporterName,
+                TransporterPhone = transporter.PhoneNumber,
 
-                SenderName =
-                    sender.SenderName,
+                VehicleType = plan.VehicleType,
 
-                SenderPhone =
-                    sender.PhoneNumber,
+                StartLocation = startLocation,
+                Destination = destinationLocation,
 
-                PickupAddress =
-                    order.PickupAddress,
-
-                PickupDate =
-                    order.PickupDate,
-
-                PickupTime =
-                    order.PickupTime,
-
-                ReceiverName =
-                    order.ReceiverName,
-
-                ReceiverPhone =
-                    order.ReceiverPhone,
-
-                ReceiverAddress =
-                    order.ReceiverAddress,
-
-                TransporterRegId =
-                    transporter.TransporterRegId,
-
-                TransporterName =
-                    transporter.TransporterName,
-
-                TransporterPhone =
-                    transporter.PhoneNumber,
-
-                VehicleType =
-                    plan.VehicleType,
-
-                StartLocation =
-                    plan.StartLocation,
-
-                Destination =
-                    plan.Destination,
-
-                TransportCharge =
-                    transportCharge,
-
-                GstAmount =
-                    gstAmount,
-
-                TotalAmount =
-                    totalAmount
+                TransportCharge = transportCharge,
+                GstAmount = gstAmount,
+                TotalAmount = totalAmount
             };
         }
-
 
 
         // select transporter

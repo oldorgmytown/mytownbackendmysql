@@ -708,71 +708,143 @@ namespace mytown.DataAccess.Repositories
 
 
         public async Task<BestcourierinfoDto?> FindMatchingTransporterAsync(
-    string storeCity,
-    string shopperCity,
-    decimal packageWeightKg)
-{
-    var today = DateTime.UtcNow.Date;
- 
-    // Find active travel plans where:
-    // - StartLocation matches store city (transporter picks up FROM store city)
-    // - Destination matches shopper city (transporter drops off TO shopper city)
-    // - Plan is active, available, and travel date is today or future
-    // - Max weight capacity >= package weight
-    var matchingPlan = await (
-        from plan in _context.TransporterTravelPlans
-        join transporter in _context.TransporterRegisters
-            on plan.TransporterRegId equals transporter.TransporterRegId
-        where plan.IsActive
-           && plan.PlanStatus == "Available"
-           && plan.StartDate.Date >= today
-           && plan.MaxWeightKg >= packageWeightKg
-           && EF.Functions.Like(plan.StartLocation.ToLower(), $"%{storeCity.ToLower()}%")
-           && EF.Functions.Like(plan.Destination.ToLower(), $"%{shopperCity.ToLower()}%")
-        orderby plan.StartDate ascending   // earliest trip first
-        select new
+     string storeTown,
+     string storeCity,
+     string storeState,
+     string storeCountry,
+
+     string shopperTown,
+     string shopperCity,
+     string shopperState,
+     string shopperCountry,
+
+     decimal packageWeightKg)
         {
-            plan.PlanId,
-            plan.TransporterRegId,
-            transporter.TransporterName,
-            plan.VehicleType,
-            plan.StartDate,
-            plan.ArrivalDate,
-            plan.MaxWeightKg
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
+
+            var matchingPlan = await (
+                from plan in _context.TransporterTravelPlans
+
+                join transporter in _context.TransporterRegisters
+                    on plan.TransporterRegId equals transporter.TransporterRegId
+
+                where
+
+                    // Active plan
+                    plan.IsActive
+
+                    &&
+
+                    plan.PlanStatus == "Available"
+
+                    &&
+
+                    // Transporter trip should not start already
+                    plan.StartDate > bookingDateTime
+
+                    &&
+
+                    // Weight check
+                    plan.MaxWeightKg >= packageWeightKg
+
+                    &&
+
+                    // Exact pickup location match
+                    plan.StartTown.ToLower() == storeTown.ToLower()
+
+                    &&
+
+                    plan.StartCity.ToLower() == storeCity.ToLower()
+
+                    &&
+
+                    plan.StartState.ToLower() == storeState.ToLower()
+
+                    &&
+
+                    plan.StartCountry.ToLower() == storeCountry.ToLower()
+
+                    &&
+
+                    // Exact delivery location match
+                    plan.DestinationTown.ToLower() == shopperTown.ToLower()
+
+                    &&
+
+                    plan.DestinationCity.ToLower() == shopperCity.ToLower()
+
+                    &&
+
+                    plan.DestinationState.ToLower() == shopperState.ToLower()
+
+                    &&
+
+                    plan.DestinationCountry.ToLower() == shopperCountry.ToLower()
+
+                // oldest created plan gets priority
+                orderby plan.CreatedAt ascending
+
+                select new
+                {
+                    plan.PlanId,
+                    plan.TransporterRegId,
+                    transporter.TransporterName,
+                    plan.VehicleType,
+                    plan.StartDate,
+                    plan.ArrivalDate,
+                    plan.MaxWeightKg
+                }
+            )
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+
+            if (matchingPlan == null)
+                return null;
+
+            int estimatedDays =
+                Math.Max(
+                    1,
+                    (matchingPlan.ArrivalDate.Date -
+                     matchingPlan.StartDate.Date).Days);
+
+            string deliveryRange =
+                estimatedDays <= 1
+                ? "Same day / Next day"
+                : $"{estimatedDays} days";
+
+            string estimatedDeliveryDate =
+                matchingPlan.ArrivalDate
+                .ToString(
+                    "MMM dd, yyyy",
+                    System.Globalization.CultureInfo.InvariantCulture);
+
+            return new BestcourierinfoDto
+            {
+                BranchId = 0,
+
+                ShippingMode = "P2P",
+
+                Cost = 0,
+
+                MaxDeliveryDays = estimatedDays,
+
+                DeliveryDaysRange = deliveryRange,
+
+                EstimatedDeliveryDate = estimatedDeliveryDate,
+
+                // Transporter Info
+                TransporterRegId = matchingPlan.TransporterRegId,
+
+                TransporterPlanId = matchingPlan.PlanId,
+
+                TransporterName = matchingPlan.TransporterName,
+
+                VehicleType = matchingPlan.VehicleType
+            };
         }
-    )
-    .AsNoTracking()
-    .FirstOrDefaultAsync();
- 
-    if (matchingPlan == null)
-        return null;
- 
-    // Estimated days = ArrivalDate - StartDate (minimum 1)
-    int estimatedDays = Math.Max(1, (matchingPlan.ArrivalDate.Date - matchingPlan.StartDate.Date).Days);
- 
-    string deliveryRange = estimatedDays <= 1
-        ? "Same day / Next day"
-        : $"{estimatedDays} days";
- 
-    string estimatedDeliveryDate = matchingPlan.ArrivalDate
-        .ToString("MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture);
- 
-    return new BestcourierinfoDto
-    {
-        BranchId = 0,                               // Not a courier branch
-        ShippingMode = "P2P",
-        Cost = 0,                                   // Cost calculated in CourierServiceHandler (30% of Standard)
-        MaxDeliveryDays = estimatedDays,
-        DeliveryDaysRange = deliveryRange,
-        EstimatedDeliveryDate = estimatedDeliveryDate,
- 
-        // ✅ Transporter info
-        TransporterRegId = matchingPlan.TransporterRegId,
-        TransporterPlanId = matchingPlan.PlanId,
-        TransporterName = matchingPlan.TransporterName,
-        VehicleType = matchingPlan.VehicleType
-    };
-}
 
 
         //    public async Task<CourierService> AddCourierAsync(CourierService courier)

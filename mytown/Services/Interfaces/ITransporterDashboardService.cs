@@ -11,8 +11,17 @@ namespace mytown.Services.Interfaces
         Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto);
         Task<bool> DeactivatePlanAsync(int planId, int transporterRegId);
 
-        Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate);
+        Task<List<AvailableTransporterDto>>
+ SearchAvailableTransportersAsync(
+     string startTown,
+     string startCity,
+     string startState,
+     string startCountry,
+
+     string destinationTown,
+     string destinationCity,
+     string destinationState,
+     string destinationCountry);
 
         // Shopper creates request → auto-assigned to transporter linked via PlanId
         Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(ShopperDeliveryRequestDto dto);

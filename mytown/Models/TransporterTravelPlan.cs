@@ -16,13 +16,54 @@ namespace mytown.Models
         public int TransporterRegId { get; set; }
 
         // Route
-        [Required]
-        [Column("start_location", TypeName = "varchar(300)")]
-        public string StartLocation { get; set; }
+
+        // =========================================================
+        // START LOCATION
+        // =========================================================
 
         [Required]
-        [Column("destination", TypeName = "varchar(300)")]
-        public string Destination { get; set; }
+        [Column("start_town", TypeName = "varchar(100)")]
+        public string StartTown { get; set; }
+
+        [Required]
+        [Column("start_city", TypeName = "varchar(100)")]
+        public string StartCity { get; set; }
+
+        [Required]
+        [Column("start_state", TypeName = "varchar(100)")]
+        public string StartState { get; set; }
+
+        [Required]
+        [Column("start_country", TypeName = "varchar(100)")]
+        public string StartCountry { get; set; }
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        [Required]
+        [Column("destination_town", TypeName = "varchar(100)")]
+        public string DestinationTown { get; set; }
+
+        [Required]
+        [Column("destination_city", TypeName = "varchar(100)")]
+        public string DestinationCity { get; set; }
+
+        [Required]
+        [Column("destination_state", TypeName = "varchar(100)")]
+        public string DestinationState { get; set; }
+
+        [Required]
+        [Column("destination_country", TypeName = "varchar(100)")]
+        public string DestinationCountry { get; set; }
+
+        //[Required]
+        //[Column("start_location", TypeName = "varchar(300)")]
+        //public string StartLocation { get; set; }
+
+        //[Required]
+        //[Column("destination", TypeName = "varchar(300)")]
+        //public string Destination { get; set; }
 
         [Column("preferred_route", TypeName = "varchar(200)")]
         public string PreferredRoute { get; set; }

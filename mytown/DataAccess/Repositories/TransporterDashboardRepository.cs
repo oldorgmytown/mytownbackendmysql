@@ -95,9 +95,25 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         TransporterRegId    = p.TransporterRegId,
         IsActive            = effectivelyActive,
         PlanStatus          = effectivelyActive ? "Available" : "Inactive",
-        StartLocation       = p.StartLocation,
-        Destination         = p.Destination,
-        PreferredRoute      = p.PreferredRoute,
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        StartTown = p.StartTown,
+        StartCity = p.StartCity,
+        StartState = p.StartState,
+        StartCountry = p.StartCountry,
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        DestinationTown = p.DestinationTown,
+        DestinationCity = p.DestinationCity,
+        DestinationState = p.DestinationState,
+        DestinationCountry = p.DestinationCountry,
+
+        PreferredRoute = p.PreferredRoute,
         DistanceKm          = p.DistanceKm,
         StartDate           = p.StartDate,
         ArrivalDate         = p.ArrivalDate,
@@ -145,8 +161,23 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
     {
         TransporterRegId    = dto.TransporterRegId,
         IsActive            = true,
-        StartLocation       = dto.StartLocation,
-        Destination         = dto.Destination,
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        StartTown = dto.StartTown,
+        StartCity = dto.StartCity,
+        StartState = dto.StartState,
+        StartCountry = dto.StartCountry,
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        DestinationTown = dto.DestinationTown,
+        DestinationCity = dto.DestinationCity,
+        DestinationState = dto.DestinationState,
+        DestinationCountry = dto.DestinationCountry,
         PreferredRoute      = dto.PreferredRoute,
         DistanceKm          = dto.DistanceKm,
         StartDate           = dto.StartDate,
@@ -190,33 +221,79 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         // SEARCH AVAILABLE TRANSPORTERS (for shoppers)
         // -------------------------------------------------------------------------
         public async Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
+       string startTown,
+       string startCity,
+       string startState,
+       string startCountry,
+       string destinationTown,
+       string destinationCity,
+       string destinationState,
+       string destinationCountry)
         {
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
+
             return await _context.TransporterTravelPlans
+
+                .Include(p => p.TransporterRegister)
+
                 .Where(p =>
+
+                    // Active plans only
                     p.IsActive &&
-                    p.ArrivalDate.Date >= DateTime.UtcNow.Date &&
-                    p.StartLocation.Contains(fromLocation) &&
-                    p.Destination.Contains(toLocation) &&
-                    p.StartDate.Date <= travelDate.Date &&
-                    p.ArrivalDate.Date >= travelDate.Date)
+
+                    // Only future transporter plans
+                    p.StartDate > bookingDateTime &&
+
+                    // Exact pickup location match
+                    p.StartTown.ToLower() == startTown.ToLower() &&
+                    p.StartCity.ToLower() == startCity.ToLower() &&
+                    p.StartState.ToLower() == startState.ToLower() &&
+                    p.StartCountry.ToLower() == startCountry.ToLower() &&
+
+                    // Exact destination match
+                    p.DestinationTown.ToLower() == destinationTown.ToLower() &&
+                    p.DestinationCity.ToLower() == destinationCity.ToLower() &&
+                    p.DestinationState.ToLower() == destinationState.ToLower() &&
+                    p.DestinationCountry.ToLower() == destinationCountry.ToLower()
+                )
+
+                // Oldest created matching plan gets priority
+                .OrderBy(p => p.CreatedAt)
+
                 .Select(p => new AvailableTransporterDto
                 {
                     PlanId = p.PlanId,
                     TransporterRegId = p.TransporterRegId,
                     TransporterName = p.TransporterRegister.TransporterName,
+
                     VehicleType = p.VehicleType,
                     VehicleName = p.VehicleName,
-                    StartLocation = p.StartLocation,
-                    Destination = p.Destination,
+
+                    StartTown = p.StartTown,
+                    StartCity = p.StartCity,
+                    StartState = p.StartState,
+                    StartCountry = p.StartCountry,
+
+                    DestinationTown = p.DestinationTown,
+                    DestinationCity = p.DestinationCity,
+                    DestinationState = p.DestinationState,
+                    DestinationCountry = p.DestinationCountry,
+
                     StartDate = p.StartDate,
                     ArrivalDate = p.ArrivalDate,
+
                     MaxWeightKg = p.MaxWeightKg,
                     NumberOfPackages = p.NumberOfPackages,
+
                     AcceptsFragile = p.AcceptsFragile,
                     AcceptsPerishable = p.AcceptsPerishable,
+
                     PreferredContact = p.PreferredContact
                 })
+
                 .ToListAsync();
         }
 
