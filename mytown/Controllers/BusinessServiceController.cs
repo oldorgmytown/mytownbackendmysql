@@ -7,8 +7,8 @@ namespace mytown.Controllers
     [Route("api/[controller]")]
     public class BusinessServiceController : ControllerBase
     {
-        private readonly IBusinessServiceService _service;
-        public BusinessServiceController(IBusinessServiceService service)
+        private readonly IServicesProfile _service;
+        public BusinessServiceController(IServicesProfile service)
         {
             _service = service;
         }
