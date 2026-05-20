@@ -1,7 +1,9 @@
+using System;
+using mytown.Models;
 namespace mytown.DataAccess.Interfaces
 {
     public interface IBusinessServiceRepository
     {
-        Task<List<mytown.Models.BusinessService>> GetAllServicesAsync();
+        Task<List<BusinessService>> GetAllServicesAsync();
     }
 }
