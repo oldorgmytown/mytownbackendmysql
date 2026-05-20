@@ -24,7 +24,7 @@ namespace mytown.Models
             public DbSet<ProductSubCategory> product_sub_categories { get; set; } //done
 
             // services 
-            public DbSet<services_sub_categories> services_sub_categories { get; set; }
+            public DbSet<ServiceSubCategory> ServiceSubCategory { get; set; }
             public DbSet<Service> Service { get; set; }
             public DbSet<ServiceProfile> ServiceProfiles { get; set; }
             public DbSet<Products> products { get; set; } //done
