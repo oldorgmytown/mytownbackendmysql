@@ -754,14 +754,14 @@ namespace mytown.DataAccess.Repositories
 
                     // Exact pickup location match
                    EF.Functions.Like(plan.StartTown, storeTown)
-&& EF.Functions.Like(plan.StartCity, storeCity)
-&& EF.Functions.Like(plan.StartState, storeState)
-&& EF.Functions.Like(plan.StartCountry, storeCountry)
+                    && EF.Functions.Like(plan.StartCity, storeCity)
+                    && EF.Functions.Like(plan.StartState, storeState)
+                    && EF.Functions.Like(plan.StartCountry, storeCountry)
 
-&& EF.Functions.Like(plan.DestinationTown, shopperTown)
-&& EF.Functions.Like(plan.DestinationCity, shopperCity)
-&& EF.Functions.Like(plan.DestinationState, shopperState)
-&& EF.Functions.Like(plan.DestinationCountry, shopperCountry)
+                    && EF.Functions.Like(plan.DestinationTown, shopperTown)
+                    && EF.Functions.Like(plan.DestinationCity, shopperCity)
+                    && EF.Functions.Like(plan.DestinationState, shopperState)
+                    && EF.Functions.Like(plan.DestinationCountry, shopperCountry)
 
                 // oldest created plan gets priority
                 orderby plan.CreatedAt ascending
