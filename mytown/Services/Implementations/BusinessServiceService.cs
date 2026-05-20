@@ -1,4 +1,5 @@
 using mytown.DataAccess.Interfaces;
+using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
 
 namespace mytown.Services.Implementations
@@ -14,6 +15,11 @@ namespace mytown.Services.Implementations
         public async Task<List<mytown.Models.BusinessService>> GetAllServicesAsync()
         {
             return await _repo.GetAllServicesAsync();
+        }
+
+        public async Task<BusinessSubCategoriesDto?> GetSubCategoriesByBusRegIdAsync(int busRegId)
+        {
+            return await _repo.GetSubCategoriesByBusRegIdAsync(busRegId);
         }
     }
 }

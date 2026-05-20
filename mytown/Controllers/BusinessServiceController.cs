@@ -19,5 +19,15 @@ namespace mytown.Controllers
             var services = await _service.GetAllServicesAsync();
             return Ok(services);
         }
+
+        [HttpGet("subcategories/{busRegId}")]
+        public async Task<IActionResult> GetSubCategories(int busRegId)
+        {
+            var result = await _service.GetSubCategoriesByBusRegIdAsync(busRegId);
+            if (result == null)
+                return NotFound(new { message = "Business profile not found" });
+
+            return Ok(result);
+        }
     }
 }
