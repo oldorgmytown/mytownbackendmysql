@@ -100,6 +100,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<ISenderService, SenderService>();
         services.AddScoped<IVerficationLinkBuildersender, VerificationLinkBuildersender>();
         services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
+        services.AddScoped<IBusinessServiceRepository, BusinessServiceRepository>();
+        services.AddScoped<IBusinessServiceService, BusinessServiceService>();
 
     }
 
