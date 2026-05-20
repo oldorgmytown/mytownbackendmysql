@@ -268,8 +268,8 @@ public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsyn
         // storeCity = store.BusinessCity  (transporter picks up FROM here)
         // shopperCity = shopper.City      (transporter drops off TO here)
         var matchingTransporter = await _repo.FindMatchingTransporterAsync(
-            store.BusinessCity,
             store.Town,
+            store.BusinessCity,
             store.BusinessState,
             store.BusinessCountry, shopper.City,shopper.Town,shopper.State, shopper.Country,
             
