@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - transport-backed
-      - backend-QA
-      - backend-PROD
   workflow_dispatch:
 
 jobs:
@@ -39,19 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
 
-
     steps:
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CB8AE7E8567D4FBD9FECE5F4C027F11C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FAFCA3EF9C08454199FE40619FB05EBF }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_67380F5B29BA4A47923F60CB32B561E4 }}
-
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'mytown-webapp'
-          slot-name: 'Production'
-          images: 'mytownacr.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_54D4782667834534A27B73A2F1F02450 }}/mytown-app:${{ github.sha }}'
+          app-name: mytown-webapp
+          slot-name: Production
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
