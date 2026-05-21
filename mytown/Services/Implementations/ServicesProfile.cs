@@ -14,7 +14,7 @@ namespace mytown.Services.Implementations
             _repo = repo;
         }
 
-        public async Task<List<BusinessService>> GetAllServicesAsync()
+        public async Task<List<mytown.Models.BusinessService>> GetAllServicesAsync()
         {
             return await _repo.GetAllServicesAsync();
 
