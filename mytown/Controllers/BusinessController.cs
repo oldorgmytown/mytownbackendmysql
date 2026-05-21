@@ -265,7 +265,7 @@ namespace mytown.Controllers
         }
 
         // ================== CATEGORIES ===================
-        [Authorize]
+        //[Authorize]
         [HttpGet("BusinessCategories")]
         public async Task<ActionResult> GetBusinessCategories()
         {

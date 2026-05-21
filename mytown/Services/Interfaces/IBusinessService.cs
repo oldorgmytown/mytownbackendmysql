@@ -15,7 +15,7 @@ namespace mytown.Services.Interfaces
 
         Task SavePendingVerification(PendingBusinessVerification pending);
 
-      //  Task RemoveVerification(BusinessVerification verification);
+        //  Task RemoveVerification(BusinessVerification verification);
 
         Task DeletePendingVerification(string token);
 

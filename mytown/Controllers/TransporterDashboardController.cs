@@ -67,12 +67,18 @@ namespace mytown.Controllers
                 var saved = await _service.SaveTravelPlanAsync(dto);
                 return Ok(saved);
             }
-            catch (Exception ex)
+           
+                catch (Exception ex)
             {
-                _logger.LogError(ex, "SaveTravelPlan failed");
-                return BadRequest(new { error = ex.Message });
+                return BadRequest(new
+                {
+                    error = ex.Message,
+                    innerException = ex.InnerException?.Message,
+                    stackTrace = ex.StackTrace
+                });
             }
         }
+        
 
         [HttpPut("travel-plan/{planId}/deactivate/{transporterRegId}")]
         public async Task<IActionResult> DeactivatePlan(int planId, int transporterRegId)
@@ -88,11 +94,28 @@ namespace mytown.Controllers
 
         [HttpGet("search")]
         public async Task<IActionResult> SearchAvailableTransporters(
-            [FromQuery] string from,
-            [FromQuery] string to,
-            [FromQuery] DateTime date)
-        {
-            var results = await _service.SearchAvailableTransportersAsync(from, to, date);
+     [FromQuery] string startTown,
+     [FromQuery] string startCity,
+     [FromQuery] string startState,
+     [FromQuery] string startCountry,
+
+     [FromQuery] string destinationTown,
+     [FromQuery] string destinationCity,
+     [FromQuery] string destinationState,
+     [FromQuery] string destinationCountry)
+
+           {
+            var results =
+                await _service.SearchAvailableTransportersAsync(
+                    startTown,
+                    startCity,
+                    startState,
+                    startCountry,
+                    destinationTown,
+                    destinationCity,
+                    destinationState,
+                    destinationCountry);
+
             return Ok(results);
         }
 

@@ -30,9 +30,28 @@ namespace mytown.Services.Implementations
         public Task<bool> DeactivatePlanAsync(int planId, int transporterRegId)
             => _repo.DeactivatePlanAsync(planId, transporterRegId);
 
-        public Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
-            => _repo.SearchAvailableTransportersAsync(fromLocation, toLocation, travelDate);
+        public Task<List<AvailableTransporterDto>>
+SearchAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string startState,
+    string startCountry,
+
+    string destinationTown,
+    string destinationCity,
+    string destinationState,
+    string destinationCountry)
+
+
+=> _repo.SearchAvailableTransportersAsync(
+    startTown,
+    startCity,
+    startState,
+    startCountry,
+    destinationTown,
+    destinationCity,
+    destinationState,
+    destinationCountry);
 
         // Request is auto-assigned to the transporter linked to PlanId — no Accept step
         public async Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(
