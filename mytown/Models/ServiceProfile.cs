@@ -52,5 +52,9 @@ namespace mytown.Models
         [StringLength(255)]
         [Column("service_banner")]
         public string? ServiceBanner { get; set; }
+
+        [StringLength(10)]
+        [Column("status")]
+        public string Status { get; set; }
     }
 }

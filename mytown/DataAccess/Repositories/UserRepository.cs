@@ -511,6 +511,7 @@ namespace mytown.DataAccess.Repositories
                     _context.UserSessions.Add(newSession);
                     await _context.SaveChangesAsync();
 
+                    // BUSINESS PROFILE
                     var businessProfile = await _context.BusinessProfiles
                         .Where(bp => bp.BusRegId == businessUser.BusRegId)
                         .Select(bp => new
@@ -528,6 +529,28 @@ namespace mytown.DataAccess.Repositories
                         })
                         .FirstOrDefaultAsync();
 
+                    // SERVICE PROFILE
+                    var serviceProfile = await _context.ServiceProfiles
+                        .Where(sp => sp.BusRegId == businessUser.BusRegId)
+                        .Select(sp => new
+                        {
+                            sp.ServiceProfileId,
+                            sp.BusRegId,
+                            sp.BusServId,
+                            sp.YearsOfExperience,
+                            sp.GovtIdDocument,
+                            sp.ProfessionalLicense,
+                            sp.ServiceAvailableLocations,
+                            sp.WorkingDays,
+                            sp.WorkingStartTime,
+                            sp.WorkingEndTime,
+                            sp.ServiceLogo,
+                            sp.ServiceBanner,
+                            sp.Status,
+                            sp.CreatedDate
+                        })
+                        .FirstOrDefaultAsync();
+
                     var token = _tokenService.GenerateToken(
                         businessUser.BusRegId,
                         businessUser.BusEmail,
@@ -540,6 +563,7 @@ namespace mytown.DataAccess.Repositories
                         userType = "Business",
                         token,
                         sessionId = newSession.SessionGuid,
+
                         user = new BusinessRegisterDto
                         {
                             BusRegId = businessUser.BusRegId,
@@ -560,14 +584,19 @@ namespace mytown.DataAccess.Repositories
                             postalCode = businessUser.PostalCode,
                             isEmailVerified = businessUser.IsEmailVerified,
                             BusinessRegDate = businessUser.BusinessRegDate,
+
+                            // BUSINESS PROFILE STATUS
                             ProfileStatus = businessProfile?.ProfileStatus ?? "Incomplete"
                         },
-                        businessProfile
+
+                        // RETURN BOTH
+                        businessProfile,
+                        serviceProfile
                     };
                 }
+
                 return null;
             }
-
             // ---------------- SHOPPER LOGIN ----------------
             if (role == "Shopper")
             {

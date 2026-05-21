@@ -70,7 +70,8 @@ namespace mytown.DataAccess.Repositories
                         WorkingEndTime = dto.WorkingEndTime,
                         ServiceLogo = dto.ServiceLogo,
                         ServiceBanner = dto.ServiceBanner,
-                        CreatedDate = DateTime.Now
+                        CreatedDate = DateTime.Now,
+                        Status = "Incomplete"
                     };
 
                     _context.ServiceProfiles.Add(profile);
