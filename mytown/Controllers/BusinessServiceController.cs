@@ -5,7 +5,7 @@ using mytown.Services.Interfaces;
 namespace mytown.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/businessservices")]
     public class BusinessServiceController : ControllerBase
     {
         private readonly IServicesProfile _service;
