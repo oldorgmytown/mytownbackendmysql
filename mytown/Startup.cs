@@ -158,8 +158,8 @@ private void RegisterApplicationServices(IServiceCollection services)
             "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
                 "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
                 "https://www.itismytown.com",
-                "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net" // staging webapp service
-
+                "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net", // staging webapp service
+                "https://jolly-sea-066e8b500.7.azurestaticapps.net" // staging static web app for frontend
         };
         services.AddCors(options =>
         {
