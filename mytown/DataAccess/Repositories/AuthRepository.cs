@@ -56,7 +56,7 @@ namespace mytown.DataAccess.Repositories
             var resetLink = $"{frontendBaseUrl}?reset-password&token={token}";
             // var resetLink = $"{frontendBaseUrl}?reset=1&email={email}&token={token}";
             // var resetLink = $"{frontendBaseUrl}/reset-password?token={token}";
-            // var resetLink = $"https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net/reset-password?token={token}";
+            // var resetLink = $"https://www.itismytown.com/reset-password?token={token}";
 
             await _emailService.SendPasswordResetEmail(email, resetLink);
         }

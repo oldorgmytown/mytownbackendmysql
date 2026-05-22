@@ -55,7 +55,7 @@ public class EmailService : IEmailService
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); border: 2px solid #004481;'>
         
         <!-- Itismytown Logo -->
-        <img src='https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png' 
+        <img src='https://www.itismytown.com/images/mainlogoblue.png' 
              alt='Google Logo' width='120' style='margin-bottom: 20px;' />
 
         <!-- Email Header -->
@@ -148,7 +148,7 @@ public class EmailService : IEmailService
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); border: 2px solid #004481;'>
         
         <!-- Itismytown Logo -->
-        <img src='https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png' 
+        <img src='https://www.itismytown.com/images/mainlogoblue.png' 
              alt='Google Logo' width='120' style='margin-bottom: 20px;' />
 
         <!-- Email Header -->
@@ -296,7 +296,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -342,7 +342,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</div>
               <div style=""color:#585858;font-size:16px;font-weight:600;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/biz/orders/{storedto.StoreOrderId}""
+                <a href=""https://www.itismytown.com/biz/orders/{storedto.StoreOrderId}""
                    style=""color:#004481;text-decoration:underline;font-weight:600;
                           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                   {storedto.StoreOrderId}
@@ -547,7 +547,7 @@ public class EmailService : IEmailService
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
           <tr>
             <td align=""center"" style=""padding:8px 0 0 0;"">
-              <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/biz/orders/{storedto.StoreOrderId}""
+              <a href=""https://www.itismytown.com/biz/orders/{storedto.StoreOrderId}""
                  style=""display:inline-block;background:#004481;color:#fff;
                         border:1px solid #004481;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
@@ -734,7 +734,7 @@ public class EmailService : IEmailService
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:6px;"">Store Order ID</td>
         <td align=""right"" style=""padding-bottom:6px;"">
-  <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/shopper/order-details/{store.StoreOrderId}""
+  <a href=""https://www.itismytown.com/shopper/order-details/{store.StoreOrderId}""
      style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
     {store.StoreOrderId}
@@ -800,7 +800,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -973,7 +973,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/shopper/orders""
+        <a href=""https://www.itismytown.com/shopper/orders""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -1179,7 +1179,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center""
           style=""padding:20px 28px 24px;border-bottom:1px solid #F4F4F5;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -1268,7 +1268,7 @@ public class EmailService : IEmailService
                           Store Order ID
                         </td>
                         <td align=""right"" style=""padding-bottom:6px;"">
-                              <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/courier/orders/{storedto.StoreOrderId}""
+                              <a href=""https://www.itismytown.com/courier/orders/{storedto.StoreOrderId}""
                                  style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
                                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                                 {storedto.StoreOrderId}
@@ -1392,7 +1392,7 @@ public class EmailService : IEmailService
           <tr>
             <td align=""center"" style=""padding:8px 0 0 0;"">
 
-              <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/courier/orders/{storedto.StoreOrderId}""
+              <a href=""https://www.itismytown.com/courier/orders/{storedto.StoreOrderId}""
                  style=""display:inline-block;background:#0C4A6E;color:#fff;
                         border:1px solid #0C4A6E;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
@@ -1522,7 +1522,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER (LOGO) ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -1670,7 +1670,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/courier/orders/{dto.StoreOrderId}""
+        <a href=""https://www.itismytown.com/courier/orders/{dto.StoreOrderId}""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -1939,7 +1939,7 @@ public class EmailService : IEmailService
                 box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); border: 2px solid #004481;'>
 
         <!-- MyTown Logo -->
-        <img src='https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png' 
+        <img src='https://www.itismytown.com/images/mainlogoblue.png' 
              alt='MyTown Logo' width='120' style='margin-bottom: 20px;' />
 
         <h2 style='color: #004481; margin-bottom: 10px;'>Courier Branch Login Created</h2>
@@ -2107,7 +2107,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center""
           style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -2195,7 +2195,7 @@ public class EmailService : IEmailService
                           Store Order ID
                         </td>
                                 <td align=""right"" style=""padding-bottom:6px;"">
-                                  <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/transporter/my-plans""
+                                  <a href=""https://www.itismytown.com/transporter/my-plans""
                                      style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
                                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                                     {storedto.StoreOrderId}
@@ -2312,7 +2312,7 @@ public class EmailService : IEmailService
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
           <tr>
             <td align=""center"" style=""padding:8px 0 16px 0;"">
-              <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/transporter/my-plans""
+              <a href=""https://www.itismytown.com/transporter/my-plans""
                  style=""display:inline-block;background:#004481;color:#fff;
                         border:1px solid #004481;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
@@ -2446,7 +2446,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER (LOGO) ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -2594,7 +2594,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/transporter/my-plans""
+        <a href=""https://www.itismytown.com/transporter/my-plans""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -2697,7 +2697,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER (LOGO) ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -3008,7 +3008,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/shopper/orders""
+        <a href=""https://www.itismytown.com/shopper/orders""
            style=""display:inline-block;background:#0C4A6E;color:#fff;border:1px solid #0C4A6E;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
@@ -3132,7 +3132,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER (LOGO) ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -3448,7 +3448,7 @@ public class EmailService : IEmailService
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000.7.azurestaticapps.net/transporter/my-plans""
+        <a href=""https://www.itismytown.com/transporter/my-plans""
            style=""display:inline-block;background:#0C4A6E;color:#fff;border:1px solid #0C4A6E;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
