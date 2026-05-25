@@ -84,7 +84,11 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IUserService, mytown.Services.UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAuthService, AuthService>();
+
         services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
+     //  services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
         services.AddScoped<IBusinessProfileService, BusinessProfileService>();
         services.AddScoped<IShopperService, ShopperService>();
         services.AddScoped<IProductService, mytown.Services.Implementations.ProductService>();
