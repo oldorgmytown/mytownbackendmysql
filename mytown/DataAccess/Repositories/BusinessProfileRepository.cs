@@ -58,7 +58,9 @@ namespace mytown.DataAccess.Repositories
                     BusServId = bp.BusServId,
                     Businessservice_name = bs != null ? bs.BusinessServiceName : null,
                     Businesscategory_name = bc != null ? bc.BusinessCategoryName : null,
-                    Currency = br.Currency // from BusinessRegister table
+                    Currency = br.Currency, // from BusinessRegister table
+                    BusEmail = br.BusEmail,
+                    BusPhone = br.BusMobileNo
                 }
             ).ToListAsync();
 
