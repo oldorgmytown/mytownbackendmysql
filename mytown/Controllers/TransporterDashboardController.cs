@@ -296,5 +296,42 @@ namespace mytown.Controllers
                 return BadRequest(new { error = ex.Message });
             }
         }
+
+        // Controller
+        [HttpGet("transporterdelivers-senderorders/{transporterRegId}")]
+        public async Task<IActionResult> GetTransporterDeliversSendersOrders(int transporterRegId)
+        {
+            var result = await _service.GetTransporterDeliversSendersOrdersAsync(transporterRegId);
+
+            if (result == null || result.Count == 0)
+            {
+                return NotFound("No orders found");
+            }
+
+            return Ok(result);
+        }
+
+        // Controller
+        [HttpPut("transporter-update-delivery-status_senderorder")]
+        public async Task<IActionResult> UpdateTransporterDeliveryStatus(
+            int senderOrderId,
+            int transporterRegId,
+            string deliveryStatus)
+        {
+            var result = await _service.UpdateTransporterDeliveryStatusAsync(
+                senderOrderId,
+                transporterRegId,
+                deliveryStatus);
+
+            if (!result)
+            {
+                return NotFound("Order not found");
+            }
+
+            return Ok(new
+            {
+                message = "Delivery status updated successfully"
+            });
+        }
     }
 }

@@ -60,5 +60,15 @@ namespace mytown.DataAccess.Interfaces
 
         // mark as delivered
         Task<string> MarkAsDeliveredAsync(int storeOrderId);
+
+        //sender orders
+        // Interface
+        Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId);
+
+        // update sender order status to delivered
+        Task<bool> UpdateTransporterDeliveryStatusAsync(
+          int senderOrderId,
+          int transporterRegId,
+          string deliveryStatus);
     }
 }

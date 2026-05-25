@@ -51,5 +51,18 @@ namespace mytown.Services.Interfaces
         //package delivered
 
         Task<string> MarkAsDeliveredAsync(int storeOrderId);
+
+        // sender ordres
+        Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId);
+
+        // update deliverystatus - sender orders
+        // Service
+
+        // Service Interface
+        Task<bool> UpdateTransporterDeliveryStatusAsync(
+            int senderOrderId,
+            int transporterRegId,
+            string deliveryStatus);
+       
     }
 }
