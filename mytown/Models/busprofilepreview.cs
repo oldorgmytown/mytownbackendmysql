@@ -21,6 +21,9 @@ namespace mytown.Models
 
         public string Currency { get; set; }  
 
+        public string BusEmail { get; set; } = string.Empty;
+         public string BusPhone { get; set; } = string.Empty;
+
         //// Pan object
         //public PanData Pan { get; set; }
         //public class PanData

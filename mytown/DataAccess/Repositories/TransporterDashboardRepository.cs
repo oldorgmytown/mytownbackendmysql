@@ -750,5 +750,40 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             return "Delivery marked as completed";
         }
+
+        // sender orders Repository
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _context.SenderOrders
+                .Where(x => x.TransporterRegId == transporterRegId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+
+        //update sender orders status to delivered
+        // Repository Interface
+
+        // Repository
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+            int senderOrderId,
+            int transporterRegId,
+            string deliveryStatus)
+        {
+            var order = await _context.SenderOrders
+                .FirstOrDefaultAsync(x =>
+                    x.SenderOrderId == senderOrderId &&
+                    x.TransporterRegId == transporterRegId);
+
+            if (order == null)
+                return false;
+
+            order.DeliveryStatus = deliveryStatus;
+
+            _context.SenderOrders.Update(order);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+      
     }
 }

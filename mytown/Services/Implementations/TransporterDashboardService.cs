@@ -1,7 +1,8 @@
+using Azure.Storage.Blobs;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
-using Azure.Storage.Blobs;
 
 namespace mytown.Services.Implementations
 {
@@ -147,6 +148,24 @@ SearchAvailableTransportersAsync(
         public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
         {
             return await _repo.MarkAsDeliveredAsync(storeOrderId);
+        }
+
+        // Service
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterDeliversSendersOrdersAsync(transporterRegId);
+        }
+
+        //update sendre orders - deliveries
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+           int senderOrderId,
+           int transporterRegId,
+           string deliveryStatus)
+        {
+            return await _repo.UpdateTransporterDeliveryStatusAsync(
+                senderOrderId,
+                transporterRegId,
+                deliveryStatus);
         }
     }
 }

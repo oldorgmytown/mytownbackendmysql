@@ -159,9 +159,9 @@ namespace mytown.DataAccess.Implementations
                     DateTime.UtcNow,
                     "India Standard Time");
 
-            var bestTransporter = await _context.TransporterTravelPlans
+            // Common matching query
+            var matchingQuery = _context.TransporterTravelPlans
                 .Include(x => x.TransporterRegister)
-
                 .Where(x =>
                     x.IsActive &&
                     x.PlanStatus == "Available" &&
@@ -177,16 +177,14 @@ namespace mytown.DataAccess.Implementations
                     x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
                     x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
 
-                    x.MaxWeightKg >= order.PackageWeight &&
-
                     (!order.IsFragile || x.AcceptsFragile) &&
-
                     (!order.IsPerishable || x.AcceptsPerishable)
-                )
+                );
 
-                // oldest created plan gets priority
+            // First priority -> weight matching
+            var exactWeightMatch = await matchingQuery
+                .Where(x => x.MaxWeightKg >= order.PackageWeight)
                 .OrderBy(x => x.CreatedAt)
-
                 .Select(x => new MatchingTransporterDto
                 {
                     PlanId = x.PlanId,
@@ -199,12 +197,36 @@ namespace mytown.DataAccess.Implementations
                     MaxWeightKg = x.MaxWeightKg,
                     StartDate = x.StartDate,
                     ArrivalDate = x.ArrivalDate,
-                    PreferredContact = x.PreferredContact
+                    PreferredContact = x.PreferredContact,
+                    Message = "Matching transporter found"
                 })
-
                 .FirstOrDefaultAsync();
 
-            return bestTransporter;
+            if (exactWeightMatch != null)
+                return exactWeightMatch;
+
+            // Second priority -> all matched except weight
+            var overweightTransporter = await matchingQuery
+             .OrderByDescending(x => x.MaxWeightKg)
+             .ThenBy(x => x.CreatedAt)
+             .Select(x => new MatchingTransporterDto
+             {
+                 PlanId = x.PlanId,
+                 TransporterRegId = x.TransporterRegId,
+                 TransporterName = x.TransporterRegister.TransporterName,
+                 Email = x.TransporterRegister.Email,
+                 PhoneNumber = x.TransporterRegister.PhoneNumber,
+                 VehicleType = x.VehicleType,
+                 VehicleName = x.VehicleName,
+                 MaxWeightKg = x.MaxWeightKg,
+                 StartDate = x.StartDate,
+                 ArrivalDate = x.ArrivalDate,
+                 PreferredContact = x.PreferredContact,
+                 Message = "Package weight exceeds transporter maximum weight limit"
+             })
+             .FirstOrDefaultAsync();
+
+            return overweightTransporter;
         }
         // changed as per transporetr columns - town, city, state, country
 
