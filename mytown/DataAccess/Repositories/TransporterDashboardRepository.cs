@@ -765,9 +765,9 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
         // Repository
         public async Task<bool> UpdateTransporterDeliveryStatusAsync(
-            int senderOrderId,
-            int transporterRegId,
-            string deliveryStatus)
+     int senderOrderId,
+     int transporterRegId,
+     string deliveryStatus)
         {
             var order = await _context.SenderOrders
                 .FirstOrDefaultAsync(x =>
@@ -777,13 +777,63 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             if (order == null)
                 return false;
 
+            // Prevent duplicate update
+            if (order.DeliveryStatus == deliveryStatus)
+                throw new Exception("Status already updated");
+
             order.DeliveryStatus = deliveryStatus;
 
-            _context.SenderOrders.Update(order);
+            // Sender Notification
+            _context.SenderDBNotifications.Add(
+                new SenderDBNotifications
+                {
+                    SenderRegId = order.SenderRegId,
+
+                    Title = "Shipment Status Updated",
+
+                    Message =
+                        $"Your shipment #{order.SenderOrderId} is now {deliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate = DateTime.UtcNow
+                });
+
+            // Transporter Notification
+            _context.TransporterDBNotifications.Add(
+                new TransporterDBNotifications
+                {
+                    TransporterRegId = transporterRegId,
+
+                    Title = "Shipment Status Updated",
+
+                    Message =
+                        $"Shipment #{order.SenderOrderId} status updated to {deliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate = DateTime.UtcNow
+                });
+
             await _context.SaveChangesAsync();
 
             return true;
         }
-      
+
+        public async Task AddSenderNotificationAsync(
+   SenderDBNotifications notification)
+        {
+            await _context
+                .SenderDBNotifications
+                .AddAsync(notification);
+        }
+
+        public async Task AddTransporterNotificationAsync(
+    TransporterDBNotifications notification)
+        {
+            await _context
+                .TransporterDBNotifications
+                .AddAsync(notification);
+        }
     }
 }

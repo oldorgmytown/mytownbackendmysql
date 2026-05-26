@@ -44,7 +44,7 @@ namespace mytown.Services.Interfaces
         Task<List<SenderOrdersTabDto>>
       GetSenderOrdersAsync(
           int senderId,
-          string orderType);
+          string orderStatus);
 
         Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId);
 
