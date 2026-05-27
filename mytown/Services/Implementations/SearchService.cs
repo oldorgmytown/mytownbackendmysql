@@ -1,4 +1,5 @@
 ﻿using mytown.DataAccess.Interfaces;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -65,5 +66,19 @@ namespace mytown.Services
         {
             return await _searchRepository.GetBusinessCategoriesByProductAsync(productName);
         }
+
+        //25-05-26
+        //get both business profiles and service profiles
+        public async Task<BusinessAndServiceSearchResultsDto>
+ GetBusinessAndServiceSearchResults(
+     string? searchTerm,
+     string? locationQuery)
+        {
+            return await _searchRepository.GetBusinessAndServiceSearchResults(
+                searchTerm,
+                locationQuery);
+        }
+
+       
     }
 }

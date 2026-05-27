@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
 using mytown.Services.Interfaces;
+using Stripe;
 
 namespace mytown.Controllers
 {
@@ -111,6 +112,20 @@ namespace mytown.Controllers
             var result = !string.IsNullOrWhiteSpace(location) && string.IsNullOrWhiteSpace(product)
                 ? await _searchService.GetBusinessCategoriesByLocationAsync(location)
                 : await _searchService.GetBusinessCategoriesByProductAsync(product!);
+
+            return Ok(result);
+        }
+
+        //27-05-26  
+        //get both business profiles and service profiles
+        [HttpGet("getbusinessandservicesearchresults")]
+        public async Task<IActionResult> GetBusinessAndServiceSearchResults(
+     string? searchTerm,
+     string? locationQuery)
+        {
+            var result = await _searchService.GetBusinessAndServiceSearchResults(
+                searchTerm,
+                locationQuery);
 
             return Ok(result);
         }
