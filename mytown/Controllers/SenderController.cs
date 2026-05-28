@@ -199,12 +199,12 @@ namespace mytown.Controllers
         public async Task<IActionResult>
 GetSenderOrders(
     int senderId,
-    string orderType)
+    string orderStatus)
         {
             var result =
                 await _senderService.GetSenderOrdersAsync(
                     senderId,
-                    orderType);
+                    orderStatus);
 
             return Ok(result);
         }

@@ -514,8 +514,10 @@ GetTransporterByIdAsync(int transporterId)
         }
 
         public async Task<List<SenderOrdersTabDto>>
-GetSenderOrdersAsync(int senderId, string orderType)
+ GetSenderOrdersAsync(int senderId, string orderStatus)
         {
+            var today = DateTime.UtcNow.Date;
+
             var query =
                 from o in _context.SenderOrders
 
@@ -535,20 +537,19 @@ GetSenderOrdersAsync(int senderId, string orderType)
 
                     BookingDate = o.CreatedAt,
 
-                    PickupLocation =
-                        o.PickupAddress,
+                    PickupLocation = o.PickupAddress,
 
-                    DeliveryLocation =
-                        o.ReceiverAddress,
+                    DeliveryLocation = o.ReceiverAddress,
 
-                    DeliveryStatus =
-                        o.DeliveryStatus,
+                    DeliveryStatus = o.DeliveryStatus,
 
                     OrderType =
-                        o.DeliveryStatus == "Pending"
-                            ? "New"
-                            : o.DeliveryStatus == "Delivered"
-                                ? "Delivered"
+                        o.DeliveryStatus == "Delivered"
+                            ? "Delivered"
+                            : o.DeliveryStatus == "Pending"
+                                ? (o.CreatedAt.Date == today
+                                    ? "New"
+                                    : "Pending")
                                 : "InProgress",
 
                     TransporterName =
@@ -560,31 +561,45 @@ GetSenderOrdersAsync(int senderId, string orderType)
                         transporter != null
                             ? transporter.PhoneNumber
                             : null,
-
-                   
                 };
 
-            if (orderType == "New")
+            // NEW = Today's pending orders
+            if (orderStatus == "New")
             {
                 query = query.Where(x =>
-                    x.OrderType == "New");
+                    x.DeliveryStatus == "Pending" &&
+                    x.BookingDate.Date == today);
             }
-            else if (orderType == "InProgress")
+
+            // PENDING = Previous pending orders
+            else if (orderStatus == "Pending")
             {
                 query = query.Where(x =>
-                    x.OrderType == "InProgress");
+                    x.DeliveryStatus == "Pending" &&
+                    x.BookingDate.Date < today);
             }
-            else if (orderType == "Delivered")
+
+            // IN PROGRESS
+            else if (orderStatus == "InProgress")
             {
                 query = query.Where(x =>
-                    x.OrderType == "Delivered");
+                    x.DeliveryStatus == "Assigned" ||
+                    x.DeliveryStatus == "PickedUp" ||
+                    x.DeliveryStatus == "InProgress" ||
+                    x.DeliveryStatus == "InTransit");
+            }
+
+            // DELIVERED
+            else if (orderStatus == "Delivered")
+            {
+                query = query.Where(x =>
+                    x.DeliveryStatus == "Delivered");
             }
 
             return await query
                 .OrderByDescending(x => x.BookingDate)
                 .ToListAsync();
         }
-
         public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
         {
             return await _context.SenderRegisters

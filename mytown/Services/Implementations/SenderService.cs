@@ -409,12 +409,12 @@ await _repo
             public async Task<List<SenderOrdersTabDto>>
             GetSenderOrdersAsync(
                 int senderId,
-                string orderType)
+                string orderStatus)
             {
                 return await _repo
                     .GetSenderOrdersAsync(
                         senderId,
-                        orderType);
+                        orderStatus);
             }
 
         public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
