@@ -157,7 +157,8 @@ private void RegisterApplicationServices(IServiceCollection services)
             "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net" ,// Production frontend
             "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
                 "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
-                "https://www.itismytown.com"
+                "https://www.itismytown.com",
+                "https://kind-meadow-0fe6b9000-dev.eastasia.7.azurestaticapps.net" // new slor for frontend
 
         };
         services.AddCors(options =>
