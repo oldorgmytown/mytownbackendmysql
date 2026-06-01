@@ -824,6 +824,21 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             if (order.DeliveryStatus == deliveryStatus)
                 throw new Exception("Status already updated");
 
+            // Allow only after pickup date & time
+            var pickupTime = DateTime.Parse(order.PickupTime).TimeOfDay;
+
+            var pickupDateTime = order.PickupDate.Date.Add(pickupTime);
+
+            var currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("India Standard Time"));
+
+            if (currentDateTime < pickupDateTime)
+            {
+                throw new Exception(
+                    $"You can update delivery status only after pickup time ({pickupDateTime:dd-MMM-yyyy hh:mm tt})");
+            }
+
             order.DeliveryStatus = deliveryStatus;
 
             // Sender Notification
