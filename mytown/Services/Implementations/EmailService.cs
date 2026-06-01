@@ -2707,7 +2707,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
         <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
-             alt=""Package Delivery Booking Confirmed""
+             alt=""Booking Order Confirmed""
              width=""600""
              style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
@@ -3009,7 +3009,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
 
-        <a href=""https://jolly-sea-066e8b500.7.azurestaticapps.net/shopper/orders""
+        <a href=""https://jolly-sea-066e8b500.7.azurestaticapps.net/active-orders""
 
            style=""display:inline-block;background:#0C4A6E;color:#fff;border:1px solid #0C4A6E;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;

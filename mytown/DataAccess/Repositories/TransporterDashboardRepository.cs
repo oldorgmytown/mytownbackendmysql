@@ -26,20 +26,58 @@ namespace mytown.DataAccess.Repositories
             if (transporter == null)
                 throw new Exception("Transporter not found.");
 
-            var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
+            var activeStatuses = new List<string>
+    {
+        "Assigned",
+        "ReachedPickup",
+        "PickedUp",
+        "InTransit"
+    };
 
-            var totalDeliveries = await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered")
+            // ==========================
+            // SHOPPER DELIVERIES
+            // ==========================
+
+            var shopperDeliveredCount = await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && d.DeliveryStatus == "Delivered")
                 .CountAsync();
 
-            var activeDeliveries = await _context.TransporterDeliveryRequests
+            var shopperActiveCount = await _context.TransporterDeliveryRequests
                 .Where(d => d.TransporterRegId == transporterRegId
                          && activeStatuses.Contains(d.DeliveryStatus))
                 .CountAsync();
 
-            var totalEarned = await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered")
-                .SumAsync(d => d.DeliveryFee);
+            var shopperEarned = await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && d.DeliveryStatus == "Delivered")
+                .SumAsync(d => (decimal?)d.DeliveryFee) ?? 0;
+
+            // ==========================
+            // SENDER DELIVERIES
+            // ==========================
+
+            var senderDeliveredCount = await _context.SenderOrders
+                .Where(s => s.TransporterRegId == transporterRegId
+                         && s.DeliveryStatus == "Delivered")
+                .CountAsync();
+
+            var senderActiveCount = await _context.SenderOrders
+                .Where(s => s.TransporterRegId == transporterRegId
+                         && activeStatuses.Contains(s.DeliveryStatus))
+                .CountAsync();
+
+            var senderEarned = senderDeliveredCount * 50;
+
+            // ==========================
+            // TOTALS
+            // ==========================
+
+            var totalDeliveries = shopperDeliveredCount + senderDeliveredCount;
+
+            var activeDeliveries = shopperActiveCount + senderActiveCount;
+
+            var totalEarned = shopperEarned + senderEarned;
 
             var kyc = await _context.TransporterKYCs
                 .Where(k => k.TransporterRegId == transporterRegId)
@@ -59,12 +97,11 @@ namespace mytown.DataAccess.Repositories
                 TotalDeliveries = totalDeliveries,
                 ActiveDeliveries = activeDeliveries,
                 TotalEarned = totalEarned,
-                KycStatus = kyc?.KycStatus ?? "NotSubmitted",   // ✅ KycStatus not Status
+                KycStatus = kyc?.KycStatus ?? "NotSubmitted",
                 BankVerified = bank?.IsVerified ?? false,
                 HasActivePlan = hasActivePlan
             };
         }
-
         // -------------------------------------------------------------------------
         // TRAVEL PLANS
         // -------------------------------------------------------------------------
@@ -393,7 +430,12 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
                     DeliveryFee = d.DeliveryFee,
                     PackageTags = d.PackageTags,
-                    DeliveryStatus = d.DeliveryStatus,
+                    //DeliveryStatus = d.DeliveryStatus,
+                    DeliveryStatus =
+                    d.DeliveryStatus != "Delivered" &&
+                    d.TravelPlan.ArrivalDate.Date < DateTime.UtcNow.Date
+                        ? "Incomplete"
+                        : d.DeliveryStatus,
                     AcceptedAt = d.AssignedAt,
                     EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
                 }
