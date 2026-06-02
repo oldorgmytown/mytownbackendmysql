@@ -126,6 +126,28 @@ namespace mytown.Controllers
             return Ok("Profile status updated successfully.");
         }
 
+        [HttpPost("updateserviceprofilestatusbyadmin")]
+        public async Task<IActionResult> UpdateServiceProfileStatusByAdmin(
+    [FromQuery] int busRegId,
+    [FromQuery] string status,
+    [FromBody] AdminProfileUpdateDto commentDto)
+        {
+            if (string.IsNullOrEmpty(status))
+                return BadRequest("Status is required.");
+
+            if (busRegId <= 0)
+                return BadRequest("Invalid business registration ID.");
+
+            var updated = await _adminService.UpdateServiceProfileStatusByAdminAsync(
+                busRegId,
+                status,
+                commentDto.Comment);
+
+            if (!updated)
+                return NotFound($"No service profile found with BusRegId {busRegId}.");
+
+            return Ok("Service profile status updated successfully.");
+        }
 
         [HttpGet("GetDashboardCounts")]
         public async Task<IActionResult> GetDashboardCounts()

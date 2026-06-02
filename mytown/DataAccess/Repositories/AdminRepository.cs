@@ -375,7 +375,63 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
+        public async Task<bool> UpdateServiceProfileStatusByAdminAsync(
+    int busRegId,
+    string status,
+    string? comments = null)
+        {
+            var serviceProfile = await _context.ServiceProfiles
+                .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
 
+            if (serviceProfile == null)
+                return false;
+
+            serviceProfile.Status = status;
+
+            if (!string.IsNullOrEmpty(comments))
+            {
+                var adminComment = new AdminComment
+                {
+                    BusRegId = busRegId,
+                    Comments = comments,
+                    Status = status,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                };
+
+                await _context.AdminComments.AddAsync(adminComment);
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Notification
+            var notification = new BusinessDBNotifications
+            {
+                BusRegId = busRegId,
+                Title = $"Service Profile {status}",
+                Message = $"Your service profile has been {status.ToLower()} by the admin.",
+                IsRead = false,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _context.BusinessDBNotifications.AddAsync(notification);
+            await _context.SaveChangesAsync();
+
+            // Email
+            var business = await _context.BusinessRegisters
+                .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
+
+            if (business != null)
+            {
+                await _emailService.SendBusinessStatusEmailAsync(
+                    business.BusEmail,
+                    business.BusinessUsername,
+                    business.BusinessName,
+                    status);
+            }
+
+            return true;
+        }
         public async Task<(int uniqueTowns,int uniqueCities, int uniqueStates, int uniqueCountries)> GetUniqueCountsAsync()
         {
                     var uniqueTowns = await _context.BusinessRegisters

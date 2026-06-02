@@ -63,6 +63,11 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
         int page,
         int pageSize,
         string? search);
-    }
-}
+   
+    
+        Task<bool> UpdateServiceProfileStatusByAdminAsync(
+            int busRegId,
+            string status,
+            string? comments = null);
+    }}
 

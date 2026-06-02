@@ -52,5 +52,10 @@ namespace mytown.Services.Interfaces
         int page,
         int pageSize,
         string? search);
+
+        Task<bool> UpdateServiceProfileStatusByAdminAsync(
+        int busRegId,
+        string status,
+        string? comments = null);
     }
 }
