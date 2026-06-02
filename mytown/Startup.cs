@@ -102,6 +102,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
         services.AddScoped<IBusinessServiceRepository, BusinessServiceRepository>();
         services.AddScoped<IServicesProfile, ServicesProfile>();
+        services.AddScoped<IServiceSubCategoryRepository, ServiceSubCategoryRepository>();
+        services.AddScoped<IServiceSubCategoryService, ServiceSubCategoryService>();
 
     }
 
