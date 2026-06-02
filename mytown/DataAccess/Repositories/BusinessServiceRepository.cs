@@ -71,7 +71,7 @@ namespace mytown.DataAccess.Repositories
                         ServiceLogo = dto.ServiceLogo,
                         ServiceBanner = dto.ServiceBanner,
                         CreatedDate = DateTime.Now,
-                        Status = "Incomplete"
+                        Status = "Submitted"
                     };
 
                     _context.ServiceProfiles.Add(profile);

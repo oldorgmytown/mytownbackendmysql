@@ -244,5 +244,17 @@ GetSenderRegistersPaginatedAsync(
                     search);
         }
 
+        public async Task<bool> UpdateServiceProfileStatusByAdminAsync(
+    int busRegId,
+    string status,
+    string? comments = null)
+        {
+            return await _adminRepo
+                .UpdateServiceProfileStatusByAdminAsync(
+                    busRegId,
+                    status,
+                    comments);
+        }
+
     }
 }
