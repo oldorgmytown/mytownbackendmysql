@@ -1,5 +1,6 @@
 ﻿using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.Services.Interfaces
 {
@@ -7,7 +8,13 @@ namespace mytown.Services.Interfaces
     {
         Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize, string? search);
         Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize, string? search);
-        Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize);
+        //Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize);
+        Task<(IEnumerable<object> Records, int TotalRecords)>
+    GetBusinessesservicesByStatusPaginatedAsync(
+        string status,
+        string? searchTerm,
+        int page,
+        int pageSize);
         Task<object> BusinessprofilestatuscountsAsync();
         Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comment);
         Task<object> GetDashboardCountsAsync();

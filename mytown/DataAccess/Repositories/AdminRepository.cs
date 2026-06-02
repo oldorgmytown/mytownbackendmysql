@@ -282,30 +282,55 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public async Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginated(string status, int page, int pageSize)
+        public async Task<(List<BusinessRegister> Records, int TotalRecords)>
+      GetBusinessesservicesByStatusPaginated(
+          string status,
+          string? searchTerm,
+          int page,
+          int pageSize)
         {
             var query = from br in _context.BusinessRegisters
-                        join bp in _context.BusinessProfiles
-                            on br.BusRegId equals bp.BusRegId into bpGroup
-                        from bp in bpGroup.DefaultIfEmpty() // Left join
-                        where
-                            br.BusServId == 1 && // Filter by servicecategory
-                            (
-                                (bp != null && bp.ProfileStatus.ToLower() == status.ToLower()) ||
-                                (bp == null && status.ToLower() == "incomplete")
-                            )
-                        select br;
+                        join sp in _context.ServiceProfiles
+                            on br.BusRegId equals sp.BusRegId into spGroup
+                        from sp in spGroup.DefaultIfEmpty()
+                        where br.BusServId == 1
+                        select new
+                        {
+                            Business = br,
+                            ServiceProfile = sp
+                        };
+
+            // Status filter
+            query = query.Where(x =>
+                (x.ServiceProfile != null &&
+                 x.ServiceProfile.Status.ToLower() == status.ToLower())
+                ||
+                (x.ServiceProfile == null &&
+                 status.ToLower() == "incomplete"));
+
+            // Search
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim().ToLower();
+
+                query = query.Where(x =>
+                    x.Business.BusinessName.ToLower().Contains(searchTerm) ||
+                    x.Business.BusinessUsername.ToLower().Contains(searchTerm) ||
+                    x.Business.BusEmail.ToLower().Contains(searchTerm) ||
+                    x.Business.BusMobileNo.ToLower().Contains(searchTerm));
+            }
 
             int totalRecords = await query.CountAsync();
 
             var records = await query
+                .OrderByDescending(x => x.Business.BusRegId)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(x => x.Business)
                 .ToListAsync();
 
             return (records, totalRecords);
         }
-
 
         public async Task<AdminDashboardcountDto> GetDashboardCountsAsync()
         {
