@@ -69,17 +69,24 @@ namespace mytown.Controllers
             });
         }
 
-        [Authorize]
+       // [Authorize]
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
+
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
-         [FromQuery] string status,
-         [FromQuery] int page = 1,
-         [FromQuery] int pageSize = 10)
+    [FromQuery] string status,
+    [FromQuery] string? searchTerm,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
         {
             if (page < 1 || pageSize < 1)
                 return BadRequest(new { message = "Invalid pagination parameters." });
 
-            var (records, totalRecords) = await _adminService.GetBusinessesservicesByStatusPaginatedAsync(status, page, pageSize);
+            var (records, totalRecords) =
+                await _adminService.GetBusinessesservicesByStatusPaginatedAsync(
+                    status,
+                    searchTerm,
+                    page,
+                    pageSize);
 
             return Ok(new
             {
