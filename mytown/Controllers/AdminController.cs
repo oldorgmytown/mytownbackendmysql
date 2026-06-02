@@ -69,17 +69,24 @@ namespace mytown.Controllers
             });
         }
 
-        [Authorize]
+       // [Authorize]
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
+
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
-         [FromQuery] string status,
-         [FromQuery] int page = 1,
-         [FromQuery] int pageSize = 10)
+    [FromQuery] string status,
+    [FromQuery] string? searchTerm,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
         {
             if (page < 1 || pageSize < 1)
                 return BadRequest(new { message = "Invalid pagination parameters." });
 
-            var (records, totalRecords) = await _adminService.GetBusinessesservicesByStatusPaginatedAsync(status, page, pageSize);
+            var (records, totalRecords) =
+                await _adminService.GetBusinessesservicesByStatusPaginatedAsync(
+                    status,
+                    searchTerm,
+                    page,
+                    pageSize);
 
             return Ok(new
             {
@@ -126,6 +133,28 @@ namespace mytown.Controllers
             return Ok("Profile status updated successfully.");
         }
 
+        [HttpPost("updateserviceprofilestatusbyadmin")]
+        public async Task<IActionResult> UpdateServiceProfileStatusByAdmin(
+    [FromQuery] int busRegId,
+    [FromQuery] string status,
+    [FromBody] AdminProfileUpdateDto commentDto)
+        {
+            if (string.IsNullOrEmpty(status))
+                return BadRequest("Status is required.");
+
+            if (busRegId <= 0)
+                return BadRequest("Invalid business registration ID.");
+
+            var updated = await _adminService.UpdateServiceProfileStatusByAdminAsync(
+                busRegId,
+                status,
+                commentDto.Comment);
+
+            if (!updated)
+                return NotFound($"No service profile found with BusRegId {busRegId}.");
+
+            return Ok("Service profile status updated successfully.");
+        }
 
         [HttpGet("GetDashboardCounts")]
         public async Task<IActionResult> GetDashboardCounts()
