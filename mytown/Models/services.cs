@@ -39,5 +39,11 @@ namespace mytown.Models
         [StringLength(100)]
         [Column("estimated_duration")]
         public string? EstimatedDuration { get; set; }
+
+        [StringLength(200)]
+        [Column("service_type_image")]
+        public string? ServiceTypeImage { get; set; }
+
+
     }
 }

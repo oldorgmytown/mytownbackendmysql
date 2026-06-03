@@ -946,12 +946,10 @@ namespace mytown.DataAccess.Repositories
                 // SERVICE SEARCH
                 // ====================================================
 
-                var serviceNameBusinessIds = _context.services
-                    .Where(s =>
-                        EF.Functions.Like(s.ServiceName, $"%{searchTerm}%") ||
-                        (s.ServiceDescription != null &&
-                         EF.Functions.Like(s.ServiceDescription, $"%{searchTerm}%")))
-                    .Select(s => s.BusRegId);
+                var serviceBusinessNameIds = _context.BusinessRegisters
+                 .Where(b =>
+                     EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
+                 .Select(b => b.BusRegId);
 
                 var serviceCategoryIds = _context.BusinessServices
                     .Where(bs =>
@@ -977,7 +975,7 @@ namespace mytown.DataAccess.Repositories
                         EF.Functions.Like(sp.ServiceAvailableLocations, $"%{searchTerm}%"))
                     .Select(sp => sp.BusRegId);
 
-                serviceBusinessIds = serviceNameBusinessIds
+                serviceBusinessIds = serviceBusinessNameIds
                     .Union(serviceCategoryBusinessIds)
                     .Union(serviceSubcategoryBusinessIds)
                     .Union(serviceLocationBusinessIds)
@@ -1036,11 +1034,40 @@ namespace mytown.DataAccess.Repositories
                     bp.ProfileStatus == "Approved")
                 .ToListAsync();
 
-            var serviceProfiles = await _context.ServiceProfiles
-                .Where(sp =>
-                    serviceBusinessIds.Contains(sp.BusRegId) &&
-                    sp.Status == "Approved")
-                .ToListAsync();
+            var serviceProfiles = await (
+    from sp in _context.ServiceProfiles
+    join br in _context.BusinessRegisters
+        on sp.BusRegId equals br.BusRegId
+    where serviceBusinessIds.Contains(sp.BusRegId)
+          && sp.Status == "Approved"
+    select new ServiceProfile
+    {
+        ServiceProfileId = sp.ServiceProfileId,
+        BusRegId = sp.BusRegId,
+        BusServId = sp.BusServId,
+        YearsOfExperience = sp.YearsOfExperience,
+        GovtIdDocument = sp.GovtIdDocument,
+        ProfessionalLicense = sp.ProfessionalLicense,
+        ServiceAvailableLocations = sp.ServiceAvailableLocations,
+        WorkingDays = sp.WorkingDays,
+        WorkingStartTime = sp.WorkingStartTime,
+        WorkingEndTime = sp.WorkingEndTime,
+        CreatedDate = sp.CreatedDate,
+        ServiceLogo = sp.ServiceLogo,
+        ServiceBanner = sp.ServiceBanner,
+        Status = sp.Status,
+
+        BusinessName = br.BusinessName,
+
+        BusinessLocation =
+            (br.Address1 ?? "") +
+            (!string.IsNullOrEmpty(br.Address2) ? ", " + br.Address2 : "") +
+            (!string.IsNullOrEmpty(br.Town) ? ", " + br.Town : "") +
+            (!string.IsNullOrEmpty(br.BusinessCity) ? ", " + br.BusinessCity : "") +
+            (!string.IsNullOrEmpty(br.BusinessState) ? ", " + br.BusinessState : "") +
+            (!string.IsNullOrEmpty(br.BusinessCountry) ? ", " + br.BusinessCountry : "")
+    })
+    .ToListAsync();
 
             return new BusinessAndServiceSearchResultsDto
             {

@@ -4,6 +4,10 @@
     {
         public int BusRegId { get; set; }
 
+        public string   BusinessName { get; set; }
+
+        public string BusinessLocation { get; set; } = string.Empty;
+
         public int BusServId { get; set; }
 
         public int? YearsOfExperience { get; set; }
@@ -40,5 +44,6 @@
         public decimal? StartingPrice { get; set; }
 
         public string? EstimatedDuration { get; set; }
+        public string? ServiceTypeImage { get; set; }
     }
 }

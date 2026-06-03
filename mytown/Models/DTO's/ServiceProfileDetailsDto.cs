@@ -5,6 +5,7 @@
         public int BusRegId { get; set; }
 
         public string BusinessName { get; set; }
+        public string BusinessLocation { get; set; }
 
         public string BusinessMobileNo { get; set; }
 
@@ -48,5 +49,7 @@
         public decimal? StartingPrice { get; set; }
 
         public string? EstimatedDuration { get; set; }
+
+        public string? ServiceTypeImage { get; set; } = null;
     }
 }
