@@ -25,6 +25,9 @@ namespace mytown.Models
         [Column("business_location")]
         public string? BusinessLocation { get; set; }
 
+        [Column("service_description")]
+        public string ServiceDescription { get; set; } = string.Empty;
+
         [Column("years_of_experience")]
         public int? YearsOfExperience { get; set; }
 

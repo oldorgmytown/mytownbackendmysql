@@ -28,7 +28,7 @@ namespace mytown.Models
         public string ServiceName { get; set; }
 
         [Column("service_description")]
-        public string? ServiceDescription { get; set; }
+        public string? ServiceTypeDescription { get; set; }
 
         [Column("inspection_fee")]
         public decimal? InspectionFee { get; set; }

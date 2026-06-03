@@ -1,5 +1,6 @@
 using mytown.DTOs;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
 using MyTown.Models;
 
@@ -15,5 +16,7 @@ namespace mytown.DataAccess.Interfaces
         Task<BusinessRegister?> GetByBusRegIdAsync(int busRegId);
 
         Task<ServiceProfileDetailsDto?> GetServiceProfileDetailsAsync(int busRegId);
+
+        Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId);
     }
 }

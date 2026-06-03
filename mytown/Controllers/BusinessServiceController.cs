@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs;
+using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
@@ -78,6 +79,18 @@ namespace mytown.Controllers
                     message = "Data not found"
                 });
             }
+
+            return Ok(result);
+        }
+
+        [HttpGet("getbusinessservicetypes_by_busregid")]
+        public async Task<IActionResult> GetBusinessServiceTypes(
+    [FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var result = await _service.GetBusinessServiceTypesAsync(busRegId);
 
             return Ok(result);
         }

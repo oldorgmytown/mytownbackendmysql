@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DTOs;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
@@ -44,6 +45,7 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.BusServId = dto.BusServId;
                     existingProfile.BusinessName = dto.BusinessName;
                     existingProfile.BusinessLocation = dto.BusinessLocation;
+                    existingProfile.ServiceDescription = dto.ServiceDescription;
                     existingProfile.YearsOfExperience = dto.YearsOfExperience;
                     existingProfile.GovtIdDocument = dto.GovtIdDocument;
                     existingProfile.ProfessionalLicense = dto.ProfessionalLicense;
@@ -65,6 +67,7 @@ namespace mytown.DataAccess.Repositories
                         BusServId = dto.BusServId,
                         BusinessName = dto.BusinessName,
                         BusinessLocation = dto.BusinessLocation,
+                        ServiceDescription = dto.ServiceDescription,
                         YearsOfExperience = dto.YearsOfExperience,
                         GovtIdDocument = dto.GovtIdDocument,
                         ProfessionalLicense = dto.ProfessionalLicense,
@@ -98,7 +101,7 @@ namespace mytown.DataAccess.Repositories
                         if (existingService != null)
                         {
                             // UPDATE
-                            existingService.ServiceDescription = item.ServiceDescription;
+                            existingService.ServiceTypeDescription = item.ServiceTypeDescription;
                             existingService.InspectionFee = item.InspectionFee;
                             existingService.StartingPrice = item.StartingPrice;
                             existingService.EstimatedDuration = item.EstimatedDuration;
@@ -115,7 +118,7 @@ namespace mytown.DataAccess.Repositories
                                 BusServId = dto.BusServId,
                                 ServSubcatId = item.ServSubcatId,
                                 ServiceName = item.ServiceName,
-                                ServiceDescription = item.ServiceDescription,
+                                ServiceTypeDescription = item.ServiceTypeDescription,
                                 InspectionFee = item.InspectionFee,
                                 StartingPrice = item.StartingPrice,
                                 EstimatedDuration = item.EstimatedDuration,
@@ -170,7 +173,7 @@ namespace mytown.DataAccess.Repositories
                 BusinessLocation = profile?.BusinessLocation ?? string.Empty,
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
-
+                ServiceDescription = profile?.ServiceDescription,
                 BusServId = profile?.BusServId ?? 0,
                 YearsOfExperience = profile?.YearsOfExperience,
                 GovtIdDocument = profile?.GovtIdDocument,
@@ -187,13 +190,41 @@ namespace mytown.DataAccess.Repositories
                     ServiceId = x.ServiceId,
                     ServSubcatId = x.ServSubcatId,
                     ServiceName = x.ServiceName,
-                    ServiceDescription = x.ServiceDescription,
+                    ServiceTypeDescription = x.ServiceTypeDescription,
                     InspectionFee = x.InspectionFee,
                     StartingPrice = x.StartingPrice,
                     EstimatedDuration = x.EstimatedDuration,
                     ServiceTypeImage = x?.ServiceTypeImage ?? string.Empty
                 }).ToList()
             };
+
+            return result;
+        }
+
+        public async Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId)
+        {
+            var result = await (
+                from s in _context.Service
+                join bs in _context.BusinessServices
+                    on s.BusServId equals bs.BusServId
+                join sc in _context.ServiceSubCategory
+                    on s.ServSubcatId equals sc.ServSubcatId
+                where s.BusRegId == busRegId
+                group new { bs, sc } by new
+                {
+                    bs.BusServId,
+                    bs.BusinessServiceName
+                }
+                into g
+                select new BusinessServiceTypesDto
+                {
+                    BusServId = g.Key.BusServId,
+                    BusinessServiceName = g.Key.BusinessServiceName,
+                    ServiceTypeNames = g.Select(x => x.sc.ServiceTypeName)
+                                        .Distinct()
+                                        .ToList()
+                }
+            ).ToListAsync();
 
             return result;
         }
