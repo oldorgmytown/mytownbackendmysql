@@ -18,6 +18,12 @@ namespace mytown.Models
         [Column("bus_serv_id")]
         public int BusServId { get; set; }
 
+        [NotMapped]
+        public string? BusinessName { get; set; }
+
+        [NotMapped]
+        public string? BusinessLocation { get; set; }
+
         [Column("years_of_experience")]
         public int? YearsOfExperience { get; set; }
 
