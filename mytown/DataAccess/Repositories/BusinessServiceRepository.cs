@@ -166,7 +166,8 @@ namespace mytown.DataAccess.Repositories
             var result = new ServiceProfileDetailsDto
             {
                 BusRegId = business.BusRegId,
-                BusinessName = business.BusinessName,
+                BusinessName = business?.BusinessName ?? string.Empty,
+                BusinessLocation = profile?.BusinessLocation ?? string.Empty,
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
 
@@ -189,7 +190,8 @@ namespace mytown.DataAccess.Repositories
                     ServiceDescription = x.ServiceDescription,
                     InspectionFee = x.InspectionFee,
                     StartingPrice = x.StartingPrice,
-                    EstimatedDuration = x.EstimatedDuration
+                    EstimatedDuration = x.EstimatedDuration,
+                    ServiceTypeImage = x?.ServiceTypeImage ?? string.Empty
                 }).ToList()
             };
 
