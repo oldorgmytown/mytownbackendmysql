@@ -42,6 +42,8 @@ namespace mytown.DataAccess.Repositories
                 {
                     // UPDATE PROFILE
                     existingProfile.BusServId = dto.BusServId;
+                    existingProfile.BusinessName = dto.BusinessName;
+                    existingProfile.BusinessLocation = dto.BusinessLocation;
                     existingProfile.YearsOfExperience = dto.YearsOfExperience;
                     existingProfile.GovtIdDocument = dto.GovtIdDocument;
                     existingProfile.ProfessionalLicense = dto.ProfessionalLicense;
@@ -61,6 +63,8 @@ namespace mytown.DataAccess.Repositories
                     {
                         BusRegId = dto.BusRegId,
                         BusServId = dto.BusServId,
+                        BusinessName = dto.BusinessName,
+                        BusinessLocation = dto.BusinessLocation,
                         YearsOfExperience = dto.YearsOfExperience,
                         GovtIdDocument = dto.GovtIdDocument,
                         ProfessionalLicense = dto.ProfessionalLicense,
@@ -98,6 +102,7 @@ namespace mytown.DataAccess.Repositories
                             existingService.InspectionFee = item.InspectionFee;
                             existingService.StartingPrice = item.StartingPrice;
                             existingService.EstimatedDuration = item.EstimatedDuration;
+                            existingService.ServiceTypeImage = item.ServiceTypeImage;
 
                             _context.Service.Update(existingService);
                         }
@@ -113,7 +118,8 @@ namespace mytown.DataAccess.Repositories
                                 ServiceDescription = item.ServiceDescription,
                                 InspectionFee = item.InspectionFee,
                                 StartingPrice = item.StartingPrice,
-                                EstimatedDuration = item.EstimatedDuration
+                                EstimatedDuration = item.EstimatedDuration,
+                                ServiceTypeImage = item.ServiceTypeImage
                             };
 
                             _context.Service.Add(newService);
