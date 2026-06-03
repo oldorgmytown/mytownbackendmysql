@@ -12,6 +12,7 @@
         public string BusinessEmail { get; set; }
 
         public int BusServId { get; set; }
+        // new
 
         public string? ServiceDescription { get; set; } = null;
 
