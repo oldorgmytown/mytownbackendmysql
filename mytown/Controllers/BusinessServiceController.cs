@@ -94,5 +94,30 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        // get all services
+        [HttpGet("getallservicesbybusregid")]
+        public async Task<IActionResult> GetServicesByBusRegId([FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var services = await _service.GetServicesByBusRegIdAsync(busRegId);
+
+            return Ok(services);
+        }
+
+        //edit service types on dashboard
+        [HttpPut("editservicetypes")]
+        public async Task<IActionResult> UpdateService(
+    [FromBody] UpdateServiceDto dto)
+        {
+            var updated = await _service.UpdateServiceAsync(dto);
+
+            if (!updated)
+                return NotFound("Service not found.");
+
+            return Ok("Service updated successfully.");
+        }
     }
 }

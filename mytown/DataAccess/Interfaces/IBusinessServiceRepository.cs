@@ -18,5 +18,11 @@ namespace mytown.DataAccess.Interfaces
         Task<ServiceProfileDetailsDto?> GetServiceProfileDetailsAsync(int busRegId);
 
         Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId);
+
+        //get allservices
+        Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId);
+
+        // edit service types
+        Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
     }
 }

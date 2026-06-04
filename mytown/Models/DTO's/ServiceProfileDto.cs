@@ -38,6 +38,7 @@
         public int ServSubcatId { get; set; }
 
         public string ServiceName { get; set; }
+        // new
 
         public string? ServiceTypeDescription { get; set; }
 
