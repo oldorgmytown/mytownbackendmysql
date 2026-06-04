@@ -227,6 +227,27 @@ namespace mytown.DataAccess.Repositories
                 .OrderBy(x => x.ServiceName)
                 .ToListAsync();
         }
+
+        //edit service types
+        public async Task<bool> UpdateServiceAsync(UpdateServiceDto dto)
+        {
+            var service = await _context.Service
+                .FirstOrDefaultAsync(x => x.ServiceId == dto.ServiceId);
+
+            if (service == null)
+                return false;
+
+           
+            service.ServiceTypeDescription = dto.ServiceTypeDescription;
+            service.InspectionFee = dto.InspectionFee;
+            service.StartingPrice = dto.StartingPrice;
+            service.EstimatedDuration = dto.EstimatedDuration;
+            service.ServiceTypeImage = dto.ServiceTypeImage;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
     }
     
 }

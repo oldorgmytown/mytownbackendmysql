@@ -51,6 +51,11 @@ namespace mytown.Services.Implementations
         {
             return await _repo.GetServicesByBusRegIdAsync(busRegId);
         }
+
+        public async Task<bool> UpdateServiceAsync(UpdateServiceDto dto)
+        {
+            return await _repo.UpdateServiceAsync(dto);
+        }
     }
 
 

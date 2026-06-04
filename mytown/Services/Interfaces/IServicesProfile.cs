@@ -17,5 +17,10 @@ namespace mytown.Services.Interfaces
 
         //get allservices
         Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId);
+
+        // edit service type
+
+        Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
+       
     }
 }

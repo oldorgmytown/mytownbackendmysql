@@ -106,5 +106,18 @@ namespace mytown.Controllers
 
             return Ok(services);
         }
+
+        //edit service types on dashboard
+        [HttpPut("editservicetypes")]
+        public async Task<IActionResult> UpdateService(
+    [FromBody] UpdateServiceDto dto)
+        {
+            var updated = await _service.UpdateServiceAsync(dto);
+
+            if (!updated)
+                return NotFound("Service not found.");
+
+            return Ok("Service updated successfully.");
+        }
     }
 }

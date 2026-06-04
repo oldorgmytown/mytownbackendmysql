@@ -21,5 +21,8 @@ namespace mytown.DataAccess.Interfaces
 
         //get allservices
         Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId);
+
+        // edit service types
+        Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
     }
 }
