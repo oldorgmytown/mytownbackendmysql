@@ -16,7 +16,14 @@ namespace mytown.DataAccess.Interfaces
 
         // ---- Search available transporters (for shoppers) ----
         Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate);
+      string startTown,
+      string startCity,
+      string startState,
+      string startCountry,
+      string destinationTown,
+      string destinationCity,
+      string destinationState,
+      string destinationCountry);
 
         // ---- Delivery Requests ----
         // Creates request and auto-assigns (status = "Assigned") — no Accept step
@@ -53,5 +60,15 @@ namespace mytown.DataAccess.Interfaces
 
         // mark as delivered
         Task<string> MarkAsDeliveredAsync(int storeOrderId);
+
+        //sender orders
+        // Interface
+        Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId);
+
+        // update sender order status to delivered
+        Task<bool> UpdateTransporterDeliveryStatusAsync(
+          int senderOrderId,
+          int transporterRegId,
+          string deliveryStatus);
     }
 }

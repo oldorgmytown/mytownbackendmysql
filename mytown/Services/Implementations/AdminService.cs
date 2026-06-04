@@ -3,6 +3,7 @@ using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using MyTown.Models;
 
 namespace mytown.Services.Implementations
 {
@@ -29,10 +30,25 @@ namespace mytown.Services.Implementations
             return await _adminRepo.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize, search);
         }
 
+        //public async Task<(IEnumerable<object> Records, int TotalRecords)>
+        //    GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize)
+        //{
+        //    return await _adminRepo.GetBusinessesservicesByStatusPaginated(status, page, pageSize);
+        //}
+
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
-            GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize)
+    GetBusinessesservicesByStatusPaginatedAsync(
+        string status,
+        string? searchTerm,
+        int page,
+        int pageSize)
         {
-            return await _adminRepo.GetBusinessesservicesByStatusPaginated(status, page, pageSize);
+            return await _adminRepo
+                .GetBusinessesservicesByStatusPaginated(
+                    status,
+                    searchTerm,
+                    page,
+                    pageSize);
         }
 
         public async Task<object> BusinessprofilestatuscountsAsync()
@@ -242,6 +258,18 @@ GetSenderRegistersPaginatedAsync(
                     page,
                     pageSize,
                     search);
+        }
+
+        public async Task<bool> UpdateServiceProfileStatusByAdminAsync(
+    int busRegId,
+    string status,
+    string? comments = null)
+        {
+            return await _adminRepo
+                .UpdateServiceProfileStatusByAdminAsync(
+                    busRegId,
+                    status,
+                    comments);
         }
 
     }

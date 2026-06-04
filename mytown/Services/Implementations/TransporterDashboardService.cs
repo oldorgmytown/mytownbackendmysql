@@ -1,7 +1,8 @@
+using Azure.Storage.Blobs;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
-using Azure.Storage.Blobs;
 
 namespace mytown.Services.Implementations
 {
@@ -30,9 +31,28 @@ namespace mytown.Services.Implementations
         public Task<bool> DeactivatePlanAsync(int planId, int transporterRegId)
             => _repo.DeactivatePlanAsync(planId, transporterRegId);
 
-        public Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
-            => _repo.SearchAvailableTransportersAsync(fromLocation, toLocation, travelDate);
+        public Task<List<AvailableTransporterDto>>
+SearchAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string startState,
+    string startCountry,
+
+    string destinationTown,
+    string destinationCity,
+    string destinationState,
+    string destinationCountry)
+
+
+=> _repo.SearchAvailableTransportersAsync(
+    startTown,
+    startCity,
+    startState,
+    startCountry,
+    destinationTown,
+    destinationCity,
+    destinationState,
+    destinationCountry);
 
         // Request is auto-assigned to the transporter linked to PlanId — no Accept step
         public async Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(
@@ -128,6 +148,24 @@ namespace mytown.Services.Implementations
         public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
         {
             return await _repo.MarkAsDeliveredAsync(storeOrderId);
+        }
+
+        // Service
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterDeliversSendersOrdersAsync(transporterRegId);
+        }
+
+        //update sendre orders - deliveries
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+           int senderOrderId,
+           int transporterRegId,
+           string deliveryStatus)
+        {
+            return await _repo.UpdateTransporterDeliveryStatusAsync(
+                senderOrderId,
+                transporterRegId,
+                deliveryStatus);
         }
     }
 }

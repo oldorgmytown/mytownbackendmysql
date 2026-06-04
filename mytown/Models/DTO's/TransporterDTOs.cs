@@ -10,8 +10,26 @@ namespace mytown.Models.DTO_s
         public string PlanStatus { get; set; }
 
         // Route
-        public string StartLocation { get; set; }
-        public string Destination { get; set; }
+
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        public string StartTown { get; set; }
+        public string StartCity { get; set; }
+        public string StartState { get; set; }
+        public string StartCountry { get; set; }
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        public string DestinationTown { get; set; }
+        public string DestinationCity { get; set; }
+        public string DestinationState { get; set; }
+        public string DestinationCountry { get; set; }
+        //public string StartLocation { get; set; }
+        //public string Destination { get; set; }
         public string PreferredRoute { get; set; }
         public decimal? DistanceKm { get; set; }
 
@@ -203,8 +221,24 @@ namespace mytown.Models.DTO_s
         public string TransporterName { get; set; }
         public string VehicleType { get; set; }
         public string VehicleName { get; set; }
-        public string StartLocation { get; set; }
-        public string Destination { get; set; }
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        public string StartTown { get; set; }
+        public string StartCity { get; set; }
+        public string StartState { get; set; }
+        public string StartCountry { get; set; }
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        public string DestinationTown { get; set; }
+        public string DestinationCity { get; set; }
+        public string DestinationState { get; set; }
+        public string DestinationCountry { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime ArrivalDate { get; set; }
         public decimal MaxWeightKg { get; set; }

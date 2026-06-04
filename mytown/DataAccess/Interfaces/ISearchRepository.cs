@@ -1,4 +1,5 @@
-﻿using mytown.Models;
+﻿using mytown.DTOs;
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
@@ -28,5 +29,13 @@ namespace mytown.DataAccess.Interfaces
         //2-12-25  search stores only
         List<BusinessProfile> GetBusinessProfilesByFilters(string? searchTerm, string? locationQuery);
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName);
-    }
+        // 27-05-26
+        //get both business profiles and service profiles
+       
+       Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
+            string? searchTerm,
+            string? locationQuery);
+       
+
+}
 }

@@ -1,18 +1,16 @@
-name: Build and deploy container app to Azure Web App - mytown-webapp
+name: Build and deploy container app to Azure Web App - mytown-webapp (QA)
 
 on:
   push:
     branches:
-      - transport-backed
       - backend-QA
-      - backend-PROD
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,39 +21,27 @@ jobs:
       - name: Log in to container registry
         uses: docker/login-action@v2
         with:
-          registry: mytownacr.azurecr.io/
+          registry: mytownacr.azurecr.io
           username: ${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_54D4782667834534A27B73A2F1F02450 }}
           password: ${{ secrets.AZUREAPPSERVICE_CONTAINERPASSWORD_D0F77C7144BA492086A893EA0AF8A5C4 }}
 
-      - name: Build and push container image to registry
+      - name: Build and push container image
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: mytownacr.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_54D4782667834534A27B73A2F1F02450 }}/mytown-app:${{ github.sha }}
+          tags: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
           file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
     needs: build
 
     steps:
-
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_CB8AE7E8567D4FBD9FECE5F4C027F11C }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_FAFCA3EF9C08454199FE40619FB05EBF }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_67380F5B29BA4A47923F60CB32B561E4 }}
-
-      - name: Deploy to Azure Web App
-        id: deploy-to-webapp
+      - name: Deploy to Azure Web App (QA)
         uses: azure/webapps-deploy@v2
         with:
-          app-name: 'mytown-webapp'
-          slot-name: 'Production'
-          images: 'mytownacr.azurecr.io/${{ secrets.AZUREAPPSERVICE_CONTAINERUSERNAME_54D4782667834534A27B73A2F1F02450 }}/mytown-app:${{ github.sha }}'
+          app-name: mytown-webapp
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_QA }}
+          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}

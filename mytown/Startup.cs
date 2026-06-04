@@ -84,7 +84,11 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IUserService, mytown.Services.UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAuthService, AuthService>();
+
         services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
+     //  services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
         services.AddScoped<IBusinessProfileService, BusinessProfileService>();
         services.AddScoped<IShopperService, ShopperService>();
         services.AddScoped<IProductService, mytown.Services.Implementations.ProductService>();
@@ -100,6 +104,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<ISenderService, SenderService>();
         services.AddScoped<IVerficationLinkBuildersender, VerificationLinkBuildersender>();
         services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
+        services.AddScoped<IBusinessServiceRepository, BusinessServiceRepository>();
+        services.AddScoped<IServicesProfile, ServicesProfile>();
 
     }
 
@@ -155,8 +161,10 @@ private void RegisterApplicationServices(IServiceCollection services)
             "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net" ,// Production frontend
             "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
                 "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
-                "https://www.itismytown.com"
-
+                "https://www.itismytown.com",
+                "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net", // staging webapp service
+                "https://jolly-sea-066e8b500.7.azurestaticapps.net",// staging static web app for frontend
+                "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net" // staging slot new static web app for frontend
         };
         services.AddCors(options =>
         {

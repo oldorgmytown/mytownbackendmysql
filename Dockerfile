@@ -1,19 +1,19 @@
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
 COPY . .
 
-RUN ls -R   
+RUN dotnet restore mytown/mytown.csproj
+RUN dotnet publish mytown/mytown.csproj -c Release -o /app/publish
 
-WORKDIR /src/mytown
-RUN dotnet restore mytown.csproj
-RUN dotnet publish mytown.csproj -c Release -o /app/publish
-
+# Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
 COPY --from=build /app/publish .
 
+
 EXPOSE 80
 
-ENTRYPOINT ["dotnet", "mytown.dll", "--urls", "http://0.0.0.0:80"]
+ENTRYPOINT ["dotnet", "mytown.dll"]

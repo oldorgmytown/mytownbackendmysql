@@ -29,7 +29,7 @@ namespace mytown.Services
         public async Task<PendingBusinessVerification?> FindPendingVerificationByEmail(string email)
         {
             var verification = await _repo.FindPendingVerificationByEmail(email);
-            return verification; 
+            return verification;
         }
 
 

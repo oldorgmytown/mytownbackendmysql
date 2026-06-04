@@ -22,9 +22,13 @@ namespace mytown.Models
             public DbSet<BusinessService> BusinessServices { get; set; } //done
             public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
             public DbSet<ProductSubCategory> product_sub_categories { get; set; } //done
-            public DbSet<services_sub_categories> services_sub_categories { get; set; }
+
+            // services 
+            public DbSet<ServiceSubCategory> ServiceSubCategory { get; set; }
+            public DbSet<Service> Service { get; set; }
+            public DbSet<ServiceProfile> ServiceProfiles { get; set; } 
             public DbSet<Products> products { get; set; } //done
-            public DbSet<Service> services { get; set; }
+           public DbSet<Service> services { get; set; }
             public DbSet<ShopperRegister> ShopperRegisters { get; set; } //done
            public DbSet<ShopperVerification> ShopperVerification { get; set; } //done
             public DbSet<subcategoryimages_busregid> Subcategoryimages_Busregids { get; set; }
@@ -116,11 +120,7 @@ namespace mytown.Models
                
 
                 // Optionally, you can add similar configuration for other models
-                modelBuilder.Entity<Service>(entity =>
-                {
-                    entity.Property(e => e.ServiceCost)
-                          .HasPrecision(18, 2); // Define precision for service_cost
-                });
+              
                 modelBuilder.Entity<subcategoryimages_busregid>().ToTable("subcategoryimages_Busregids");
 
                 // Seed data for businesscategoriescs: inserting "products" and "services"

@@ -1,0 +1,123 @@
+using Microsoft.AspNetCore.Mvc;
+using mytown.DTOs;
+using mytown.Services.Implementations;
+using mytown.Services.Interfaces;
+
+namespace mytown.Controllers
+{
+    [ApiController]
+    [Route("api/businessservices")]
+    public class BusinessServiceController : ControllerBase
+    {
+        private readonly IServicesProfile _service;
+        public BusinessServiceController(IServicesProfile service)
+        {
+            _service = service;
+        }
+
+        [HttpGet("GetBusinessServices")]
+        public async Task<IActionResult> GetAllServices()
+        {
+            var services = await _service.GetAllServicesAsync();
+            return Ok(services);
+        }
+
+        [HttpGet("Service_Subcategories/{busServId}")]
+        public async Task<IActionResult> GetByBusServId(int busServId)
+        {
+            var result = await _service.GetByBusServIdAsync(busServId);
+
+            if (result == null || !result.Any())
+            {
+                return NotFound(new
+                {
+                    message = "No service subcategories found"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpPost("add-service-profile")]
+        public async Task<IActionResult> AddServiceProfile(CreateServiceProfileDto dto)
+        {
+            var result = await _service.AddServiceProfileAsync(dto);
+
+            if (result)
+            {
+                return Ok("Service profile added successfully");
+            }
+
+            return BadRequest();
+        }
+
+        [HttpGet("GetBusinessServiceDetails/{busRegId}")]
+        public async Task<IActionResult> GetByBusRegId(int busRegId)
+        {
+            var result = await _service.GetByBusRegIdAsync(busRegId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Business not found"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("service-profile-details/{busRegId}")]
+        public async Task<IActionResult> GetServiceProfileDetails(int busRegId)
+        {
+            var result = await _service.GetServiceProfileDetailsAsync(busRegId);
+
+            if (result == null)
+            {
+                return NotFound(new
+                {
+                    message = "Data not found"
+                });
+            }
+
+            return Ok(result);
+        }
+
+        [HttpGet("getbusinessservicetypes_by_busregid")]
+        public async Task<IActionResult> GetBusinessServiceTypes(
+    [FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var result = await _service.GetBusinessServiceTypesAsync(busRegId);
+
+            return Ok(result);
+        }
+
+        // get all services
+        [HttpGet("getallservicesbybusregid")]
+        public async Task<IActionResult> GetServicesByBusRegId([FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var services = await _service.GetServicesByBusRegIdAsync(busRegId);
+
+            return Ok(services);
+        }
+
+        //edit service types on dashboard
+        [HttpPut("editservicetypes")]
+        public async Task<IActionResult> UpdateService(
+    [FromBody] UpdateServiceDto dto)
+        {
+            var updated = await _service.UpdateServiceAsync(dto);
+
+            if (!updated)
+                return NotFound("Service not found.");
+
+            return Ok("Service updated successfully.");
+        }
+    }
+}

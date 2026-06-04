@@ -40,7 +40,15 @@ public interface ICourierServiceRepository
     // Matches transporter who is going FROM storeCity TO shopperCity
     // on or after today's date and still has capacity
     Task<BestcourierinfoDto?> FindMatchingTransporterAsync(
-        string storeCity,
-        string shopperCity,
-        decimal packageWeightKg);
+      string storeTown,
+      string storeCity,
+      string storeState,
+      string storeCountry,
+
+      string shopperTown,
+      string shopperCity,
+      string shopperState,
+      string shopperCountry,
+
+      decimal packageWeightKg);
 }

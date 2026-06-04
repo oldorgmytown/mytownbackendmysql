@@ -1,4 +1,5 @@
-﻿using mytown.Models;
+﻿using mytown.DTOs;
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
@@ -33,5 +34,11 @@ namespace mytown.Services.Interfaces
 
         // Categories by product
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName);
+
+        //27-05-26
+        //get both business profiles and service profiles
+        Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
+       string? searchTerm,
+       string? locationQuery);
     }
 }

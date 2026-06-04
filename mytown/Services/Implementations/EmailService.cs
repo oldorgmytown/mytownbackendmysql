@@ -2707,7 +2707,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
         <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
-             alt=""Package Ready for Pickup""
+             alt=""Booking Order Confirmed""
              width=""600""
              style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
@@ -2722,7 +2722,7 @@ public class EmailService : IEmailService
         </p>
         <p style=""color:#000;font-size:16px;font-weight:400;line-height:1.5;margin:0;
                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-          Your shipment booking has been confirmed! Your order is now ready for pickup.
+          Your shipment booking has been confirmed! Transporter is ready for pickup.
         </p>
       </td>
     </tr>
