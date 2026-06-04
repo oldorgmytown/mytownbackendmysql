@@ -1547,6 +1547,73 @@ namespace mytown.Migrations
                     b.ToTable("registrations");
                 });
 
+            modelBuilder.Entity("mytown.Models.SenderAlternateAddress", b =>
+                {
+                    b.Property<int>("AltAddressId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("alt_address_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AltAddressId"));
+
+                    b.Property<string>("AltAddress")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_address");
+
+                    b.Property<string>("AltCity")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_city");
+
+                    b.Property<string>("AltCountry")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_country");
+
+                    b.Property<string>("AltName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_name");
+
+                    b.Property<string>("AltPhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_phone_number");
+
+                    b.Property<string>("AltPostalCode")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_postal_code");
+
+                    b.Property<string>("AltState")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_state");
+
+                    b.Property<string>("AltTown")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("alt_town");
+
+                    b.Property<string>("DeliveryNotes")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("delivery_notes");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("SenderRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_reg_id");
+
+                    b.HasKey("AltAddressId");
+
+                    b.ToTable("sender_alternate_address");
+                });
+
             modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -1922,60 +1989,162 @@ namespace mytown.Migrations
                     b.Property<int>("ServiceId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("service_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_id");
+                        .HasColumnName("service_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ServiceId"));
 
                     b.Property<int>("BusRegId")
                         .HasColumnType("int")
-                        .HasColumnName("bus_reg_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "bus_reg_id");
+                        .HasColumnName("bus_reg_id");
 
                     b.Property<int>("BusServId")
                         .HasColumnType("int")
-                        .HasColumnName("bus_serv_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "bus_serv_id");
+                        .HasColumnName("bus_serv_id");
+
+                    b.Property<string>("EstimatedDuration")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("estimated_duration");
+
+                    b.Property<decimal?>("InspectionFee")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("inspection_fee");
 
                     b.Property<int>("ServSubcatId")
                         .HasColumnType("int")
-                        .HasColumnName("serv_subcat_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "serv_subcat_id");
-
-                    b.Property<decimal>("ServiceCost")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(10,2)")
-                        .HasColumnName("service_cost")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_cost");
-
-                    b.Property<string>("ServiceDescription")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("service_description")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_description");
-
-                    b.Property<string>("ServiceImage")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("service_image")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_image");
+                        .HasColumnName("serv_subcat_id");
 
                     b.Property<string>("ServiceName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("service_name")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_name");
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("service_name");
 
-                    b.Property<string>("ServiceSubject")
-                        .IsRequired()
+                    b.Property<string>("ServiceTypeDescription")
                         .HasColumnType("longtext")
-                        .HasColumnName("service_subject")
-                        .HasAnnotation("Relational:JsonPropertyName", "service_subject");
+                        .HasColumnName("service_type_description");
+
+                    b.Property<string>("ServiceTypeImage")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("service_type_image");
+
+                    b.Property<decimal?>("StartingPrice")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("starting_price");
 
                     b.HasKey("ServiceId");
 
                     b.ToTable("services");
+                });
+
+            modelBuilder.Entity("mytown.Models.ServiceProfile", b =>
+                {
+                    b.Property<int>("ServiceProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("service_profile_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ServiceProfileId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<int>("BusServId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_serv_id");
+
+                    b.Property<string>("BusinessLocation")
+                        .HasColumnType("longtext")
+                        .HasColumnName("business_location");
+
+                    b.Property<string>("BusinessName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("business_name");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("GovtIdDocument")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("govt_id_document");
+
+                    b.Property<string>("ProfessionalLicense")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("professional_license");
+
+                    b.Property<string>("ServiceAvailableLocations")
+                        .HasColumnType("longtext")
+                        .HasColumnName("service_available_locations");
+
+                    b.Property<string>("ServiceBanner")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("service_banner");
+
+                    b.Property<string>("ServiceDescription")
+                        .HasColumnType("longtext")
+                        .HasColumnName("service_description");
+
+                    b.Property<string>("ServiceLogo")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("service_logo");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("WorkingDays")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("working_days");
+
+                    b.Property<TimeSpan?>("WorkingEndTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("working_end_time");
+
+                    b.Property<TimeSpan?>("WorkingStartTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("working_start_time");
+
+                    b.Property<int?>("YearsOfExperience")
+                        .HasColumnType("int")
+                        .HasColumnName("years_of_experience");
+
+                    b.HasKey("ServiceProfileId");
+
+                    b.ToTable("service_profiles");
+                });
+
+            modelBuilder.Entity("mytown.Models.ServiceSubCategory", b =>
+                {
+                    b.Property<int>("ServSubcatId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("serv_subcat_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ServSubcatId"));
+
+                    b.Property<int>("BusServId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_serv_id");
+
+                    b.Property<string>("ServiceTypeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("service_type_name");
+
+                    b.HasKey("ServSubcatId");
+
+                    b.ToTable("services_sub_categories");
                 });
 
             modelBuilder.Entity("mytown.Models.ShippingDetails", b =>
@@ -2770,10 +2939,25 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("Destination")
+                    b.Property<string>("DestinationCity")
                         .IsRequired()
-                        .HasColumnType("varchar(300)")
-                        .HasColumnName("destination");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("destination_city");
+
+                    b.Property<string>("DestinationCountry")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("destination_country");
+
+                    b.Property<string>("DestinationState")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("destination_state");
+
+                    b.Property<string>("DestinationTown")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("destination_town");
 
                     b.Property<decimal?>("DistanceKm")
                         .HasColumnType("decimal(10,2)")
@@ -2831,14 +3015,29 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(200)")
                         .HasColumnName("preferred_route");
 
+                    b.Property<string>("StartCity")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("start_city");
+
+                    b.Property<string>("StartCountry")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("start_country");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("start_date");
 
-                    b.Property<string>("StartLocation")
+                    b.Property<string>("StartState")
                         .IsRequired()
-                        .HasColumnType("varchar(300)")
-                        .HasColumnName("start_location");
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("start_state");
+
+                    b.Property<string>("StartTown")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("start_town");
 
                     b.Property<int>("TransporterRegId")
                         .HasColumnType("int")
@@ -3068,35 +3267,6 @@ namespace mytown.Migrations
                     b.HasIndex("StoreOrderId");
 
                     b.ToTable("orderdetails");
-                });
-
-            modelBuilder.Entity("mytown.Models.services_sub_categories", b =>
-                {
-                    b.Property<int>("serv_subcat_id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("serv_subcat_id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("serv_subcat_id"));
-
-                    b.Property<int>("BusservId")
-                        .HasColumnType("int")
-                        .HasColumnName("busserv_id");
-
-                    b.Property<string>("serv_subcat_image")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("serv_subcat_image");
-
-                    b.Property<string>("serv_subcat_name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("serv_subcat_name");
-
-                    b.HasKey("serv_subcat_id");
-
-                    b.ToTable("services_sub_categories");
                 });
 
             modelBuilder.Entity("mytown.Models.subcategoryimages_busregid", b =>

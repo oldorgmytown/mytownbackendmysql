@@ -45,7 +45,7 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.BusServId = dto.BusServId;
                     existingProfile.BusinessName = dto.BusinessName;
                     existingProfile.BusinessLocation = dto.BusinessLocation;
-                    existingProfile.ServiceDescription = dto.ServiceDescription;
+                   existingProfile.ServiceDescription = dto.ServiceDescription;
                     existingProfile.YearsOfExperience = dto.YearsOfExperience;
                     existingProfile.GovtIdDocument = dto.GovtIdDocument;
                     existingProfile.ProfessionalLicense = dto.ProfessionalLicense;
@@ -174,7 +174,7 @@ namespace mytown.DataAccess.Repositories
                 BusinessLocation = profile?.BusinessLocation ?? string.Empty,
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
-                ServiceDescription = profile?.ServiceDescription ?? string.Empty,
+               ServiceDescription = profile?.ServiceDescription ?? string.Empty,
                 BusServId = profile?.BusServId ?? 0,
                 YearsOfExperience = profile?.YearsOfExperience ?? 0,
                 GovtIdDocument = profile?.GovtIdDocument ?? string.Empty,
