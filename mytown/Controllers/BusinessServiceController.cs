@@ -94,5 +94,17 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        // get all services
+        [HttpGet("getallservicesbybusregid")]
+        public async Task<IActionResult> GetServicesByBusRegId([FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var services = await _service.GetServicesByBusRegIdAsync(busRegId);
+
+            return Ok(services);
+        }
     }
 }

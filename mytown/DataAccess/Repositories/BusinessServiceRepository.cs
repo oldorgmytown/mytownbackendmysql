@@ -87,46 +87,35 @@ namespace mytown.DataAccess.Repositories
                 await _context.SaveChangesAsync();
 
                 // SERVICES
+                // SERVICES
+                var existingServices = await _context.Service
+                    .Where(x => x.BusRegId == dto.BusRegId)
+                    .ToListAsync();
+
+                if (existingServices.Any())
+                {
+                    _context.Service.RemoveRange(existingServices);
+                    await _context.SaveChangesAsync();
+                }
+
                 if (dto.Services != null && dto.Services.Any())
                 {
                     foreach (var item in dto.Services)
                     {
-                        // Check existing service
-                        var existingService = await _context.Service
-                            .FirstOrDefaultAsync(x =>
-                                x.BusRegId == dto.BusRegId &&
-                                x.ServSubcatId == item.ServSubcatId &&
-                                x.ServiceName == item.ServiceName);
-
-                        if (existingService != null)
+                        var newService = new Service
                         {
-                            // UPDATE
-                            existingService.ServiceTypeDescription = item.ServiceTypeDescription;
-                            existingService.InspectionFee = item.InspectionFee;
-                            existingService.StartingPrice = item.StartingPrice;
-                            existingService.EstimatedDuration = item.EstimatedDuration;
-                            existingService.ServiceTypeImage = item.ServiceTypeImage;
+                            BusRegId = dto.BusRegId,
+                            BusServId = dto.BusServId,
+                            ServSubcatId = item.ServSubcatId,
+                            ServiceName = item.ServiceName,
+                            ServiceTypeDescription = item.ServiceTypeDescription,
+                            InspectionFee = item.InspectionFee,
+                            StartingPrice = item.StartingPrice,
+                            EstimatedDuration = item.EstimatedDuration,
+                            ServiceTypeImage = item.ServiceTypeImage
+                        };
 
-                            _context.Service.Update(existingService);
-                        }
-                        else
-                        {
-                            // INSERT
-                            var newService = new Service
-                            {
-                                BusRegId = dto.BusRegId,
-                                BusServId = dto.BusServId,
-                                ServSubcatId = item.ServSubcatId,
-                                ServiceName = item.ServiceName,
-                                ServiceTypeDescription = item.ServiceTypeDescription,
-                                InspectionFee = item.InspectionFee,
-                                StartingPrice = item.StartingPrice,
-                                EstimatedDuration = item.EstimatedDuration,
-                                ServiceTypeImage = item.ServiceTypeImage
-                            };
-
-                            _context.Service.Add(newService);
-                        }
+                        _context.Service.Add(newService);
                     }
 
                     await _context.SaveChangesAsync();
@@ -228,6 +217,15 @@ namespace mytown.DataAccess.Repositories
             ).ToListAsync();
 
             return result;
+        }
+
+        //get all services
+        public async Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId)
+        {
+            return await _context.Service
+                .Where(x => x.BusRegId == busRegId)
+                .OrderBy(x => x.ServiceName)
+                .ToListAsync();
         }
     }
     

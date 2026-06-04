@@ -46,6 +46,11 @@ namespace mytown.Services.Implementations
         {
             return await _repo.GetBusinessServiceTypesAsync(busRegId);
         }
+
+        public async Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId)
+        {
+            return await _repo.GetServicesByBusRegIdAsync(busRegId);
+        }
     }
 
 
