@@ -27,7 +27,7 @@ namespace mytown.Models
         //new
 
         [Column("service_description")]
-        public string ServiceDescription { get; set; } = string.Empty;
+        public string? ServiceDescription { get; set; } = string.Empty;
 
         [Column("years_of_experience")]
         public int? YearsOfExperience { get; set; }

@@ -158,13 +158,14 @@ namespace mytown.DataAccess.Repositories
 
             if (business == null)
                 return null;
+            var services = await _context.Service
+              .Where(x => x.BusRegId == busRegId)
+              .ToListAsync();
 
             var profile = await _context.ServiceProfiles
                 .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
 
-            var services = await _context.Service
-                .Where(x => x.BusRegId == busRegId)
-                .ToListAsync();
+          
 
             var result = new ServiceProfileDetailsDto
             {
@@ -173,17 +174,17 @@ namespace mytown.DataAccess.Repositories
                 BusinessLocation = profile?.BusinessLocation ?? string.Empty,
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
-                ServiceDescription = profile?.ServiceDescription,
+                ServiceDescription = profile?.ServiceDescription ?? string.Empty,
                 BusServId = profile?.BusServId ?? 0,
-                YearsOfExperience = profile?.YearsOfExperience,
-                GovtIdDocument = profile?.GovtIdDocument,
-                ProfessionalLicense = profile?.ProfessionalLicense,
-                ServiceAvailableLocations = profile?.ServiceAvailableLocations,
-                WorkingDays = profile?.WorkingDays,
+                YearsOfExperience = profile?.YearsOfExperience ?? 0,
+                GovtIdDocument = profile?.GovtIdDocument ?? string.Empty,
+                ProfessionalLicense = profile?.ProfessionalLicense ?? string.Empty,
+                ServiceAvailableLocations = profile?.ServiceAvailableLocations ?? string.Empty,
+                WorkingDays = profile?.WorkingDays ?? string.Empty,
                 WorkingStartTime = profile?.WorkingStartTime,
                 WorkingEndTime = profile?.WorkingEndTime,
-                ServiceLogo = profile?.ServiceLogo,
-                ServiceBanner = profile?.ServiceBanner,
+                ServiceLogo = profile?.ServiceLogo ?? string.Empty,
+                ServiceBanner = profile?.ServiceBanner ?? string.Empty,
 
                 Services = services.Select(x => new ServiceItemDto
                 {
