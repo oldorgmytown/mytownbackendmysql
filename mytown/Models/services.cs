@@ -27,7 +27,7 @@ namespace mytown.Models
         [Column("service_name")]
         public string ServiceName { get; set; }
 
-        [Column("service_description")]
+        [Column("service_type_description")]
         public string? ServiceTypeDescription { get; set; }
 
         [Column("inspection_fee")]
