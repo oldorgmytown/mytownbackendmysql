@@ -1,5 +1,4 @@
 name: Build and deploy ASP.Net Core app
-
 on:
   push:
     branches:
@@ -7,85 +6,70 @@ on:
     - backend-QA
     - backend-PROD
   workflow_dispatch:
-
 jobs:
-
   build:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '3.1'
-
+          dotnet-version: '8.0'  
       - name: Build
         run: dotnet build --configuration Release
-
       - name: Publish
         run: dotnet publish -c Release -o publish
-
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: app
           path: publish
-
 # -------- DEV --------
   deploy-dev:
     needs: build
     runs-on: windows-latest
     if: github.ref == 'refs/heads/transport-backed'
-
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: app
-
       - name: Deploy to Dev Slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp  
           slot-name: dev
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
           package: .
-
 # -------- QA --------
   deploy-qa:
     needs: build
     runs-on: windows-latest
     if: github.ref == 'refs/heads/backend-QA'
-
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: app
-
       - name: Deploy to Staging Slot
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp  
           slot-name: staging
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
           package: .
-
 # -------- PROD --------
   deploy-prod:
     needs: build
     runs-on: windows-latest
     if: github.ref == 'refs/heads/backend-PROD'
-
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: app
-
       - name: Deploy to Production
         uses: azure/webapps-deploy@v3
         with:
-          app-name: itsmytowndb
+          app-name: mytown-webapp  
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
           package: .
+
