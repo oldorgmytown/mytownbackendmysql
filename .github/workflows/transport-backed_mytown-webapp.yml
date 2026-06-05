@@ -1,5 +1,4 @@
 name: Build and deploy container app to Azure Web App - mytown-webapp
-name: Build and deploy container app to Azure Web App - mytown-webapp
 
 on:
   push:
@@ -13,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+
     steps:
       - uses: actions/checkout@v4
 
@@ -34,9 +34,6 @@ jobs:
           tags: |
             mytownacr.azurecr.io/mytown-app:${{ github.sha }}
             mytownacr.azurecr.io/mytown-app:latest
-          tags: |
-            mytownacr.azurecr.io/mytown-app:${{ github.sha }}
-            mytownacr.azurecr.io/mytown-app:latest
           file: ./Dockerfile
 
   deploy:
@@ -47,10 +44,9 @@ jobs:
 
     steps:
       - name: Deploy to Azure Web App (Production)
-      - name: Deploy to Azure Web App (Production)
         uses: azure/webapps-deploy@v2
         with:
           app-name: mytown-webapp
           slot-name: Production
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
-          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}  # ← Fixed: was latest, now sha
+          images: mytownacr.azurecr.io/mytown-app:${{ github.sha }}
