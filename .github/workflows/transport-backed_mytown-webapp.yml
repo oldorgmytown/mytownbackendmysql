@@ -3,6 +3,8 @@ name: Build and deploy ASP.Net Core app
 on:
   push:
     branches:
+    - transport-backed
+    - backend-QA
     - backend-PROD
   workflow_dispatch:
 
