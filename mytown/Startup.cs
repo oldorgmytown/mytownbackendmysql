@@ -241,10 +241,11 @@ private void RegisterApplicationServices(IServiceCollection services)
         app.UseStaticFiles();
 
         ConfigureSwagger(app, env, logger);
-     //   ApplyMigrations(app, logger);
-
-        app.UseRouting();
+        //   ApplyMigrations(app, logger);
+        //new latest
         app.UseCors("AllowFrontend");
+        app.UseRouting();
+       
         app.UseAuthentication();
         app.UseAuthorization();
 

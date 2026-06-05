@@ -1,93 +1,91 @@
-trigger:
+name: Build and deploy ASP.Net Core app
 
-* transport-backed
+on:
+  push:
+    branches:
+      # - transport-backed
+      # - backend-QA
+      - backend-PROD
+  workflow_dispatch:
 
-pool:
-vmImage: 'ubuntu-latest'
+jobs:
 
-variables:
-imageName: 'mytown-app'
-acrLoginServer: 'mytownacr.azurecr.io'
-webAppName: 'mytown-webapp'
-resourceGroup: 'CICDRG'
+  build:
+    runs-on: windows-latest
 
-stages:
-
-# -------- BUILD & PUSH --------
-
-* stage: Build
-  displayName: Build and Push Image
-  jobs:
-
-  * job: Build
     steps:
+      - uses: actions/checkout@v4
 
-    * task: Docker@2
-      displayName: Build and Push to ACR
-      inputs:
-      containerRegistry: 'ACR-Service-Connection'
-      repository: $(imageName)
-      command: 'buildAndPush'
-      Dockerfile: '**/Dockerfile'
-      tags: |
-      latest
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '3.1'
 
-# -------- DEV DEPLOY --------
+      - name: Build
+        run: dotnet build --configuration Release
 
-* stage: Deploy_Dev
-  displayName: Deploy to Dev Slot
-  dependsOn: Build
-  jobs:
+      - name: Publish
+        run: dotnet publish -c Release -o publish
 
-  * job: DeployDev
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: publish
+
+# -------- DEV --------
+  deploy-dev:
+    needs: build
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/transport-backed'
+
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
 
-    * task: AzureWebAppContainer@1
-      displayName: Deploy to Dev Slot
-      inputs:
-      azureSubscription: 'Azure-Service-Connection'
-      appName: $(webAppName)
-      resourceGroupName: $(resourceGroup)
-      deployToSlotOrASE: true
-      slotName: dev
-      containers: $(acrLoginServer)/$(imageName):latest
+      - name: Deploy to Dev Slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: itsmytowndb
+          slot-name: dev
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_DEV }}
+          package: .
 
-# -------- STAGING DEPLOY --------
+# -------- QA --------
+  deploy-qa:
+    needs: build
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/backend-QA'
 
-* stage: Deploy_Staging
-  displayName: Deploy to Staging Slot
-  dependsOn: Deploy_Dev
-  jobs:
-
-  * job: DeployStaging
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
 
-    * task: AzureWebAppContainer@1
-      displayName: Deploy to Staging Slot
-      inputs:
-      azureSubscription: 'Azure-Service-Connection'
-      appName: $(webAppName)
-      resourceGroupName: $(resourceGroup)
-      deployToSlotOrASE: true
-      slotName: staging
-      containers: $(acrLoginServer)/$(imageName):latest
+      - name: Deploy to Staging Slot
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: itsmytowndb
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_STAGING }}
+          package: .
 
-# -------- PRODUCTION (SWAP) --------
+# -------- PROD --------
+  deploy-prod:
+    needs: build
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/backend-PROD'
 
-* stage: Deploy_Production
-  displayName: Swap Staging to Production
-  dependsOn: Deploy_Staging
-  jobs:
-
-  * job: Swap
     steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
 
-    * task: AzureAppServiceManage@0
-      displayName: Swap Staging to Production
-      inputs:
-      azureSubscription: 'Azure-Service-Connection'
-      Action: 'Swap Slots'
-      WebAppName: $(webAppName)
-      ResourceGroupName: $(resourceGroup)
-      SourceSlot: 'staging'
-
+      - name: Deploy to Production
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: itsmytowndb
+          slot-name: Production
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_PROD }}
+          package: .

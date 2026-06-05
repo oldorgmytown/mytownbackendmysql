@@ -23,8 +23,8 @@ try
     // Create the WebApplication builder
     var builder = WebApplication.CreateBuilder(args);
 
-    
- //   builder.WebHost.UseUrls("http://0.0.0.0:80");
+    //added
+    builder.WebHost.UseUrls("http://0.0.0.0:80");
 
     // Setup logging
     Directory.CreateDirectory(Path.Combine(builder.Environment.ContentRootPath, "logs"));
