@@ -243,6 +243,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         ConfigureSwagger(app, env, logger);
      //   ApplyMigrations(app, logger);
 
+        //this works
+
         app.UseRouting();
         app.UseCors("AllowFrontend");
         app.UseAuthentication();
