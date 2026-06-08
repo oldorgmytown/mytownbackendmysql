@@ -29,21 +29,18 @@ namespace mytown.DataAccess.Repositories
             return (true, null);
         }
 
-        //  Changed from PendingVerification to PendingGuestVerification
         public async Task SavePendingVerificationAsync(PendingGuestVerification pending)
         {
             _context.PendingGuestVerifications.Add(pending);
             await _context.SaveChangesAsync();
         }
 
-        //  Changed from PendingVerification to PendingGuestVerification
         public async Task<PendingGuestVerification> FindPendingVerificationByTokenAsync(string token)
         {
             return await _context.PendingGuestVerifications
                 .FirstOrDefaultAsync(p => p.Token == token);
         }
 
-        //  Changed from PendingVerification to PendingGuestVerification
         public async Task<PendingGuestVerification> FindPendingVerificationByEmailAsync(string email)
         {
             return await _context.PendingGuestVerifications
@@ -51,7 +48,6 @@ namespace mytown.DataAccess.Repositories
                                        && p.ExpiryDate > DateTime.UtcNow);
         }
 
-        // Changed from PendingVerification to PendingGuestVerification
         public async Task DeletePendingVerificationAsync(string token)
         {
             var pending = await _context.PendingGuestVerifications
@@ -81,6 +77,27 @@ namespace mytown.DataAccess.Repositories
         {
             return await _context.GuestRegisters
                 .FirstOrDefaultAsync(g => g.GuestRegId == guestRegId);
+        }
+
+        //  New method - Get guest details by ID
+        public async Task<GuestDetailsDto> GetGuestDetailsByIdAsync(int guestRegId)
+        {
+            return await _context.GuestRegisters
+                .Where(g => g.GuestRegId == guestRegId)
+                .Select(g => new GuestDetailsDto
+                {
+                    GuestRegId = g.GuestRegId,
+                    Username = g.Username,
+                    Email = g.Email,
+                    PhoneNumber = g.PhoneNumber,
+                    Address = g.Address,
+                    Town = g.Town,
+                    City = g.City,
+                    State = g.State,
+                    Country = g.Country,
+                    PostalCode = g.PostalCode
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }

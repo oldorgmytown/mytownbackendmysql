@@ -8,5 +8,7 @@ namespace mytown.Services.Interfaces
         Task<(bool success, string message, int? guestRegId)> VerifyEmailAsync(string token);
         Task<(bool success, string message)> ResendVerificationEmailAsync(string email);
         Task<(bool success, string message, string? token, int? guestRegId)> LoginAsync(GuestLoginDto dto);
+        
+        Task<GuestDetailsDto> GetGuestDetailsAsync(int guestRegId);
     }
 }

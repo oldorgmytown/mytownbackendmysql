@@ -79,7 +79,6 @@ namespace mytown.Services.Implementations
             {
                 Username = dto.Username,
                 Email = dto.Email,
-                // ✅ Password removed - guest checkout style
                 Address = dto.Address,
                 Town = dto.Town,
                 City = dto.City,
@@ -131,7 +130,6 @@ namespace mytown.Services.Implementations
         }
 
         // ---------------- LOGIN ----------------
-        //  Login now by email only - no password
         public async Task<(bool success, string message, string? token, int? guestRegId)> LoginAsync(GuestLoginDto dto)
         {
             var guest = await _repo.GetGuestByEmailAsync(dto.Email);
@@ -145,11 +143,16 @@ namespace mytown.Services.Implementations
             if (!guest.IsEmailVerified)
                 return (false, "Please verify your email before logging in.", null, null);
 
-            
             string sessionId = Guid.NewGuid().ToString();
             var token = _tokenService.GenerateToken(guest.GuestRegId, guest.Email, "Guest", sessionId);
 
             return (true, "Login successful.", token, guest.GuestRegId);
+        }
+
+        // ---------------- GET GUEST DETAILS ----------------
+        public async Task<GuestDetailsDto> GetGuestDetailsAsync(int guestRegId)
+        {
+            return await _repo.GetGuestDetailsByIdAsync(guestRegId);
         }
     }
 }
