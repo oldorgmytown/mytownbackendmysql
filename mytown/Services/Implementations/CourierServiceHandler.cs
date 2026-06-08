@@ -236,7 +236,7 @@ namespace mytown.Services.Implementations
             // GUEST FLOW
             else if (request.GuestCustomerId.HasValue)
             {
-                var guest = await _repo.GetGuestByIdAsync(request.GuestCustomerId.Value)
+                var guest = await _repo.GetGuestDetailsByIdAsync(request.GuestCustomerId.Value)
                     ?? throw new Exception("Guest not found");
 
                 city = guest.City;
