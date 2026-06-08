@@ -21,7 +21,5 @@ namespace mytown.Models
         [JsonPropertyName("prod_type_name")]
         public string ProdTypeName { get; set; }
 
-        [ForeignKey(nameof(ProdTypeId))]
-        public ProductType Producttype { get; set; }
     }
 }

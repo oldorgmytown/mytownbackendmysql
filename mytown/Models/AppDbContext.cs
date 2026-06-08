@@ -17,7 +17,7 @@ namespace mytown.Models
             public DbSet<User> Users { get; set; }
             public DbSet<Registration> Registrations { get; set; } // Pluralized name
             public DbSet<BusinessRegister> BusinessRegisters { get; set; } // done
-           public DbSet<BusinessVerification> BusinessVerification { get; set; }//done
+            public DbSet<BusinessVerification> BusinessVerification { get; set; }//done
             public DbSet<BusinessProfile> BusinessProfiles { get; set; }//done
             public DbSet<BusinessService> BusinessServices { get; set; } //done
             public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
@@ -45,6 +45,7 @@ namespace mytown.Models
             public DbSet<ShippingDetails> ShippingDetails { get; set; } //done
             public DbSet<CourierService> CourierService { get; set; } //DONE
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
+            public DbSet<PendingGuestVerification> PendingGuestVerifications { get; set; }
 
             public DbSet<CourierVerification> CourierVerifications { get; set; } //new
             public DbSet<CourierBranch> CourierBranches { get; set; } //modified table
@@ -78,6 +79,7 @@ namespace mytown.Models
             public DbSet<CourierBranchService> CourierBranchServices { get; set; } // latest table
 
             public DbSet<Wishlist> Wishlist { get; set; }// new
+            public DbSet<GuestRegister> GuestRegisters { get; set; }
 
             public DbSet<TransporterRegister> TransporterRegisters { get; set; } //new
 

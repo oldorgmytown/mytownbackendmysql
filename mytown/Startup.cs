@@ -60,6 +60,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<mytown.DataAccess.IBusinessRepository, BusinessRepository>();
         services.AddScoped<IBusinessRegistrationValidator, BusinessRegistrationValidator>();
         services.AddScoped<IVerificationLinkBuildertransporter, VerificationLinkBuildertransporter>();
+       
+        services.AddScoped<IVerificationLinkBuilderGuest, VerificationLinkBuilderGuest>();
       
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
@@ -104,6 +106,8 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IServicesProfile, ServicesProfile>();
         services.AddScoped<IServiceSubCategoryRepository, ServiceSubCategoryRepository>();
         services.AddScoped<IServiceSubCategoryService, ServiceSubCategoryService>();
+        services.AddScoped<IGuestRepository, GuestRepository>();
+        services.AddScoped<IGuestService, GuestService>();
 
     }
 
