@@ -1,6 +1,8 @@
 using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
 using mytown.DTOs;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using MyTown.Models;
 
@@ -38,6 +40,21 @@ namespace mytown.Services.Implementations
         public async Task<ServiceProfileDetailsDto?> GetServiceProfileDetailsAsync(int busRegId)
         {
             return await _repo.GetServiceProfileDetailsAsync(busRegId);
+        }
+
+        public async Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId)
+        {
+            return await _repo.GetBusinessServiceTypesAsync(busRegId);
+        }
+
+        public async Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId)
+        {
+            return await _repo.GetServicesByBusRegIdAsync(busRegId);
+        }
+
+        public async Task<bool> UpdateServiceAsync(UpdateServiceDto dto)
+        {
+            return await _repo.UpdateServiceAsync(dto);
         }
     }
 

@@ -2185,12 +2185,54 @@ namespace mytown.Migrations
                         .HasColumnName("bus_serv_id");
 
                     b.Property<string>("BusinessLocation")
+                        .HasColumnName("serv_subcat_id");
+
+                    b.Property<string>("ServiceName")
                         .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("service_name");
+
+                    b.Property<string>("ServiceTypeDescription")
+                        .HasColumnType("longtext")
+                        .HasColumnName("service_type_description");
+
+                    b.Property<string>("ServiceTypeImage")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("service_type_image");
+
+                    b.Property<decimal?>("StartingPrice")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("starting_price");
+
+                    b.HasKey("ServiceId");
+
+                    b.ToTable("services");
+                });
+
+            modelBuilder.Entity("mytown.Models.ServiceProfile", b =>
+                {
+                    b.Property<int>("ServiceProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("service_profile_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ServiceProfileId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<int>("BusServId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_serv_id");
+
+                    b.Property<string>("BusinessLocation")
                         .HasColumnType("longtext")
                         .HasColumnName("business_location");
 
                     b.Property<string>("BusinessName")
-                        .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("business_name");
 
@@ -2216,6 +2258,10 @@ namespace mytown.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
                         .HasColumnName("service_banner");
+
+                    b.Property<string>("ServiceDescription")
+                        .HasColumnType("longtext")
+                        .HasColumnName("service_description");
 
                     b.Property<string>("ServiceLogo")
                         .HasMaxLength(255)

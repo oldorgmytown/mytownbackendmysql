@@ -10,6 +10,8 @@
 
         public int BusServId { get; set; }
 
+        public string? ServiceDescription { get; set; }
+
         public int? YearsOfExperience { get; set; }
 
         public string? GovtIdDocument { get; set; }
@@ -36,8 +38,9 @@
         public int ServSubcatId { get; set; }
 
         public string ServiceName { get; set; }
+        // new
 
-        public string? ServiceDescription { get; set; }
+        public string? ServiceTypeDescription { get; set; }
 
         public decimal? InspectionFee { get; set; }
 

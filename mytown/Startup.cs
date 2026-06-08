@@ -86,7 +86,11 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IUserService, mytown.Services.UserService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IAuthService, AuthService>();
-       services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
+        services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
+     //  services.AddScoped<IBusinessService, mytown.Services.BusinessService>();
+
         services.AddScoped<IBusinessProfileService, BusinessProfileService>();
         services.AddScoped<IShopperService, ShopperService>();
         services.AddScoped<IProductService, mytown.Services.Implementations.ProductService>();
@@ -164,8 +168,9 @@ private void RegisterApplicationServices(IServiceCollection services)
             "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
                 "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
                 "https://www.itismytown.com",
-                "https://kind-meadow-0fe6b9000-dev.eastasia.7.azurestaticapps.net" // new slor for frontend
-
+                "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net", // staging webapp service
+                "https://jolly-sea-066e8b500.7.azurestaticapps.net",// staging static web app for frontend
+                "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net" // staging slot new static web app for frontend
         };
         services.AddCors(options =>
         {
@@ -243,6 +248,8 @@ private void RegisterApplicationServices(IServiceCollection services)
 
         ConfigureSwagger(app, env, logger);
      //   ApplyMigrations(app, logger);
+
+        //this works
 
         app.UseRouting();
         app.UseCors("AllowFrontend");

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs;
+using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
@@ -80,6 +81,43 @@ namespace mytown.Controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpGet("getbusinessservicetypes_by_busregid")]
+        public async Task<IActionResult> GetBusinessServiceTypes(
+    [FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var result = await _service.GetBusinessServiceTypesAsync(busRegId);
+
+            return Ok(result);
+        }
+
+        // get all services
+        [HttpGet("getallservicesbybusregid")]
+        public async Task<IActionResult> GetServicesByBusRegId([FromQuery] int busRegId)
+        {
+            if (busRegId <= 0)
+                return BadRequest("Invalid BusRegId.");
+
+            var services = await _service.GetServicesByBusRegIdAsync(busRegId);
+
+            return Ok(services);
+        }
+
+        //edit service types on dashboard
+        [HttpPut("editservicetypes")]
+        public async Task<IActionResult> UpdateService(
+    [FromBody] UpdateServiceDto dto)
+        {
+            var updated = await _service.UpdateServiceAsync(dto);
+
+            if (!updated)
+                return NotFound("Service not found.");
+
+            return Ok("Service updated successfully.");
         }
     }
 }

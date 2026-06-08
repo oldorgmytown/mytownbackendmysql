@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DTOs;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
@@ -44,6 +45,7 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.BusServId = dto.BusServId;
                     existingProfile.BusinessName = dto.BusinessName;
                     existingProfile.BusinessLocation = dto.BusinessLocation;
+                   existingProfile.ServiceDescription = dto.ServiceDescription;
                     existingProfile.YearsOfExperience = dto.YearsOfExperience;
                     existingProfile.GovtIdDocument = dto.GovtIdDocument;
                     existingProfile.ProfessionalLicense = dto.ProfessionalLicense;
@@ -65,6 +67,7 @@ namespace mytown.DataAccess.Repositories
                         BusServId = dto.BusServId,
                         BusinessName = dto.BusinessName,
                         BusinessLocation = dto.BusinessLocation,
+                        ServiceDescription = dto.ServiceDescription,
                         YearsOfExperience = dto.YearsOfExperience,
                         GovtIdDocument = dto.GovtIdDocument,
                         ProfessionalLicense = dto.ProfessionalLicense,
@@ -84,46 +87,35 @@ namespace mytown.DataAccess.Repositories
                 await _context.SaveChangesAsync();
 
                 // SERVICES
+                // SERVICES
+                var existingServices = await _context.Service
+                    .Where(x => x.BusRegId == dto.BusRegId)
+                    .ToListAsync();
+
+                if (existingServices.Any())
+                {
+                    _context.Service.RemoveRange(existingServices);
+                    await _context.SaveChangesAsync();
+                }
+
                 if (dto.Services != null && dto.Services.Any())
                 {
                     foreach (var item in dto.Services)
                     {
-                        // Check existing service
-                        var existingService = await _context.Service
-                            .FirstOrDefaultAsync(x =>
-                                x.BusRegId == dto.BusRegId &&
-                                x.ServSubcatId == item.ServSubcatId &&
-                                x.ServiceName == item.ServiceName);
-
-                        if (existingService != null)
+                        var newService = new Service
                         {
-                            // UPDATE
-                            existingService.ServiceDescription = item.ServiceDescription;
-                            existingService.InspectionFee = item.InspectionFee;
-                            existingService.StartingPrice = item.StartingPrice;
-                            existingService.EstimatedDuration = item.EstimatedDuration;
-                            existingService.ServiceTypeImage = item.ServiceTypeImage;
+                            BusRegId = dto.BusRegId,
+                            BusServId = dto.BusServId,
+                            ServSubcatId = item.ServSubcatId,
+                            ServiceName = item.ServiceName,
+                            ServiceTypeDescription = item.ServiceTypeDescription,
+                            InspectionFee = item.InspectionFee,
+                            StartingPrice = item.StartingPrice,
+                            EstimatedDuration = item.EstimatedDuration,
+                            ServiceTypeImage = item.ServiceTypeImage
+                        };
 
-                            _context.Service.Update(existingService);
-                        }
-                        else
-                        {
-                            // INSERT
-                            var newService = new Service
-                            {
-                                BusRegId = dto.BusRegId,
-                                BusServId = dto.BusServId,
-                                ServSubcatId = item.ServSubcatId,
-                                ServiceName = item.ServiceName,
-                                ServiceDescription = item.ServiceDescription,
-                                InspectionFee = item.InspectionFee,
-                                StartingPrice = item.StartingPrice,
-                                EstimatedDuration = item.EstimatedDuration,
-                                ServiceTypeImage = item.ServiceTypeImage
-                            };
-
-                            _context.Service.Add(newService);
-                        }
+                        _context.Service.Add(newService);
                     }
 
                     await _context.SaveChangesAsync();
@@ -155,45 +147,114 @@ namespace mytown.DataAccess.Repositories
 
             if (business == null)
                 return null;
+            var services = await _context.Service
+              .Where(x => x.BusRegId == busRegId)
+              .ToListAsync();
 
             var profile = await _context.ServiceProfiles
                 .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
 
-            var services = await _context.Service
-                .Where(x => x.BusRegId == busRegId)
-                .ToListAsync();
+          
 
             var result = new ServiceProfileDetailsDto
             {
                 BusRegId = business.BusRegId,
-                BusinessName = business.BusinessName,
+                BusinessName = business?.BusinessName ?? string.Empty,
+                BusinessLocation = string.Join(", ",
+                new[]
+                {
+                    business.Town,
+                    business.BusinessCity,
+                    business.BusinessState,
+                    business.BusinessCountry
+                }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
-
+               ServiceDescription = profile?.ServiceDescription ?? string.Empty,
                 BusServId = profile?.BusServId ?? 0,
-                YearsOfExperience = profile?.YearsOfExperience,
-                GovtIdDocument = profile?.GovtIdDocument,
-                ProfessionalLicense = profile?.ProfessionalLicense,
-                ServiceAvailableLocations = profile?.ServiceAvailableLocations,
-                WorkingDays = profile?.WorkingDays,
+                YearsOfExperience = profile?.YearsOfExperience ?? 0,
+                GovtIdDocument = profile?.GovtIdDocument ?? string.Empty,
+                ProfessionalLicense = profile?.ProfessionalLicense ?? string.Empty,
+                ServiceAvailableLocations = profile?.ServiceAvailableLocations ?? string.Empty,
+                WorkingDays = profile?.WorkingDays ?? string.Empty,
                 WorkingStartTime = profile?.WorkingStartTime,
                 WorkingEndTime = profile?.WorkingEndTime,
-                ServiceLogo = profile?.ServiceLogo,
-                ServiceBanner = profile?.ServiceBanner,
+                ServiceLogo = profile?.ServiceLogo ?? string.Empty,
+                ServiceBanner = profile?.ServiceBanner ?? string.Empty,
 
                 Services = services.Select(x => new ServiceItemDto
                 {
                     ServiceId = x.ServiceId,
                     ServSubcatId = x.ServSubcatId,
                     ServiceName = x.ServiceName,
-                    ServiceDescription = x.ServiceDescription,
+                    ServiceTypeDescription = x.ServiceTypeDescription,
                     InspectionFee = x.InspectionFee,
                     StartingPrice = x.StartingPrice,
-                    EstimatedDuration = x.EstimatedDuration
+                    EstimatedDuration = x.EstimatedDuration,
+                    ServiceTypeImage = x?.ServiceTypeImage ?? string.Empty
                 }).ToList()
             };
 
             return result;
+        }
+
+        public async Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId)
+        {
+            var result = await (
+                from s in _context.Service
+                join bs in _context.BusinessServices
+                    on s.BusServId equals bs.BusServId
+                join sc in _context.ServiceSubCategory
+                    on s.ServSubcatId equals sc.ServSubcatId
+                where s.BusRegId == busRegId
+                group new { bs, sc } by new
+                {
+                    bs.BusServId,
+                    bs.BusinessServiceName
+                }
+                into g
+                select new BusinessServiceTypesDto
+                {
+                    BusServId = g.Key.BusServId,
+                    BusinessServiceName = g.Key.BusinessServiceName,
+                    ServiceTypeNames = g.Select(x => x.sc.ServiceTypeName)
+                                        .Distinct()
+                                        .ToList()
+                }
+            ).ToListAsync();
+
+            return result;
+        }
+
+        //get all services
+        public async Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId)
+        {
+            return await _context.Service
+                .Where(x => x.BusRegId == busRegId)
+                .OrderBy(x => x.ServiceName)
+                .ToListAsync();
+        }
+
+        //edit service types
+        public async Task<bool> UpdateServiceAsync(UpdateServiceDto dto)
+        {
+            var service = await _context.Service
+                .FirstOrDefaultAsync(x => x.ServiceId == dto.ServiceId);
+
+            if (service == null)
+                return false;
+
+           
+            service.ServiceTypeDescription = dto.ServiceTypeDescription;
+            service.InspectionFee = dto.InspectionFee;
+            service.StartingPrice = dto.StartingPrice;
+            service.EstimatedDuration = dto.EstimatedDuration;
+            service.ServiceTypeImage = dto.ServiceTypeImage;
+
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
     

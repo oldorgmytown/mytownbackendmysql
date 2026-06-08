@@ -102,7 +102,6 @@ namespace mytown.DataAccess.Repositories
                 HasActivePlan = hasActivePlan
             };
         }
-
         // -------------------------------------------------------------------------
         // TRAVEL PLANS
         // -------------------------------------------------------------------------
@@ -431,12 +430,12 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
                     DeliveryFee = d.DeliveryFee,
                     PackageTags = d.PackageTags,
+                    //DeliveryStatus = d.DeliveryStatus,
                     DeliveryStatus =
-                        d.DeliveryStatus != "Delivered" &&
+                    d.DeliveryStatus != "Delivered" &&
                     d.TravelPlan.ArrivalDate.Date < DateTime.UtcNow.Date
                         ? "Incomplete"
                         : d.DeliveryStatus,
-
                     AcceptedAt = d.AssignedAt,
                     EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
                 }

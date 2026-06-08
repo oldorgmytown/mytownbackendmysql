@@ -18,12 +18,16 @@ namespace mytown.Models
         [Column("bus_serv_id")]
         public int BusServId { get; set; }
 
-        [Required]
+       // [Required]
         [Column("business_name")]
         public string? BusinessName { get; set; }
-        [Required]
+       // [Required]
         [Column("business_location")]
         public string? BusinessLocation { get; set; }
+        //new
+
+        [Column("service_description")]
+        public string? ServiceDescription { get; set; } = string.Empty;
 
         [Column("years_of_experience")]
         public int? YearsOfExperience { get; set; }
