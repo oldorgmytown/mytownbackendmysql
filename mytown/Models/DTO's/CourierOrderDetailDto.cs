@@ -8,7 +8,7 @@
         public DateTime OrderDate { get; set; }
 
         // Shopper Info
-        public int ShopperId { get; set; }
+        public int? ShopperId { get; set; }
         public string ShopperName { get; set; }
         public string ShopperPhone { get; set; }
 
