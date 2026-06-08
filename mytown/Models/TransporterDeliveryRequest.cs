@@ -19,9 +19,14 @@ namespace mytown.Models
         [Column("transporter_reg_id")]
         public int TransporterRegId { get; set; }
 
-        [Required]
         [Column("shopper_reg_id")]
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+
+        [Column("guest_reg_id")]
+        public int? GuestRegId { get; set; }
+
+        [Column("is_guest_order")]
+        public bool IsGuestOrder { get; set; }
 
         [Column("order_id")]
         public int? OrderId { get; set; }

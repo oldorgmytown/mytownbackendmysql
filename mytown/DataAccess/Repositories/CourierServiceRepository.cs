@@ -706,7 +706,25 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-
+        public async Task<GuestDetailsDto> GetGuestDetailsByIdAsync(int guestRegId)
+        {
+            return await _context.GuestRegisters
+                .Where(g => g.GuestRegId == guestRegId)
+                .Select(g => new GuestDetailsDto
+                {
+                    GuestRegId = g.GuestRegId,
+                    Username = g.Username,
+                    Email = g.Email,
+                    PhoneNumber = g.PhoneNumber,
+                    Address = g.Address,
+                    Town = g.Town,
+                    City = g.City,
+                    State = g.State,
+                    Country = g.Country,
+                    PostalCode = g.PostalCode
+                })
+                .FirstOrDefaultAsync();
+        }
         public async Task<BestcourierinfoDto?> FindMatchingTransporterAsync(
      string storeTown,
      string storeCity,

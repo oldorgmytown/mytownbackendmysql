@@ -7,7 +7,7 @@
         public int TransactionId { get; set; }
         public DateTime OrderDate { get; set; }
 
-        public int ShopperId { get; set; }
+        public int? ShopperId { get; set; }
 
         public int StoreId { get; set; }
         public string StoreName { get; set; }

@@ -8,7 +8,7 @@
         public int TransactionId { get; set; }
 
     // Shopper info
-    public int ShopperId { get; set; }
+    public int? ShopperId { get; set; }
     public string ShopperName { get; set; }
     public string ShopperPhone { get; set; }
 

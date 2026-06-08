@@ -177,7 +177,9 @@ public async Task ProcessPostPaymentAsync(int orderId)
             {
                 PlanId = shipping.TransporterPlanId ?? 0,
                 TransporterRegId = transporterRegId,
-                ShopperRegId     = storeOrder.Order.ShopperRegId,
+                ShopperRegId = storeOrder.Order.ShopperRegId,
+                GuestRegId = storeOrder.Order.GuestRegId,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
                 OrderId          = orderId,
                 StoreOrderId     = shipping.StoreOrderId,
                 PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),

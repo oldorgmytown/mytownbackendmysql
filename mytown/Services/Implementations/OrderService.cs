@@ -63,7 +63,7 @@ namespace mytown.Services.Implementations
             {
                 var shopperNotification = new ShopperDBNotifications
                 {
-                    ShopperRegId = orderConfirmation.ShopperRegId,
+                    ShopperRegId = orderConfirmation.ShopperRegId ?? 0,
                     Title = "Order Confirmation",
                     Message = $"Your order #{orderId} has been successfully placed.",
                     IsRead = false,
