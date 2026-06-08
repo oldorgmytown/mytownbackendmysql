@@ -160,7 +160,15 @@ namespace mytown.DataAccess.Repositories
             {
                 BusRegId = business.BusRegId,
                 BusinessName = business?.BusinessName ?? string.Empty,
-                BusinessLocation = profile?.BusinessLocation ?? string.Empty,
+                BusinessLocation = string.Join(", ",
+                new[]
+                {
+                    business.Town,
+                    business.BusinessCity,
+                    business.BusinessState,
+                    business.BusinessCountry
+                }.Where(x => !string.IsNullOrWhiteSpace(x))),
+                
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
                ServiceDescription = profile?.ServiceDescription ?? string.Empty,
