@@ -1635,7 +1635,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Customer</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ShopperName)}
+              {WebUtility.HtmlEncode(dto.CustomerName)}
             </td>
           </tr>
           <tr>
@@ -1643,7 +1643,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Phone</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ShopperPhone)}
+              {WebUtility.HtmlEncode(dto.CustomerPhone)}
             </td>
           </tr>
           <tr>
@@ -2559,7 +2559,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Customer</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ShopperName)}
+              {WebUtility.HtmlEncode(dto.CustomerName)}
             </td>
           </tr>
           <tr>
@@ -2567,7 +2567,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Phone</td>
             <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ShopperPhone)}
+              {WebUtility.HtmlEncode(dto.CustomerPhone)}
             </td>
           </tr>
           <tr>

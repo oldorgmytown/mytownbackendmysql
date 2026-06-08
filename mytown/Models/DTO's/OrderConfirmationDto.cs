@@ -7,6 +7,10 @@
         public decimal TotalAmount { get; set; }
 
         public int? ShopperRegId { get; set; }
+        // NEW
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
+
         public string ShopperName { get; set; } = string.Empty;
         public string ShopperEmail { get; set; } = string.Empty;
         public string ShopperPhone { get; set; } = string.Empty;

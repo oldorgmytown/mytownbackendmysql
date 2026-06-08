@@ -27,6 +27,7 @@ namespace mytown.Models
         [Column("is_guest_order")]
         public bool IsGuestOrder { get; set; }
 
+       
         // Selected delivery address
         [Column("selected_alt_address_id")]
         public int? SelectedAltAddressId { get; set; }

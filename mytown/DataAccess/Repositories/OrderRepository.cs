@@ -543,18 +543,28 @@ namespace mytown.DataAccess.Repositories
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
             // 1️⃣ Order + Shopper basic details + PaymentMethod
-            var order = await _context.Orders
+                        var order = await _context.Orders
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new
                 {
                     o.OrderId,
                     o.OrderDate,
                     o.ShopperRegId,
-                    ShopperName = o.ShopperRegister.Username,
-                    ShopperEmail = o.ShopperRegister.Email,
-                    ShopperPhone = o.ShopperRegister.PhoneNumber,
+                    o.GuestRegId,
+                    o.IsGuestOrder,
 
-                    // Get latest payment object
+                    ShopperName = o.IsGuestOrder
+                        ? o.GuestRegister.Username
+                        : o.ShopperRegister.Username,
+
+                    ShopperEmail = o.IsGuestOrder
+                        ? o.GuestRegister.Email
+                        : o.ShopperRegister.Email,
+
+                    ShopperPhone = o.IsGuestOrder
+                        ? o.GuestRegister.PhoneNumber
+                        : o.ShopperRegister.PhoneNumber,
+
                     LatestPayment = _context.Payments
                         .Where(p => p.OrderId == o.OrderId)
                         .OrderByDescending(p => p.PaymentDate)
@@ -674,6 +684,9 @@ namespace mytown.DataAccess.Repositories
                 TotalAmount = order.LatestPayment?.AmountPaid ?? 0,
 
                 ShopperRegId = order.ShopperRegId,
+                GuestRegId = order.GuestRegId,
+                IsGuestOrder = order.IsGuestOrder,
+
                 ShopperName = order.ShopperName,
                 ShopperEmail = order.ShopperEmail,
                 ShopperPhone = order.ShopperPhone,
