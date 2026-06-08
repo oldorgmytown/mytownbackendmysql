@@ -24,5 +24,6 @@ namespace mytown.DataAccess.Interfaces
         Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id);
         Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress addressDto);
         Task<bool> DeleteAddressAsync(int id);
+        Task<bool> IsEmailExistsAsync(string email);
     }
 }
