@@ -106,5 +106,26 @@ namespace mytown.Controllers
                 return StatusCode(500, new { error = "Something went wrong. Please try again." });
             }
         }
+
+        // ---------------- GET GUEST DETAILS ----------------
+        //[Authorize]
+        [HttpGet("details/{guestRegId}")]
+        public async Task<IActionResult> GetGuestDetails(int guestRegId)
+        {
+            try
+            {
+                var result = await _guestService.GetGuestDetailsAsync(guestRegId);
+
+                if (result == null)
+                    return NotFound(new { error = "Guest not found." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching guest details for {GuestRegId}", guestRegId);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
     }
 }

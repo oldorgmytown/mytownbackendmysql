@@ -16,5 +16,6 @@ namespace mytown.DataAccess.Interfaces
         Task<GuestRegister> RegisterGuestAsync(GuestRegister guest);
         Task<GuestRegister?> GetGuestByEmailAsync(string email);
         Task<GuestRegister?> GetGuestByIdAsync(int guestRegId);
+        Task<GuestDetailsDto> GetGuestDetailsByIdAsync(int guestRegId);
     }
 }
