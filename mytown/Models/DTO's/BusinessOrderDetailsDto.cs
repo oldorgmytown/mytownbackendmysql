@@ -11,6 +11,8 @@
     public int? ShopperId { get; set; }
     public string ShopperName { get; set; }
     public string ShopperPhone { get; set; }
+    public string CustomerName { get; set; }
+    public string CustomerPhone { get; set; }
 
     // Store info
     public int StoreId { get; set; }
