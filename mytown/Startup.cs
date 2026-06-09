@@ -252,7 +252,7 @@ private void RegisterApplicationServices(IServiceCollection services)
         //this is same and working and again changed
         app.UseCors("AllowFrontend");
         app.UseRouting();
-        app.UseCors("AllowFrontend");
+        //app.UseCors("AllowFrontend");
         app.UseAuthentication();
         app.UseAuthorization();
 
