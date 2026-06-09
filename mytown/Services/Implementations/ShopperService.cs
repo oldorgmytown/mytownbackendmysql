@@ -113,7 +113,7 @@ namespace mytown.Services.Implementations
                 Email = email,
                 Token = token,
                 ExpiryDate = expiry,
-                JsonPayload = existing.JsonPayload  // ← carry forward
+                JsonPayload = existing.JsonPayload
             };
 
             await _repo.SavePendingVerification(pending);
@@ -159,5 +159,16 @@ namespace mytown.Services.Implementations
 
         public Task<bool> DeleteAddressAsync(int id)
             => _repo.DeleteAddressAsync(id);
+
+        // New method - Check if email exists
+        public async Task<(bool exists, string message)> CheckEmailExistsAsync(string email)
+        {
+            var exists = await _repo.IsEmailExistsAsync(email);
+
+            if (exists)
+                return (true, "This email is already registered. Please login to continue.");
+
+            return (false, "Email not found.");
+        }
     }
 }

@@ -11,13 +11,23 @@ namespace mytown.Models
         [Column("order_id")]
         public int OrderId { get; set; }
 
-        [Required]
+       // [Required]
         [Column("shopper_reg_id")]
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
 
         [ForeignKey("ShopperRegId")]
         public ShopperRegister ShopperRegister { get; set; }
 
+        [Column("guest_reg_id")]
+        public int? GuestRegId { get; set; }
+
+        [ForeignKey("GuestRegId")]
+        public GuestRegister? GuestRegister { get; set; }
+
+        [Column("is_guest_order")]
+        public bool IsGuestOrder { get; set; }
+
+       
         // Selected delivery address
         [Column("selected_alt_address_id")]
         public int? SelectedAltAddressId { get; set; }

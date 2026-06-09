@@ -362,6 +362,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 PlanId = dto.PlanId,
                 TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.GuestRegId.HasValue,
                 OrderId = dto.OrderId,
                 StoreOrderId = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
@@ -510,7 +512,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             // ── NOTIFY SHOPPER ──
             _context.ShopperDBNotifications.Add(new ShopperDBNotifications
             {
-                ShopperRegId = delivery.ShopperRegId,
+                ShopperRegId = delivery.ShopperRegId ?? 0,
                 Title = "Delivery Update",
                 Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
                 IsRead = false,

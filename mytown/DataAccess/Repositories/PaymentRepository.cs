@@ -233,6 +233,8 @@ namespace mytown.DataAccess.Repositories
                 PlanId = dto.PlanId,
                 TransporterRegId = dto.TransporterRegId,
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.IsGuestOrder,
                 OrderId = dto.OrderId,
                 StoreOrderId     = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,

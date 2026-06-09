@@ -184,6 +184,8 @@ namespace mytown.DataAccess.Repositories
             var storeOrder = await _context.StoreOrders
                 .Include(so => so.Order)
                     .ThenInclude(o => o.ShopperRegister)
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.GuestRegister)
                 .Include(so => so.Store)
                 .Include(so => so.OrderDetails)
                     .ThenInclude(od => od.Product)
@@ -199,9 +201,9 @@ namespace mytown.DataAccess.Repositories
                 .Include(sd => sd.CourierBranch)
                     .ThenInclude(cb => cb.CourierService)
                 .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
-            //package dimensions
+
             var package = await _context.ShippingPackageDetails
-    .FirstOrDefaultAsync(p => p.StoreOrderId == storeOrderId);
+                .FirstOrDefaultAsync(p => p.StoreOrderId == storeOrderId);
 
             int estimateDays = shipping?.EstimatedDays ?? 0;
 
@@ -213,25 +215,55 @@ namespace mytown.DataAccess.Repositories
 
             var shippingCost = shipping?.Cost ?? 0;
 
+            string customerName;
+            string customerPhone;
+            int? shopperId = null;
+            int? guestRegId = null;
+
+            if (storeOrder.Order.IsGuestOrder)
+            {
+                guestRegId = storeOrder.Order.GuestRegId;
+
+                customerName =
+                    storeOrder.Order.GuestRegister?.Username?? "";
+
+                customerPhone =
+                    storeOrder.Order.GuestRegister?.PhoneNumber ?? "";
+            }
+            else
+            {
+                shopperId = storeOrder.Order.ShopperRegId;
+
+                customerName =
+                    storeOrder.Order.ShopperRegister?.Username ?? "";
+
+                customerPhone =
+                    storeOrder.Order.ShopperRegister?.PhoneNumber ?? "";
+            }
+
             return new CourierOrderDetailDto
             {
                 StoreOrderId = storeOrder.StoreOrderId,
                 OrderId = storeOrder.OrderId,
                 OrderDate = storeOrder.Order.OrderDate,
 
-                ShopperId = storeOrder.Order.ShopperRegId,
-                ShopperName = storeOrder.Order.ShopperRegister.Username,
-                ShopperPhone = storeOrder.Order.ShopperRegister.PhoneNumber,
+                ShopperId = shopperId,
+                GuestRegId = guestRegId,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
+
+                CustomerName = customerName,
+                CustomerPhone = customerPhone,
 
                 StoreId = storeOrder.StoreId,
                 StoreName = storeOrder.Store.BusinessName,
-                //StoreTown = storeOrder.Store.Town,
+
                 StoreTown =
                     (storeOrder.Store.Address1 ?? "") + ", " +
                     (storeOrder.Store.Town ?? "") + ", " +
                     (storeOrder.Store.BusinessCity ?? "") + ", " +
                     (storeOrder.Store.BusinessState ?? "") + ", " +
                     (storeOrder.Store.BusinessCountry ?? ""),
+
                 ShippingMethod = shipping?.ShippingType,
                 ShippingCost = shippingCost,
                 ShippingAddress = shipping?.DeliveryAddress,
@@ -242,7 +274,6 @@ namespace mytown.DataAccess.Repositories
                 CourierServiceName = shipping?.CourierBranch?.CourierService?.CourierServiceName,
                 TrackingId = shipping?.TrackingId,
 
-                //package dimensions
                 PackageLength = package?.PackageLength,
                 PackageWidth = package?.PackageWidth,
                 PackageHeight = package?.PackageHeight,
