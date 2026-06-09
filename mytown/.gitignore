@@ -31,6 +31,3 @@ dist/
 # Environment files
 .env
 
-appsettings.Development.json
-appsettings.QA.json
-appsettings.Production.json

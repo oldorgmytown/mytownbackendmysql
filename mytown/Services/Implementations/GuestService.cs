@@ -44,37 +44,7 @@ namespace mytown.Services.Implementations
             if (isTaken)
                 return (false, "This email is already registered.");
 
-            string token = Guid.NewGuid().ToString();
-            DateTime expiry = DateTime.UtcNow.AddHours(24);
-
-            string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-            string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
-
-            var pending = new PendingGuestVerification
-            {
-                Email = dto.Email,
-                Token = token,
-                ExpiryDate = expiry,
-                JsonPayload = JsonSerializer.Serialize(dto),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _repo.SavePendingVerificationAsync(pending);
-            await _emailService.SendVerificationEmail(dto.Email, link);
-
-            return (true, "Verification email sent.");
-        }
-
-        // ---------------- VERIFY EMAIL ----------------
-        public async Task<(bool success, string message, int? guestRegId)> VerifyEmailAsync(string token)
-        {
-            var pending = await _repo.FindPendingVerificationByTokenAsync(token);
-
-            if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
-                return (false, "Invalid or expired verification link.", null);
-
-            var dto = JsonSerializer.Deserialize<GuestRegisterDto>(pending.JsonPayload);
-
+            //  Directly register guest without email verification
             var guest = new GuestRegister
             {
                 Username = dto.Username,
@@ -92,41 +62,81 @@ namespace mytown.Services.Implementations
             };
 
             await _repo.RegisterGuestAsync(guest);
-            await _repo.DeletePendingVerificationAsync(token);
 
-            return (true, "Email verified successfully.", guest.GuestRegId);
+            // ❌ Email verification commented out
+            // string token = Guid.NewGuid().ToString();
+            // DateTime expiry = DateTime.UtcNow.AddHours(24);
+            // string frontendBaseUrl = _configuration["FrontendBaseUrl"];
+            // string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
+            // var pending = new PendingGuestVerification
+            // {
+            //     Email = dto.Email,
+            //     Token = token,
+            //     ExpiryDate = expiry,
+            //     JsonPayload = JsonSerializer.Serialize(dto),
+            //     CreatedAt = DateTime.UtcNow
+            // };
+            // await _repo.SavePendingVerificationAsync(pending);
+            // await _emailService.SendVerificationEmail(dto.Email, link);
+
+            return (true, "Guest registered successfully.");
         }
 
-        // ---------------- RESEND EMAIL ----------------
+        // ---------------- VERIFY EMAIL (commented out - not needed) ----------------
+        public async Task<(bool success, string message, int? guestRegId)> VerifyEmailAsync(string token)
+        {
+            // ❌ Email verification commented out
+            // var pending = await _repo.FindPendingVerificationByTokenAsync(token);
+            // if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
+            //     return (false, "Invalid or expired verification link.", null);
+            // var dto = JsonSerializer.Deserialize<GuestRegisterDto>(pending.JsonPayload);
+            // var guest = new GuestRegister
+            // {
+            //     Username = dto.Username,
+            //     Email = dto.Email,
+            //     Address = dto.Address,
+            //     Town = dto.Town,
+            //     City = dto.City,
+            //     State = dto.State,
+            //     Country = dto.Country,
+            //     PostalCode = dto.PostalCode,
+            //     PhoneNumber = dto.PhoneNumber,
+            //     PhotoName = dto.PhotoName,
+            //     IsEmailVerified = true,
+            //     Status = "Active"
+            // };
+            // await _repo.RegisterGuestAsync(guest);
+            // await _repo.DeletePendingVerificationAsync(token);
+            // return (true, "Email verified successfully.", guest.GuestRegId);
+
+            return (true, "Email verification not required.", null);
+        }
+
+        // ---------------- RESEND EMAIL (commented out - not needed) ----------------
         public async Task<(bool success, string message)> ResendVerificationEmailAsync(string email)
         {
-            var existing = await _repo.FindPendingVerificationByEmailAsync(email);
+            // ❌ Resend verification commented out
+            // var existing = await _repo.FindPendingVerificationByEmailAsync(email);
+            // if (existing == null)
+            //     return (false, "No pending verification found.");
+            // await _repo.DeletePendingVerificationAsync(existing.Token);
+            // string token = Guid.NewGuid().ToString();
+            // DateTime expiry = DateTime.UtcNow.AddHours(24);
+            // var pending = new PendingGuestVerification
+            // {
+            //     Email = email,
+            //     Token = token,
+            //     ExpiryDate = expiry,
+            //     JsonPayload = existing.JsonPayload,
+            //     CreatedAt = DateTime.UtcNow
+            // };
+            // await _repo.SavePendingVerificationAsync(pending);
+            // string frontendBaseUrl = _configuration["FrontendBaseUrl"];
+            // string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
+            // await _emailService.SendVerificationEmail(email, link);
+            // return (true, "Verification email resent.");
 
-            if (existing == null)
-                return (false, "No pending verification found.");
-
-            await _repo.DeletePendingVerificationAsync(existing.Token);
-
-            string token = Guid.NewGuid().ToString();
-            DateTime expiry = DateTime.UtcNow.AddHours(24);
-
-            var pending = new PendingGuestVerification
-            {
-                Email = email,
-                Token = token,
-                ExpiryDate = expiry,
-                JsonPayload = existing.JsonPayload,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _repo.SavePendingVerificationAsync(pending);
-
-            string frontendBaseUrl = _configuration["FrontendBaseUrl"];
-            string link = _verificationLinkBuilder.BuildLink(frontendBaseUrl, token);
-
-            await _emailService.SendVerificationEmail(email, link);
-
-            return (true, "Verification email resent.");
+            return (true, "Email verification not required.");
         }
 
         // ---------------- LOGIN ----------------
