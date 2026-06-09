@@ -3511,4 +3511,47 @@ public class EmailService : IEmailService
 }
 
 
+    public async Task SendGuestNotificationforTracking(
+    string email,
+    string guestName,
+    OrderConfirmationDto orderdto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            var htmlBody = BuildShopperNotificationTemplate(
+                WebUtility.HtmlEncode(guestName),
+                orderdto);
+
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"Order Confirmation - {orderdto.OrderId}",
+                    Body = htmlBody,
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(email);
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+            }
+
+            Console.WriteLine($"Guest order confirmation email sent to {email}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending guest notification email: {ex.Message}");
+            throw new Exception("Failed to send guest notification email.");
+        }
+    }
+
 }

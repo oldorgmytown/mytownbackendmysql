@@ -473,14 +473,13 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
     public async Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId)
     {
-        // 🔹 Get order + shopper + store + shipping info
+        // 🔹 Get order + customer + store + shipping info
         var orderData = await (
             from so in _context.StoreOrders
             join o in _context.Orders on so.OrderId equals o.OrderId
             join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
             join p in _context.Payments on o.OrderId equals p.OrderId
             join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
-            join sh in _context.ShopperRegisters on o.ShopperRegId equals sh.ShopperRegId
             where so.StoreOrderId == storeOrderId
             select new
             {
@@ -488,31 +487,74 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 o.OrderId,
                 o.OrderDate,
                 p.PaymentId,
+
                 o.ShopperRegId,
-                ShopperName = sh.Username,
-                ShopperPhone = sh.PhoneNumber,
+                o.GuestRegId,
+                o.IsGuestOrder,
+
                 so.StoreId,
+
                 StoreName = s.BusinessName,
+
                 StoreTown =
                     (s.Address1 ?? "") + ", " +
                     (s.Town ?? "") + ", " +
                     (s.BusinessCity ?? "") + ", " +
                     (s.BusinessState ?? "") + ", " +
                     (s.BusinessCountry ?? ""),
+
                 sd.ShippingType,
                 sd.DeliveryAddress,
                 sd.EstimatedDays,
                 sd.TrackingId,
                 sd.BranchId,
-                sd.TransporterRegId ,
-                sd.ShippingStatus// ← include both IDs
+                sd.TransporterRegId,
+                sd.ShippingStatus
             }
         ).FirstOrDefaultAsync();
 
         if (orderData == null)
             return null;
 
-        // 🔹 Get courier details if BranchId exists
+        // 🔹 Customer Details (Shopper OR Guest)
+        string customerName = "";
+        string customerPhone = "";
+
+        if (orderData.IsGuestOrder)
+        {
+            var guest = await _context.GuestRegisters
+                .Where(g => g.GuestRegId == orderData.GuestRegId)
+                .Select(g => new
+                {
+                    g.Username,
+                    g.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (guest != null)
+            {
+                customerName = guest.Username;
+                customerPhone = guest.PhoneNumber;
+            }
+        }
+        else
+        {
+            var shopper = await _context.ShopperRegisters
+                .Where(s => s.ShopperRegId == orderData.ShopperRegId)
+                .Select(s => new
+                {
+                    s.Username,
+                    s.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (shopper != null)
+            {
+                customerName = shopper.Username;
+                customerPhone = shopper.PhoneNumber;
+            }
+        }
+
         // 🔹 Courier details
         string courierServiceName = null;
         string courierPhone = null;
@@ -568,7 +610,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             }
         }
 
-        // 🔹 Get products with image (SKU image preferred)
+        // 🔹 Products
         var products = await (
             from od in _context.OrderDetails
             join pr in _context.products on od.ProductId equals pr.ProductId
@@ -603,16 +645,19 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var productAmount = products.Sum(p => p.Amount);
 
-        // 🔹 Combine everything
         return new BusinessOrderDetailsDto
         {
             StoreOrderId = orderData.StoreOrderId,
-            OrderId = orderData.OrderId, //new
+            OrderId = orderData.OrderId,
             OrderDate = orderData.OrderDate,
             TransactionId = orderData.PaymentId,
+
             ShopperId = orderData.ShopperRegId,
-            ShopperName = orderData.ShopperName,
-            ShopperPhone = orderData.ShopperPhone,
+            GuestRegId = orderData.GuestRegId,
+            IsGuestOrder = orderData.IsGuestOrder,
+
+            CustomerName = customerName,
+            CustomerPhone = customerPhone,
 
             StoreId = orderData.StoreId,
             StoreName = orderData.StoreName,
@@ -621,13 +666,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             Products = products,
             ProductAmount = productAmount,
 
-            ShippingMethod = orderData.ShippingType, //updated
+            ShippingMethod = orderData.ShippingType,
             ShippingAddress = orderData.DeliveryAddress,
             EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
             TrackingId = orderData.TrackingId,
             ShippingStatus = orderData.ShippingStatus,
 
-            // Courier (populated if courier handles shipping)
             CourierServiceName = courierServiceName,
             CourierBranchPhone = courierPhone,
             CourierBranchContactname = courierBranchContact,
@@ -638,7 +682,6 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             TransporterEmail = transporterEmail
         };
     }
-
     public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
     int storeId,
     string? search,

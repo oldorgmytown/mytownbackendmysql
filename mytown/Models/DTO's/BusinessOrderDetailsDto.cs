@@ -7,13 +7,20 @@
     public DateTime OrderDate { get; set; }
         public int TransactionId { get; set; }
 
-    // Shopper info
-    public int? ShopperId { get; set; }
-    public string ShopperName { get; set; }
-    public string ShopperPhone { get; set; }
+        // Shopper info
+        //public int? ShopperId { get; set; }
+        //public string ShopperName { get; set; }
+        //public string ShopperPhone { get; set; }
 
-    // Store info
-    public int StoreId { get; set; }
+        public int? ShopperId { get; set; }
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
+
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+
+        // Store info
+        public int StoreId { get; set; }
     public string StoreName { get; set; }
     public string StoreTown { get; set; }
 

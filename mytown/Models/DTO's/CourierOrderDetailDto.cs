@@ -7,10 +7,17 @@
         public int OrderId { get; set; }
         public DateTime OrderDate { get; set; }
 
-        // Shopper Info
+        // Shopper and guest Info
+        //public int? ShopperId { get; set; }
+        //public string ShopperName { get; set; }
+        //public string ShopperPhone { get; set; }
+
         public int? ShopperId { get; set; }
-        public string ShopperName { get; set; }
-        public string ShopperPhone { get; set; }
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
+
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
 
         // Store Info
         public int StoreId { get; set; }

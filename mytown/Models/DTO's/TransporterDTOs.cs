@@ -255,7 +255,9 @@ namespace mytown.Models.DTO_s
     public class ShopperDeliveryRequestDto
     {
         public int PlanId { get; set; }
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
         public int? OrderId { get; set; }
         public int StoreOrderId { get; set; } // link to store order for easier tracking
         public string PickupLocation { get; set; }

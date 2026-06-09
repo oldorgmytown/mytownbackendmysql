@@ -362,6 +362,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 PlanId = dto.PlanId,
                 TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.GuestRegId.HasValue,
                 OrderId = dto.OrderId,
                 StoreOrderId = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
