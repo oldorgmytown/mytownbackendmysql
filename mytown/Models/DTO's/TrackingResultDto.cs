@@ -20,13 +20,24 @@ namespace mytown.Models.DTO_s
         public DateTime OrderDate { get; set; }
         public bool IsGuestOrder { get; set; }
 
-        //  New - Product details
-        public string ProductName { get; set; }
-        public string ProductImage { get; set; }
-
-        // Customer Info
+              // Customer Info
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
         public string CustomerPhone { get; set; }
+
+        public List<TrackingProductDto> Products { get; set; } = new();
     }
+}
+
+
+
+
+public class TrackingProductDto
+{
+    public int ProductId { get; set; }
+    public int? SkuId { get; set; }
+    public string ProductName { get; set; }
+    public string ProductImage { get; set; }
+    public int Quantity { get; set; }
+    public decimal ProductCost { get; set; }
 }

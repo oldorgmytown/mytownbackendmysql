@@ -799,6 +799,37 @@ namespace mytown.DataAccess.Repositories
                 customerPhone = "Unknown";
             }
 
+                        var products = await (
+                from od in _context.OrderDetails
+                join p in _context.products
+                    on od.ProductId equals p.ProductId
+
+                join sku in _context.Sku_ProductVariants
+                    on od.SkuId equals sku.SkuId into skuGroup
+                from sku in skuGroup.DefaultIfEmpty()
+
+                join img in _context.ProductImages
+                    on sku.SkuId equals img.SkuId into imgGroup
+                from img in imgGroup
+                    .OrderBy(i => i.SortOrder)
+                    .Take(1)
+                    .DefaultIfEmpty()
+
+                where od.OrderId == order.OrderId
+
+                select new TrackingProductDto
+                {
+                    ProductId = p.ProductId,
+                    SkuId = od.SkuId,
+                    ProductName = p.ProductName,
+                    Quantity = od.Quantity,
+                    ProductCost = od.Price,
+                    ProductImage = img != null
+                        ? img.FileName
+                        : p.ProductImage
+                }
+            ).ToListAsync();
+
             return new TrackingResultDto
             {
                 TrackingId = shipping.TrackingId,
@@ -807,14 +838,19 @@ namespace mytown.DataAccess.Repositories
                 EstimatedDays = shipping.EstimatedDays,
                 DeliveredDate = shipping.DeliveredDate,
                 DeliveryAddress = shipping.DeliveryAddress,
+
                 OrderId = order.OrderId,
                 OrderStatus = order.OrderStatus,
                 TotalAmount = order.TotalAmount,
                 OrderDate = order.OrderDate,
+
                 IsGuestOrder = order.IsGuestOrder,
+
                 CustomerName = customerName,
                 CustomerEmail = customerEmail,
-                CustomerPhone = customerPhone
+                CustomerPhone = customerPhone,
+
+                Products = products
             };
         }
     }
