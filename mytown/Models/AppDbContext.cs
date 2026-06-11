@@ -107,6 +107,10 @@ namespace mytown.Models
             public DbSet<SenderDBNotifications> SenderDBNotifications { get; set; }
             public DbSet<SenderAlternateAddress> SenderAlternateAddresses { get; set; }
 
+            //Shopper Experince
+
+            public DbSet<ShopperExperience> ShopperExperiences { get; set; }
+
 
 
 

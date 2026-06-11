@@ -1,5 +1,6 @@
 ﻿using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -25,5 +26,8 @@ namespace mytown.DataAccess.Interfaces
         Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddress addressDto);
         Task<bool> DeleteAddressAsync(int id);
         Task<bool> IsEmailExistsAsync(string email);
+
+
+      
     }
 }
