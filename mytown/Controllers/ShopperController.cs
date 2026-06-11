@@ -174,5 +174,7 @@ namespace mytown.Controllers
                 return StatusCode(500, new { error = "Something went wrong." });
             }
         }
+
+     
     }
 }

@@ -73,7 +73,7 @@ namespace mytown.DataAccess.Repositories
             return productsQuery.ToList();
         }
 
-        // Search from location and product/category and get the matching store  details
+        // Search from location and product/category and get the matching store details
         public async Task<List<BusinessProfile>> SearchBusinessesAsync(string location, string categoryProduct)
         {
             var productResults = new List<Products>();
@@ -180,17 +180,17 @@ namespace mytown.DataAccess.Repositories
         public List<BusinessProfile> GetBusinessProfilesByLocation(string location)
         {
             var query =
-        from bp in _context.BusinessProfiles
-        where bp.BusinessLocation.Contains(location)
-        && bp.ProfileStatus == "approved"
-        select new
-        {
-            BusinessProfile = bp,
-            TotalPurchases = (from o in _context.OrderDetails
-                              join pr in _context.products on o.ProductId equals pr.ProductId
-                              where pr.BusRegId == bp.BusRegId
-                              select (int?)o.Quantity).Sum() ?? 0
-        };
+                from bp in _context.BusinessProfiles
+                where bp.BusinessLocation.Contains(location)
+                && bp.ProfileStatus == "approved"
+                select new
+                {
+                    BusinessProfile = bp,
+                    TotalPurchases = (from o in _context.OrderDetails
+                                      join pr in _context.products on o.ProductId equals pr.ProductId
+                                      where pr.BusRegId == bp.BusRegId
+                                      select (int?)o.Quantity).Sum() ?? 0
+                };
 
             var orderedProfiles = query
                 .OrderByDescending(x => x.TotalPurchases)
@@ -198,13 +198,11 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
 
             return orderedProfiles;
-
         }
 
         // stores and profiles based on both search bars - location (optional), search term for product n store
         public SearchResultDto GetBusinessProfilesAndProductsBySearchTerm(string searchTerm, string? locationQuery = null)
         {
-            // 1️⃣ Matching categories
             var matchingBusCatIds = _context.BusinessCategories
                 .Where(bc => bc.BusinessCategoryName.Contains(searchTerm))
                 .Select(bc => bc.BusCatId);
@@ -214,7 +212,6 @@ namespace mytown.DataAccess.Repositories
                 .Select(p => p.BusRegId)
                 .Distinct();
 
-            // 2️⃣ If no businesses, check subcategories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
@@ -227,7 +224,6 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // 3️⃣ If still no businesses, check products directly
             if (!businessIds.Any())
             {
                 businessIds = _context.products
@@ -239,7 +235,6 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // 4️⃣ Also search in SKU variants (for color, size, etc.)
             var skuBusinessIds = _context.Sku_ProductVariants
                 .Include(v => v.Product)
                 .Where(v =>
@@ -248,10 +243,8 @@ namespace mytown.DataAccess.Repositories
                 .Select(v => v.Product.BusRegId)
                 .Distinct();
 
-            // Merge SKU-based and product-based business IDs
             businessIds = businessIds.Union(skuBusinessIds);
 
-            // 5️⃣ Apply location filtering if provided
             if (!string.IsNullOrEmpty(locationQuery))
             {
                 var locationBusinessIds = _context.BusinessRegisters
@@ -269,12 +262,10 @@ namespace mytown.DataAccess.Repositories
 
             var businessIdList = businessIds.ToList();
 
-            // 6️⃣ Fetch matching business profiles
             var stores = _context.BusinessProfiles
                 .Where(bp => businessIdList.Contains(bp.BusRegId))
                 .ToList();
 
-            // 7️⃣ Fetch products (filtered by businessIds)
             var products = _context.products
                 .Where(p => businessIdList.Contains(p.BusRegId) &&
                     (p.ProductName.Contains(searchTerm) ||
@@ -291,13 +282,10 @@ namespace mytown.DataAccess.Repositories
                     BusRegId = p.BusRegId,
                     BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
-                  //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
                     ProdcatId = p.ProdSubcatId,
-                    //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
                     ProductName = p.ProductName,
                     ProductDescription = p.ProductDescription,
                     SupplierName = p.SupplierName,
-
                     Variants = p.Sku_ProductVariants
                         .Select(v => new Sku_ProductVariantDto
                         {
@@ -327,14 +315,13 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToList();
 
-            // Collect colors only from the returned products/variants
             var colors = products
-                .SelectMany(p => p.Variants)        // flatten all variants
-                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
+                .SelectMany(p => p.Variants)
+                .Where(v => !string.IsNullOrEmpty(v.Color))
                 .Select(v => v.Color!)
                 .Distinct()
                 .ToList();
-            // 9️⃣ Return combined result
+
             return new SearchResultDto
             {
                 Stores = stores,
@@ -345,13 +332,9 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-
-
-
         // Fetch Business Profiles and Products based on Product & Location Search Terms
         public SearchResultDto GetBusinessProfilesAndProductsByProductAndLocation(string productSearchTerm, string locationSearchTerm)
         {
-            // 1. Match categories
             var matchingBusCatIds = _context.BusinessCategories
                 .Where(bc => bc.BusinessCategoryName.Contains(productSearchTerm))
                 .Select(bc => bc.BusCatId)
@@ -363,7 +346,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .ToList();
 
-            // 2. If no businesses, match subcategories
             if (!businessIds.Any())
             {
                 var matchingSubcatIds = _context.product_sub_categories
@@ -378,7 +360,6 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
             }
 
-            // 3. If still no businesses, match products directly
             if (!businessIds.Any())
             {
                 businessIds = _context.products
@@ -391,22 +372,16 @@ namespace mytown.DataAccess.Repositories
                     .ToList();
             }
 
-            // 4. Apply location filter directly on business_location
             var finalBusinessIds = _context.BusinessProfiles
                 .Where(bp => businessIds.Contains(bp.BusRegId) &&
                              bp.BusinessLocation.Contains(locationSearchTerm))
                 .Select(bp => bp.BusRegId)
                 .ToList();
 
-
-           // var finalBusinessIds = businessIds.Intersect(locationBusinessIds).ToList();
-
-            // 5. Get matching business profiles
             var stores = _context.BusinessProfiles
                 .Where(bp => finalBusinessIds.Contains(bp.BusRegId) && bp.ProfileStatus == "approved")
                 .ToList();
 
-            // 6. Get matching products
             var products = _context.products
                 .Where(p => finalBusinessIds.Contains(p.BusRegId) &&
                     (p.ProductName.Contains(productSearchTerm) ||
@@ -423,13 +398,10 @@ namespace mytown.DataAccess.Repositories
                     BusRegId = p.BusRegId,
                     BusinessName = p.BusinessRegister.BusinessName,
                     BuscatId = p.BuscatId,
-                    //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
                     ProdcatId = p.ProdSubcatId,
-                    //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
                     ProductName = p.ProductName,
                     ProductDescription = p.ProductName,
                     SupplierName = p.SupplierName,
-
                     Variants = p.Sku_ProductVariants
                         .Select(v => new Sku_ProductVariantDto
                         {
@@ -459,16 +431,13 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToList();
 
-            // Collect colors only from the returned products/variants
             var colors = products
-                .SelectMany(p => p.Variants)        // flatten all variants
-                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
+                .SelectMany(p => p.Variants)
+                .Where(v => !string.IsNullOrEmpty(v.Color))
                 .Select(v => v.Color!)
                 .Distinct()
                 .ToList();
 
-
-            // 8. Return both stores & products
             return new SearchResultDto
             {
                 Stores = stores,
@@ -479,21 +448,18 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-
         public async Task<IEnumerable<ProductSubCategory>> GetProductSubCategoriesByLocationAsync(string location)
         {
-            // Step 1: Get all business profiles matching location
             var busCatIds = await _context.BusinessProfiles
-            .Where(bp => bp.BusinessLocation != null &&
-                         bp.BusinessLocation.Contains(location)) // property name matches model
-            .Select(bp => bp.BusCatId)
-            .Distinct()
-            .ToListAsync();
+                .Where(bp => bp.BusinessLocation != null &&
+                             bp.BusinessLocation.Contains(location))
+                .Select(bp => bp.BusCatId)
+                .Distinct()
+                .ToListAsync();
 
             if (!busCatIds.Any())
                 return new List<ProductSubCategory>();
 
-            // Step 2: Get all product_sub_categories for those categories
             var subCategories = await _context.product_sub_categories
                 .Where(sc => busCatIds.Contains(sc.BuscatId))
                 .Select(sc => new ProductSubCategory
@@ -508,10 +474,8 @@ namespace mytown.DataAccess.Repositories
             return subCategories;
         }
 
-
         public async Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location)
         {
-            // Step 1: Get all business profiles matching the location
             var busCatIds = await _context.BusinessProfiles
                 .Where(bp => bp.BusinessLocation != null &&
                              bp.BusinessLocation.Contains(location))
@@ -522,7 +486,6 @@ namespace mytown.DataAccess.Repositories
             if (!busCatIds.Any())
                 return new List<BusinessCategory>();
 
-            // Step 2: Get all business categories for those BusCatIds
             var categories = await _context.BusinessCategories
                 .Where(bc => busCatIds.Contains(bc.BusCatId))
                 .Select(bc => new BusinessCategory
@@ -535,132 +498,18 @@ namespace mytown.DataAccess.Repositories
             return categories;
         }
 
-
-        //search by both location and store or product
-        public SearchResultDto SearchByLocationAndProduct(string searchTerm, string locationQuery)
-        {
-            // 1. Get stores in given location
-            var locationBusinessIds = _context.BusinessRegisters
-                .Where(b =>
-                    (b.Town != null && b.Town.Contains(locationQuery)) ||
-                    (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
-                    (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
-                    (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
-                    (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
-                    (b.Address2 != null && b.Address2.Contains(locationQuery)))
-                .Select(b => b.BusRegId)
-                .ToList();
-
-            if (!locationBusinessIds.Any())
-            {
-                return new SearchResultDto
-                {
-                    Stores = new List<BusinessProfile>(),
-                    Products = new List<ProdcVariantforShopperDto>(),
-                    Colors = new List<string>(),
-                    StoreCount = 0,
-                    ProductCount = 0
-                };
-            }
-
-            // 2. Filter stores by store name OR products/categories inside those stores
-            var storeMatches = _context.BusinessProfiles
-                .Where(bp => locationBusinessIds.Contains(bp.BusRegId) &&
-                             (bp.BusinessName.Contains(searchTerm) ||
-                              bp.BusinessAbout.Contains(searchTerm)))
-                .ToList();
-
-
-            var products = _context.products
-               .Where(p => locationBusinessIds.Contains(p.BusRegId) &&
-                   (p.ProductName.Contains(searchTerm) ||
-                    p.ProductSubject.Contains(searchTerm) ||
-                    p.ProductDescription.Contains(searchTerm) ||
-                    p.Sku_ProductVariants.Any(v =>
-                        v.Color.Contains(searchTerm) ||
-                        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))))
-               .Include(p => p.Sku_ProductVariants)
-                   .ThenInclude(v => v.Images)
-               .Select(p => new ProdcVariantforShopperDto
-               {
-                   ProductId = p.ProductId,
-                   BusRegId = p.BusRegId,
-                   BusinessName = p.BusinessRegister.BusinessName,
-                   BuscatId = p.BuscatId,
-                   //  BuscatName = p.BusinessCategory != null ? p.BusinessCategory.Businesscategory_name : null,
-                   ProdcatId = p.ProdSubcatId,
-                   //  ProdcatName = p.ProductSubCategory != null ? p.ProductSubCategory.prod_subcat_name : null,
-                   ProductName = p.ProductName,
-                   ProductDescription = p.ProductDescription,
-                   SupplierName = p.SupplierName,
-
-                   Variants = p.Sku_ProductVariants
-                       .Select(v => new Sku_ProductVariantDto
-                       {
-                           SkuId_Productvariant = v.SkuId,
-                           ProductId = v.ProductId,
-                           Color = v.Color,
-                           SizeId = v.SizeId,
-                           SizeName = v.Size != null ? v.Size.SizeName : null,
-                           Sku_Cost = v.Sku_Cost,
-                           DiscountPrice = v.DiscountPrice,
-                           Quantity = v.Quantity,
-                           Length = v.Length,
-                           Width = v.Width,
-                           Height = v.Height,
-                           Weight = v.Weight,
-                           Discount = v.Discount,
-                           Images = v.Images
-                               .OrderBy(i => i.SortOrder)
-                               .Select(i => new ProductImageDto
-                               {
-                                   FileName = i.FileName,
-                                   SortOrder = i.SortOrder
-                               })
-                               .ToList()
-                       })
-                       .ToList()
-               })
-               .ToList();
-
-            // Collect colors only from the returned products/variants
-            var colors = products
-                .SelectMany(p => p.Variants)        // flatten all variants
-                .Where(v => !string.IsNullOrEmpty(v.Color)) // filter null/empty
-                .Select(v => v.Color!)
-                .Distinct()
-                .ToList();
-
-            // 4. Return combined result
-            return new SearchResultDto
-            {
-                Stores = storeMatches,
-                Products = products,
-                Colors = colors,
-                StoreCount = storeMatches.Count,
-                ProductCount = products.Count
-            };
-        }
-
-
-        //2-12-25 get bsiness prpfiles for search reuslts ( no products)
         public List<BusinessProfile> GetBusinessProfilesByFilters(string? searchTerm, string? locationQuery)
         {
             IQueryable<int> businessIds = Enumerable.Empty<int>().AsQueryable();
 
-            // ------------------------------------------------
-            // 1️ SEARCH TERM FILTER
-            // ------------------------------------------------
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.Trim();
 
-                //  Store Name Search (FIRST)
                 var storeNameIds = _context.BusinessRegisters
                     .Where(b => b.BusinessName.Contains(searchTerm))
                     .Select(b => b.BusRegId);
 
-                // Category Match
                 var categoryIds = _context.BusinessCategories
                     .Where(c => c.BusinessCategoryName.Contains(searchTerm))
                     .Select(c => c.BusCatId);
@@ -669,7 +518,6 @@ namespace mytown.DataAccess.Repositories
                     .Where(p => categoryIds.Contains(p.BuscatId))
                     .Select(p => p.BusRegId);
 
-                // Subcategory Match
                 var subcategoryIds = _context.product_sub_categories
                     .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
                     .Select(sc => sc.ProdSubcatId);
@@ -678,7 +526,6 @@ namespace mytown.DataAccess.Repositories
                     .Where(p => subcategoryIds.Contains(p.ProdSubcatId))
                     .Select(p => p.BusRegId);
 
-                // Product Field Match
                 var productFieldBusinessIds = _context.products
                     .Where(p =>
                         p.ProductName.Contains(searchTerm) ||
@@ -686,14 +533,12 @@ namespace mytown.DataAccess.Repositories
                         p.ProductDescription.Contains(searchTerm))
                     .Select(p => p.BusRegId);
 
-                // SKU Variant Match
                 var skuBusinessIds = _context.Sku_ProductVariants
                     .Where(v =>
                         v.Color.Contains(searchTerm) ||
                         (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
                     .Select(v => v.Product.BusRegId);
 
-                // UNION ALL MATCHES
                 businessIds = storeNameIds
                     .Union(categoryBusinessIds)
                     .Union(subcategoryBusinessIds)
@@ -702,9 +547,6 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // ------------------------------------------------
-            //  LOCATION FILTER
-            // ------------------------------------------------
             if (!string.IsNullOrWhiteSpace(locationQuery))
             {
                 locationQuery = locationQuery.Trim();
@@ -729,9 +571,6 @@ namespace mytown.DataAccess.Repositories
                 }
             }
 
-            // ------------------------------------------------
-            // FINAL RESULT
-            // ------------------------------------------------
             return _context.BusinessProfiles
                 .Where(bp =>
                     businessIds.Contains(bp.BusRegId) &&
@@ -739,118 +578,15 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
         }
 
-
-        //    public List<BusinessProfile> GetBusinessProfilesByFilters(
-        //string? searchTerm,
-        //string? locationQuery)
-        //    {
-        //        // --------------------------------------------
-        //        // 0️⃣ START with APPROVED business IDs ONLY
-        //        // --------------------------------------------
-        //        IQueryable<int> approvedBusinessIds = _context.BusinessProfiles
-        //            .Where(bp => bp.ProfileStatus == "Approved")
-        //            .Select(bp => bp.BusRegId);
-
-        //        IQueryable<int> businessIds = approvedBusinessIds;
-
-        //        // --------------------------------------------
-        //        // 1️⃣ PRODUCT / CATEGORY / SKU SEARCH
-        //        // --------------------------------------------
-        //        if (!string.IsNullOrWhiteSpace(searchTerm))
-        //        {
-        //            searchTerm = searchTerm.Trim();
-
-        //            // 🔹 Category match
-        //            var matchingCatIds = _context.BusinessCategories
-        //                .Where(c => c.BusinessCategoryName.Contains(searchTerm))
-        //                .Select(c => c.BusCatId);
-
-        //            var productCategoryMatches = _context.products
-        //                .Where(p =>
-        //                    businessIds.Contains(p.BusRegId) &&
-        //                    matchingCatIds.Contains(p.BuscatId))
-        //                .Select(p => p.BusRegId);
-
-        //            // 🔹 Subcategory match
-        //            var matchingSubcatIds = _context.product_sub_categories
-        //                .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
-        //                .Select(sc => sc.ProdSubcatId);
-
-        //            var productSubcategoryMatches = _context.products
-        //                .Where(p =>
-        //                    businessIds.Contains(p.BusRegId) &&
-        //                    matchingSubcatIds.Contains(p.ProdSubcatId))
-        //                .Select(p => p.BusRegId);
-
-        //            // 🔹 Product text search
-        //            var productTextMatches = _context.products
-        //                .Where(p =>
-        //                    businessIds.Contains(p.BusRegId) &&
-        //                    (p.ProductName.Contains(searchTerm) ||
-        //                     p.ProductSubject.Contains(searchTerm) ||
-        //                     p.ProductDescription.Contains(searchTerm)))
-        //                .Select(p => p.BusRegId);
-
-        //            // 🔹 SKU variant search
-        //            var skuMatches = _context.Sku_ProductVariants
-        //                .Include(v => v.Product)
-        //                .Where(v =>
-        //                    businessIds.Contains(v.Product.BusRegId) &&
-        //                    (v.Color.Contains(searchTerm) ||
-        //                     (v.Size != null && v.Size.SizeName.Contains(searchTerm))))
-        //                .Select(v => v.Product.BusRegId);
-
-        //            businessIds =
-        //                productCategoryMatches
-        //                .Union(productSubcategoryMatches)
-        //                .Union(productTextMatches)
-        //                .Union(skuMatches)
-        //                .Distinct();
-        //        }
-
-        //        // --------------------------------------------
-        //        // 2️⃣ LOCATION FILTER
-        //        // --------------------------------------------
-        //        if (!string.IsNullOrWhiteSpace(locationQuery))
-        //        {
-        //            locationQuery = locationQuery.Trim();
-
-        //            var locationMatches = _context.BusinessRegisters
-        //                .Where(b =>
-        //                    businessIds.Contains(b.BusRegId) &&
-        //                    (
-        //                        (b.Town != null && b.Town.Contains(locationQuery)) ||
-        //                        (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
-        //                        (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
-        //                        (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
-        //                        (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
-        //                        (b.Address2 != null && b.Address2.Contains(locationQuery))
-        //                    ))
-        //                .Select(b => b.BusRegId);
-
-        //            businessIds = locationMatches;
-        //        }
-
-        //        // --------------------------------------------
-        //        // 3️⃣ FINAL APPROVED BUSINESS PROFILES
-        //        // --------------------------------------------
-        //        return _context.BusinessProfiles
-        //            .Where(bp =>
-        //                bp.ProfileStatus == "Approved" &&
-        //                businessIds.Contains(bp.BusRegId))
-        //            .ToList();
-        //    }
-
         public async Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName)
         {
             if (string.IsNullOrWhiteSpace(productName))
                 return new List<BusinessCategory>();
 
-            // Step 1: Find all BusCatIds from stores that have a matching product
             var busCatIds = await _context.products
                 .Where(p => p.ProductName.Contains(productName) ||
                             p.ProductSubject.Contains(productName))
-                .Select(p => p.BusRegId) // store id
+                .Select(p => p.BusRegId)
                 .Distinct()
                 .Join(_context.BusinessProfiles,
                       productStoreId => productStoreId,
@@ -862,7 +598,6 @@ namespace mytown.DataAccess.Repositories
             if (!busCatIds.Any())
                 return new List<BusinessCategory>();
 
-            // Step 2: Fetch all business categories
             var categories = await _context.BusinessCategories
                 .Where(bc => busCatIds.Contains(bc.BusCatId))
                 .Select(bc => new BusinessCategory
@@ -875,37 +610,24 @@ namespace mytown.DataAccess.Repositories
             return categories;
         }
 
-        //27-05-26
-        //get both business profiles and service profiles
-
-
-        public async Task<BusinessAndServiceSearchResultsDto>
-        GetBusinessAndServiceSearchResults(string? searchTerm, string? locationQuery)
+        // 27-05-26
+        // get both business profiles and service profiles
+        public async Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
+            string? searchTerm, string? locationQuery)
         {
             IQueryable<int> businessIds = Enumerable.Empty<int>().AsQueryable();
-
             IQueryable<int> serviceBusinessIds = Enumerable.Empty<int>().AsQueryable();
-
-            // ====================================================
-            // SEARCH TERM
-            // ====================================================
 
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.Trim();
 
-                // ====================================================
-                // BUSINESS SEARCH
-                // ====================================================
-
                 var storeNameIds = _context.BusinessRegisters
-                    .Where(b =>
-                        EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
+                    .Where(b => EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
                     .Select(b => b.BusRegId);
 
                 var categoryIds = _context.BusinessCategories
-                    .Where(c =>
-                        EF.Functions.Like(c.BusinessCategoryName, $"%{searchTerm}%"))
+                    .Where(c => EF.Functions.Like(c.BusinessCategoryName, $"%{searchTerm}%"))
                     .Select(c => c.BusCatId);
 
                 var categoryBusinessIds = _context.products
@@ -913,8 +635,7 @@ namespace mytown.DataAccess.Repositories
                     .Select(p => p.BusRegId);
 
                 var subcategoryIds = _context.product_sub_categories
-                    .Where(sc =>
-                        EF.Functions.Like(sc.ProdSubcatName, $"%{searchTerm}%"))
+                    .Where(sc => EF.Functions.Like(sc.ProdSubcatName, $"%{searchTerm}%"))
                     .Select(sc => sc.ProdSubcatId);
 
                 var subcategoryBusinessIds = _context.products
@@ -931,8 +652,7 @@ namespace mytown.DataAccess.Repositories
                 var skuBusinessIds = _context.Sku_ProductVariants
                     .Where(v =>
                         EF.Functions.Like(v.Color, $"%{searchTerm}%") ||
-                        (v.Size != null &&
-                         EF.Functions.Like(v.Size.SizeName, $"%{searchTerm}%")))
+                        (v.Size != null && EF.Functions.Like(v.Size.SizeName, $"%{searchTerm}%")))
                     .Select(v => v.Product.BusRegId);
 
                 businessIds = storeNameIds
@@ -942,18 +662,12 @@ namespace mytown.DataAccess.Repositories
                     .Union(skuBusinessIds)
                     .Distinct();
 
-                // ====================================================
-                // SERVICE SEARCH
-                // ====================================================
-
                 var serviceBusinessNameIds = _context.BusinessRegisters
-                 .Where(b =>
-                     EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
-                 .Select(b => b.BusRegId);
+                    .Where(b => EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
+                    .Select(b => b.BusRegId);
 
                 var serviceCategoryIds = _context.BusinessServices
-                    .Where(bs =>
-                        EF.Functions.Like(bs.BusinessServiceName, $"%{searchTerm}%"))
+                    .Where(bs => EF.Functions.Like(bs.BusinessServiceName, $"%{searchTerm}%"))
                     .Select(bs => bs.BusServId);
 
                 var serviceCategoryBusinessIds = _context.services
@@ -961,8 +675,7 @@ namespace mytown.DataAccess.Repositories
                     .Select(s => s.BusRegId);
 
                 var serviceSubcategoryIds = _context.ServiceSubCategory
-                    .Where(ss =>
-                        EF.Functions.Like(ss.ServiceTypeName, $"%{searchTerm}%"))
+                    .Where(ss => EF.Functions.Like(ss.ServiceTypeName, $"%{searchTerm}%"))
                     .Select(ss => ss.ServSubcatId);
 
                 var serviceSubcategoryBusinessIds = _context.services
@@ -982,33 +695,18 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            // ====================================================
-            // LOCATION FILTER
-            // ====================================================
-
             if (!string.IsNullOrWhiteSpace(locationQuery))
             {
                 locationQuery = locationQuery.Trim();
 
                 var locationBusinessIds = _context.BusinessRegisters
                     .Where(b =>
-                        (b.Town != null &&
-                         EF.Functions.Like(b.Town, $"%{locationQuery}%")) ||
-
-                        (b.BusinessCity != null &&
-                         EF.Functions.Like(b.BusinessCity, $"%{locationQuery}%")) ||
-
-                        (b.BusinessState != null &&
-                         EF.Functions.Like(b.BusinessState, $"%{locationQuery}%")) ||
-
-                        (b.BusinessCountry != null &&
-                         EF.Functions.Like(b.BusinessCountry, $"%{locationQuery}%")) ||
-
-                        (b.Address1 != null &&
-                         EF.Functions.Like(b.Address1, $"%{locationQuery}%")) ||
-
-                        (b.Address2 != null &&
-                         EF.Functions.Like(b.Address2, $"%{locationQuery}%")))
+                        (b.Town != null && EF.Functions.Like(b.Town, $"%{locationQuery}%")) ||
+                        (b.BusinessCity != null && EF.Functions.Like(b.BusinessCity, $"%{locationQuery}%")) ||
+                        (b.BusinessState != null && EF.Functions.Like(b.BusinessState, $"%{locationQuery}%")) ||
+                        (b.BusinessCountry != null && EF.Functions.Like(b.BusinessCountry, $"%{locationQuery}%")) ||
+                        (b.Address1 != null && EF.Functions.Like(b.Address1, $"%{locationQuery}%")) ||
+                        (b.Address2 != null && EF.Functions.Like(b.Address2, $"%{locationQuery}%")))
                     .Select(b => b.BusRegId);
 
                 if (string.IsNullOrWhiteSpace(searchTerm))
@@ -1019,55 +717,44 @@ namespace mytown.DataAccess.Repositories
                 else
                 {
                     businessIds = businessIds.Intersect(locationBusinessIds);
-
                     serviceBusinessIds = serviceBusinessIds.Intersect(locationBusinessIds);
                 }
             }
 
-            // ====================================================
-            // FINAL RESULT
-            // ====================================================
-
             var businessProfiles = await _context.BusinessProfiles
-                .Where(bp =>
-                    businessIds.Contains(bp.BusRegId) &&
-                    bp.ProfileStatus == "Approved")
+                .Where(bp => businessIds.Contains(bp.BusRegId) && bp.ProfileStatus == "Approved")
                 .ToListAsync();
 
             var serviceProfiles = await (
-    from sp in _context.ServiceProfiles
-    join br in _context.BusinessRegisters
-        on sp.BusRegId equals br.BusRegId
-    where serviceBusinessIds.Contains(sp.BusRegId)
-          && sp.Status == "Approved"
-    select new ServiceProfile
-    {
-        ServiceProfileId = sp.ServiceProfileId,
-        BusRegId = sp.BusRegId,
-        BusServId = sp.BusServId,
-        YearsOfExperience = sp.YearsOfExperience,
-        GovtIdDocument = sp.GovtIdDocument,
-        ProfessionalLicense = sp.ProfessionalLicense,
-        ServiceAvailableLocations = sp.ServiceAvailableLocations,
-        WorkingDays = sp.WorkingDays,
-        WorkingStartTime = sp.WorkingStartTime,
-        WorkingEndTime = sp.WorkingEndTime,
-        CreatedDate = sp.CreatedDate,
-        ServiceLogo = sp.ServiceLogo,
-        ServiceBanner = sp.ServiceBanner,
-        Status = sp.Status,
-
-        BusinessName = br.BusinessName,
-
-        BusinessLocation =
-            (br.Address1 ?? "") +
-            (!string.IsNullOrEmpty(br.Address2) ? ", " + br.Address2 : "") +
-            (!string.IsNullOrEmpty(br.Town) ? ", " + br.Town : "") +
-            (!string.IsNullOrEmpty(br.BusinessCity) ? ", " + br.BusinessCity : "") +
-            (!string.IsNullOrEmpty(br.BusinessState) ? ", " + br.BusinessState : "") +
-            (!string.IsNullOrEmpty(br.BusinessCountry) ? ", " + br.BusinessCountry : "")
-    })
-    .ToListAsync();
+                from sp in _context.ServiceProfiles
+                join br in _context.BusinessRegisters on sp.BusRegId equals br.BusRegId
+                where serviceBusinessIds.Contains(sp.BusRegId) && sp.Status == "Approved"
+                select new ServiceProfile
+                {
+                    ServiceProfileId = sp.ServiceProfileId,
+                    BusRegId = sp.BusRegId,
+                    BusServId = sp.BusServId,
+                    YearsOfExperience = sp.YearsOfExperience,
+                    GovtIdDocument = sp.GovtIdDocument,
+                    ProfessionalLicense = sp.ProfessionalLicense,
+                    ServiceAvailableLocations = sp.ServiceAvailableLocations,
+                    WorkingDays = sp.WorkingDays,
+                    WorkingStartTime = sp.WorkingStartTime,
+                    WorkingEndTime = sp.WorkingEndTime,
+                    CreatedDate = sp.CreatedDate,
+                    ServiceLogo = sp.ServiceLogo,
+                    ServiceBanner = sp.ServiceBanner,
+                    Status = sp.Status,
+                    BusinessName = br.BusinessName,
+                    BusinessLocation =
+                        (br.Address1 ?? "") +
+                        (!string.IsNullOrEmpty(br.Address2) ? ", " + br.Address2 : "") +
+                        (!string.IsNullOrEmpty(br.Town) ? ", " + br.Town : "") +
+                        (!string.IsNullOrEmpty(br.BusinessCity) ? ", " + br.BusinessCity : "") +
+                        (!string.IsNullOrEmpty(br.BusinessState) ? ", " + br.BusinessState : "") +
+                        (!string.IsNullOrEmpty(br.BusinessCountry) ? ", " + br.BusinessCountry : "")
+                })
+                .ToListAsync();
 
             return new BusinessAndServiceSearchResultsDto
             {
@@ -1076,5 +763,96 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
+        // 
+        // New method - Track order by tracking ID
+        public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
+        {
+            var shipping = await _context.ShippingDetails
+                .Include(s => s.Order)
+                    .ThenInclude(o => o.ShopperRegister)
+                .Include(s => s.Order)
+                    .ThenInclude(o => o.GuestRegister)
+                .FirstOrDefaultAsync(s => s.TrackingId == trackingId);
+
+            if (shipping == null)
+                return null;
+
+            var order = shipping.Order;
+            string customerName, customerEmail, customerPhone;
+
+            if (order.IsGuestOrder && order.GuestRegister != null)
+            {
+                customerName = order.GuestRegister.Username;
+                customerEmail = order.GuestRegister.Email;
+                customerPhone = order.GuestRegister.PhoneNumber;
+            }
+            else if (order.ShopperRegister != null)
+            {
+                customerName = order.ShopperRegister.Username;
+                customerEmail = order.ShopperRegister.Email;
+                customerPhone = order.ShopperRegister.PhoneNumber;
+            }
+            else
+            {
+                customerName = "Unknown";
+                customerEmail = "Unknown";
+                customerPhone = "Unknown";
+            }
+
+                        var products = await (
+                from od in _context.OrderDetails
+                join p in _context.products
+                    on od.ProductId equals p.ProductId
+
+                join sku in _context.Sku_ProductVariants
+                    on od.SkuId equals sku.SkuId into skuGroup
+                from sku in skuGroup.DefaultIfEmpty()
+
+                join img in _context.ProductImages
+                    on sku.SkuId equals img.SkuId into imgGroup
+                from img in imgGroup
+                    .OrderBy(i => i.SortOrder)
+                    .Take(1)
+                    .DefaultIfEmpty()
+
+                where od.OrderId == order.OrderId
+
+                select new TrackingProductDto
+                {
+                    ProductId = p.ProductId,
+                    SkuId = od.SkuId,
+                    ProductName = p.ProductName,
+                    Quantity = od.Quantity,
+                    ProductCost = od.Price,
+                    ProductImage = img != null
+                        ? img.FileName
+                        : p.ProductImage
+                }
+            ).ToListAsync();
+
+            return new TrackingResultDto
+            {
+                TrackingId = shipping.TrackingId,
+                ShippingStatus = shipping.ShippingStatus,
+                ShippingType = shipping.ShippingType,
+                EstimatedDays = shipping.EstimatedDays,
+                DeliveredDate = shipping.DeliveredDate,
+                DeliveryAddress = shipping.DeliveryAddress,
+
+                OrderId = order.OrderId,
+                OrderStatus = order.OrderStatus,
+                TotalAmount = order.TotalAmount,
+                OrderDate = order.OrderDate,
+
+                IsGuestOrder = order.IsGuestOrder,
+
+                CustomerName = customerName,
+                CustomerEmail = customerEmail,
+                CustomerPhone = customerPhone,
+
+                Products = products
+            };
+        }
     }
 }
+

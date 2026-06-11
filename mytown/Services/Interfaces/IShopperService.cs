@@ -21,5 +21,7 @@ namespace mytown.Services.Interfaces
         Task<bool> DeleteAddressAsync(int id);
 
         Task<(bool exists, string message)> CheckEmailExistsAsync(string email);
+
+        
     }
 }

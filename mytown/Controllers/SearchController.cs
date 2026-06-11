@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
 using mytown.Services.Interfaces;
 using Stripe;
@@ -116,18 +117,39 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //27-05-26  
-        //get both business profiles and service profiles
+        // 27-05-26
+        // get both business profiles and service profiles
         [HttpGet("getbusinessandservicesearchresults")]
         public async Task<IActionResult> GetBusinessAndServiceSearchResults(
-     string? searchTerm,
-     string? locationQuery)
+            string? searchTerm,
+            string? locationQuery)
         {
             var result = await _searchService.GetBusinessAndServiceSearchResults(
                 searchTerm,
                 locationQuery);
 
             return Ok(result);
+        }
+
+        //  New endpoint - Track order by tracking ID
+        [AllowAnonymous]
+        [HttpGet("track/{trackingId}")]
+        public async Task<IActionResult> TrackOrder(string trackingId)
+        {
+            try
+            {
+                var result = await _searchService.TrackOrderByTrackingIdAsync(trackingId);
+
+                if (result == null)
+                    return NotFound(new { error = "Tracking ID not found." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error tracking order {TrackingId}", trackingId);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
         }
     }
 }
