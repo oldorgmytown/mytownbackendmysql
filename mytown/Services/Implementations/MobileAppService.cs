@@ -28,5 +28,10 @@ namespace mytown.Services.Implementations
         {
             return await _mobileAppRepository.GetPopularStoresAsync();
         }
+
+        public async Task<List<TownStoreCountDto>> GetExploreTownsAsync()
+        {
+            return await _mobileAppRepository.GetExploreTownsAsync();
+        }
     }
 }

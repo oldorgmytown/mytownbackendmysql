@@ -165,5 +165,26 @@ namespace mytown.DataAccess.Repositories
 
             return result;
         }
+
+        public async Task<List<TownStoreCountDto>> GetExploreTownsAsync()
+        {
+            var result = await _context.BusinessRegisters
+                .Where(x => !string.IsNullOrEmpty(x.Town))
+                .GroupBy(x => new
+                {
+                    x.Town,
+                    x.BusinessCountry
+                })
+                .Select(g => new TownStoreCountDto
+                {
+                    TownName = g.Key.Town,
+                    CountryName = g.Key.BusinessCountry,
+                    StoreCount = g.Count()
+                })
+               .OrderByDescending(x => x.StoreCount)
+                .ToListAsync();
+
+            return result;
+        }
     }
 }

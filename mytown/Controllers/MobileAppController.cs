@@ -33,5 +33,12 @@ namespace mytown.Controllers
             var result = await _mobileAppService.GetPopularStoresAsync();
             return Ok(result);
         }
+
+        [HttpGet("exploretowns")]
+        public async Task<IActionResult> GetExploreTowns()
+        {
+            var result = await _mobileAppService.GetExploreTownsAsync();
+            return Ok(result);
+        }
     }
 }
