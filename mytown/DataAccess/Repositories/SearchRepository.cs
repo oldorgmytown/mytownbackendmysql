@@ -763,8 +763,7 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-        // 
-        // New method - Track order by tracking ID
+        // Track order by tracking ID
         public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
         {
             var shipping = await _context.ShippingDetails
@@ -799,10 +798,9 @@ namespace mytown.DataAccess.Repositories
                 customerPhone = "Unknown";
             }
 
-                        var products = await (
+            var products = await (
                 from od in _context.OrderDetails
-                join p in _context.products
-                    on od.ProductId equals p.ProductId
+                join p in _context.products on od.ProductId equals p.ProductId
 
                 join sku in _context.Sku_ProductVariants
                     on od.SkuId equals sku.SkuId into skuGroup
@@ -824,9 +822,7 @@ namespace mytown.DataAccess.Repositories
                     ProductName = p.ProductName,
                     Quantity = od.Quantity,
                     ProductCost = od.Price,
-                    ProductImage = img != null
-                        ? img.FileName
-                        : p.ProductImage
+                    ProductImage = img != null ? img.FileName : p.ProductImage
                 }
             ).ToListAsync();
 
@@ -838,21 +834,33 @@ namespace mytown.DataAccess.Repositories
                 EstimatedDays = shipping.EstimatedDays,
                 DeliveredDate = shipping.DeliveredDate,
                 DeliveryAddress = shipping.DeliveryAddress,
-
                 OrderId = order.OrderId,
                 OrderStatus = order.OrderStatus,
                 TotalAmount = order.TotalAmount,
                 OrderDate = order.OrderDate,
-
                 IsGuestOrder = order.IsGuestOrder,
-
                 CustomerName = customerName,
                 CustomerEmail = customerEmail,
                 CustomerPhone = customerPhone,
-
                 Products = products
             };
         }
+
+        // ✅ New method - Get popular cities from different countries
+        public async Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync()
+        {
+            return await _context.BusinessRegisters
+                .Where(br => br.BusinessCity != null
+                          && br.BusinessCountry != null)
+                .GroupBy(br => new { br.BusinessCity, br.BusinessCountry })
+                .Select(g => new PopularCityDto
+                {
+                    City = g.Key.BusinessCity,
+                    Country = g.Key.BusinessCountry,
+                    StoreCount = g.Count()
+                })
+                .OrderByDescending(x => x.StoreCount)
+                .ToListAsync();
+        }
     }
 }
-

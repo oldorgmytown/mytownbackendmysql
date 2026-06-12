@@ -19,5 +19,6 @@ namespace mytown.DataAccess.Interfaces
 
         //  New method
         Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId);
+        Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync();
     }
 }
