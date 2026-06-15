@@ -3,16 +3,18 @@ using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-
     [Route("api/mobileapp")]
     [ApiController]
-    public class MobileAppController :ControllerBase
+    public class MobileAppController : ControllerBase
     {
         private readonly ILogger<MobileAppController> _logger;
         private readonly IConfiguration _configuration;
         private readonly IMobileAppService _mobileAppService;
 
-        public MobileAppController(ILogger<MobileAppController> logger, IConfiguration configuration, IMobileAppService mobileAppService)
+        public MobileAppController(
+            ILogger<MobileAppController> logger,
+            IConfiguration configuration,
+            IMobileAppService mobileAppService)
         {
             _logger = logger;
             _configuration = configuration;
@@ -23,7 +25,6 @@ namespace mytown.Controllers
         public async Task<IActionResult> GetPopularProducts()
         {
             var result = await _mobileAppService.GetPopularProductsAsync();
-
             return Ok(result);
         }
 
@@ -38,6 +39,21 @@ namespace mytown.Controllers
         public async Task<IActionResult> GetExploreTowns()
         {
             var result = await _mobileAppService.GetExploreTownsAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("popularcities")]
+        public async Task<IActionResult> GetPopularCities()
+        {
+            var result = await _mobileAppService.GetPopularCitiesAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("city/{city}/towns")]
+        public async Task<IActionResult> GetTownListByCity(string city)
+        {
+            var result = await _mobileAppService.GetTownListByCityAsync(city);
+
             return Ok(result);
         }
     }
