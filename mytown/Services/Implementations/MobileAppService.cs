@@ -42,5 +42,18 @@ namespace mytown.Services.Implementations
        {
     return await _mobileAppRepository.GetTownListByCityAsync(city);
        }
+
+        public async Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string destinationTown,
+    string destinationCity)
+        {
+            return await _mobileAppRepository.GetAvailableTransportersAsync(
+                startTown,
+                startCity,
+                destinationTown,
+                destinationCity);
+        }
     }
 }

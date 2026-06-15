@@ -10,5 +10,10 @@ namespace mytown.Services.Interfaces
         // New Popular Cities API
         Task<List<PopularCityDto>> GetPopularCitiesAsync();
         Task<List<TownListDto>> GetTownListByCityAsync(string city);
+        Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string destinationTown,
+    string destinationCity);
     }
 }

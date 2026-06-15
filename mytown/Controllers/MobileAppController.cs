@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
@@ -39,6 +40,22 @@ namespace mytown.Controllers
         public async Task<IActionResult> GetExploreTowns()
         {
             var result = await _mobileAppService.GetExploreTownsAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("find-transporters")]
+        public async Task<IActionResult> GetAvailableTransporters(
+     string startTown,
+     string startCity,
+     string destinationTown,
+     string destinationCity)
+        {
+            var result = await _mobileAppService.GetAvailableTransportersAsync(
+                startTown,
+                startCity,
+                destinationTown,
+                destinationCity);
+
             return Ok(result);
         }
 

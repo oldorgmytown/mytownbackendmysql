@@ -187,6 +187,53 @@ namespace mytown.DataAccess.Repositories
 
             return result;
         }
+
+        public async Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
+     string startTown,
+     string startCity,
+     string destinationTown,
+     string destinationCity)
+        {
+            return await (
+                from tp in _context.TransporterTravelPlans
+                join tr in _context.TransporterRegisters
+                    on tp.TransporterRegId equals tr.TransporterRegId
+                where tp.IsActive
+                      && tp.PlanStatus == "Available"
+                      && tp.StartTown == startTown
+                      && tp.StartCity == startCity
+                      && tp.DestinationTown == destinationTown
+                      && tp.DestinationCity == destinationCity
+                orderby tp.StartDate
+                select new AvailableTransporterDto
+                {
+                    PlanId = tp.PlanId,
+                    TransporterRegId = tp.TransporterRegId,
+
+                    TransporterName = tr.TransporterName,
+
+                    VehicleType = tp.VehicleType,
+                    VehicleName = tp.VehicleName,
+
+                    StartTown = tp.StartTown,
+                    StartCity = tp.StartCity,
+                    StartState = tp.StartState,
+                    StartCountry = tp.StartCountry,
+
+                    DestinationTown = tp.DestinationTown,
+                    DestinationCity = tp.DestinationCity,
+                    DestinationState = tp.DestinationState,
+                    DestinationCountry = tp.DestinationCountry,
+                    StartDate = tp.StartDate,
+                    ArrivalDate = tp.ArrivalDate,
+                    
+                    MaxWeightKg = tp.MaxWeightKg,
+
+                    PreferredContact = tp.PreferredContact,
+                    PreferredRoute = tp.PreferredRoute
+                })
+                .ToListAsync();
+        }
 public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
 {
     var result = await _context.BusinessRegisters
