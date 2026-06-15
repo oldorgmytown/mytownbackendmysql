@@ -17,13 +17,14 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<(bool isTaken, string message)> IsEmailTakenAsync(string email)
         {
-            var guest = await _context.GuestRegisters
+            // checking email is already registered as shopper or not
+            var shopper = await _context.ShopperRegisters
                 .FirstOrDefaultAsync(g => g.Email.ToLower() == email.ToLower());
 
-            if (guest == null || guest.Status == "Deactivated")
+            if (shopper == null || shopper.Status == "Deactivated")
                 return (false, null);
 
-            if (guest.Status == "Blocked")
+            if (shopper.Status == "Blocked")
                 return (true, "This email is blocked. Please contact support.");
 
             return (true, null);

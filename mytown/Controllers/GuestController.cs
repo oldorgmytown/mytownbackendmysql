@@ -19,6 +19,17 @@ namespace mytown.Controllers
         }
 
         // ---------------- REGISTER ----------------
+
+        [HttpGet("check-email")]
+        public async Task<IActionResult> CheckEmail(string email)
+        {
+            var result = await _guestService.CheckEmailAsync(email);
+
+            if (!result.success)
+                return BadRequest(new { error = result.message });
+
+            return Ok(new { message = result.message });
+        }
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] GuestRegisterDto dto)
