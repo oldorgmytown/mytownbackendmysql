@@ -80,6 +80,7 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<ITransporterDashboardRepository, TransporterDashboardRepository>();
         services.AddScoped<ISenderRepository, SenderRepository>();
         services.AddScoped<IConnectionsRepository, ConnectionsRepository>();
+        services.AddScoped<IMobileAppRepository, MobileAppRepository>();
 
 
         services.AddScoped<ITokenService, TokenService>();
@@ -110,6 +111,7 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IGuestRepository, GuestRepository>();
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IConnectionsService, ConnectionsService>();
+        services.AddScoped<IMobileAppService, MobileAppService>();
 
     }
 

@@ -246,6 +246,7 @@ namespace mytown.Models.DTO_s
         public bool AcceptsFragile { get; set; }
         public bool AcceptsPerishable { get; set; }
         public string PreferredContact { get; set; }
+        public string PreferredRoute { get; set; }
     }
 }
 

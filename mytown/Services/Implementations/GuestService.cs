@@ -34,15 +34,30 @@ namespace mytown.Services.Implementations
         }
 
         // ---------------- REGISTER ----------------
+
+        public async Task<(bool success, string message)> CheckEmailAsync(string email)
+        {
+            var (isTaken, statusMessage) = await _repo.IsEmailTakenAsync(email);
+
+            if (statusMessage != null)
+                return (false, statusMessage);
+
+            if (isTaken)
+                return (false,
+                    "This email is already registered as Shopper with ItIsMyTown. Please Login and continue as Shopper");
+
+            return (true, "Email is available");
+        }
         public async Task<(bool success, string message)> RegisterGuestAsync(GuestRegisterDto dto)
         {
+            // check if this guest email is already registered as shopper on mytown
             var (isTaken, statusMessage) = await _repo.IsEmailTakenAsync(dto.Email);
 
             if (statusMessage != null)
                 return (false, statusMessage);
 
             if (isTaken)
-                return (false, "This email is already registered.");
+                return (false, "This email is already registered as Shopper with ItIsMyTown. Please Login and continue as Shopper");
 
             //  Directly register guest without email verification
             var guest = new GuestRegister

@@ -131,7 +131,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //  New endpoint - Track order by tracking ID
+        // Track order by tracking ID
         [AllowAnonymous]
         [HttpGet("track/{trackingId}")]
         public async Task<IActionResult> TrackOrder(string trackingId)
@@ -148,6 +148,23 @@ namespace mytown.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error tracking order {TrackingId}", trackingId);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
+
+        // ✅ Get popular cities
+        [AllowAnonymous]
+        [HttpGet("popular-cities")]
+        public async Task<IActionResult> GetPopularCities()
+        {
+            try
+            {
+                var result = await _searchService.GetPopularCitiesAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching popular cities");
                 return StatusCode(500, new { error = "Something went wrong." });
             }
         }
