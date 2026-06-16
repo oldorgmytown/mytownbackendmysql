@@ -8,6 +8,7 @@ namespace mytown.DataAccess.Repositories
     public class MobileAppRepository : IMobileAppRepository
     {
         private readonly AppDbContext _context;
+
         public MobileAppRepository(AppDbContext context)
         {
             _context = context;
@@ -181,7 +182,7 @@ namespace mytown.DataAccess.Repositories
                     CountryName = g.Key.BusinessCountry,
                     StoreCount = g.Count()
                 })
-               .OrderByDescending(x => x.StoreCount)
+                .OrderByDescending(x => x.StoreCount)
                 .ToListAsync();
 
             return result;
@@ -233,5 +234,61 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
+public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
+{
+    var result = await _context.BusinessRegisters
+        .Where(x => !string.IsNullOrEmpty(x.BusinessCity))
+        .GroupBy(x => new
+        {
+            x.BusinessCity,
+            x.BusinessCountry
+        })
+        .Select(g => new PopularCityDto
+        {
+            City = g.Key.BusinessCity,
+            Country = g.Key.BusinessCountry,
+            StoreCount = g.Count()
+        })
+        .OrderByDescending(x => x.StoreCount)
+        .Take(12)
+        .ToListAsync();
+
+    return result;
+}
+
+        public async Task<List<TownListDto>> GetTownListByCityAsync(string city)
+        {
+        var stores = await _context.BusinessRegisters
+            .Where(x =>
+                x.BusinessCity == city &&
+                !string.IsNullOrEmpty(x.Town))
+            .Select(x => new
+            {
+                x.Town,
+                x.BusinessName
+            })
+            .ToListAsync();
+
+        var result = stores
+            .GroupBy(x => x.Town)
+            .Select(g => new TownListDto
+            {
+                TownName = g.Key,
+
+                ActiveStoreCount = g.Count(),
+
+                PopularStores = g
+                    .Select(x => x.BusinessName)
+                    .Distinct()
+                    .Take(3)
+                    .ToList()
+            })
+            .OrderByDescending(x => x.ActiveStoreCount)
+            .ToList();
+
+        return result;
+}
+
+
     }
 }

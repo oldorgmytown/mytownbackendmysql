@@ -12,7 +12,7 @@ namespace mytown.DataAccess.Interfaces
     string startCity,
     string destinationTown,
     string destinationCity);
-
-
+        Task<List<PopularCityDto>> GetPopularCitiesAsync();
+        Task<List<TownListDto>> GetTownListByCityAsync(string city);
     }
 }

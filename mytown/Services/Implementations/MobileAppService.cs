@@ -1,5 +1,4 @@
 ﻿using mytown.DataAccess.Interfaces;
-using mytown.DataAccess.Repositories;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -10,10 +9,9 @@ namespace mytown.Services.Implementations
         private readonly ILogger<MobileAppService> _logger;
         private readonly IMobileAppRepository _mobileAppRepository;
 
-
         public MobileAppService(
-      ILogger<MobileAppService> logger,
-      IMobileAppRepository mobileAppRepository)
+            ILogger<MobileAppService> logger,
+            IMobileAppRepository mobileAppRepository)
         {
             _logger = logger;
             _mobileAppRepository = mobileAppRepository;
@@ -33,6 +31,17 @@ namespace mytown.Services.Implementations
         {
             return await _mobileAppRepository.GetExploreTownsAsync();
         }
+
+        // New Popular Cities Method
+        public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
+        {
+            return await _mobileAppRepository.GetPopularCitiesAsync();
+        }
+
+        public async Task<List<TownListDto>> GetTownListByCityAsync(string city)
+       {
+    return await _mobileAppRepository.GetTownListByCityAsync(city);
+       }
 
         public async Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
     string startTown,

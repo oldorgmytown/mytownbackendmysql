@@ -636,7 +636,8 @@ namespace mytown.DataAccess.Repositories
            ShippingAmount = sd.Cost,
            EstimatedDays = sd.EstimatedDays,
            EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
-           ShippingStatus = sd.ShippingStatus
+           ShippingStatus = sd.ShippingStatus,
+           TrackingId = sd.TrackingId
        }
    ).ToListAsync();
 
