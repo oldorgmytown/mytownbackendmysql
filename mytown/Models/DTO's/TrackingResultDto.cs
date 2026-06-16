@@ -10,7 +10,7 @@ namespace mytown.Models.DTO_s
         public DateTime? DeliveredDate { get; set; }
         public string DeliveryAddress { get; set; }
 
-        //  New - Expected delivery date
+        // Expected Delivery
         public DateTime? ExpectedDeliveryDate { get; set; }
 
         // Order Info
@@ -20,24 +20,39 @@ namespace mytown.Models.DTO_s
         public DateTime OrderDate { get; set; }
         public bool IsGuestOrder { get; set; }
 
-              // Customer Info
+        // Customer Info
         public string CustomerName { get; set; }
         public string CustomerEmail { get; set; }
         public string CustomerPhone { get; set; }
 
+        // Store Details
+        public int? StoreId { get; set; }
+        public string? StoreName { get; set; }
+        public string? StoreLogo { get; set; }
+        public string? StoreBanner { get; set; }
+        public string? StoreAddress { get; set; }
+        public string? StorePhone { get; set; }
+        public string? StoreEmail { get; set; }
+        public string? StoreDescription { get; set; }
+
+        // Transporter Details
+        public int? TransporterRegId { get; set; }
+        public string? TransporterName { get; set; }
+        public string? TransporterPhone { get; set; }
+        public string? TransporterEmail { get; set; }
+        public string? TransporterAddress { get; set; }
+
+        // Products
         public List<TrackingProductDto> Products { get; set; } = new();
     }
-}
 
-
-
-
-public class TrackingProductDto
-{
-    public int ProductId { get; set; }
-    public int? SkuId { get; set; }
-    public string ProductName { get; set; }
-    public string ProductImage { get; set; }
-    public int Quantity { get; set; }
-    public decimal ProductCost { get; set; }
+    public class TrackingProductDto
+    {
+        public int ProductId { get; set; }
+        public int? SkuId { get; set; }
+        public string ProductName { get; set; }
+        public string ProductImage { get; set; }
+        public int Quantity { get; set; }
+        public decimal ProductCost { get; set; }
+    }
 }
