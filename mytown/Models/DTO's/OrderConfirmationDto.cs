@@ -49,6 +49,7 @@
         public string TransporterEmail { get; set; } = string.Empty;
         public string ShippingType { get; set; } = string.Empty;
         public decimal ShippingAmount { get; set; }
+        public string TrackingId { get; set; } = string.Empty;
 
         public int EstimatedDays { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
