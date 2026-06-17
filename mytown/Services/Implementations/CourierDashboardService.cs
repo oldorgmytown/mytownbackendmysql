@@ -16,7 +16,7 @@ namespace mytown.Services.Implementations
         private readonly IEmailService _emailService;
 
         private static readonly HashSet<string> ValidStatuses =
-       new() { "Pending","New Order", "In Progress", "Delivered" };
+       new() { "Pending","New Order", "Ready to Ship", "In Progress", "Delivered" };
         public CourierDashboardService(ICourierDashboardRepository repository)
         {
             _repository = repository;
