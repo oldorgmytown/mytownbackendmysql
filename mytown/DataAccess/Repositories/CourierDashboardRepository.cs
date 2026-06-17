@@ -34,7 +34,7 @@ namespace mytown.DataAccess.Repositories
             {
                 query = query.Where(sd =>
                     sd.ShippingStatus == "Pending" ||
-                    sd.ShippingStatus == "Ready To Ship");
+                    sd.ShippingStatus == "Ready to Ship");
             }
             else
             {
@@ -98,7 +98,7 @@ namespace mytown.DataAccess.Repositories
             {
                 query = query.Where(sd =>
                     sd.ShippingStatus == "Pending" ||
-                    sd.ShippingStatus == "Ready To Ship");
+                    sd.ShippingStatus == "Ready to Ship");
             }
             else
             {
