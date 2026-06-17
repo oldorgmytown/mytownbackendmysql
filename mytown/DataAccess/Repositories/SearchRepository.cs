@@ -764,89 +764,140 @@ namespace mytown.DataAccess.Repositories
         }
 
         // Track order by tracking ID
-        public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
+       public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
+{
+    var shipping = await _context.ShippingDetails
+        .Include(s => s.Order)
+            .ThenInclude(o => o.ShopperRegister)
+        .Include(s => s.Order)
+            .ThenInclude(o => o.GuestRegister)
+        .FirstOrDefaultAsync(s => s.TrackingId == trackingId);
+
+    if (shipping == null)
+        return null;
+
+    var order = shipping.Order;
+    string customerName, customerEmail, customerPhone;
+
+    if (order.IsGuestOrder && order.GuestRegister != null)
+    {
+        customerName = order.GuestRegister.Username;
+        customerEmail = order.GuestRegister.Email;
+        customerPhone = order.GuestRegister.PhoneNumber;
+    }
+    else if (order.ShopperRegister != null)
+    {
+        customerName = order.ShopperRegister.Username;
+        customerEmail = order.ShopperRegister.Email;
+        customerPhone = order.ShopperRegister.PhoneNumber;
+    }
+    else
+    {
+        customerName = "Unknown";
+        customerEmail = "Unknown";
+        customerPhone = "Unknown";
+    }
+
+    var products = await (
+        from od in _context.OrderDetails
+        join p in _context.products on od.ProductId equals p.ProductId
+
+        join sku in _context.Sku_ProductVariants
+            on od.SkuId equals sku.SkuId into skuGroup
+        from sku in skuGroup.DefaultIfEmpty()
+
+        join img in _context.ProductImages
+            on sku.SkuId equals img.SkuId into imgGroup
+        from img in imgGroup
+            .OrderBy(i => i.SortOrder)
+            .Take(1)
+            .DefaultIfEmpty()
+
+        where od.OrderId == order.OrderId
+
+        select new TrackingProductDto
         {
-            var shipping = await _context.ShippingDetails
-                .Include(s => s.Order)
-                    .ThenInclude(o => o.ShopperRegister)
-                .Include(s => s.Order)
-                    .ThenInclude(o => o.GuestRegister)
-                .FirstOrDefaultAsync(s => s.TrackingId == trackingId);
-
-            if (shipping == null)
-                return null;
-
-            var order = shipping.Order;
-            string customerName, customerEmail, customerPhone;
-
-            if (order.IsGuestOrder && order.GuestRegister != null)
-            {
-                customerName = order.GuestRegister.Username;
-                customerEmail = order.GuestRegister.Email;
-                customerPhone = order.GuestRegister.PhoneNumber;
-            }
-            else if (order.ShopperRegister != null)
-            {
-                customerName = order.ShopperRegister.Username;
-                customerEmail = order.ShopperRegister.Email;
-                customerPhone = order.ShopperRegister.PhoneNumber;
-            }
-            else
-            {
-                customerName = "Unknown";
-                customerEmail = "Unknown";
-                customerPhone = "Unknown";
-            }
-
-            var products = await (
-                from od in _context.OrderDetails
-                join p in _context.products on od.ProductId equals p.ProductId
-
-                join sku in _context.Sku_ProductVariants
-                    on od.SkuId equals sku.SkuId into skuGroup
-                from sku in skuGroup.DefaultIfEmpty()
-
-                join img in _context.ProductImages
-                    on sku.SkuId equals img.SkuId into imgGroup
-                from img in imgGroup
-                    .OrderBy(i => i.SortOrder)
-                    .Take(1)
-                    .DefaultIfEmpty()
-
-                where od.OrderId == order.OrderId
-
-                select new TrackingProductDto
-                {
-                    ProductId = p.ProductId,
-                    SkuId = od.SkuId,
-                    ProductName = p.ProductName,
-                    Quantity = od.Quantity,
-                    ProductCost = od.Price,
-                    ProductImage = img != null ? img.FileName : p.ProductImage
-                }
-            ).ToListAsync();
-
-            return new TrackingResultDto
-            {
-                TrackingId = shipping.TrackingId,
-                ShippingStatus = shipping.ShippingStatus,
-                ShippingType = shipping.ShippingType,
-                EstimatedDays = shipping.EstimatedDays,
-                DeliveredDate = shipping.DeliveredDate,
-                DeliveryAddress = shipping.DeliveryAddress,
-                OrderId = order.OrderId,
-                OrderStatus = order.OrderStatus,
-                TotalAmount = order.TotalAmount,
-                OrderDate = order.OrderDate,
-                IsGuestOrder = order.IsGuestOrder,
-                CustomerName = customerName,
-                CustomerEmail = customerEmail,
-                CustomerPhone = customerPhone,
-                Products = products
-            };
+            ProductId = p.ProductId,
+            SkuId = od.SkuId,
+            ProductName = p.ProductName,
+            Quantity = od.Quantity,
+            ProductCost = od.Price,
+            ProductImage = img != null ? img.FileName : p.ProductImage
         }
+    ).ToListAsync();
 
-        // ✅ New method - Get popular cities from different countries
+    // Store Details
+    var firstOrderDetail = await _context.OrderDetails
+        .FirstOrDefaultAsync(x => x.OrderId == order.OrderId);
+
+    BusinessRegister? store = null;
+    BusinessProfile? storeProfile = null;
+
+    if (firstOrderDetail != null)
+    {
+        store = await _context.BusinessRegisters
+            .FirstOrDefaultAsync(x => x.BusRegId == firstOrderDetail.StoreId);
+
+        if (store != null)
+        {
+            storeProfile = await _context.BusinessProfiles
+                .FirstOrDefaultAsync(x => x.BusRegId == store.BusRegId);
+        }
+    }
+
+    // Transporter Details
+    TransporterRegister? transporter = null;
+
+    if (shipping.TransporterRegId.HasValue)
+    {
+        transporter = await _context.TransporterRegisters
+            .FirstOrDefaultAsync(x =>
+                x.TransporterRegId == shipping.TransporterRegId.Value);
+    }
+
+    return new TrackingResultDto
+    {
+        TrackingId = shipping.TrackingId,
+        ShippingStatus = shipping.ShippingStatus,
+        ShippingType = shipping.ShippingType,
+        EstimatedDays = shipping.EstimatedDays,
+        DeliveredDate = shipping.DeliveredDate,
+        DeliveryAddress = shipping.DeliveryAddress,
+
+        OrderId = order.OrderId,
+        OrderStatus = order.OrderStatus,
+        TotalAmount = order.TotalAmount,
+        OrderDate = order.OrderDate,
+        IsGuestOrder = order.IsGuestOrder,
+
+        CustomerName = customerName,
+        CustomerEmail = customerEmail,
+        CustomerPhone = customerPhone,
+
+        // Store Details
+        StoreId = store?.BusRegId,
+        StoreName = store?.BusinessName,
+        StorePhone = store?.BusMobileNo,
+        StoreEmail = store?.BusEmail,
+        StoreAddress = storeProfile?.BusinessLocation,
+        StoreLogo = storeProfile?.LogoPath,
+        StoreBanner = storeProfile?.BannerPath,
+        StoreDescription = storeProfile?.BusinessAbout,
+
+        // Transporter Details
+        TransporterRegId = transporter?.TransporterRegId,
+        TransporterName = transporter?.TransporterName,
+        TransporterPhone = transporter?.PhoneNumber,
+        TransporterEmail = transporter?.Email,
+        TransporterAddress = transporter != null
+            ? $"{transporter.Address}, {transporter.Town}, {transporter.City}, {transporter.State}, {transporter.Country}"
+            : null,
+
+        Products = products
+    };
+}
+
+        //  New method - Get popular cities from different countries
         public async Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync()
         {
             return await _context.BusinessRegisters
