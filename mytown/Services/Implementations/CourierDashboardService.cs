@@ -17,9 +17,12 @@ namespace mytown.Services.Implementations
 
         private static readonly HashSet<string> ValidStatuses =
        new() { "Pending","New Order", "Ready to Ship", "In Progress", "Delivered" };
-        public CourierDashboardService(ICourierDashboardRepository repository)
+        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService
+            )
         {
             _repository = repository;
+            _orderRepository = orderRepository;
+            _emailService = emailService;
         }
 
         public async Task<List<CourierOrderDto>> GetOrdersAsync(
