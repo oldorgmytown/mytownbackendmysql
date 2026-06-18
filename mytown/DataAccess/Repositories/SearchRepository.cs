@@ -855,6 +855,24 @@ namespace mytown.DataAccess.Repositories
                 x.TransporterRegId == shipping.TransporterRegId.Value);
     }
 
+    // Courier Branch Details
+    CourierBranch? courierBranch = null;
+
+    if (shipping.BranchId.HasValue)
+    {
+        courierBranch = await _context.CourierBranches
+            .FirstOrDefaultAsync(x => x.BranchId == shipping.BranchId.Value);
+    }
+
+        // Travel Plan Details
+        TransporterTravelPlan? transporterPlan = null;
+
+        if (shipping.TransporterPlanId.HasValue)
+        {
+            transporterPlan = await _context.TransporterTravelPlans
+                .FirstOrDefaultAsync(x => x.PlanId == shipping.TransporterPlanId.Value);
+        }
+
     return new TrackingResultDto
     {
         TrackingId = shipping.TrackingId,
@@ -884,16 +902,23 @@ namespace mytown.DataAccess.Repositories
         StoreBanner = storeProfile?.BannerPath,
         StoreDescription = storeProfile?.BusinessAbout,
 
-        // Transporter Details
-        TransporterRegId = transporter?.TransporterRegId,
-        TransporterName = transporter?.TransporterName,
-        TransporterPhone = transporter?.PhoneNumber,
-        TransporterEmail = transporter?.Email,
-        TransporterAddress = transporter != null
-            ? $"{transporter.Address}, {transporter.Town}, {transporter.City}, {transporter.State}, {transporter.Country}"
-            : null,
 
-        Products = products
+    TransporterAddress = transporter != null
+    ? $"{transporter.Address}, {transporter.Town}, {transporter.City}, {transporter.State}, {transporter.Country}"
+    : null,
+
+    // Courier Details
+    CourierName = courierBranch?.CourierServiceName,
+    BranchContactPerson = courierBranch?.BranchContactPerson,
+    BranchEmail = courierBranch?.BranchEmailId,
+    BranchPhoneNumber = courierBranch?.BranchPhoneNumber,
+
+    // Travel Plan Details
+    VehicleType = transporterPlan?.VehicleType,
+    VehicleName = transporterPlan?.VehicleName,
+    PreferredRoute = transporterPlan?.PreferredRoute,
+
+    Products = products
     };
 }
 
