@@ -525,15 +525,18 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 }
             }
 
-            // ── NOTIFY SHOPPER ──
-            _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+            // ── NOTIFY SHOPPER ONLY FOR REGISTERED SHOPPERS , Not for guest ──
+            if (!delivery.IsGuestOrder && delivery.ShopperRegId.HasValue)
             {
-                ShopperRegId = delivery.ShopperRegId ?? 0,
-                Title = "Delivery Update",
-                Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
-                IsRead = false,
-                CreatedDate = DateTime.UtcNow
-            });
+                _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+                {
+                    ShopperRegId = delivery.ShopperRegId.Value,
+                    Title = "Delivery Update",
+                    Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
 
             // ── NOTIFY TRANSPORTER ──
             _context.TransporterDBNotifications.Add(new TransporterDBNotifications

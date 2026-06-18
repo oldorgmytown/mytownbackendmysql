@@ -309,8 +309,8 @@ namespace mytown.Services.Implementations
                     store.BusinessCity,
                     store.BusinessState,
                     store.BusinessCountry,
-                    city,
                     town,
+                    city,
                     state,
                     country,
                     totalWeight
