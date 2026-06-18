@@ -42,7 +42,7 @@ namespace mytown.Models.DTO_s
         public string? TransporterEmail { get; set; }
         public string? TransporterAddress { get; set; }
 
-        // Courier Details
+        // Courier Details added
         public string? CourierName { get; set; }
         public string? BranchContactPerson { get; set; }
         public string? BranchEmail { get; set; }

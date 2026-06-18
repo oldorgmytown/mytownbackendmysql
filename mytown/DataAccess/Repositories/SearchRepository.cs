@@ -907,7 +907,7 @@ namespace mytown.DataAccess.Repositories
     ? $"{transporter.Address}, {transporter.Town}, {transporter.City}, {transporter.State}, {transporter.Country}"
     : null,
 
-    // Courier Details
+    // Courier Details added new
     CourierName = courierBranch?.CourierServiceName,
     BranchContactPerson = courierBranch?.BranchContactPerson,
     BranchEmail = courierBranch?.BranchEmailId,
