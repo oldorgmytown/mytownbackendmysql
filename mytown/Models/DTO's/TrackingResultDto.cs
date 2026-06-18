@@ -42,6 +42,19 @@ namespace mytown.Models.DTO_s
         public string? TransporterEmail { get; set; }
         public string? TransporterAddress { get; set; }
 
+        // Courier Details
+        public string? CourierName { get; set; }
+        public string? BranchContactPerson { get; set; }
+        public string? BranchEmail { get; set; }
+        public string? BranchPhoneNumber { get; set; }
+
+
+        // Travel Plan Details
+        public string? VehicleType { get; set; }
+        public string? VehicleName { get; set; }
+        public string? PreferredRoute { get; set; }
+
+
         // Products
         public List<TrackingProductDto> Products { get; set; } = new();
     }
