@@ -30,6 +30,7 @@ namespace mytown.Controllers
 
             return Ok(new { message = result.message });
         }
+
         [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] GuestRegisterDto dto)
@@ -41,7 +42,8 @@ namespace mytown.Controllers
                 if (!result.success)
                     return BadRequest(new { error = result.message });
 
-                return Ok(new { message = result.message });
+                //  Now returns guestRegId
+                return Ok(new { message = result.message, guestRegId = result.guestRegId });
             }
             catch (Exception ex)
             {
