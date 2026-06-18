@@ -975,7 +975,8 @@ public class EmailService : IEmailService
       </td>
     </tr>
 
-    <!-- ===== VIEW ORDER BUTTON ===== -->
+    <!-- ===== VIEW ORDER BUTTON only for shopper ===== -->
+
     {(!orderdto.IsGuestOrder
 ? @"
 <tr>
