@@ -709,6 +709,15 @@ public class EmailService : IEmailService
 </tr>");
             }
 
+            var storeOrderDisplay = orderdto.IsGuestOrder
+    ? store.StoreOrderId.ToString()
+    : $@"
+<a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/order-details/{store.StoreOrderId}""
+   style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
+          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+    {store.StoreOrderId}
+</a>";
+
             storesBuilder.Append($@"
 <!-- ===== STORE BLOCK ===== -->
 <tr>
@@ -734,12 +743,8 @@ public class EmailService : IEmailService
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:6px;"">Store Order ID</td>
         <td align=""right"" style=""padding-bottom:6px;"">
-  <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/order-details/{store.StoreOrderId}""
-     style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
-            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-    {store.StoreOrderId}
-  </a>
-</td>
+            {storeOrderDisplay}
+        </td>
       </tr>
       <tr>
         <td style=""color:#000;font-size:16px;font-weight:400;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Estimated Date of Delivery</td>
@@ -971,17 +976,20 @@ public class EmailService : IEmailService
     </tr>
 
     <!-- ===== VIEW ORDER BUTTON ===== -->
-    <tr>
-      <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/orders""
-           style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
-                  border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
-                  text-decoration:none;text-align:center;
-                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-          View Order
-        </a>
-      </td>
-    </tr>
+    {(!orderdto.IsGuestOrder
+? @"
+<tr>
+  <td align=""center"" style=""padding:24px 30px;"">
+    <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/orders""
+       style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
+              border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
+              text-decoration:none;text-align:center;
+              font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
+      View Order
+    </a>
+  </td>
+</tr>"
+: "")}
 
     <!-- ===== FOOTER ===== -->
     <tr>
