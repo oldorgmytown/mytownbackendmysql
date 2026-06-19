@@ -68,8 +68,8 @@ namespace mytown.Services.Implementations
         {
             var shipment = await _repository.GetByStoreOrderIdAsync(storeOrderId);
 
-            if (shipment.ShippingStatus != "Pending" && shipment.ShippingStatus != "Ready to Ship")
-                throw new Exception("Tracking can be added only for new orders");
+            if (shipment.ShippingStatus != "Ready to Ship")
+                throw new Exception("Tracking can be added only after Ready to Ship notification from Store");
 
             shipment.TrackingId = trackingId;
             shipment.ShippingStatus = "In Progress";
