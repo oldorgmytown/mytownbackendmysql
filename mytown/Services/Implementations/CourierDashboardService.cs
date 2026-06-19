@@ -68,6 +68,7 @@ namespace mytown.Services.Implementations
         {
             var shipment = await _repository.GetByStoreOrderIdAsync(storeOrderId);
 
+            // allow tracking id allotment only for ready to ship orders
             if (shipment.ShippingStatus != "Ready to Ship")
                 throw new Exception("Tracking can be added only after Ready to Ship notification from Store");
 
