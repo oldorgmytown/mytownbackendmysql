@@ -70,6 +70,7 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<GuestRegister?> GetGuestByEmailAsync(string email)
         {
+            //getting latest guest registration by email
             return await _context.GuestRegisters
                 .Where(g => g.Email == email)
                 .OrderByDescending(g => g.GuestRegId)

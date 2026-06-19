@@ -3545,7 +3545,7 @@ public class EmailService : IEmailService
                 using (var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail, "ITISMYTOWN"),
-                    Subject = $"Tracking Information for Order - {orderdto.OrderId}",
+                    Subject = $"Tracking Information for Order - {orderdto.OrderId}", //subject name change
                     Body = htmlBody,
                     IsBodyHtml = true
                 })
