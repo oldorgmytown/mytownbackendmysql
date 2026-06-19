@@ -71,7 +71,9 @@ namespace mytown.DataAccess.Repositories
         public async Task<GuestRegister?> GetGuestByEmailAsync(string email)
         {
             return await _context.GuestRegisters
-                .FirstOrDefaultAsync(g => g.Email.ToLower() == email.ToLower());
+                .Where(g => g.Email == email)
+                .OrderByDescending(g => g.GuestRegId)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<GuestRegister?> GetGuestByIdAsync(int guestRegId)
