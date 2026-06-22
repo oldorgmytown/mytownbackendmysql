@@ -60,5 +60,15 @@ namespace mytown.Services.Implementations
             return await _mobileAppRepository.GetAllProductsAsync();
         }
 
+        public async Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId)
+        {
+           return await _mobileAppRepository.GetProductsBySubCategoryAsync(subCategoryId);
+        }
+
+        public async Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId)
+        {
+          return await _mobileAppRepository.GetStoresBySubCategoryAsync(prodSubcatId);
+        }
+
     }
 }
