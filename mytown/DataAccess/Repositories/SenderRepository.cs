@@ -580,6 +580,8 @@ GetTransporterByIdAsync(int transporterId)
                     x.BookingDate.Date < today);
             }
 
+            //sender In Progress status error fixed - changed to In Progress from InProgress
+
             else if (orderStatus == "In Progress")
             {
                 query = query.Where(x =>
