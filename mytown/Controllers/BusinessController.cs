@@ -282,27 +282,6 @@ namespace mytown.Controllers
             return Ok(await _businessService.BusinessSubCategoriesforStores(buscatid));
         }
 
-        [AllowAnonymous]
-[HttpPost("fix-blob-cors")]
-public async Task<IActionResult> FixBlobCors()
-{
-    var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
-    var blobServiceClient = new BlobServiceClient(connectionString);
-
-    var properties = await blobServiceClient.GetPropertiesAsync();
-    properties.Value.Cors.Clear();
-    properties.Value.Cors.Add(new Azure.Storage.Blobs.Models.BlobCorsRule
-    {
-        AllowedOrigins = "*",
-        AllowedMethods = "GET,HEAD,OPTIONS",
-        AllowedHeaders = "*",
-        ExposedHeaders = "*",
-        MaxAgeInSeconds = 3600
-    });
-
-    await blobServiceClient.SetPropertiesAsync(properties.Value);
-    return Ok("CORS fixed");
-}
 
         // ================== UPLOAD IMAGE ===================
         [Authorize]
