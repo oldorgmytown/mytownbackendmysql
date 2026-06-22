@@ -561,6 +561,7 @@ GetTransporterByIdAsync(int transporterId)
                         transporter != null
                             ? transporter.PhoneNumber
                             : null,
+                    TrackingId = o.TrackingId
                 };
 
             // NEW = Today's pending orders
@@ -579,14 +580,14 @@ GetTransporterByIdAsync(int transporterId)
                     x.BookingDate.Date < today);
             }
 
-            // IN PROGRESS
-            else if (orderStatus == "InProgress")
+            else if (orderStatus == "In Progress")
             {
                 query = query.Where(x =>
-                    x.DeliveryStatus == "Assigned" ||
-                    x.DeliveryStatus == "PickedUp" ||
-                    x.DeliveryStatus == "InProgress" ||
-                    x.DeliveryStatus == "InTransit");
+                    x.DeliveryStatus.ToLower() == "pickedup" ||
+                    x.DeliveryStatus.ToLower() == "inprogress" ||
+                    x.DeliveryStatus.ToLower() == "in progress" ||
+                    x.DeliveryStatus.ToLower() == "intransit" ||
+                    x.DeliveryStatus.ToLower() == "in transit");
             }
 
             // DELIVERED

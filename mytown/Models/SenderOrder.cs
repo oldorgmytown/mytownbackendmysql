@@ -112,7 +112,10 @@ namespace mytown.Models
         public int? TransporterPlanId { get; set; }
 
         [Column("delivery_status")]
-        public string DeliveryStatus { get; set; }
-    = "Pending";
+        public string DeliveryStatus { get; set; } = "Pending";
+
+        [Column("tracking_id")]
+        public string? TrackingId { get; set; }
+
     }
 }

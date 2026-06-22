@@ -21,5 +21,6 @@
         public string? TransporterPhone { get; set; }
 
         public string? VehicleType { get; set; }
+        public string? TrackingId { get; set; } 
     }
 }

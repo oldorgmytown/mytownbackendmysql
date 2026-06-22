@@ -886,6 +886,16 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             order.DeliveryStatus = deliveryStatus;
 
+            // generating tracking id when sttaus is picked up and tracking id is null or empty
+
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(order.TrackingId))
+            {
+                order.TrackingId = GenerateSenderTrackingId(order.SenderOrderId);
+            }
+
+            
+
             // Sender Notification
             _context.SenderDBNotifications.Add(
                 new SenderDBNotifications
@@ -923,6 +933,10 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             return true;
         }
 
+        private string GenerateSenderTrackingId(int senderOrderId)
+        {
+            return $"MYTOWN-SND-{senderOrderId}";
+        }
         public async Task AddSenderNotificationAsync(
    SenderDBNotifications notification)
         {

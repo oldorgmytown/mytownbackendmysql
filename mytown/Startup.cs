@@ -158,30 +158,44 @@ private void RegisterApplicationServices(IServiceCollection services)
 
 
     // Configures the CORS policy.
-    private void RegisterCors(IServiceCollection services)
+private void RegisterCors(IServiceCollection services)
+{
+    var allowedOrigins = new List<string>
     {
-        var allowedOrigins = new List<string>
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net",
+        "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net",
+        "https://kind-meadow-0fe6b9000.7.azurestaticapps.net",
+        "https://www.itismytown.com",
+        "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net",
+        "https://jolly-sea-066e8b500.7.azurestaticapps.net",
+        "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net"
+    };
+
+    services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", policy =>
         {
-            "http://localhost:3000", // Local frontend
-            "http://localhost:3001",
-            "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net" ,// Production frontend
-            "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net", // new webapp service
-                "https://kind-meadow-0fe6b9000.7.azurestaticapps.net", // new static web app for frontend
-                "https://www.itismytown.com",
-                "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net", // staging webapp service
-                "https://jolly-sea-066e8b500.7.azurestaticapps.net",// staging static web app for frontend
-                "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net" // staging slot new static web app for frontend
-        };
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowFrontend", policy =>
+            policy.SetIsOriginAllowed(origin =>
             {
-                policy.WithOrigins(allowedOrigins.ToArray())
-                      .AllowAnyMethod()
-                      .AllowAnyHeader();
-            });
+                if (allowedOrigins.Contains(origin)) return true;
+
+                // Flutter web debug runs on a random localhost port each time —
+                // allow any localhost/127.0.0.1 origin instead of hardcoding ports.
+                if (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                    (uri.Host == "localhost" || uri.Host == "127.0.0.1"))
+                {
+                    return true;
+                }
+
+                return false;
+            })
+            .AllowAnyMethod()
+            .AllowAnyHeader();
         });
-    }
+    });
+}
 
     // Configures JWT Bearer authentication.
     private void RegisterAuthentication(IServiceCollection services)

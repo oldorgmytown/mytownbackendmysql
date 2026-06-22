@@ -11,9 +11,12 @@ namespace mytown.Services.Interfaces
         Task<List<PopularCityDto>> GetPopularCitiesAsync();
         Task<List<TownListDto>> GetTownListByCityAsync(string city);
         Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
-    string startTown,
-    string startCity,
-    string destinationTown,
-    string destinationCity);
+        string startTown,
+        string startCity,
+        string destinationTown,
+        string destinationCity);
+       Task<List<AllProductsDto>> GetAllProductsAsync();
+       Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId);
+       Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId);
     }
 }

@@ -288,7 +288,119 @@ public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
 
         return result;
 }
+        public async Task<List<AllProductsDto>> GetAllProductsAsync()
+{
+    var result = await (
+        from p in _context.products
+        join b in _context.BusinessRegisters
+            on p.BusRegId equals b.BusRegId
+        join v in _context.Sku_ProductVariants
+            .Include(x => x.Images)
+            on p.ProductId equals v.ProductId
 
+        select new AllProductsDto
+        {
+            ProductId = p.ProductId,
+            ProductName = p.ProductName,
+
+            BusRegId = b.BusRegId,
+            StoreName = b.BusinessName,
+            StoreCity = b.BusinessCity,
+
+            SkuId = v.SkuId,
+
+            Cost = v.Sku_Cost,
+            DiscountPrice = v.DiscountPrice,
+            DiscountPercent = v.Discount,
+
+            ImageName = v.Images
+                .OrderBy(i => i.SortOrder)
+                .Select(i => i.FileName)
+                .FirstOrDefault(),
+
+            ProductDescription = p.ProductDescription,
+            AvailableQuantity = v.Quantity
+        })
+        .ToListAsync();
+
+    return result;
+}
+
+
+    public async Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId)
+{
+    var result = await (
+        from p in _context.products
+        join b in _context.BusinessRegisters
+            on p.BusRegId equals b.BusRegId
+        join v in _context.Sku_ProductVariants
+            .Include(x => x.Images)
+            on p.ProductId equals v.ProductId
+        where p.ProdSubcatId == subCategoryId
+              && p.IsActive == true
+        select new AllProductsDto
+        {
+            ProductId = p.ProductId,
+            ProductName = p.ProductName,
+
+            BusRegId = b.BusRegId,
+            StoreName = b.BusinessName,
+            StoreCity = b.BusinessCity,
+
+            SkuId = v.SkuId,
+
+            Cost = v.Sku_Cost,
+            DiscountPrice = v.DiscountPrice,
+            DiscountPercent = v.Discount,
+
+            ImageName = v.Images
+                .OrderBy(i => i.SortOrder)
+                .Select(i => i.FileName)
+                .FirstOrDefault(),
+
+            ProductDescription = p.ProductDescription,
+
+            AvailableQuantity = (int)v.Quantity
+        })
+        .ToListAsync();
+
+    return result;
+}
+
+
+        public async Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId)
+{
+    var result = await (
+        from p in _context.products
+        join br in _context.BusinessRegisters
+            on p.BusRegId equals br.BusRegId
+        join bp in _context.BusinessProfiles
+            on br.BusRegId equals bp.BusRegId
+        where p.ProdSubcatId == prodSubcatId
+              && p.IsActive
+        select new StoreBySubCategoryDto
+        {
+            BusRegId = br.BusRegId,
+
+            StoreName = br.BusinessName,
+            StoreCity = br.BusinessCity,
+            StoreState = br.BusinessState,
+            StoreCountry = br.BusinessCountry,
+
+            StorePhone = br.BusMobileNo,
+            StoreEmail = br.BusEmail,
+
+            StoreLogo = bp.LogoPath,
+            StoreBanner = bp.BannerPath,
+
+            StoreDescription = bp.BusinessAbout,
+            StoreLocation = bp.BusinessLocation
+        })
+        .Distinct()
+        .ToListAsync();
+
+    return result;
+}
 
     }
 }

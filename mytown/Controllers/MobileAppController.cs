@@ -73,5 +73,31 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("allproducts")]
+        public async Task<IActionResult> GetAllProducts()
+        {
+            var result = await _mobileAppService.GetAllProductsAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("productsbysubcategory/{subCategoryId}")]
+        public async Task<IActionResult> GetProductsBySubCategory(int subCategoryId)
+        {
+            var result = await _mobileAppService.GetProductsBySubCategoryAsync(subCategoryId);
+
+            return Ok(result);
+        }
+
+        [HttpGet("storesbysubcategory/{prodSubcatId}")]
+        public async Task<IActionResult> GetStoresBySubCategory(int prodSubcatId)
+        {
+            var result =
+                await _mobileAppService.GetStoresBySubCategoryAsync(prodSubcatId);
+
+            return Ok(result);
+        }
+
+
     }
 }
