@@ -561,6 +561,7 @@ GetTransporterByIdAsync(int transporterId)
                         transporter != null
                             ? transporter.PhoneNumber
                             : null,
+                    TrackingId = o.TrackingId
                 };
 
             // NEW = Today's pending orders
