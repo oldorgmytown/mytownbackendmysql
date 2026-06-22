@@ -282,6 +282,28 @@ namespace mytown.Controllers
             return Ok(await _businessService.BusinessSubCategoriesforStores(buscatid));
         }
 
+        [AllowAnonymous]
+[HttpPost("fix-blob-cors")]
+public async Task<IActionResult> FixBlobCors()
+{
+    var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+    var blobServiceClient = new BlobServiceClient(connectionString);
+
+    var properties = await blobServiceClient.GetPropertiesAsync();
+    properties.Value.Cors.Clear();
+    properties.Value.Cors.Add(new Azure.Storage.Blobs.Models.BlobCorsRule
+    {
+        AllowedOrigins = "*",
+        AllowedMethods = "GET,HEAD,OPTIONS",
+        AllowedHeaders = "*",
+        ExposedHeaders = "*",
+        MaxAgeInSeconds = 3600
+    });
+
+    await blobServiceClient.SetPropertiesAsync(properties.Value);
+    return Ok("CORS fixed");
+}
+
         // ================== UPLOAD IMAGE ===================
         [Authorize]
         [HttpPost("upload_image")]
@@ -304,10 +326,26 @@ namespace mytown.Controllers
 
             var blobClient = containerClient.GetBlobClient(newFileName);
 
-            using (var stream = file.OpenReadStream())
-            {
-                await blobClient.UploadAsync(stream, overwrite: true);
-            }
+using (var stream = file.OpenReadStream())
+{
+    var contentType = Path.GetExtension(file.FileName).ToLowerInvariant() switch
+    {
+        ".png" => "image/png",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".webp" => "image/webp",
+        ".gif" => "image/gif",
+        ".bmp" => "image/bmp",
+        _ => "application/octet-stream"
+    };
+
+    await blobClient.UploadAsync(stream, new Azure.Storage.Blobs.Models.BlobUploadOptions
+    {
+        HttpHeaders = new Azure.Storage.Blobs.Models.BlobHttpHeaders
+        {
+            ContentType = contentType
+        }
+    });
+}
 
             return Ok(new { FileName = newFileName, Url = blobClient.Uri.AbsoluteUri });
         }

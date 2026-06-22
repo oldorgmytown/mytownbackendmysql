@@ -15,5 +15,7 @@ namespace mytown.DataAccess.Interfaces
         Task<List<PopularCityDto>> GetPopularCitiesAsync();
         Task<List<TownListDto>> GetTownListByCityAsync(string city);
         Task<List<AllProductsDto>> GetAllProductsAsync();
+        Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId);
+        Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId);
     }
 }
