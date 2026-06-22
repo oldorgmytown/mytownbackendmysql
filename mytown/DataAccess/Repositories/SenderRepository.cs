@@ -576,8 +576,8 @@ GetTransporterByIdAsync(int transporterId)
             else if (orderStatus == "Pending")
             {
                 query = query.Where(x =>
-                    x.DeliveryStatus == "Pending" &&
-                    x.BookingDate.Date < today);
+                    x.DeliveryStatus == "Pending");
+
             }
 
             else if (orderStatus == "In Progress")

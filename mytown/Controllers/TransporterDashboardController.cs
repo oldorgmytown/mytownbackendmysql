@@ -311,27 +311,39 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        // Controller
         [HttpPut("transporter-update-delivery-status_senderorder")]
         public async Task<IActionResult> UpdateTransporterDeliveryStatus(
-            int senderOrderId,
-            int transporterRegId,
-            string deliveryStatus)
+      int senderOrderId,
+      int transporterRegId,
+      string deliveryStatus)
         {
-            var result = await _service.UpdateTransporterDeliveryStatusAsync(
-                senderOrderId,
-                transporterRegId,
-                deliveryStatus);
-
-            if (!result)
+            try
             {
-                return NotFound("Order not found");
+                var result = await _service.UpdateTransporterDeliveryStatusAsync(
+                    senderOrderId,
+                    transporterRegId,
+                    deliveryStatus);
+
+                if (!result)
+                {
+                    return NotFound(new
+                    {
+                        message = "Order not found"
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Delivery status updated successfully"
+                });
             }
-
-            return Ok(new
+            catch (Exception ex)
             {
-                message = "Delivery status updated successfully"
-            });
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
     }
 }
