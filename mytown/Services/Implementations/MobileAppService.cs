@@ -55,5 +55,10 @@ namespace mytown.Services.Implementations
                 destinationTown,
                 destinationCity);
         }
+        public async Task<List<AllProductsDto>> GetAllProductsAsync()
+        {
+            return await _mobileAppRepository.GetAllProductsAsync();
+        }
+
     }
 }

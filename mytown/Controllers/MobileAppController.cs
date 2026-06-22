@@ -73,5 +73,14 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("allproducts")]
+        public async Task<IActionResult> GetAllProducts()
+        {
+            var result = await _mobileAppService.GetAllProductsAsync();
+            return Ok(result);
+        }
+
+
     }
 }

@@ -288,7 +288,43 @@ public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
 
         return result;
 }
+        public async Task<List<AllProductsDto>> GetAllProductsAsync()
+{
+    var result = await (
+        from p in _context.products
+        join b in _context.BusinessRegisters
+            on p.BusRegId equals b.BusRegId
+        join v in _context.Sku_ProductVariants
+            .Include(x => x.Images)
+            on p.ProductId equals v.ProductId
 
+        select new AllProductsDto
+        {
+            ProductId = p.ProductId,
+            ProductName = p.ProductName,
+
+            BusRegId = b.BusRegId,
+            StoreName = b.BusinessName,
+            StoreCity = b.BusinessCity,
+
+            SkuId = v.SkuId,
+
+            Cost = v.Sku_Cost,
+            DiscountPrice = v.DiscountPrice,
+            DiscountPercent = v.Discount,
+
+            ImageName = v.Images
+                .OrderBy(i => i.SortOrder)
+                .Select(i => i.FileName)
+                .FirstOrDefault(),
+
+            ProductDescription = p.ProductDescription,
+            AvailableQuantity = v.Quantity
+        })
+        .ToListAsync();
+
+    return result;
+}
 
     }
 }
