@@ -168,5 +168,29 @@ namespace mytown.Controllers
                 return StatusCode(500, new { error = "Something went wrong." });
             }
         }
+
+        // Sender Order Tracking
+[AllowAnonymous]
+[HttpGet("senderorder/{senderOrderId}")]
+public async Task<IActionResult> GetSenderOrderTracking(int senderOrderId)
+{
+    try
+    {
+        var result = await _searchService.GetSenderOrderTrackingAsync(senderOrderId);
+
+        if (result == null)
+            return NotFound(new { error = "Sender order not found." });
+
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error fetching sender order tracking {SenderOrderId}", senderOrderId);
+        return StatusCode(500, new { error = "Something went wrong." });
+    }
+}
+
+
+
     }
 }

@@ -938,5 +938,82 @@ namespace mytown.DataAccess.Repositories
                 .OrderByDescending(x => x.StoreCount)
                 .ToListAsync();
         }
+
+        public async Task<SenderOrderTrackingDto?> GetSenderOrderTrackingAsync(int senderOrderId)
+    {
+        var order = await _context.SenderOrders
+            .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+        if (order == null)
+            return null;
+
+        TransporterRegister? transporter = null;
+
+        if (order.TransporterRegId.HasValue)
+        {
+            transporter = await _context.TransporterRegisters
+                .FirstOrDefaultAsync(x =>
+                    x.TransporterRegId == order.TransporterRegId.Value);
+        }
+
+        TransporterTravelPlan? plan = null;
+
+        if (order.TransporterPlanId.HasValue)
+        {
+            plan = await _context.TransporterTravelPlans
+                .FirstOrDefaultAsync(x =>
+                    x.PlanId == order.TransporterPlanId.Value);
+        }
+
+        return new SenderOrderTrackingDto
+        {
+            SenderOrderId = order.SenderOrderId,
+
+            ProductName = order.ProductName,
+            ProductCost = order.ProductCost,
+
+            PackageLength = order.PackageLength,
+            PackageWidth = order.PackageWidth,
+            PackageHeight = order.PackageHeight,
+            PackageWeight = order.PackageWeight,
+
+            IsFragile = order.IsFragile,
+            IsPerishable = order.IsPerishable,
+            SpecialInstructions = order.SpecialInstructions,
+
+            PickupAddress = order.PickupAddress,
+            PickupTown = order.PickupTown,
+            PickupCity = order.PickupCity,
+            PickupState = order.PickupState,
+            PickupCountry = order.PickupCountry,
+            PickupPincode = order.PickupPincode,
+
+            PickupDate = order.PickupDate,
+            PickupTime = order.PickupTime,
+
+            ReceiverName = order.ReceiverName,
+            ReceiverPhone = order.ReceiverPhone,
+            ReceiverAddress = order.ReceiverAddress,
+            ReceiverTown = order.ReceiverTown,
+            ReceiverCity = order.ReceiverCity,
+            ReceiverState = order.ReceiverState,
+            ReceiverCountry = order.ReceiverCountry,
+            ReceiverPincode = order.ReceiverPincode,
+
+            OrderStatus = order.OrderStatus,
+            DeliveryStatus = order.DeliveryStatus,
+
+            TransporterName = transporter?.TransporterName,
+            TransporterPhone = transporter?.PhoneNumber,
+            TransporterEmail = transporter?.Email,
+
+            VehicleType = plan?.VehicleType,
+            VehicleName = plan?.VehicleName,
+            PreferredRoute = plan?.PreferredRoute
+        };
+    }
+
+
+
     }
 }
