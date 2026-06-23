@@ -4,6 +4,8 @@ namespace mytown.Models.DTO_s
     {
         public int SenderOrderId { get; set; }
 
+        public string? TrackingId { get; set; }
+
         public string ProductName { get; set; }
         public decimal ProductCost { get; set; }
 
