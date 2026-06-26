@@ -415,6 +415,47 @@ public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
     return result;
 }
 
+public async Task<List<LocationImageDto>> GetLocationImagesAsync()
+{
+    return await _context.LocationImages
+        .Where(x => x.IsActive)
+        .Select(x => new LocationImageDto
+        {
+            Id = x.Id,
+            Country = x.Country,
+            StateName = x.StateName,
+            City = x.City,
+            Image = x.Image
+        })
+        .ToListAsync();
+}
+
+public async Task<List<LocationImageDto>> GetLocationImageCountriesAsync()
+{
+    return await _context.LocationImages
+        .Where(x => x.IsActive)
+        .GroupBy(x => x.Country)
+        .Select(g => new LocationImageDto
+        {
+            Country = g.Key,
+            Image = g.FirstOrDefault().Image
+        })
+        .ToListAsync();
+}
+
+public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
+{
+    return await _context.LocationImages
+        .Where(x => x.IsActive)
+        .GroupBy(x => x.City)
+        .Select(g => new LocationImageDto
+        {
+            City = g.Key,
+            Image = g.FirstOrDefault().Image
+        })
+        .ToListAsync();
+}
+
 public async Task<List<CountryDto>> GetAllCountriesAsync()
 {
     return await _context.LocationImages
