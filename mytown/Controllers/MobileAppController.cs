@@ -98,6 +98,35 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+                [HttpGet("location-images")]
+        public async Task<IActionResult> GetLocationImages()
+        {
+            var result = await _mobileAppService.GetLocationImagesAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("location-images/country")]
+        public async Task<IActionResult> GetLocationImageCountries()
+        {
+            var result = await _mobileAppService.GetLocationImageCountriesAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("location-images/city")]
+        public async Task<IActionResult> GetLocationImageCities()
+        {
+            var result = await _mobileAppService.GetLocationImageCitiesAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("allcountries")]
+        public async Task<IActionResult> GetAllCountries()
+        {
+            var result = await _mobileAppService.GetAllCountriesAsync();
+            return Ok(result);
+        }
+
+
 
     }
 }
