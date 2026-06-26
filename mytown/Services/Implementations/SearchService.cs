@@ -88,5 +88,12 @@ namespace mytown.Services
         {
             return await _searchRepository.GetPopularCitiesAsync();
         }
+
+        public async Task<SenderOrderTrackingDto?> GetSenderOrderTrackingAsync(string trackingId)
+        {
+            return await _searchRepository
+                .GetSenderOrderTrackingAsync(trackingId);
+        }
+
     }
 }

@@ -311,7 +311,6 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        // Controller
         [HttpPut("transporter-update-delivery-status_senderorder")]
         public async Task<IActionResult> UpdateTransporterDeliveryStatus(
      int senderOrderId,

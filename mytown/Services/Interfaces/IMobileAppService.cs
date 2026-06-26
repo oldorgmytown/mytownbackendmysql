@@ -18,5 +18,10 @@ namespace mytown.Services.Interfaces
        Task<List<AllProductsDto>> GetAllProductsAsync();
        Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId);
        Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId);
+       Task<List<LocationImageDto>> GetLocationImagesAsync();
+       Task<List<LocationImageDto>> GetLocationImageCountriesAsync();
+       Task<List<LocationImageDto>> GetLocationImageCitiesAsync();
+       Task<List<CountryDto>> GetAllCountriesAsync();  // added
+       
     }
 }
