@@ -7,6 +7,8 @@ namespace mytown.DataAccess.Interfaces
     {
         Task<Payments> AddPaymentAsync(int orderId, decimal amountPaid, string paymentMethod, string stripePaymentIntentId);
 
+        // check for duplicate payments
+        Task<Payments?> GetPaymentByStripePaymentIntentId(string stripePaymentIntentId);
         Task<bool> UpdateCartStatusAsync(int orderId);
         Task<Order> GetOrderWithShippingDetailsAsync(int orderId);
 
