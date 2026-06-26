@@ -98,6 +98,14 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [HttpGet("allcountries")]
+        public async Task<IActionResult> GetAllCountries()
+        {
+            var result = await _mobileAppService.GetAllCountriesAsync();
+            return Ok(result);
+        }
+
+
 
     }
 }

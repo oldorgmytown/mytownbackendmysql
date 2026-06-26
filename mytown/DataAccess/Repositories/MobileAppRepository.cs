@@ -234,27 +234,6 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
-public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
-{
-    var result = await _context.BusinessRegisters
-        .Where(x => !string.IsNullOrEmpty(x.BusinessCity))
-        .GroupBy(x => new
-        {
-            x.BusinessCity,
-            x.BusinessCountry
-        })
-        .Select(g => new PopularCityDto
-        {
-            City = g.Key.BusinessCity,
-            Country = g.Key.BusinessCountry,
-            StoreCount = g.Count()
-        })
-        .OrderByDescending(x => x.StoreCount)
-        .Take(12)
-        .ToListAsync();
-
-    return result;
-}
 
         public async Task<List<TownListDto>> GetTownListByCityAsync(string city)
         {
@@ -401,6 +380,54 @@ public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
 
     return result;
 }
+
+public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
+{
+    var cities = await _context.BusinessRegisters
+        .Where(x => !string.IsNullOrEmpty(x.BusinessCity))
+        .GroupBy(x => new { x.BusinessCity, x.BusinessCountry })
+        .Select(g => new
+        {
+            City = g.Key.BusinessCity,
+            Country = g.Key.BusinessCountry,
+            StoreCount = g.Count()
+        })
+        .OrderByDescending(x => x.StoreCount)
+        .Take(12)
+        .ToListAsync();
+
+    // Left join with CityImages in memory
+    var cityNames = cities.Select(c => c.City).ToList();
+    var images = await _context.CityImages
+        .Where(ci => cityNames.Contains(ci.City))
+        .ToListAsync();
+
+    var result = cities.Select(c => new PopularCityDto
+    {
+        City = c.City,
+        Country = c.Country,
+        StoreCount = c.StoreCount,
+        ImageFileName = images
+            .FirstOrDefault(i => i.City == c.City && i.Country == c.Country)
+            ?.ImageFileName
+    }).ToList();
+
+    return result;
+}
+
+public async Task<List<CountryDto>> GetAllCountriesAsync()
+{
+    return await _context.LocationImages
+        .Where(x => x.IsActive)
+        .GroupBy(x => x.Country)
+        .Select(g => new CountryDto
+        {
+            Country = g.Key
+        })
+        .ToListAsync();
+}
+
+    
 
     }
 }

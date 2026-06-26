@@ -670,7 +670,7 @@ namespace mytown.DataAccess.Repositories
                     .Where(bs => EF.Functions.Like(bs.BusinessServiceName, $"%{searchTerm}%"))
                     .Select(bs => bs.BusServId);
 
-                var serviceCategoryBusinessIds = _context.services
+                var serviceCategoryBusinessIds = _context.Service
                     .Where(s => serviceCategoryIds.Contains(s.BusServId))
                     .Select(s => s.BusRegId);
 
@@ -678,7 +678,7 @@ namespace mytown.DataAccess.Repositories
                     .Where(ss => EF.Functions.Like(ss.ServiceTypeName, $"%{searchTerm}%"))
                     .Select(ss => ss.ServSubcatId);
 
-                var serviceSubcategoryBusinessIds = _context.services
+                var serviceSubcategoryBusinessIds = _context.Service
                     .Where(s => serviceSubcategoryIds.Contains(s.ServSubcatId))
                     .Select(s => s.BusRegId);
 
