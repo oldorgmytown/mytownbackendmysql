@@ -3659,6 +3659,8 @@ public class EmailService : IEmailService
         </tr>
       </table>
 
+
+
       <!-- Track Shipment button -->     
 <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/track-order?id={store.TrackingId}""
    style=""display:block;background:#0E7490;color:#fff;text-align:center;
@@ -3984,7 +3986,53 @@ public class EmailService : IEmailService
 
 </body>
 </html>";
-}
 
 
+}  // closes BuildGuestTrackingTemplate
+
+public async Task SendOtpEmailAsync(string email, string name, string otp)
+{
+    if (!await DomainHasMX(email))
+        throw new Exception("The email domain is not valid (no MX records found).");
+
+    using (var smtpClient = new SmtpClient(_smtpServer))
+    {
+        smtpClient.Port = _smtpPort;
+        smtpClient.UseDefaultCredentials = false;
+        smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+        smtpClient.EnableSsl = true;
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress(_senderEmail),
+            Subject = "Your OTP - MyTown",
+            IsBodyHtml = true,
+            Body = $@"
+<div style='font-family:Arial,sans-serif;background:#fff;padding:40px;text-align:center;'>
+  <div style='max-width:500px;margin:auto;background:#fff;padding:30px;border-radius:10px;
+              box-shadow:0px 4px 10px rgba(0,0,0,0.2);border:2px solid #004481;'>
+    <img src='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png'
+         width='120' style='margin-bottom:20px;'/>
+    <h2 style='color:#004481;'>Email Verification</h2>
+    <p style='color:#333;font-size:14px;'>Hello {name}, use the OTP below to verify your account.</p>
+    <div style='font-size:36px;font-weight:bold;letter-spacing:10px;color:#004481;
+                background:#f5f7fa;padding:20px;border-radius:8px;margin:20px 0;'>
+      {otp}
+    </div>
+    <p style='color:#777;font-size:12px;'>This OTP is valid for 5 minutes. Do not share it with anyone.</p>
+    <hr style='border:0.5px solid #ddd;margin:20px 0;'/>
+    <p style='font-size:10px;color:#777;'>© 2025 MyTown. All rights reserved.</p>
+  </div>
+</div>"
+        };
+        mailMessage.To.Add(email);
+        await smtpClient.SendMailAsync(mailMessage);
+    }
 }
+
+} // closes EmailService class
+
+
+
+
+
