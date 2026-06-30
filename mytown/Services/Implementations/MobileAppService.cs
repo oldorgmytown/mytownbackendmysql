@@ -2,6 +2,7 @@
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
+
 namespace mytown.Services.Implementations
 {
     public class MobileAppService : IMobileAppService
@@ -70,5 +71,29 @@ namespace mytown.Services.Implementations
           return await _mobileAppRepository.GetStoresBySubCategoryAsync(prodSubcatId);
         }
 
+        public async Task<List<LocationImageDto>> GetLocationImagesAsync()
+        {
+            return await _mobileAppRepository.GetLocationImagesAsync();
+        }
+
+        public async Task<List<LocationImageDto>> GetLocationImageCountriesAsync()
+        {
+            return await _mobileAppRepository.GetLocationImageCountriesAsync();
+        }
+
+        public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
+        {
+            return await _mobileAppRepository.GetLocationImageCitiesAsync();
+        }
+
+                
+
+        public async Task<List<CountryDto>> GetAllCountriesAsync()
+        {
+            return await _mobileAppRepository.GetAllCountriesAsync();
+        }
+
+       
+       
     }
 }

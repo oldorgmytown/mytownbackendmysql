@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Model;
 
 namespace mytown.Models
 {
@@ -13,77 +12,70 @@ namespace mytown.Models
         [Column("courier_id")]
         public int CourierId { get; set; }
 
-        // 🏢 Courier basic info
         [Required]
         [Column("courier_service_name", TypeName = "varchar(255)")]
-        public string CourierServiceName { get; set; }
+        public string CourierServiceName { get; set; } = null!;
 
         [Required]
         [Column("courier_website_name", TypeName = "varchar(255)")]
-        public string CourierWebsiteName { get; set; }
+        public string CourierWebsiteName { get; set; } = null!;
 
         [Required]
         [EmailAddress]
         [Column("courier_email", TypeName = "varchar(100)")]
-        public string CourierEmail { get; set; }
+        public string CourierEmail { get; set; } = null!;
 
         [Required]
         [StringLength(15)]
         [Column("courier_phone", TypeName = "varchar(15)")]
-        public string CourierPhone { get; set; }
+        public string CourierPhone { get; set; } = null!;
 
-        // 🏠 Head Office Address
         [Required]
         [Column("address", TypeName = "varchar(255)")]
-        public string Address { get; set; }
+        public string Address { get; set; } = null!;
 
         [Required]
         [Column("town", TypeName = "varchar(100)")]
-        public string Town { get; set; }
+        public string Town { get; set; } = null!;
 
         [Required]
         [Column("city", TypeName = "varchar(100)")]
-        public string City { get; set; }
+        public string City { get; set; } = null!;
 
         [Required]
         [Column("state", TypeName = "varchar(100)")]
-        public string State { get; set; }
+        public string State { get; set; } = null!;
 
         [Required]
         [Column("country", TypeName = "varchar(100)")]
-        public string Country { get; set; }
+        public string Country { get; set; } = null!;
 
         [Required]
         [StringLength(10)]
         [Column("postal_code", TypeName = "varchar(10)")]
-        public string PostalCode { get; set; }
+        public string PostalCode { get; set; } = null!;
 
-        // 🚚 Service availability
         [Column("is_city")]
         public bool IsCity { get; set; }
 
         [Column("is_state")]
         public bool IsState { get; set; }
 
-        // 🔐 Auth
         [Required]
         [Column("password", TypeName = "varchar(255)")]
-        public string Password { get; set; }
+        public string Password { get; set; } = null!;
 
-        // 📅 Meta
         [Column("registered_date")]
         public DateTime RegisteredDate { get; set; } = DateTime.UtcNow;
 
         [Column("is_email_verified")]
         public bool IsEmailVerified { get; set; } = false;
+
         [Column("profile_status")]
         public string ProfileStatus { get; set; } = "Incomplete";
 
+        public ICollection<CourierBranch> CourierBranches { get; set; } = new List<CourierBranch>();
 
-
-        // Navigation property
-        public ICollection<CourierBranch> CourierBranches { get; set; }
-
-        public virtual ICollection<CourierVerification> CourierVerifications { get; set; }
+        public virtual ICollection<CourierVerification> CourierVerifications { get; set; } = new List<CourierVerification>();
     }
 }

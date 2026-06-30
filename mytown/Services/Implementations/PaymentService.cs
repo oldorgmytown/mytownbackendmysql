@@ -83,11 +83,17 @@ namespace mytown.Services.Implementations
                 throw new Exception("Order not found");
 
             // verify stripe payment first (important)
-            //var service = new PaymentIntentService();
-            //var intent = await service.GetAsync(stripePaymentIntentId);
+            var service = new PaymentIntentService();
+            var intent = await service.GetAsync(stripePaymentIntentId);
 
-            //if (intent.Status != "succeeded")
-            //    throw new Exception("Payment not completed");
+            if (intent.Status != "succeeded")
+                throw new Exception("Payment not completed");
+
+            // Check if this Payment Intent was already processed
+            var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(stripePaymentIntentId);
+
+            if (existingPayment != null)
+                throw new Exception("Payment has already been processed.");
 
             // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 

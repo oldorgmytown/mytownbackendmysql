@@ -19,15 +19,13 @@ namespace mytown.DataAccess.Repositories
             _context = context;
             _configuration = configuration;
         }
-        
 
-        // Get all business profiles including related BusinessRegister data
         public async Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync()
         {
             return await _context.BusinessProfiles
-        .Where(bp => bp.ProfileStatus == "approved")
-        .Include(bp => bp.BusinessRegister)
-        .ToListAsync();
+                .Where(bp => bp.ProfileStatus == "approved")
+                .Include(bp => bp.BusinessRegister)
+                .ToListAsync();
         }
 
         public async Task<List<busprofilepreview>> GetBusinessProfilesByBusRegIdAsync(int busRegId)
@@ -47,8 +45,8 @@ namespace mytown.DataAccess.Repositories
                 {
                     businessprofile_id = bp.BusinessProfileId,
                     BusRegId = bp.BusRegId,
-                    Businessname = br.BusinessName, // From BusinessRegister table
-                    Businessusername = br.BusinessUsername, // from business register table
+                    Businessname = br.BusinessName,
+                    Businessusername = br.BusinessUsername,
                     business_location = bp.BusinessLocation,
                     business_about = bp.BusinessAbout,
                     banner_path = bp.BannerPath,
@@ -56,9 +54,10 @@ namespace mytown.DataAccess.Repositories
                     profile_status = bp.ProfileStatus,
                     BusCatId = bp.BusCatId,
                     BusServId = bp.BusServId,
-                    Businessservice_name = bs != null ? bs.BusinessServiceName : null,
-                    Businesscategory_name = bc != null ? bc.BusinessCategoryName : null,
-                    Currency = br.Currency, // from BusinessRegister table
+                    // Left-joined rows may be null — fall back to empty string
+                    Businessservice_name = bs != null ? bs.BusinessServiceName : "",
+                    Businesscategory_name = bc != null ? bc.BusinessCategoryName : "",
+                    Currency = br.Currency,
                     BusEmail = br.BusEmail,
                     BusPhone = br.BusMobileNo
                 }
@@ -67,64 +66,12 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
-
-
-
-        //get products for selected category
         public IEnumerable<Products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
         {
             return _context.products
-                           .Where(p => p.BusRegId == busRegId && p.ProdSubcatId == prodSubcatId)
-                           .ToList();
+                .Where(p => p.BusRegId == busRegId && p.ProdSubcatId == prodSubcatId)
+                .ToList();
         }
-
-        // adding business profile data to DB
-        //public async Task<businessprofile> AddBusinessProfileAsync(businessprofile businessProfile)
-        //{
-        //    // Check if the business profile with the given BusRegId already exists
-        //    var existingProfile = await _context.BusinessProfiles
-        //        .FirstOrDefaultAsync(bp => bp.BusRegId == businessProfile.BusRegId);
-
-        //    if (existingProfile != null)
-        //    {
-        //        // Updating an existing profile
-        //        existingProfile.BusinessUsername = businessProfile.BusinessUsername;
-        //        existingProfile.business_location = businessProfile.business_location;
-        //        existingProfile.business_about = businessProfile.business_about;
-        //        existingProfile.banner_path = businessProfile.banner_path;
-        //        existingProfile.profile_status = businessProfile.profile_status;
-        //        existingProfile.bus_time = businessProfile.bus_time;
-        //        existingProfile.BusCatId = businessProfile.BusCatId;
-        //        existingProfile.BusServId = businessProfile.BusServId;
-
-        //        // Update image position & zoom
-        //        existingProfile.image_positionx = businessProfile.image_positionx;
-        //        existingProfile.image_positiony = businessProfile.image_positiony;
-        //        existingProfile.zoom = businessProfile.zoom;
-
-        //        // Mark entity as modified
-        //        _context.BusinessProfiles.Update(existingProfile);
-        //    }
-        //    else
-        //    {
-        //        // Set default values if they are not provided
-        //        if (businessProfile.image_positionx == 0 && businessProfile.image_positiony == 0 && businessProfile.zoom == 0)
-        //        {
-        //            businessProfile.image_positionx = 0;
-        //            businessProfile.image_positiony = 0;
-        //            businessProfile.zoom = 1; // Default zoom value
-        //        }
-
-        //        // Add a new profile
-        //        await _context.BusinessProfiles.AddAsync(businessProfile);
-        //    }
-
-        //    // Save changes asynchronously
-        //    await _context.SaveChangesAsync();
-
-        //    // Return the updated or newly added profile
-        //    return existingProfile ?? businessProfile;
-        //}
 
         public async Task<BusinessProfile> AddBusinessProfileAsync(BusinessProfile businessProfile)
         {
@@ -133,7 +80,6 @@ namespace mytown.DataAccess.Repositories
 
             if (existingProfile != null)
             {
-                // Update only if values are provided
                 if (!string.IsNullOrEmpty(businessProfile.BusinessName))
                     existingProfile.BusinessName = businessProfile.BusinessName;
 
@@ -145,31 +91,22 @@ namespace mytown.DataAccess.Repositories
 
                 if (!string.IsNullOrEmpty(businessProfile.BannerPath))
                 {
-                    // If a new banner is uploaded
                     if (!string.IsNullOrEmpty(existingProfile.BannerPath))
-                    {
-                        // Delete old banner from blob
                         await DeleteFromBlobAsync(existingProfile.BannerPath);
-                    }
+
                     existingProfile.BannerPath = businessProfile.BannerPath;
                 }
 
                 if (!string.IsNullOrEmpty(businessProfile.LogoPath))
                 {
-                    // If a new logo is uploaded
                     if (!string.IsNullOrEmpty(existingProfile.LogoPath))
-                    {
-                        // Delete old logo from blob
                         await DeleteFromBlobAsync(existingProfile.LogoPath);
-                    }
+
                     existingProfile.LogoPath = businessProfile.LogoPath;
                 }
 
                 if (!string.IsNullOrEmpty(businessProfile.ProfileStatus))
                     existingProfile.ProfileStatus = businessProfile.ProfileStatus;
-
-                //if (!string.IsNullOrEmpty(businessProfile.bus_time))
-                //    existingProfile.bus_time = businessProfile.bus_time;
 
                 if (businessProfile.BusCatId != 0)
                     existingProfile.BusCatId = businessProfile.BusCatId;
@@ -177,19 +114,10 @@ namespace mytown.DataAccess.Repositories
                 if (businessProfile.BusServId != 0)
                     existingProfile.BusServId = businessProfile.BusServId;
 
-                //if (!string.IsNullOrEmpty(businessProfile.Businessservice_name))
-                //    existingProfile.Businessservice_name = businessProfile.Businessservice_name;
-
-                //if (!string.IsNullOrEmpty(businessProfile.Businesscategory_name))
-                //    existingProfile.Businesscategory_name = businessProfile.Businesscategory_name;
-
-               
-
                 _context.BusinessProfiles.Update(existingProfile);
             }
             else
             {
-                // Add new profile
                 await _context.BusinessProfiles.AddAsync(businessProfile);
             }
 
@@ -197,11 +125,12 @@ namespace mytown.DataAccess.Repositories
             return existingProfile ?? businessProfile;
         }
 
-
         public async Task DeleteFromBlobAsync(string fileName)
         {
-            var containerName = _configuration["AzureBlobStorage:ContainerName"];
-            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+            // Fall back to empty string if config is missing — BlobServiceClient
+            // will throw a meaningful exception rather than a NullReferenceException
+            var containerName = _configuration["AzureBlobStorage:ContainerName"] ?? "";
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"] ?? "";
 
             var blobServiceClient = new BlobServiceClient(connectionString);
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
@@ -212,8 +141,8 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
         {
-            var containerName = _configuration["AzureBlobStorage:ContainerName"];
-            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+            var containerName = _configuration["AzureBlobStorage:ContainerName"] ?? "";
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"] ?? "";
 
             var blobServiceClient = new BlobServiceClient(connectionString);
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
@@ -233,50 +162,49 @@ namespace mytown.DataAccess.Repositories
                 await blobClient.UploadAsync(stream, overwrite: true);
             }
 
-            return newFileName; // return file name (store in DB)
+            return newFileName;
         }
-
 
         public async Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath)
         {
             var business = await _context.BusinessProfiles
-                                         .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
+                .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
 
             if (business == null)
-                return false; // Business not found
+                return false;
 
             business.BannerPath = bannerPath;
             await _context.SaveChangesAsync();
             return true;
         }
+
         public async Task<bool> UpdateLogoPathAsync(int busRegId, string logoPath)
         {
             var business = await _context.BusinessProfiles
-                                         .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
+                .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
 
             if (business == null)
-                return false; // Business not found
+                return false;
 
             business.LogoPath = logoPath;
             await _context.SaveChangesAsync();
             return true;
         }
 
-        // Get all product subcategories
         public async Task<IEnumerable<ProductSubCategory>> GetAllSubCategoriesAsync()
         {
             return await _context.product_sub_categories.ToListAsync();
         }
-        //get categories ofproducts for a businessid
+
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
         {
             var result = (from product in _context.products
                           join subCategory in _context.product_sub_categories
-                          on product.ProdSubcatId equals subCategory.ProdSubcatId
+                              on product.ProdSubcatId equals subCategory.ProdSubcatId
                           join subCatImage in _context.Subcategoryimages_Busregids
-                          on new { product.BusRegId, ProdSubCatId = subCategory.ProdSubcatId }
-                          equals new { subCatImage.BusRegId, ProdSubCatId = subCatImage.Prod_subcat_id }
-                          into subCatImageGroup
+                              on new { product.BusRegId, ProdSubCatId = subCategory.ProdSubcatId }
+                              equals new { subCatImage.BusRegId, ProdSubCatId = subCatImage.Prod_subcat_id }
+                              into subCatImageGroup
                           from subCatImage in subCatImageGroup.DefaultIfEmpty()
                           where product.BusRegId == busRegId
                           select new ProductSubCategory
@@ -291,7 +219,6 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
-      //  get prodct sub catgeories by business category id
         public List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId)
         {
             return _context.product_sub_categories
@@ -299,39 +226,27 @@ namespace mytown.DataAccess.Repositories
                 .ToList();
         }
 
-        // //get product category details like type, fabric,design on add product form
-
         public async Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId)
         {
-
-            //var subcat = await _context.product_sub_categories
-            //                  .Where(sc => sc.prod_subcat_id == prodSubcatId)
-            //                  .Select(sc => new ProductSubCategories
-            //                  {
-            //                      ProdSubcatId = sc.prod_subcat_id,
-            //                      ProdSubcatName = sc.prod_subcat_name
-            //                  })
-            //                  .FirstOrDefaultAsync();
             var types = await _context.Product_Types
-                                      .Where(pt => pt.ProdSubcatId == prodSubcatId)
-                                      .OrderBy(pt => pt.ProdTypeName)
-                                      .ToListAsync();
+                .Where(pt => pt.ProdSubcatId == prodSubcatId)
+                .OrderBy(pt => pt.ProdTypeName)
+                .ToListAsync();
 
             var fabrics = await _context.Fabrics
-                                        .Where(f => f.ProdSubcatId == prodSubcatId)
-                                        .OrderBy(f => f.FabricName)
-                                        .ToListAsync();
+                .Where(f => f.ProdSubcatId == prodSubcatId)
+                .OrderBy(f => f.FabricName)
+                .ToListAsync();
 
             var designs = await _context.Designs
-                                        .Where(d => d.ProdSubcatId == prodSubcatId)
-                                        .OrderBy(d => d.DesignName)
-                                        .ToListAsync();
+                .Where(d => d.ProdSubcatId == prodSubcatId)
+                .OrderBy(d => d.DesignName)
+                .ToListAsync();
 
-
-            var sizes = await _context.ProductSizes      
-                                      .Where(s => s.ProdSubcatId == prodSubcatId)
-                                      .OrderBy(s => s.SizeName)
-                                      .ToListAsync();
+            var sizes = await _context.ProductSizes
+                .Where(s => s.ProdSubcatId == prodSubcatId)
+                .OrderBy(s => s.SizeName)
+                .ToListAsync();
 
             return new ProductDetailsDto
             {
@@ -339,43 +254,24 @@ namespace mytown.DataAccess.Repositories
                 ProductTypes = types,
                 Fabrics = fabrics,
                 Designs = designs,
-                Sizes = sizes          
+                Sizes = sizes
             };
         }
-    
-
-
-        // businessprofiels with discount products
-        //public async Task<IEnumerable<businessprofile>> GetBusinessProfilesWithDiscountedProductsAsync()
-        //{
-        //    // Step 1: Get distinct business ids from products having discounts
-        //    var businessIdsWithDiscounts = await _context.products
-        //        .Where(p => p.discount.HasValue && p.discount > 0) // only products with valid discount
-        //        .Select(p => p.BusRegId)
-        //        .Distinct()
-        //        .ToListAsync();
-
-        //    // Step 2: Fetch business profiles for those business ids
-        //    var businessProfiles = await _context.BusinessProfiles
-        //        .Where(bp => businessIdsWithDiscounts.Contains(bp.BusRegId))
-        //        .ToListAsync();
-
-        //    return businessProfiles;
-        //}
 
         public async Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync()
         {
             // Step 1: Get max discount per business from SKU variants
             var businessDiscounts = await _context.Sku_ProductVariants
                 .Where(v => v.Discount.HasValue && v.Discount > 0)
-                .Include(v => v.Product) // Include product to access BusRegId
+                .Include(v => v.Product)
                 .GroupBy(v => v.Product.BusRegId)
                 .Select(g => new
                 {
                     BusRegId = g.Key,
-                    MaxDiscount = g.Max(v => v.Discount.Value)
+                    // .Value is safe here — the Where above guarantees Discount.HasValue
+                    MaxDiscount = g.Max(v => v.Discount!.Value)
                 })
-                .OrderByDescending(g => g.MaxDiscount) // highest discount first
+                .OrderByDescending(g => g.MaxDiscount)
                 .ToListAsync();
 
             // Step 2: Fetch profiles
@@ -400,26 +296,26 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
-        //Get countries having profil on mytown
         public async Task<List<string>> GetUniqueCountriesAsync()
         {
-            // Step 1: Get raw locations from DB
+            // Step 1: Pull raw locations from DB — filter nulls and those with commas server-side
             var locations = await _context.BusinessProfiles
                 .Where(b => b.BusinessLocation != null && b.BusinessLocation.Contains(","))
                 .Select(b => b.BusinessLocation)
                 .ToListAsync();
 
-            // Step 2: Process in memory (C# side)
+            // Step 2: Process in memory
+            // loc is string? from EF; the Where above guarantees non-null but NRT
+            // analysis doesn't track that, so use the null-forgiving operator (loc!)
             var countries = locations
-                .Select(loc => loc.Substring(loc.LastIndexOf(',') + 1).Trim()) // take last part
+                .Select(loc => loc!.Substring(loc.LastIndexOf(',') + 1).Trim())
                 .Where(c => !string.IsNullOrWhiteSpace(c) && c != "0000")
-                .Select(c => c.ToLower()) // normalize case
+                .Select(c => c.ToLower())
                 .Distinct()
-                .Select(c => char.ToUpper(c[0]) + c.Substring(1)) // TitleCase
+                .Select(c => char.ToUpper(c[0]) + c.Substring(1))
                 .ToList();
 
             return countries;
         }
-
     }
 }
