@@ -197,6 +197,7 @@ private void RegisterCors(IServiceCollection services)
     });
 }
 
+
     // Configures JWT Bearer authentication.
     private void RegisterAuthentication(IServiceCollection services)
     {
