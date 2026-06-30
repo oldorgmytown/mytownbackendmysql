@@ -712,7 +712,7 @@ public class EmailService : IEmailService
             var storeOrderDisplay = orderdto.IsGuestOrder
     ? store.StoreOrderId.ToString()
     : $@"
-<a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/order-details/{store.StoreOrderId}""
+<a href=""https://www.itismytown.com/shopper/order-details/{store.StoreOrderId}""
    style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
           font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
     {store.StoreOrderId}
@@ -981,7 +981,7 @@ public class EmailService : IEmailService
 ? @"
 <tr>
   <td align=""center"" style=""padding:24px 30px;"">
-    <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/orders""
+    <a href=""https://www.itismytown.com/shopper/orders""
        style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
               border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
               text-decoration:none;text-align:center;
@@ -3659,7 +3659,7 @@ public class EmailService : IEmailService
       </table>
 
       <!-- Track Shipment button -->     
-<a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/track-order?id={store.TrackingId}""
+<a href=""https://www.itismytown.com/track-order?id={store.TrackingId}""
    style=""display:block;background:#0E7490;color:#fff;text-align:center;
                 padding:10px 0;border-radius:6px;font-size:16px;font-weight:600;
                 text-decoration:none;margin-bottom:8px;
@@ -3813,7 +3813,7 @@ public class EmailService : IEmailService
     <!-- ===== HEADER ===== -->
     <tr>
       <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;"">
-        <img src=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png""
+        <img src=""https://www.itismytown.com/images/mainlogoblue.png""
              alt=""ITISMYTOWN"" height=""55""
              style=""height:55px;width:auto;display:block;margin:0 auto;"" />
       </td>
@@ -3939,7 +3939,7 @@ public class EmailService : IEmailService
                 </tr>
               </table>
               <!-- Create Account button -->
-              <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/register""
+              <a href=""https://www.itismytown.com/register""
                  style=""display:block;background:#0E7490;color:#fff;text-align:center;
                         padding:12px 0;border-radius:6px;font-size:16px;font-weight:700;
                         text-decoration:none;
