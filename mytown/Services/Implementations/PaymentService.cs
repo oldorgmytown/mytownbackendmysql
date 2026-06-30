@@ -83,11 +83,11 @@ namespace mytown.Services.Implementations
                 throw new Exception("Order not found");
 
             // verify stripe payment first (important)
-            //var service = new PaymentIntentService();
-            //var intent = await service.GetAsync(stripePaymentIntentId);
+            var service = new PaymentIntentService();
+            var intent = await service.GetAsync(stripePaymentIntentId);
 
-            //if (intent.Status != "succeeded")
-            //    throw new Exception("Payment not completed");
+            if (intent.Status != "succeeded")
+                throw new Exception("Payment not completed");
 
             // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 
@@ -177,7 +177,9 @@ public async Task ProcessPostPaymentAsync(int orderId)
             {
                 PlanId = shipping.TransporterPlanId ?? 0,
                 TransporterRegId = transporterRegId,
-                ShopperRegId     = storeOrder.Order.ShopperRegId,
+                ShopperRegId = storeOrder.Order.ShopperRegId,
+                GuestRegId = storeOrder.Order.GuestRegId,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
                 OrderId          = orderId,
                 StoreOrderId     = shipping.StoreOrderId,
                 PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),

@@ -203,6 +203,8 @@ namespace mytown.DataAccess.Repositories
                 return false;
 
             profile.ProfileStatus = status;
+            _context.BusinessProfiles.Update(profile);
+            await _context.SaveChangesAsync();
 
             if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
             {

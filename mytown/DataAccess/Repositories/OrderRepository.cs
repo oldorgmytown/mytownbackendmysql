@@ -27,7 +27,10 @@ namespace mytown.DataAccess.Repositories
 
             // 1️⃣ GET ITEMS (Cart OR BuyNow)
             if (request.UseCart)
-            {
+             {
+                if (!request.ShopperRegId.HasValue)
+                    throw new Exception("ShopperId is required for cart checkout.");
+
                 var cartItems = await _context.addtocart
                     .Where(c => c.ShopperRegId == request.ShopperRegId && c.orderstatus == "Cart")
                     .ToListAsync();
@@ -111,6 +114,8 @@ namespace mytown.DataAccess.Repositories
             var newOrder = new Order
             {
                 ShopperRegId = request.ShopperRegId,
+                GuestRegId = request.GuestRegId,
+                IsGuestOrder = request.IsGuestOrder,
                 SelectedAltAddressId = selectedAltAddressId,
                 TotalAmount = totalAmount,
                 ShippingType = "Multiple",
@@ -124,25 +129,49 @@ namespace mytown.DataAccess.Repositories
             // 4️⃣ ADDRESS
             string deliveryAddress;
 
-            if (selectedAltAddressId.HasValue)
+            if (!request.IsGuestOrder)
             {
-                deliveryAddress = await _context.ShopperAlternateAddresses
-                    .Where(a => a.AltAddressId == selectedAltAddressId.Value)
-                    .Select(a =>
-                        a.AltName + ", " + a.AltAddress + ", " + a.AltTown + ", " +
-                        a.AltCity + ", " + a.AltState + ", " + a.AltCountry +
-                        (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
-                    )
-                    .FirstOrDefaultAsync();
+                if (selectedAltAddressId.HasValue)
+                {
+                    deliveryAddress = await _context.ShopperAlternateAddresses
+                        .Where(a => a.AltAddressId == selectedAltAddressId.Value)
+                        .Select(a =>
+                            a.AltName + ", " +
+                            a.AltAddress + ", " +
+                            a.AltTown + ", " +
+                            a.AltCity + ", " +
+                            a.AltState + ", " +
+                            a.AltCountry +
+                            (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
+                        )
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    deliveryAddress = await _context.ShopperRegisters
+                        .Where(s => s.ShopperRegId == request.ShopperRegId)
+                        .Select(s =>
+                            s.Address + ", " +
+                            s.Town + ", " +
+                            s.City + ", " +
+                            s.State + ", " +
+                            s.Country +
+                            (s.PostalCode != null ? " - " + s.PostalCode : "")
+                        )
+                        .FirstOrDefaultAsync();
+                }
             }
             else
             {
-                deliveryAddress = await _context.ShopperRegisters
-                    .Where(s => s.ShopperRegId == request.ShopperRegId)
-                    .Select(s =>
-                        s.Address + ", " + s.Town + ", " + s.City + ", " +
-                        s.State + ", " + s.Country +
-                        (s.PostalCode != null ? " - " + s.PostalCode : "")
+                deliveryAddress = await _context.GuestRegisters
+                    .Where(g => g.GuestRegId == request.GuestRegId)
+                    .Select(g =>
+                        g.Address + ", " +
+                        g.Town + ", " +
+                        g.City + ", " +
+                        g.State + ", " +
+                        g.Country +
+                        (g.PostalCode != null ? " - " + g.PostalCode : "")
                     )
                     .FirstOrDefaultAsync();
             }
@@ -236,16 +265,32 @@ namespace mytown.DataAccess.Repositories
                         (travelPlan.ArrivalDate.Date - travelPlan.StartDate.Date).Days);
 
                     var store = await _context.BusinessRegisters
-                        .FirstOrDefaultAsync(b => b.BusRegId == storeOrder.StoreId);
+     .FirstOrDefaultAsync(b => b.BusRegId == storeOrder.StoreId);
 
-                    var shopper = await _context.ShopperRegisters
-                        .FirstOrDefaultAsync(s => s.ShopperRegId == request.ShopperRegId);
+                    string destinationCity = "";
+
+                    if (request.IsGuestOrder)
+                    {
+                        var guest = await _context.GuestRegisters
+                            .FirstOrDefaultAsync(g =>
+                                g.GuestRegId == request.GuestRegId);
+
+                        destinationCity = guest?.City ?? "";
+                    }
+                    else
+                    {
+                        var shopper = await _context.ShopperRegisters
+                            .FirstOrDefaultAsync(s =>
+                                s.ShopperRegId == request.ShopperRegId);
+
+                        destinationCity = shopper?.City ?? "";
+                    }
 
                     decimal p2pCost = 100m; // default fallback
 
-                    if (store != null && shopper != null)
+                    if (store != null && !string.IsNullOrEmpty(destinationCity))
                     {
-                        // Find cheapest surface service for this store → shopper route
+                        // Find cheapest surface service for this store → customer route
                         var surfaceService = await (
                             from branch in _context.CourierBranches
                             join service in _context.CourierBranchServices
@@ -264,12 +309,14 @@ namespace mytown.DataAccess.Repositories
                             .Where(s => s.Destinations
                                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                                 .Select(d => d.Trim().ToLower())
-                                .Contains(shopper.City.ToLower()))
+                                .Contains(destinationCity.ToLower()))
                             .OrderBy(s => s.Charges)
                             .FirstOrDefault();
 
                         if (matchingSurface != null)
-                            p2pCost = Math.Max(50m, Math.Round(matchingSurface.Charges * 0.30m, 2));
+                            p2pCost = Math.Max(
+                                50m,
+                                Math.Round(matchingSurface.Charges * 0.30m, 2));
                     }
 
                     // Save ShippingDetails with BranchId = 1 (P2P has no courier branch)
@@ -496,18 +543,28 @@ namespace mytown.DataAccess.Repositories
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
             // 1️⃣ Order + Shopper basic details + PaymentMethod
-            var order = await _context.Orders
+                        var order = await _context.Orders
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new
                 {
                     o.OrderId,
                     o.OrderDate,
                     o.ShopperRegId,
-                    ShopperName = o.ShopperRegister.Username,
-                    ShopperEmail = o.ShopperRegister.Email,
-                    ShopperPhone = o.ShopperRegister.PhoneNumber,
+                    o.GuestRegId,
+                    o.IsGuestOrder,
 
-                    // Get latest payment object
+                    ShopperName = o.IsGuestOrder
+                        ? o.GuestRegister.Username
+                        : o.ShopperRegister.Username,
+
+                    ShopperEmail = o.IsGuestOrder
+                        ? o.GuestRegister.Email
+                        : o.ShopperRegister.Email,
+
+                    ShopperPhone = o.IsGuestOrder
+                        ? o.GuestRegister.PhoneNumber
+                        : o.ShopperRegister.PhoneNumber,
+
                     LatestPayment = _context.Payments
                         .Where(p => p.OrderId == o.OrderId)
                         .OrderByDescending(p => p.PaymentDate)
@@ -579,7 +636,8 @@ namespace mytown.DataAccess.Repositories
            ShippingAmount = sd.Cost,
            EstimatedDays = sd.EstimatedDays,
            EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
-           ShippingStatus = sd.ShippingStatus
+           ShippingStatus = sd.ShippingStatus,
+           TrackingId = sd.TrackingId
        }
    ).ToListAsync();
 
@@ -627,6 +685,9 @@ namespace mytown.DataAccess.Repositories
                 TotalAmount = order.LatestPayment?.AmountPaid ?? 0,
 
                 ShopperRegId = order.ShopperRegId,
+                GuestRegId = order.GuestRegId,
+                IsGuestOrder = order.IsGuestOrder,
+
                 ShopperName = order.ShopperName,
                 ShopperEmail = order.ShopperEmail,
                 ShopperPhone = order.ShopperPhone,

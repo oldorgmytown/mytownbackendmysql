@@ -67,18 +67,33 @@ namespace mytown.Services
             return await _searchRepository.GetBusinessCategoriesByProductAsync(productName);
         }
 
-        //25-05-26
-        //get both business profiles and service profiles
-        public async Task<BusinessAndServiceSearchResultsDto>
- GetBusinessAndServiceSearchResults(
-     string? searchTerm,
-     string? locationQuery)
+        // get both business profiles and service profiles
+        public async Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
+            string? searchTerm,
+            string? locationQuery)
         {
             return await _searchRepository.GetBusinessAndServiceSearchResults(
                 searchTerm,
                 locationQuery);
         }
 
-       
+        // Track order by tracking ID
+        public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
+        {
+            return await _searchRepository.TrackOrderByTrackingIdAsync(trackingId);
+        }
+
+        //  Get popular cities
+        public async Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync()
+        {
+            return await _searchRepository.GetPopularCitiesAsync();
+        }
+
+        public async Task<SenderOrderTrackingDto?> GetSenderOrderTrackingAsync(string trackingId)
+        {
+            return await _searchRepository
+                .GetSenderOrderTrackingAsync(trackingId);
+        }
+
     }
 }

@@ -15,9 +15,7 @@ namespace mytown.Services.Interfaces
         Task SendShopperNotification(string email, string shopperName, OrderConfirmationDto orderdto);
         
 
-       // Task SendEmailToCourierAsync(string email, string courierName, int shippingDetailId);
-
-        //send email notification to business owner for approval or rejection of profile
+       
 
         Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status);
 
@@ -66,6 +64,12 @@ namespace mytown.Services.Interfaces
         string email,
         string transporterName,
         SenderOrderConfirmationDto dto);
+
+        Task SendGuestNotificationforTracking(
+   string email,
+   string guestName,
+   OrderConfirmationDto orderdto);
+
     }
 
 

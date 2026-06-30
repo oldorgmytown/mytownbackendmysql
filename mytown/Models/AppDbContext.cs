@@ -15,75 +15,63 @@ namespace mytown.Models
             public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
             public DbSet<User> Users { get; set; }
-            public DbSet<Registration> Registrations { get; set; } // Pluralized name
-            public DbSet<BusinessRegister> BusinessRegisters { get; set; } // done
-           public DbSet<BusinessVerification> BusinessVerification { get; set; }//done
-            public DbSet<BusinessProfile> BusinessProfiles { get; set; }//done
-            public DbSet<BusinessService> BusinessServices { get; set; } //done
-            public DbSet<BusinessCategory> BusinessCategories { get; set; }//done
-            public DbSet<ProductSubCategory> product_sub_categories { get; set; } //done
+            public DbSet<Registration> Registrations { get; set; }
+            public DbSet<BusinessRegister> BusinessRegisters { get; set; }
+            public DbSet<BusinessVerification> BusinessVerification { get; set; }
+            public DbSet<BusinessProfile> BusinessProfiles { get; set; }
+            public DbSet<BusinessService> BusinessServices { get; set; }
+            public DbSet<BusinessCategory> BusinessCategories { get; set; }
+            public DbSet<ProductSubCategory> product_sub_categories { get; set; }
 
             // services 
             public DbSet<ServiceSubCategory> ServiceSubCategory { get; set; }
             public DbSet<Service> Service { get; set; }
-            public DbSet<ServiceProfile> ServiceProfiles { get; set; } 
-            public DbSet<Products> products { get; set; } //done
-           public DbSet<Service> services { get; set; }
-            public DbSet<ShopperRegister> ShopperRegisters { get; set; } //done
-           public DbSet<ShopperVerification> ShopperVerification { get; set; } //done
+            public DbSet<ServiceProfile> ServiceProfiles { get; set; }
+            public DbSet<Products> products { get; set; }
+
+            public DbSet<ShopperRegister> ShopperRegisters { get; set; }
+            public DbSet<ShopperVerification> ShopperVerification { get; set; }
             public DbSet<subcategoryimages_busregid> Subcategoryimages_Busregids { get; set; }
             public IEnumerable<object> businessprofile { get; internal set; }
 
-            public DbSet<AddToCart> addtocart { get; set; } //done
-            public DbSet<Order> Orders { get; set; } //done
-
-            public DbSet<orderdetails> OrderDetails { get; set; } //done
-            public DbSet<Payments> Payments { get; set; } //done
-            public DbSet<PendingVerification> PendingVerifications{ get; set; }
-            public DbSet<PendingBusinessVerification> PendingBusinessVerifications { get; set; }//done
-            public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; } //done
-            public DbSet<ShippingDetails> ShippingDetails { get; set; } //done
-            public DbSet<CourierService> CourierService { get; set; } //DONE
+            public DbSet<AddToCart> addtocart { get; set; }
+            public DbSet<Order> Orders { get; set; }
+            public DbSet<orderdetails> OrderDetails { get; set; }
+            public DbSet<Payments> Payments { get; set; }
+            public DbSet<PendingVerification> PendingVerifications { get; set; }
+            public DbSet<PendingBusinessVerification> PendingBusinessVerifications { get; set; }
+            public DbSet<PasswordResetRequest> PasswordResetRequests { get; set; }
+            public DbSet<ShippingDetails> ShippingDetails { get; set; }
+            public DbSet<CourierService> CourierService { get; set; }
             public DbSet<PendingCourierVerification> PendingCourierVerifications { get; set; }
+            public DbSet<PendingGuestVerification> PendingGuestVerifications { get; set; }
+            public DbSet<CourierVerification> CourierVerifications { get; set; }
+            public DbSet<CourierBranch> CourierBranches { get; set; }
 
-            public DbSet<CourierVerification> CourierVerifications { get; set; } //new
-            public DbSet<CourierBranch> CourierBranches { get; set; } //modified table
-
-           
-            public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; } //done
-            public DbSet<ProductImage> ProductImages { get; set; } //done
-
-            public DbSet<ProductType> Product_Types { get; set; } //done
-            public DbSet<Fabric> Fabrics { get; set; } //done
-            public DbSet<Design> Designs { get; set; } //done
-            public DbSet<ProductSize> ProductSizes { get; set; } //done
-            public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; } //done
-            //  public DbSet<ProductImage> ProductImages { get; set; }
-
+            public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; }
+            public DbSet<ProductImage> ProductImages { get; set; }
+            public DbSet<ProductType> Product_Types { get; set; }
+            public DbSet<Fabric> Fabrics { get; set; }
+            public DbSet<Design> Designs { get; set; }
+            public DbSet<ProductSize> ProductSizes { get; set; }
+            public DbSet<Sku_ProductVariant> Sku_ProductVariants { get; set; }
             public DbSet<ProductSize_Measurement> ProductSize_Measurements { get; set; }
-
-            public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; } //done
-
-            public DbSet<AdminComment> AdminComments { get; set; } //done
-
+            public DbSet<ShopperAlternateAddress> ShopperAlternateAddresses { get; set; }
+            public DbSet<AdminComment> AdminComments { get; set; }
             public DbSet<UserSession> UserSessions { get; set; }
-
-            public DbSet<StoreOrder> StoreOrders { get; set; } //done
+            public DbSet<StoreOrder> StoreOrders { get; set; }
 
             public DbSet<BusinessDBNotifications> BusinessDBNotifications { get; set; }
             public DbSet<CourierDBNotifications> CourierDBNotifications { get; set; }
-
             public DbSet<ShopperDBNotifications> ShopperDBNotifications { get; set; }
 
-            public DbSet<CourierBranchService> CourierBranchServices { get; set; } // latest table
+            public DbSet<CourierBranchService> CourierBranchServices { get; set; }
+            public DbSet<Wishlist> Wishlist { get; set; }
+            public DbSet<GuestRegister> GuestRegisters { get; set; }
 
-            public DbSet<Wishlist> Wishlist { get; set; }// new
-
-            public DbSet<TransporterRegister> TransporterRegisters { get; set; } //new
-
-            public DbSet<PendingTransporterVerification>PendingTransporterVerifications { get; set; }
+            public DbSet<TransporterRegister> TransporterRegisters { get; set; }
+            public DbSet<PendingTransporterVerification> PendingTransporterVerifications { get; set; }
             public DbSet<TransporterVerification> TransporterVerification { get; set; }
-
             public DbSet<TransporterKYC> TransporterKYCs { get; set; }
             public DbSet<TransporterBankDetails> TransporterBankDetails { get; set; }
             public DbSet<TransporterTravelPlan> TransporterTravelPlans { get; set; }
@@ -91,55 +79,48 @@ namespace mytown.Models
             public DbSet<TransporterExceptionReport> TransporterExceptionReports { get; set; }
             public DbSet<TransporterDBNotifications> TransporterDBNotifications { get; set; }
 
-            //sender
+            // sender
             public DbSet<SenderRegister> SenderRegisters { get; set; }
             public DbSet<PendingSenderVerification> PendingSenderVerifications { get; set; }
             public DbSet<SenderVerification> SenderVerifications { get; set; }
 
-            //package dimensions
+            // package dimensions
             public DbSet<ShippingPackageDetails> ShippingPackageDetails { get; set; }
 
-            //Senderorder
+            // sender order
             public DbSet<SenderOrder> SenderOrders { get; set; }
-             public DbSet<SenderOrderPayment> SenderOrderPayments { get; set; }
+            public DbSet<SenderOrderPayment> SenderOrderPayments { get; set; }
             public DbSet<SenderDBNotifications> SenderDBNotifications { get; set; }
             public DbSet<SenderAlternateAddress> SenderAlternateAddresses { get; set; }
 
+            // shopper experience
+            public DbSet<ShopperExperience> ShopperExperiences { get; set; }
 
-
-
-
-
-
-
+            // location images
+            public DbSet<LocationImage> LocationImages { get; set; }
+            public DbSet<CityImage> CityImages { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
                 base.OnModelCreating(modelBuilder);
 
-               
-
-                // Optionally, you can add similar configuration for other models
-              
                 modelBuilder.Entity<subcategoryimages_busregid>().ToTable("subcategoryimages_Busregids");
 
-                // Seed data for businesscategoriescs: inserting "products" and "services"
                 modelBuilder.Entity<BusinessCategory>().HasData(
                     new BusinessCategory { BusCatId = 1, BusinessCategoryName = "products" },
                     new BusinessCategory { BusCatId = 2, BusinessCategoryName = "services" }
                 );
 
                 modelBuilder.Entity<ShopperProductRecentView>()
-                   .HasIndex(v => new { v.ShopperId, v.ProductId })
-                   .IsUnique();
+                    .HasIndex(v => new { v.ShopperId, v.ProductId })
+                    .IsUnique();
 
                 modelBuilder.Entity<ProductImage>()
-             .HasOne(pi => pi.Product)
-             .WithMany(p => p.Images)   // you need to add ICollection<ProductImage> Images in products model
-             .HasForeignKey(pi => pi.ProductId)
-             .OnDelete(DeleteBehavior.Cascade);
+                    .HasOne(pi => pi.Product)
+                    .WithMany(p => p.Images)
+                    .HasForeignKey(pi => pi.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-                // Convert all table and column names to snake_case
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {
                     entity.SetTableName(ToSnakeCase(entity.GetTableName()));
@@ -150,17 +131,12 @@ namespace mytown.Models
                     }
                 }
             }
-                  private static string ToSnakeCase(string name)
+
+            private static string ToSnakeCase(string name)
             {
                 if (string.IsNullOrEmpty(name)) return name;
                 return Regex.Replace(name, "([a-z0-9])([A-Z])", "$1_$2").ToLower();
             }
-
-
         }
     }
-
-       
-          
- }
-
+}

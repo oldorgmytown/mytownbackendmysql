@@ -1,18 +1,24 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using mytown.Services.Interfaces;
 
 namespace mytown.DataAccess.Repositories
 {
     public class TransporterDashboardRepository : ITransporterDashboardRepository
     {
         private readonly AppDbContext _context;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IEmailService _emailService;
 
-        public TransporterDashboardRepository(AppDbContext context)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService)
         {
             _context = context;
+            _orderRepository = orderRepo;
+            _emailService = emailService;
         }
 
         // -------------------------------------------------------------------------
@@ -362,6 +368,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 PlanId = dto.PlanId,
                 TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.GuestRegId.HasValue,
                 OrderId = dto.OrderId,
                 StoreOrderId = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
@@ -496,26 +504,39 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     shipping.ShippingStatus = dto.NewStatus switch
                     {
                         "ReachedPickup" => "ReachedPickup",
-                        "PickedUp"      => "PickedUp",
-                        "InTransit"     => "InTransit",
-                        "Delivered"     => "Delivered",
-                        _               => shipping.ShippingStatus
+                        "PickedUp" => "PickedUp",
+                        "InTransit" => "InTransit",
+                        "Delivered" => "Delivered",
+                        _ => shipping.ShippingStatus
                     };
 
+                    // Generate tracking ID when transporter picks up the parcel
+                    if (dto.NewStatus == "PickedUp" &&
+                        string.IsNullOrEmpty(shipping.TrackingId))
+                    {
+                        shipping.TrackingId = GenerateTrackingId(shipping.StoreOrderId);
+                    }
+
+                    // Mark delivery completion date
                     if (dto.NewStatus == "Delivered")
+                    {
                         shipping.DeliveredDate = DateTime.UtcNow;
+                    }
                 }
             }
 
-            // ── NOTIFY SHOPPER ──
-            _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+            // ── NOTIFY SHOPPER ONLY FOR REGISTERED SHOPPERS , Not for guest ──
+            if (!delivery.IsGuestOrder && delivery.ShopperRegId.HasValue)
             {
-                ShopperRegId = delivery.ShopperRegId,
-                Title = "Delivery Update",
-                Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
-                IsRead = false,
-                CreatedDate = DateTime.UtcNow
-            });
+                _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+                {
+                    ShopperRegId = delivery.ShopperRegId.Value,
+                    Title = "Delivery Update",
+                    Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
 
             // ── NOTIFY TRANSPORTER ──
             _context.TransporterDBNotifications.Add(new TransporterDBNotifications
@@ -528,7 +549,32 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             });
 
             await _context.SaveChangesAsync();
+
+            // send tracking id email to guests only
+            if (dto.NewStatus == "PickedUp" &&
+              delivery.OrderId.HasValue)
+            {
+                var orderConfirmation =
+                    await _orderRepository.GetOrderConfirmationAsync(delivery.OrderId.Value);
+
+                if (orderConfirmation != null &&
+                    orderConfirmation.IsGuestOrder &&
+                    !string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+                {
+                    await _emailService.SendGuestNotificationforTracking(
+                        orderConfirmation.ShopperEmail,
+                        orderConfirmation.ShopperName,
+                        orderConfirmation
+                    );
+                }
+            }
             return true;
+        }
+
+        //Generate tracking id based on storeorderid
+        private string GenerateTrackingId(int storeOrderId)
+        {
+            return $"TRK-{storeOrderId}-{DateTime.UtcNow:yyyyMMddHHmm}";
         }
 
         // -------------------------------------------------------------------------
@@ -840,6 +886,16 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             order.DeliveryStatus = deliveryStatus;
 
+            // generating tracking id when sttaus is picked up and tracking id is null or empty
+
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(order.TrackingId))
+            {
+                order.TrackingId = GenerateSenderTrackingId(order.SenderOrderId);
+            }
+
+            
+
             // Sender Notification
             _context.SenderDBNotifications.Add(
                 new SenderDBNotifications
@@ -877,6 +933,10 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             return true;
         }
 
+        private string GenerateSenderTrackingId(int senderOrderId)
+        {
+            return $"MYTOWN-SND-{senderOrderId}";
+        }
         public async Task AddSenderNotificationAsync(
    SenderDBNotifications notification)
         {

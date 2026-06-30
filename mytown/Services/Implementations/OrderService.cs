@@ -58,12 +58,13 @@ namespace mytown.Services.Implementations
             if (orderConfirmation == null)
                 return null;
 
-            // Shopper notification
-            if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+            // Create notification ONLY for registered shoppers
+            if (!orderConfirmation.IsGuestOrder &&
+                orderConfirmation.ShopperRegId.HasValue)
             {
                 var shopperNotification = new ShopperDBNotifications
                 {
-                    ShopperRegId = orderConfirmation.ShopperRegId,
+                    ShopperRegId = orderConfirmation.ShopperRegId.Value,
                     Title = "Order Confirmation",
                     Message = $"Your order #{orderId} has been successfully placed.",
                     IsRead = false,
@@ -73,7 +74,7 @@ namespace mytown.Services.Implementations
                 await _repo.AddShopperNotificationAsync(shopperNotification);
             }
 
-            // 2️⃣ Send email using data already present in DTO
+            // Send confirmation email for BOTH Shopper and Guest
             if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
             {
                 await _EmailService.SendShopperNotification(

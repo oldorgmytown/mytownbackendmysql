@@ -141,6 +141,70 @@ namespace mytown.Migrations
                     b.ToTable("business_registers");
                 });
 
+            modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
+                {
+                    b.Property<int>("ShopperExperienceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperienceId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Experience")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("experience");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_anonymous");
+
+                    b.Property<string>("PostType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("post_type");
+
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("rating");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<bool>("VerifiedPurchase")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("verified_purchase");
+
+                    b.HasKey("ShopperExperienceId");
+
+                    b.HasIndex("BusRegId");
+
+                    b.HasIndex("ShopperRegId");
+
+                    b.ToTable("shopper_experiences");
+                });
+
             modelBuilder.Entity("mytown.Models.AddToCart", b =>
                 {
                     b.Property<int>("CartId")
@@ -905,6 +969,124 @@ namespace mytown.Migrations
                     b.HasAnnotation("Relational:JsonPropertyName", "fabric");
                 });
 
+            modelBuilder.Entity("mytown.Models.GuestRegister", b =>
+                {
+                    b.Property<int>("GuestRegId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("guest_reg_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("GuestRegId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("country");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime>("GuestRegDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("guest_reg_date");
+
+                    b.Property<bool>("IsEmailVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_email_verified");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("varchar(15)")
+                        .HasColumnName("phone_number");
+
+                    b.Property<string>("PhotoName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("photo_name");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)")
+                        .HasColumnName("postal_code");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Town")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("town");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("username");
+
+                    b.HasKey("GuestRegId");
+
+                    b.ToTable("guest_registers");
+                });
+
+            modelBuilder.Entity("mytown.Models.LocationImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("country");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("image");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("StateName")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("state_name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("location_images");
+                });
+
             modelBuilder.Entity("mytown.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -913,6 +1095,14 @@ namespace mytown.Migrations
                         .HasColumnName("order_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("OrderId"));
+
+                    b.Property<int?>("GuestRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("guest_reg_id");
+
+                    b.Property<bool>("IsGuestOrder")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_guest_order");
 
                     b.Property<DateTime>("OrderDate")
                         .HasColumnType("datetime(6)")
@@ -932,7 +1122,7 @@ namespace mytown.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("shipping_type");
 
-                    b.Property<int>("ShopperRegId")
+                    b.Property<int?>("ShopperRegId")
                         .HasColumnType("int")
                         .HasColumnName("shopper_reg_id");
 
@@ -941,6 +1131,8 @@ namespace mytown.Migrations
                         .HasColumnName("total_amount");
 
                     b.HasKey("OrderId");
+
+                    b.HasIndex("GuestRegId");
 
                     b.HasIndex("SelectedAltAddressId");
 
@@ -1084,6 +1276,43 @@ namespace mytown.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("pending_courier_verifications");
+                });
+
+            modelBuilder.Entity("mytown.Models.PendingGuestVerification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("email");
+
+                    b.Property<DateTime>("ExpiryDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("expiry_date");
+
+                    b.Property<string>("JsonPayload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("json_payload");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("token");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("pending_guest_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingSenderVerification", b =>
@@ -1727,6 +1956,10 @@ namespace mytown.Migrations
                     b.Property<string>("SpecialInstructions")
                         .HasColumnType("longtext")
                         .HasColumnName("special_instructions");
+
+                    b.Property<string>("TrackingId")
+                        .HasColumnType("longtext")
+                        .HasColumnName("tracking_id");
 
                     b.Property<int?>("TransporterPlanId")
                         .HasColumnType("int")
@@ -2504,9 +2737,17 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(300)")
                         .HasColumnName("dropoff_location");
 
+                    b.Property<int?>("GuestRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("guest_reg_id");
+
                     b.Property<DateTime?>("InTransitAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("in_transit_at");
+
+                    b.Property<bool>("IsGuestOrder")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_guest_order");
 
                     b.Property<int>("NumberOfPackages")
                         .HasColumnType("int")
@@ -2542,7 +2783,7 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("reached_pickup_at");
 
-                    b.Property<int>("ShopperRegId")
+                    b.Property<int?>("ShopperRegId")
                         .HasColumnType("int")
                         .HasColumnName("shopper_reg_id");
 
@@ -3147,6 +3388,25 @@ namespace mytown.Migrations
                     b.Navigation("BusinessCategory");
                 });
 
+            modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
+                        .WithMany()
+                        .HasForeignKey("BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
+                        .WithMany()
+                        .HasForeignKey("ShopperRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegister");
+
+                    b.Navigation("ShopperRegister");
+                });
+
             modelBuilder.Entity("mytown.Models.AdminComment", b =>
                 {
                     b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
@@ -3256,15 +3516,19 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.Order", b =>
                 {
+                    b.HasOne("mytown.Models.GuestRegister", "GuestRegister")
+                        .WithMany()
+                        .HasForeignKey("GuestRegId");
+
                     b.HasOne("mytown.Models.DTO_s.ShopperAlternateAddress", "SelectedAlternateAddress")
                         .WithMany()
                         .HasForeignKey("SelectedAltAddressId");
 
                     b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
                         .WithMany()
-                        .HasForeignKey("ShopperRegId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ShopperRegId");
+
+                    b.Navigation("GuestRegister");
 
                     b.Navigation("SelectedAlternateAddress");
 
@@ -3319,17 +3583,6 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("Size");
-                });
-
-            modelBuilder.Entity("mytown.Models.ProductType", b =>
-                {
-                    b.HasOne("mytown.Models.ProductType", "Producttype")
-                        .WithMany()
-                        .HasForeignKey("ProdTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Producttype");
                 });
 
             modelBuilder.Entity("mytown.Models.Products", b =>
@@ -3520,9 +3773,7 @@ namespace mytown.Migrations
 
                     b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
                         .WithMany()
-                        .HasForeignKey("ShopperRegId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ShopperRegId");
 
                     b.HasOne("mytown.Models.StoreOrder", "StoreOrder")
                         .WithMany()

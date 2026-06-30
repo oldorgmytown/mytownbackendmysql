@@ -25,8 +25,12 @@ namespace mytown.Services.Interfaces
         Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
 
 
-        Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(int shopperId,
-      List<int> storeIds);
+        //works for both shopper and guest
+        Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
+    StoreCourierRequestDto request);
+
+        //  Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(int shopperId,
+        //List<int> storeIds);
 
 
         // Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId);
