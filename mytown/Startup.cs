@@ -15,7 +15,6 @@ using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
 using mytown.DataAccess.Implementations;
 using Stripe;
-using mytown.Hubs;
 
 
 
@@ -258,7 +257,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-            endpoints.MapHub<ChatHub>("/chatHub");
+          //  endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);
