@@ -1,5 +1,6 @@
 ﻿using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using MyTown.Models;
@@ -50,6 +51,16 @@ namespace mytown.Services.Implementations
         public async Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId)
         {
             return await _Connectrepo.GetExperiencesByBusinessAsync(busRegId);
+        }
+
+        public async Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request)
+        {
+            await _Connectrepo.CaptureBusinessProfileViewAsync(request);
+        }
+
+        public async Task<List<CurrentBusinessProfileViewerDto>> GetCurrentBusinessProfileViewersAsync(int busRegId, int shopperRegId)
+        {
+            return await _Connectrepo.GetCurrentBusinessProfileViewersAsync(busRegId, shopperRegId);
         }
     }
 }

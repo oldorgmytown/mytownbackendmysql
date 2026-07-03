@@ -12,5 +12,8 @@ namespace mytown.Models.DTO_s
     {
         public string Country { get; set; }
         public int StoreCount { get; set; }
+        public string? ImageUrl { get; set; }
+      //  public int StoreCount { get; set; }
+
     }
 }

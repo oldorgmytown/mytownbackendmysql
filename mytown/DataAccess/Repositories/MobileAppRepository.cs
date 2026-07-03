@@ -437,6 +437,7 @@ public async Task<List<LocationImageDto>> GetLocationImageCountriesAsync()
         .GroupBy(x => x.Country)
         .Select(g => new LocationImageDto
         {
+            Id = g.FirstOrDefault().Id,
             Country = g.Key,
             Image = g.FirstOrDefault().Image
         })
@@ -450,7 +451,9 @@ public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
         .GroupBy(x => x.City)
         .Select(g => new LocationImageDto
         {
+            Id = g.FirstOrDefault().Id,
             City = g.Key,
+            Country = g.FirstOrDefault().Country,
             Image = g.FirstOrDefault().Image
         })
         .ToListAsync();
@@ -458,16 +461,24 @@ public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
 
 public async Task<List<CountryDto>> GetAllCountriesAsync()
 {
-    return await _context.LocationImages
-        .Where(x => x.IsActive)
-        .GroupBy(x => x.Country)
-        .Select(g => new CountryDto
+    var result = await (
+        from li in _context.LocationImages
+        join br in _context.BusinessRegisters
+            on li.Country equals br.BusinessCountry into stores
+        group new { li, stores } by li.Country into g
+        select new CountryDto
         {
-            Country = g.Key
+            Country = g.Key,
+            ImageUrl = g.First().li.Image,
+            StoreCount = g.SelectMany(x => x.stores)
+                          .Select(x => x.BusRegId)
+                          .Distinct()
+                          .Count()
         })
         .ToListAsync();
-}
 
+    return result;
+}
     
 
     }
