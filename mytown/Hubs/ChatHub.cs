@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using mytown.Controllers.Helpers;
 using mytown.Helpers;
-using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 
@@ -19,52 +19,69 @@ namespace mytown.Hubs
             _context = context;
         }
 
-        public Task RegisterShopper(int shopperRegId)
+        public Task RegisterConnection(int userId, UserType userType)
         {
-            _connectionManager.AddConnection(shopperRegId, Context.ConnectionId);
+            _connectionManager.AddConnection(userId, userType, Context.ConnectionId);
             return Task.CompletedTask;
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var shopperRegId = _connectionManager.GetShopperId(Context.ConnectionId);
+            var user = _connectionManager.GetUser(Context.ConnectionId);
 
-            if (shopperRegId.HasValue)
+            if (user != null)
             {
-                _connectionManager.RemoveConnection(shopperRegId.Value);
+                _connectionManager.RemoveConnection(user.UserId, user.UserType);
             }
 
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task<bool> SendMessage(int receiverShopperId, string message)
+        public async Task<bool> SendMessage(int receiverId, UserType receiverType, string message)
         {
-            var senderShopperId = _connectionManager.GetShopperId(Context.ConnectionId);
-
-            if (!senderShopperId.HasValue)
+            if (string.IsNullOrWhiteSpace(message))
                 return false;
 
-            if (senderShopperId.Value == receiverShopperId)
-                return false;
-
-            var receiverConnectionId = _connectionManager.GetConnection(receiverShopperId);
-
-            if (string.IsNullOrEmpty(receiverConnectionId))
-                return false;
-
-            var sender = await _context.ShopperRegisters
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.ShopperRegId == senderShopperId.Value);
+            var sender = _connectionManager.GetUser(Context.ConnectionId);
 
             if (sender == null)
                 return false;
 
+            if (sender.UserId == receiverId && sender.UserType == receiverType)
+                return false;
+
+            var receiverConnectionId = _connectionManager.GetConnection(receiverId, receiverType);
+
+            if (string.IsNullOrEmpty(receiverConnectionId))
+                return false;
+
+            string senderName;
+            string? senderPhoto = null;
+
+            if (sender.UserType == UserType.Shopper)
+            {
+                var shopper = await _context.ShopperRegisters
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ShopperRegId == sender.UserId);
+
+                if (shopper == null)
+                    return false;
+
+                senderName = shopper.Username;
+                senderPhoto = shopper.PhotoName;
+            }
+            else
+            {
+                senderName = "Store";
+            }
+
             var chatMessage = new ChatMessageDto
             {
-                SenderShopperId = sender.ShopperRegId,
-                SenderName = sender.Username,
-                SenderPhoto = sender.PhotoName,
-                Message = message,
+                SenderUserId = sender.UserId,
+                SenderType = sender.UserType,
+                SenderName = senderName,
+                SenderPhoto = senderPhoto,
+                Message = message.Trim(),
                 SentTime = DateTime.UtcNow
             };
 
@@ -74,20 +91,68 @@ namespace mytown.Hubs
             return true;
         }
 
-        public async Task StopTyping(int receiverShopperId)
+        public async Task Typing(int receiverId, UserType receiverType)
         {
-            var senderShopperId = _connectionManager.GetShopperId(Context.ConnectionId);
+            var sender = _connectionManager.GetUser(Context.ConnectionId);
 
-            if (!senderShopperId.HasValue)
+            if (sender == null)
                 return;
 
-            var receiverConnectionId = _connectionManager.GetConnection(receiverShopperId);
+            var receiverConnectionId = _connectionManager.GetConnection(receiverId, receiverType);
+
+            if (string.IsNullOrEmpty(receiverConnectionId))
+                return;
+
+            string senderName;
+            string? senderPhoto = null;
+
+            if (sender.UserType == UserType.Shopper)
+            {
+                var shopper = await _context.ShopperRegisters
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ShopperRegId == sender.UserId);
+
+                if (shopper == null)
+                    return;
+
+                senderName = shopper.Username;
+                senderPhoto = shopper.PhotoName;
+            }
+            else
+            {
+                senderName = "Store";
+            }
+
+            var typingDto = new TypingDto
+            {
+                SenderUserId = sender.UserId,
+                SenderType = sender.UserType,
+                SenderName = senderName,
+                SenderPhoto = senderPhoto
+            };
+
+            await Clients.Client(receiverConnectionId)
+                .SendAsync("Typing", typingDto);
+        }
+
+        public async Task StopTyping(int receiverId, UserType receiverType)
+        {
+            var sender = _connectionManager.GetUser(Context.ConnectionId);
+
+            if (sender == null)
+                return;
+
+            var receiverConnectionId = _connectionManager.GetConnection(receiverId, receiverType);
 
             if (string.IsNullOrEmpty(receiverConnectionId))
                 return;
 
             await Clients.Client(receiverConnectionId)
-                .SendAsync("StopTyping", senderShopperId.Value);
+                .SendAsync("StopTyping", new
+                {
+                    SenderId = sender.UserId,
+                    SenderType = sender.UserType
+                });
         }
     }
 }

@@ -1,35 +1,58 @@
-﻿using System.Collections.Concurrent;
+﻿using mytown.Controllers.Helpers;
+using System.Collections.Concurrent;
 
 namespace mytown.Helpers
 {
     public class ConnectionManager
     {
-        private static readonly ConcurrentDictionary<int, string> _connections = new();
+        // Key: "Shopper_10", "Business_5"
+        private static readonly ConcurrentDictionary<string, string> _connections = new();
 
-        public void AddConnection(int shopperRegId, string connectionId)
+        // Key: ConnectionId
+        private static readonly ConcurrentDictionary<string, ConnectionUser> _connectionUsers = new();
+
+        private string GetKey(int userId, UserType userType)
         {
-            _connections[shopperRegId] = connectionId;
+            return $"{userType}_{userId}";
         }
 
-        public void RemoveConnection(int shopperRegId)
+        public void AddConnection(int userId, UserType userType, string connectionId)
         {
-            _connections.TryRemove(shopperRegId, out _);
+            var key = GetKey(userId, userType);
+
+            _connections[key] = connectionId;
+
+            _connectionUsers[connectionId] = new ConnectionUser
+            {
+                UserId = userId,
+                UserType = userType
+            };
         }
 
-        public string? GetConnection(int shopperRegId)
+        public void RemoveConnection(int userId, UserType userType)
         {
-            _connections.TryGetValue(shopperRegId, out var connectionId);
+            var key = GetKey(userId, userType);
+
+            if (_connections.TryRemove(key, out var connectionId))
+            {
+                _connectionUsers.TryRemove(connectionId, out _);
+            }
+        }
+
+        public string? GetConnection(int userId, UserType userType)
+        {
+            var key = GetKey(userId, userType);
+
+            _connections.TryGetValue(key, out var connectionId);
+
             return connectionId;
         }
 
-        public int? GetShopperId(string connectionId)
+        public ConnectionUser? GetUser(string connectionId)
         {
-            var item = _connections.FirstOrDefault(x => x.Value == connectionId);
+            _connectionUsers.TryGetValue(connectionId, out var user);
 
-            if (item.Equals(default(KeyValuePair<int, string>)))
-                return null;
-
-            return item.Key;
+            return user;
         }
     }
 }
