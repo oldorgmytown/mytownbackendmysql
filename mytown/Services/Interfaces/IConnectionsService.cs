@@ -1,4 +1,5 @@
-﻿using mytown.Models.DTO_s;
+﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
 {
@@ -9,5 +10,12 @@ namespace mytown.Services.Interfaces
 
         Task<ShopperExperienceDto> CreateExperienceAsync(CreateShopperExperienceDto dto);
         Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
+
+        Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
+
+        Task<List<CurrentBusinessProfileViewerDto>> GetCurrentBusinessProfileViewersAsync(int busRegId, int currentShopperRegId);
+
+
+
     }
 }

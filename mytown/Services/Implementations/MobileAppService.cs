@@ -2,6 +2,7 @@
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
+
 namespace mytown.Services.Implementations
 {
     public class MobileAppService : IMobileAppService
@@ -92,6 +93,7 @@ namespace mytown.Services.Implementations
             return await _mobileAppRepository.GetAllCountriesAsync();
         }
 
+       
        
     }
 }

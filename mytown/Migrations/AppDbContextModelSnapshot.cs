@@ -445,6 +445,36 @@ namespace mytown.Migrations
                     b.ToTable("business_profiles");
                 });
 
+            modelBuilder.Entity("mytown.Models.BusinessProfileViewer", b =>
+                {
+                    b.Property<int>("ProfileViewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProfileViewId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<DateTime>("LastSeen")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("last_seen");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.HasKey("ProfileViewId");
+
+                    b.HasIndex("BusRegId");
+
+                    b.HasIndex("ShopperRegId");
+
+                    b.ToTable("business_profile_viewers");
+                });
+
             modelBuilder.Entity("mytown.Models.BusinessService", b =>
                 {
                     b.Property<int>("BusServId")
@@ -500,6 +530,34 @@ namespace mytown.Migrations
                     b.HasIndex("BusRegId");
 
                     b.ToTable("business_verifications");
+                });
+
+            modelBuilder.Entity("mytown.Models.CityImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("country");
+
+                    b.Property<string>("ImageFileName")
+                        .HasColumnType("longtext")
+                        .HasColumnName("image_file_name");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("city_images");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
@@ -1063,6 +1121,10 @@ namespace mytown.Migrations
                         .HasColumnName("id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("City")
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("city");
 
                     b.Property<string>("Country")
                         .IsRequired()
@@ -3427,6 +3489,25 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessRegister");
+                });
+
+            modelBuilder.Entity("mytown.Models.BusinessProfileViewer", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "Business")
+                        .WithMany()
+                        .HasForeignKey("BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ShopperRegister", "Shopper")
+                        .WithMany()
+                        .HasForeignKey("ShopperRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Business");
+
+                    b.Navigation("Shopper");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessVerification", b =>

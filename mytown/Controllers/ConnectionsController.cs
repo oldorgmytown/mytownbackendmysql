@@ -3,6 +3,7 @@ using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 
+
 namespace mytown.Controllers
 {
 
@@ -12,6 +13,13 @@ namespace mytown.Controllers
     {
         private readonly IConnectionsService _service;
         private readonly ILogger<ConnectionsController> _logger;
+
+        public ConnectionsController(IConnectionsService service,
+                             ILogger<ConnectionsController> logger)
+        {
+            _service = service;
+            _logger = logger;
+        }
 
         //------------ Shopper Experinece/ Reviews-----------------------
 
@@ -45,6 +53,25 @@ CreateExperience(
                 _logger.LogError(ex, "Error fetching experiences");
                 return StatusCode(500, "An error occurred while fetching experiences.");
             }
+        }
+
+
+        [HttpPost("capture-business-profile-view")]
+        public async Task<IActionResult> CaptureBusinessProfileView(
+    [FromBody] CaptureBusinessProfileViewDto request)
+        {
+            await _service.CaptureBusinessProfileViewAsync(request);
+
+            return Ok(new
+            {
+                message = "View captured successfully."
+            });
+        }
+
+        [HttpGet("current-business-profile-viewers")]
+        public async Task<IActionResult> GetCurrentBusinessProfileViewers(int busRegId, int shopperRegId)
+        {
+            return Ok(await _service.GetCurrentBusinessProfileViewersAsync(busRegId, shopperRegId));
         }
     }
 }

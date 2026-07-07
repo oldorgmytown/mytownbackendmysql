@@ -47,5 +47,60 @@ namespace mytown.DataAccess.Repositories
                               CreatedDate = e.CreatedDate
                           }).ToListAsync();
         }
+
+        // Online visitors
+        public async Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request)
+        {
+            var existingViewer = await _context.BusinessProfileViewers
+                .FirstOrDefaultAsync(x =>
+                    x.BusRegId == request.BusRegId &&
+                    x.ShopperRegId == request.ShopperRegId);
+
+            if (existingViewer == null)
+            {
+                var viewer = new BusinessProfileViewer
+                {
+                    BusRegId = request.BusRegId,
+                    ShopperRegId = request.ShopperRegId,
+                    LastSeen = DateTime.UtcNow
+                };
+
+                _context.BusinessProfileViewers.Add(viewer);
+            }
+            else
+            {
+                existingViewer.LastSeen = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<List<CurrentBusinessProfileViewerDto>>
+    GetCurrentBusinessProfileViewersAsync(
+    int busRegId,
+    int currentShopperRegId)
+        {
+            var activeTime = DateTime.UtcNow.AddMinutes(-2);
+
+            return await (
+                from viewer in _context.BusinessProfileViewers
+                join shopper in _context.ShopperRegisters
+                    on viewer.ShopperRegId equals shopper.ShopperRegId
+
+                where viewer.BusRegId == busRegId
+                      && viewer.LastSeen >= activeTime
+                      && shopper.Status == "Active"
+                     && shopper.ShopperRegId != currentShopperRegId
+
+                select new CurrentBusinessProfileViewerDto
+                {
+                    ShopperRegId = shopper.ShopperRegId,
+                    Username = shopper.Username,
+                    PhotoName = shopper.PhotoName,
+                    IsOnline = true
+                })
+                .Distinct()
+                .ToListAsync();
+        }
     }
 }

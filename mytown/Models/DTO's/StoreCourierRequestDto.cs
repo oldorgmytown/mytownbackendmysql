@@ -3,6 +3,8 @@
     public class StoreCourierRequestDto
     {
         public int? ShopperId { get; set; }
+
+        public bool UseAlternateAddress { get; set; }
         public List<int> StoreIds { get; set; } = new();
 
         // Only required for Guest

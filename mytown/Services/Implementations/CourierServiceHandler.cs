@@ -218,16 +218,31 @@ namespace mytown.Services.Implementations
 
             Dictionary<int, decimal> storeWeights;
 
-            // SHOPPER FLOW (existing)
+            // SHOPPER FLOW (existing) for main address or altrenate address
             if (request.ShopperId.HasValue)
             {
                 var shopper = await _repo.GetShopperByIdAsync(request.ShopperId.Value)
                     ?? throw new Exception("Shopper not found");
 
-                city = shopper.City;
-                town = shopper.Town;
-                state = shopper.State;
-                country = shopper.Country;
+                if (request.UseAlternateAddress)
+                {
+                    var altAddress = await _repo.GetAlternateAddressByShopperIdAsync(request.ShopperId.Value);
+
+                    if (altAddress == null)
+                        throw new Exception("Alternate address not found.");
+
+                    city = altAddress.AltCity;
+                    town = altAddress.AltTown;
+                    state = altAddress.AltState;
+                    country = altAddress.AltCountry;
+                }
+                else
+                {
+                    city = shopper.City;
+                    town = shopper.Town;
+                    state = shopper.State;
+                    country = shopper.Country;
+                }
 
                 storeWeights = await _repo.GetStoreWeightsAsync(
                     request.ShopperId.Value,

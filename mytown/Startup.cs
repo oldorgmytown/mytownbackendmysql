@@ -15,6 +15,8 @@ using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
 using mytown.DataAccess.Implementations;
 using Stripe;
+using mytown.Hubs;
+using mytown.Helpers;
 
 
 
@@ -27,7 +29,6 @@ public class Startup
 
     public IConfiguration Configuration { get; }
 
-    // Main entry for service registration; this method calls several private helpers.
     public void ConfigureServices(IServiceCollection services)
     {
         RegisterDatabase(services);
@@ -38,7 +39,6 @@ public class Startup
         services.AddMemoryCache();
     }
 
-    // Registers the database (EF Core with MySQL).
     private void RegisterDatabase(IServiceCollection services)
     {
         var connectionString = Configuration.GetConnectionString("mysqlConnection");
@@ -47,22 +47,19 @@ public class Startup
            options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
     }
 
-    // Consolidates all AddScoped registrations.
-private void RegisterApplicationServices(IServiceCollection services)
-{
-    StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
-    services.AddScoped<IUserRepository, UserRepository>();
+    private void RegisterApplicationServices(IServiceCollection services)
+    {
+        StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
+        services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<IShopperRegistrationValidator, ShopperRegistrationValidator>();
         services.AddScoped<IVerificationLinkBuilder, VerificationLinkBuilder>();
-        services.AddScoped<IVerificationLinkBuilderbusiness,VerificationLinkBuilderbusiness>();
+        services.AddScoped<IVerificationLinkBuilderbusiness, VerificationLinkBuilderbusiness>();
         services.AddScoped<mytown.DataAccess.IBusinessRepository, BusinessRepository>();
         services.AddScoped<IBusinessRegistrationValidator, BusinessRegistrationValidator>();
         services.AddScoped<IVerificationLinkBuildertransporter, VerificationLinkBuildertransporter>();
-       
         services.AddScoped<IVerificationLinkBuilderGuest, VerificationLinkBuilderGuest>();
-      
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IAdminRepository, AdminRepository>();
         services.AddScoped<IAuthRepository, AuthRepository>();
@@ -75,13 +72,15 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<IVerificationLinkBuildercourier, VerificationLinkBuildercourier>();
         services.AddScoped<ISearchRepository, SearchRepository>();
         services.AddScoped<IShopperDashboardRepository, ShopperDashboardRepository>();
-        services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>(); //latest
+        services.AddScoped<ICourierDashboardRepository, CourierDashboardRepository>();
         services.AddScoped<ITransporterRepository, TransporterRepository>();
         services.AddScoped<ITransporterDashboardRepository, TransporterDashboardRepository>();
         services.AddScoped<ISenderRepository, SenderRepository>();
         services.AddScoped<IConnectionsRepository, ConnectionsRepository>();
         services.AddScoped<IMobileAppRepository, MobileAppRepository>();
 
+        // Mobile Auth
+        services.AddScoped<IMobileAuthRepository, MobileAuthRepository>();
 
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IFileService, mytown.Services.FileService>();
@@ -106,18 +105,17 @@ private void RegisterApplicationServices(IServiceCollection services)
         services.AddScoped<ITransporterDashboardService, TransporterDashboardService>();
         services.AddScoped<IBusinessServiceRepository, BusinessServiceRepository>();
         services.AddScoped<IServicesProfile, ServicesProfile>();
-        //services.AddScoped<IServiceSubCategoryRepository, ServiceSubCategoryRepository>();
-        //services.AddScoped<IServiceSubCategoryService, ServiceSubCategoryService>();
         services.AddScoped<IGuestRepository, GuestRepository>();
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IConnectionsService, ConnectionsService>();
         services.AddScoped<IMobileAppService, MobileAppService>();
 
+        services.AddSingleton<ConnectionManager>();
     }
 
-    // Registers controllers and Swagger (for API documentation).
     private void RegisterControllersAndSwagger(IServiceCollection services)
     {
+        services.AddSignalR();
         services.AddControllers();
         services.AddEndpointsApiExplorer();
 
@@ -129,7 +127,6 @@ private void RegisterApplicationServices(IServiceCollection services)
                 Version = "v1"
             });
 
-            //  Add JWT Auth to Swagger
             c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
             {
                 Description = "Enter JWT token like: **Bearer your_token_here**",
@@ -140,64 +137,59 @@ private void RegisterApplicationServices(IServiceCollection services)
             });
 
             c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-        {
             {
-                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                 {
-                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    new Microsoft.OpenApi.Models.OpenApiSecurityScheme
                     {
-                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                        Id = "Bearer"
-                    }
-                },
-                Array.Empty<string>()
-            }
-        });
+                        Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                        {
+                            Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                    },
+                    Array.Empty<string>()
+                }
+            });
         });
     }
 
-
-    // Configures the CORS policy.
-private void RegisterCors(IServiceCollection services)
-{
-    var allowedOrigins = new List<string>
+    private void RegisterCors(IServiceCollection services)
     {
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net",
-        "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net",
-        "https://kind-meadow-0fe6b9000.7.azurestaticapps.net",
-        "https://www.itismytown.com",
-        "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net",
-        "https://jolly-sea-066e8b500.7.azurestaticapps.net",
-        "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net"
-    };
-
-    services.AddCors(options =>
-    {
-        options.AddPolicy("AllowFrontend", policy =>
+        var allowedOrigins = new List<string>
         {
-            policy.SetIsOriginAllowed(origin =>
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://mytown-wa-d8gmezfjg7d7hhdy.canadacentral-01.azurewebsites.net",
+            "https://mytown-webapp-gzcyexgdhmgfdzf2.centralindia-01.azurewebsites.net",
+            "https://kind-meadow-0fe6b9000.7.azurestaticapps.net",
+            "https://www.itismytown.com",
+            "https://mytown-webapp-staging-erd7ekb9d9g8bvfk.centralindia-01.azurewebsites.net",
+            "https://jolly-sea-066e8b500.7.azurestaticapps.net",
+            "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net"
+        };
+
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
             {
-                if (allowedOrigins.Contains(origin)) return true;
-
-                // Flutter web debug runs on a random localhost port each time —
-                // allow any localhost/127.0.0.1 origin instead of hardcoding ports.
-                if (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-                    (uri.Host == "localhost" || uri.Host == "127.0.0.1"))
+                policy.SetIsOriginAllowed(origin =>
                 {
-                    return true;
-                }
+                    if (allowedOrigins.Contains(origin)) return true;
 
-                return false;
-            })
-            .AllowAnyMethod()
-            .AllowAnyHeader();
+                    if (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                        (uri.Host == "localhost" || uri.Host == "127.0.0.1"))
+                    {
+                        return true;
+                    }
+
+                    return false;
+                })
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+            });
         });
-    });
-}
+    }
 
-    // Configures JWT Bearer authentication.
     private void RegisterAuthentication(IServiceCollection services)
     {
         var key = Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]);
@@ -220,7 +212,6 @@ private void RegisterCors(IServiceCollection services)
                 IssuerSigningKey = new SymmetricSecurityKey(key)
             };
 
-            // ✅ Validate Session GUID after token validation
             options.Events = new JwtBearerEvents
             {
                 OnTokenValidated = async context =>
@@ -251,9 +242,6 @@ private void RegisterCors(IServiceCollection services)
         services.AddAuthorization();
     }
 
-
-
-    // Main pipeline configuration method; this also calls several helper methods.
     public void Configure(IApplicationBuilder app, IHostEnvironment env, ILogger<Startup> logger)
     {
         ConfigureExceptionHandling(app, env, logger);
@@ -274,17 +262,14 @@ private void RegisterCors(IServiceCollection services)
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-          //  endpoints.MapFallbackToFile("index.html");
+          //  endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);
         logger.LogInformation("API is ready and running.");
         Console.WriteLine("API is ready and running.");
-
-       
     }
 
-    // Sets up error handling based on the environment.
     private void ConfigureExceptionHandling(IApplicationBuilder app, IHostEnvironment env, ILogger logger)
     {
         if (env.IsDevelopment())
@@ -298,22 +283,17 @@ private void RegisterCors(IServiceCollection services)
         }
     }
 
-    // Enables Swagger only in development.
     private void ConfigureSwagger(IApplicationBuilder app, IHostEnvironment env, ILogger logger)
     {
-        //if (env.IsDevelopment())
-        //{
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-                c.RoutePrefix = "swagger";
-            });
-            logger.LogInformation("Swagger UI is enabled.");
-        //}
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            c.RoutePrefix = "swagger";
+        });
+        logger.LogInformation("Swagger UI is enabled.");
     }
 
-    // Applies pending EF Core migrations.
     private void ApplyMigrations(IApplicationBuilder app, ILogger logger)
     {
         using (var scope = app.ApplicationServices.CreateScope())
@@ -321,7 +301,6 @@ private void RegisterCors(IServiceCollection services)
             try
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-               // dbContext.Database.Migrate();
                 logger.LogInformation("Database migrations applied successfully.");
             }
             catch (Exception ex)
@@ -332,7 +311,6 @@ private void RegisterCors(IServiceCollection services)
         }
     }
 
-    // Logs the addresses where the server is listening.
     private void LogServerAddresses(IApplicationBuilder app, ILogger logger)
     {
         var addresses = app.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
@@ -350,4 +328,3 @@ private void RegisterCors(IServiceCollection services)
         }
     }
 }
-
