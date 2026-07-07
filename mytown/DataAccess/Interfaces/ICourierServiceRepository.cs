@@ -33,6 +33,7 @@ public interface ICourierServiceRepository
         decimal productWeightKg);
 
     Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
+    Task<ShopperAlternateAddress?> GetAlternateAddressByShopperIdAsync(int shopperId);
     Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds);
     Task<Dictionary<int, decimal>> GetStoreWeightsAsync(int shopperId, List<int> storeIds);
 
