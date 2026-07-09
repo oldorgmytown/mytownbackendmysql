@@ -521,6 +521,9 @@ GetTransporterByIdAsync(int transporterId)
             var query =
                 from o in _context.SenderOrders
 
+                where o.SenderRegId == senderId
+               && o.TransporterRegId != null
+
                 join t in _context.TransporterRegisters
                 on o.TransporterRegId equals t.TransporterRegId
                 into transporterGroup
