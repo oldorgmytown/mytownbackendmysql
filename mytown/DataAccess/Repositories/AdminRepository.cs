@@ -391,7 +391,7 @@ namespace mytown.DataAccess.Repositories
             var shopperCount = await _context.ShopperRegisters.CountAsync();
             var courierServiceCount = await _context.CourierService.CountAsync();
 
-            // Return everything in one object
+            // Return everything in a DTO
             return new AdminDashboardcountDto
             {
                 UniqueTowns = uniqueTowns,
