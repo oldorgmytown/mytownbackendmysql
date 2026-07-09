@@ -386,6 +386,8 @@ namespace mytown.DataAccess.Repositories
 
             // Other counts
             var businessCount = await _context.BusinessRegisters.CountAsync();
+            var storesCount = await _context.BusinessProfiles.CountAsync();
+            var servicesCount = await _context.ServiceProfiles.CountAsync();
             var shopperCount = await _context.ShopperRegisters.CountAsync();
             var courierServiceCount = await _context.CourierService.CountAsync();
 
@@ -397,6 +399,8 @@ namespace mytown.DataAccess.Repositories
                 UniqueStates = uniqueStates,
                 UniqueCountries = uniqueCountries,
                 BusinessRegisterCount = businessCount,
+                StoresCount = storesCount,
+                ServiceProfileCount = servicesCount,
                 ShopperRegisterCount = shopperCount,
                 CourierServiceCount = courierServiceCount
             };
