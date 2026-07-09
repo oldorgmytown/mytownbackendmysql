@@ -1986,6 +1986,7 @@ public class EmailService : IEmailService
         }
     }
 
+    // Transporter order confirmation email
     public async Task SendEmailToTransporterAsync(
     string email,
     string transporterName,
@@ -2203,7 +2204,7 @@ public class EmailService : IEmailService
                           Store Order ID
                         </td>
                                 <td align=""right"" style=""padding-bottom:6px;"">
-                                  <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/my-plans""
+                                  <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/deliveries""
                                      style=""color:#004481;font-size:16px;font-weight:500;text-decoration:underline;
                                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                                     {storedto.StoreOrderId}
@@ -2320,7 +2321,7 @@ public class EmailService : IEmailService
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
           <tr>
             <td align=""center"" style=""padding:8px 0 16px 0;"">
-              <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/my-plans""
+              <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/deliveries""
                  style=""display:inline-block;background:#004481;color:#fff;
                         border:1px solid #004481;border-radius:8px;
                         padding:14px 40px;font-size:16px;font-weight:400;
@@ -3152,7 +3153,7 @@ public class EmailService : IEmailService
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
         <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
-             alt=""Package Ready for Pickup""
+             alt=""Shipment Assigned for Delivery""
              width=""600""
              style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
       </td>
