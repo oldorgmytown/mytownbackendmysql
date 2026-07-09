@@ -97,7 +97,7 @@ namespace mytown.Controllers
             });
         }
 
-        [Authorize]
+      //  [Authorize]
         [HttpGet("Businessprofilestatuscounts")]
         public async Task<IActionResult> Businessprofilestatuscounts()
         {
