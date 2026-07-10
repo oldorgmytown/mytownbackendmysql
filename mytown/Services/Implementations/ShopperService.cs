@@ -143,6 +143,7 @@ namespace mytown.Services.Implementations
         {
             var entity = new ShopperAlternateAddress
             {
+                AltAddressId = dto.AltAddressId,
                 ShopperRegId = dto.ShopperRegId,
                 AltName = dto.AltName,
                 AltPhoneNumber = dto.AltPhoneNumber,
