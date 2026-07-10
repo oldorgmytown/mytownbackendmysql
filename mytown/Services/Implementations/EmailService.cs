@@ -2716,7 +2716,7 @@ public class EmailService : IEmailService
     <!-- ===== BANNER IMAGE ===== -->
     <tr>
       <td align=""center"" style=""padding:0;background:#FAFBFC;"">
-        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg""
+        <img src=""https://mytownblobstore.blob.core.windows.net/uploadedfiles/SenderBooking.jpeg""
              alt=""Booking Order Confirmed""
              width=""600""
              style=""width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;"" />
