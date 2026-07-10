@@ -11,5 +11,7 @@
         public int ServiceProfileCount { get; set; }
         public int ShopperRegisterCount { get; set; }
         public int CourierServiceCount { get; set; }
+        public int TransportersCount { get; set; }
+        public int SendersCount { get; set; }
     }
 }

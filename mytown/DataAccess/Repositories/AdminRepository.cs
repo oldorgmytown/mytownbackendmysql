@@ -390,6 +390,8 @@ namespace mytown.DataAccess.Repositories
             var servicesCount = await _context.ServiceProfiles.CountAsync();
             var shopperCount = await _context.ShopperRegisters.CountAsync();
             var courierServiceCount = await _context.CourierService.CountAsync();
+            var Senderscount = await _context.SenderRegisters.CountAsync();
+            var transporterscount = await _context.TransporterRegisters.CountAsync();
 
             // Return everything in one object
             return new AdminDashboardcountDto
@@ -402,7 +404,9 @@ namespace mytown.DataAccess.Repositories
                 StoresCount = storesCount,
                 ServiceProfileCount = servicesCount,
                 ShopperRegisterCount = shopperCount,
-                CourierServiceCount = courierServiceCount
+                CourierServiceCount = courierServiceCount,
+                TransportersCount = transporterscount,
+                SendersCount = Senderscount
             };
         }
 
