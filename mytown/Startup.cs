@@ -15,6 +15,8 @@ using mytown.Services.Interfaces;
 using mytown.Services.Implementations;
 using mytown.DataAccess.Implementations;
 using Stripe;
+using mytown.Hubs;
+using mytown.Helpers;
 
 
 
@@ -107,10 +109,13 @@ public class Startup
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IConnectionsService, ConnectionsService>();
         services.AddScoped<IMobileAppService, MobileAppService>();
+
+        services.AddSingleton<ConnectionManager>();
     }
 
     private void RegisterControllersAndSwagger(IServiceCollection services)
     {
+        services.AddSignalR();
         services.AddControllers();
         services.AddEndpointsApiExplorer();
 
@@ -253,6 +258,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
+            endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);

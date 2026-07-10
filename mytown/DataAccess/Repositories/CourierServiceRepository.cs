@@ -675,7 +675,14 @@ namespace mytown.DataAccess.Repositories
                 .AsNoTracking()
                 .FirstOrDefaultAsync(s => s.ShopperRegId == shopperId);
         }
-
+        public async Task<ShopperAlternateAddress?> GetAlternateAddressByShopperIdAsync(int shopperId)
+        {
+            return await _context.ShopperAlternateAddresses
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x =>
+                    x.ShopperRegId == shopperId &&
+                    !x.IsDeleted);
+        }
         public async Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds)
         {
             return await _context.BusinessRegisters
