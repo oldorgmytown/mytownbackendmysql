@@ -204,7 +204,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id)
         {
             return await _context.ShopperAlternateAddresses
-                .Where(a => a.AltAddressId == id)
+                .Where(a => a.AltAddressId == id && !a.IsDeleted)
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
