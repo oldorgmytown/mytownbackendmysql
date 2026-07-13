@@ -183,7 +183,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesByShopperIdAsync(int shopperRegId)
         {
             return await _context.ShopperAlternateAddresses
-                .Where(a => a.ShopperRegId == shopperRegId)
+                .Where(a => a.ShopperRegId == shopperRegId && !a.IsDeleted)
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
@@ -204,7 +204,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id)
         {
             return await _context.ShopperAlternateAddresses
-                .Where(a => a.AltAddressId == id)
+                .Where(a => a.AltAddressId == id && !a.IsDeleted) // return only not deleted addresses
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
