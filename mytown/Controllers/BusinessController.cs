@@ -99,8 +99,12 @@ namespace mytown.Controllers
                 var pending = await _businessService.FindPendingVerificationByToken(token);
                 if (pending == null || pending.ExpiryDate < DateTime.UtcNow)
                 {
-                    return BadRequest(new { error = "Invalid or expired verification link." });
+                    return Ok(new
+                    {
+                        message = "Business account created successfully!"
+                    });
                 }
+
 
                 var businessDto = JsonSerializer.Deserialize<BusinessRegisterDto>(pending.JsonPayload);
                 var hashedPassword = BCrypt.Net.BCrypt.HashPassword(businessDto.Password);
