@@ -21,7 +21,7 @@ namespace mytown.Controllers
     {
         _service = service;
     }
-
+        [Authorize]
         // ------------------- ADD BUSINESS PROFILE -------------------
         [HttpPost("addBusinessProfile")]
         public async Task<IActionResult> AddBusinessProfile(
@@ -33,7 +33,7 @@ namespace mytown.Controllers
         }
 
         //--------------Update to Blob-------------
-
+        [Authorize]
         [HttpPost("upload_Business_Images_toBlob")]
         public async Task<IActionResult> UploadProfileImage(IFormFile file, string ImageType)
         {
@@ -47,6 +47,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- UPDATE BANNER -------------------
+        [Authorize]
         [HttpPut("update-banner/{busRegId}")]
         public async Task<IActionResult> UpdateBannerPath(int busRegId, [FromBody] UpdateBannerRequest request)
         {
@@ -61,6 +62,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- UPDATE LOGO -------------------
+        [Authorize]
         [HttpPut("update-logo/{busRegId}")]
         public async Task<IActionResult> UpdateLogoPath(int busRegId, [FromBody] UpdateLogoRequest request)
         {
@@ -75,6 +77,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET ALL SUBCATEGORIES -------------------
+        [AllowAnonymous]
         [HttpGet("GetAllProductsubcategories")]
         public async Task<IActionResult> GetAllProductsubcategories()
         {
@@ -83,6 +86,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET SUBCATEGORY DETAILS -------------------
+        [Authorize]
         [HttpGet("GetSubcatdetails_onaddproductform")]
         public async Task<IActionResult> GetBySubCategory(int subcatId)
         {
@@ -99,6 +103,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET SUBCATEGORIES FOR BUSINESS -------------------
+        [Authorize]
         [HttpGet("GetProductCategoriesbybusregid")]
         public IActionResult GetProductSubCategories(int busRegId)
         {
@@ -110,6 +115,7 @@ namespace mytown.Controllers
             return Ok(subCategories);
         }
 
+        [AllowAnonymous]
         [HttpGet("Productsubcategory-by-buscatid/{busCatId}")]
         public IActionResult GetProductSubCategoriesByBusCatId(int busCatId)
         {
@@ -122,6 +128,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET ALL BUSINESS PROFILES -------------------
+        [AllowAnonymous]
         [HttpGet("getBusinessProfiles")]
         public async Task<IActionResult> GetBusinessProfiles()
         {
@@ -130,6 +137,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET BUSINESS PROFILES BY BUSREGID -------------------
+        [Authorize]
         [HttpGet("getBusinessProfilesByBusRegId")]
         public async Task<IActionResult> GetBusinessProfilesByBusRegId(int busRegId)
         {
@@ -142,6 +150,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET PRODUCTS BY BUSREGID & SUBCATID -------------------
+        [Authorize]
         [HttpGet("by-busreg-and-subcat")]
         public IActionResult GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
         {
@@ -153,6 +162,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET BUSINESS PROFILES WITH DISCOUNTED PRODUCTS -------------------
+        [AllowAnonymous]
         [HttpGet("BusinessprofileswithDiscountproducts")]
         public async Task<IActionResult> GetStoresWithDiscountedProducts()
         {
@@ -164,6 +174,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET UNIQUE COUNTRIES -------------------
+        [AllowAnonymous]
         [HttpGet("uniquecountries")]
         public async Task<IActionResult> GetUniqueCountries()
         {

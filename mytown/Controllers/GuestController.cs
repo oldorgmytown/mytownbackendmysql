@@ -121,7 +121,7 @@ namespace mytown.Controllers
         }
 
         // ---------------- GET GUEST DETAILS ----------------
-        //[Authorize]
+        [Authorize]
         [HttpGet("getGuestdetails/{guestRegId}")]
         public async Task<IActionResult> GetGuestDetails(int guestRegId)
         {

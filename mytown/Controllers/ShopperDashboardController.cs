@@ -7,7 +7,7 @@ using Stripe.Climate;
 
 namespace mytown.Controllers
 {
-  //  [Authorize]
+   [Authorize]
     [ApiController]
     [Route("api/shopperdashboard")]
     public class ShopperDashboardController: ControllerBase

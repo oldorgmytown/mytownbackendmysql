@@ -6,7 +6,7 @@ using Stripe;
 
 namespace mytown.Controllers
 {
-   // [Authorize]
+    [Authorize]
     [Route("api/shoppingcart/payment")]
     [ApiController]
     public class PaymentController : ControllerBase

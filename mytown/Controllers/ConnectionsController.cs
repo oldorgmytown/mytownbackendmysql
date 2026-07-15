@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
@@ -6,7 +7,7 @@ using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-
+    [Authorize]
     [Route("api/connections")]
     [ApiController]
     public class ConnectionsController :ControllerBase

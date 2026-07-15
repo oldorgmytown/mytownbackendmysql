@@ -45,7 +45,7 @@ namespace mytown.Controllers
             _registrationValidator = registrationValidator;
             _verificationLinkBuildercourier = verificationLinkBuildercourier;
         }
-
+        [AllowAnonymous]
         [HttpPost("register")]
         public async Task<IActionResult> RegisterCourier([FromBody] CourierServiceDto courierDto)
         {
@@ -81,7 +81,7 @@ namespace mytown.Controllers
                 return StatusCode(500, new { error = "Something went wrong. Please try again." });
             }
         }
-
+        [AllowAnonymous]
         [HttpGet("verify-courier-email")]
         public async Task<IActionResult> VerifyEmail([FromQuery] string token)
         {
@@ -102,6 +102,8 @@ namespace mytown.Controllers
         }
 
         // preview CSV
+
+        [Authorize]
         [HttpPost("courierBranchUpload-preview")]
         public async Task<IActionResult> UploadCourierCsv(IFormFile file)
         {
@@ -113,6 +115,8 @@ namespace mytown.Controllers
         }
 
         // save branches
+
+        [Authorize]
         [HttpPost("save-courier-branches")]
         public async Task<IActionResult> SaveCourierBranches([FromBody] List<CourierBranchCsvRowDto> rows)
         {
@@ -190,7 +194,7 @@ namespace mytown.Controllers
             }
         }
 
-        // [Authorize]
+        [Authorize]
         [HttpPost("GetBestCourier")]
         public async Task<IActionResult> GetBestCourier(
      [FromBody] StoreCourierRequestDto request)

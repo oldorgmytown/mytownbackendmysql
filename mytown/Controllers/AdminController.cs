@@ -47,7 +47,7 @@ namespace mytown.Controllers
             });
         }
 
-      //  [Authorize]
+        [Authorize]
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
             [FromQuery] string status,
@@ -69,7 +69,7 @@ namespace mytown.Controllers
             });
         }
 
-       // [Authorize]
+       [Authorize]
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
 
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
@@ -97,7 +97,7 @@ namespace mytown.Controllers
             });
         }
 
-      //  [Authorize]
+       [Authorize]
         [HttpGet("Businessprofilestatuscounts")]
         public async Task<IActionResult> Businessprofilestatuscounts()
         {
@@ -112,7 +112,7 @@ namespace mytown.Controllers
             }
         }
 
-    //    [Authorize]
+       [Authorize]
         [HttpPost("updateprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateProfileStatusByAdmin(
             [FromQuery] int busRegId,
@@ -132,7 +132,7 @@ namespace mytown.Controllers
 
             return Ok("Profile status updated successfully.");
         }
-
+        [Authorize]
         [HttpPost("updateserviceprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateServiceProfileStatusByAdmin(
     [FromQuery] int busRegId,
@@ -257,7 +257,7 @@ namespace mytown.Controllers
         }
 
 
-      //  [Authorize]
+        [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
         public async Task<IActionResult> UpdateShopperStatusByAdmin([FromQuery] int shopperId, [FromQuery] string status)
         {
@@ -284,7 +284,7 @@ namespace mytown.Controllers
 
         //    return Ok(new { message = "Shopper Email successfully" });
         //}
-
+        [Authorize]
         [HttpPut("deactivateShopper")]
         public async Task<IActionResult> DeactivateShopper(int shopperRegId)
         {
@@ -442,7 +442,7 @@ namespace mytown.Controllers
             var result = await _adminService.GetLocationCourierSummaryAsync();
             return Ok(result);
         }
-
+        [Authorize]
         [HttpGet("branches_info_courierId")]
         public async Task<IActionResult> GetBasicBranches(int courierId)
         {
@@ -459,7 +459,7 @@ namespace mytown.Controllers
             var branch = await _adminService.GetBranchAsync(branchId);
             return Ok(branch);
         }
-
+        [Authorize]
         [HttpGet("getSenderRegistersPaginated")]
         public async Task<IActionResult> GetSenderRegistersPaginated(
     string? search = null,

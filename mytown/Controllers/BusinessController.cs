@@ -279,7 +279,7 @@ namespace mytown.Controllers
         }
 
 
-        [Authorize]
+        
         [HttpGet("BusinessSubCategoriesforStores")]
         public async Task<ActionResult<IEnumerable<BusinessCategory>>> BusinessSubCategoriesforStores(int buscatid)
         {

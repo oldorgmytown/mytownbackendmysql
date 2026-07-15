@@ -35,6 +35,7 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = result });
         }
 
+        [AllowAnonymous]
         [HttpGet("searchstore")]
         public async Task<IActionResult> SearchBusinessstores(string location, string categoryProduct)
         {
@@ -49,6 +50,7 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = result });
         }
 
+        [AllowAnonymous]
         [HttpGet("searchbylocation")]
         public IActionResult GetBusinessProfilesByLocation(string location)
         {
@@ -60,6 +62,7 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = profiles });
         }
 
+        [AllowAnonymous]
         [HttpGet("searchproductandbusiness")]
         public IActionResult SearchBusinessByCategoryOrProduct(string searchterm, string? location)
         {
@@ -67,7 +70,7 @@ namespace mytown.Controllers
 
             return Ok(new { code = 200, data = result });
         }
-
+        [AllowAnonymous]
         [HttpGet("SearchProfilesandProducts_ByProductAndLocation")]
         public IActionResult SearchProfilesByProductAndLocation(string productSearchTerm, string locationSearchTerm)
         {
@@ -77,6 +80,7 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = result });
         }
 
+        [AllowAnonymous]
         [HttpGet("product-subcategories-by-location")]
         public async Task<IActionResult> GetProductSubCategoriesByLocation(string location)
         {
@@ -88,6 +92,7 @@ namespace mytown.Controllers
             return Ok(new { code = 200, data = result });
         }
 
+        [AllowAnonymous]
         [HttpGet("business-categories-by-location")]
         public async Task<IActionResult> GetBusinessCategoriesByLocation(string location)
         {
@@ -98,7 +103,7 @@ namespace mytown.Controllers
 
             return Ok(new { code = 200, data = result });
         }
-
+        [AllowAnonymous]
         [HttpGet("searchstoresonly")]
         public IActionResult SearchStores(string? searchTerm, string? location)
         {
@@ -106,7 +111,7 @@ namespace mytown.Controllers
 
             return Ok(new { stores, storeCount = stores.Count });
         }
-
+        [AllowAnonymous]
         [HttpGet("Searhcategoriesfilter")]
         public async Task<IActionResult> GetCategories(string? product, string? location)
         {
@@ -119,6 +124,7 @@ namespace mytown.Controllers
 
         // 27-05-26
         // get both business profiles and service profiles
+        [AllowAnonymous]
         [HttpGet("getbusinessandservicesearchresults")]
         public async Task<IActionResult> GetBusinessAndServiceSearchResults(
             string? searchTerm,

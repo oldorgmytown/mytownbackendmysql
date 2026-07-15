@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace mytown.Controllers
 {
-  //  [Authorize]
+   [Authorize]
     [ApiController]
     [Route("api/businessdashboard")]
     public class BusinessDashboardController : ControllerBase

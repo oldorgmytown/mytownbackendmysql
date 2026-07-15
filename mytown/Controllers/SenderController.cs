@@ -100,7 +100,7 @@ namespace mytown.Controllers
         }
 
         // ---------------- CREATE SENDER ORDER ----------------
-
+        [Authorize]
         [HttpPost("CreateOrder")]
         public async Task<IActionResult> Create(
        [FromBody] CreateSenderOrderDto dto)
@@ -116,6 +116,7 @@ namespace mytown.Controllers
         }
 
         // ---------------- GET MATCHING TRANSPORTERS ----------------
+        [Authorize]
         [HttpGet("matching-transporters/{senderOrderId}")]
         public async Task<IActionResult>
     GetMatchingTransporters(int senderOrderId)
@@ -127,6 +128,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("summary")]
         public async Task<IActionResult>
     GetSummary(
@@ -140,6 +142,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("create-payment-intent/{senderOrderId}")]
         public async Task<IActionResult>
     CreatePaymentIntent(int senderOrderId)
@@ -152,6 +155,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPost("confirm-payment")]
         public async Task<IActionResult>
     ConfirmPayment(
@@ -167,6 +171,7 @@ namespace mytown.Controllers
             });
         }
 
+        [Authorize]
         [HttpGet("senderorderconfirmation/{senderOrderId}")]
         public async Task<IActionResult>
     GetConfirmation(
@@ -180,6 +185,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPut("update-delivery-status")]
         public async Task<IActionResult>
     UpdateSenderPackageDeliveryStatus(
@@ -195,6 +201,7 @@ namespace mytown.Controllers
             });
         }
 
+        [Authorize]
         [HttpGet("sender/orders")]
         public async Task<IActionResult>
 GetSenderOrders(
@@ -209,6 +216,7 @@ GetSenderOrders(
             return Ok(result);
         }
 
+        [Authorize]
         [HttpGet("sender-profile/{senderRegId}")]
         public async Task<IActionResult> GetSenderProfile(int senderRegId)
         {
@@ -221,6 +229,7 @@ GetSenderOrders(
             return Ok(result);
         }
 
+        [Authorize]
         [HttpPut("update-sender-profile/{senderRegId}")]
         public async Task<IActionResult> UpdateSenderProfile(
     int senderRegId,
@@ -240,7 +249,7 @@ GetSenderOrders(
         // =========================================================
         // NOTIFICATIONS
         // =========================================================
-
+        [Authorize]
         [HttpGet("notifications/{senderId}")]
         public async Task<IActionResult> GetUnreadNotifications(int senderId)
         {
@@ -250,6 +259,7 @@ GetSenderOrders(
             return Ok(notifications);
         }
 
+        [Authorize]
         [HttpPut("notifications/mark-all-read/{senderId}")]
         public async Task<IActionResult> MarkAllAsRead(int senderId)
         {
@@ -261,6 +271,7 @@ GetSenderOrders(
             });
         }
 
+        [Authorize]
         [HttpPut("notifications/mark-read/{notificationId}")]
         public async Task<IActionResult> MarkNotificationRead(int notificationId)
         {
@@ -274,7 +285,7 @@ GetSenderOrders(
 
         // ---------------- ALTERNATE ADDRESSES ----------------
 
-        
+        [Authorize]
         [HttpGet("GetSenderAltAddress")]
         public async Task<IActionResult> GetAddresses(int senderRegId)
         {
@@ -284,7 +295,7 @@ GetSenderOrders(
             return Ok(addresses);
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPost("AddSenderAltAddress")]
         public async Task<IActionResult> AddAddress(
             [FromBody] SenderAlternateAddressDto dto)
@@ -295,7 +306,7 @@ GetSenderOrders(
             return Ok(result);
         }
 
-       // [Authorize]
+       [Authorize]
         [HttpDelete("DeleteSenderAltAddress/{id}")]
         public async Task<IActionResult> DeleteAddress(int id)
         {

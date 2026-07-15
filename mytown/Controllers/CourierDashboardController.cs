@@ -11,7 +11,7 @@ using System.Text.Json;
 
 namespace mytown.Controllers
 {
-
+    [Authorize]
     [ApiController]
     [Route("api/courier")]
     public class CourierDashboardController : ControllerBase

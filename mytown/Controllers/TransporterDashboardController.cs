@@ -5,7 +5,7 @@ using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
-    // [Authorize]
+     [Authorize]
     [ApiController]
     [Route("api/transporter-dashboard")]
     public class TransporterDashboardController : ControllerBase

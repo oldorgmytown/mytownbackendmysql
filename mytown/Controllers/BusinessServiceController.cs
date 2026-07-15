@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs;
 using mytown.Services.Implementations;
@@ -5,6 +6,7 @@ using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/businessservices")]
     public class BusinessServiceController : ControllerBase

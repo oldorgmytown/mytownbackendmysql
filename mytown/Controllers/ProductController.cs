@@ -18,7 +18,7 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Add Product ----------------
-
+        [Authorize]
         [HttpPost("Add_Product")]
         public async Task<IActionResult> AddProduct([FromBody] ProductCreateDto dto)
         {
@@ -27,7 +27,7 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Add Variant ----------------
-
+        [Authorize]
         [HttpPost("Add_SKU_ProductVariant")]
         public async Task<IActionResult> AddProductVariant([FromForm] Sku_CreateVariantDto dto)
         {
@@ -36,21 +36,21 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Fetch ----------------
-
+        [Authorize]
         [HttpGet("GetSizeMeasurements")]
         public async Task<IActionResult> GetMeasurementBySizeId(int sizeId)
         {
             var result = await _service.GetMeasurementBySizeIdAsync(sizeId);
             return result == null ? NotFound() : Ok(result);
         }
-
+        [Authorize]
         [HttpGet("GetProductandVariantDetails/{productId}")]
         public async Task<IActionResult> GetProductandVariantDetails(int productId)
         {
             var result = await _service.GetProductAndVariantAsync(productId);
             return result == null ? NotFound() : Ok(result);
         }
-
+        [Authorize]
         [HttpGet("GetAllProductsforbusid/{busRegId}")]
         public async Task<IActionResult> GetAllProducts(int busRegId)
         {
@@ -59,7 +59,7 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Update ----------------
-
+        [Authorize]
         [HttpPut("Update_Productdetails")]
         public async Task<IActionResult> UpdateProduct([FromBody] ProductCreateDto dto)
         {
@@ -67,6 +67,7 @@ namespace MyTown.Controllers
             return result == null ? NotFound() : Ok(new { message = "Product updated successfully" });
         }
 
+        [Authorize]
         [HttpPut("UpdateProductVariants")]
         public async Task<IActionResult> UpdateVariant(
             [FromForm] Sku_ProductVariantDto dto,
@@ -77,7 +78,7 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Delete ----------------
-
+        [Authorize]
         [HttpDelete("deleteProduct")]
         public async Task<IActionResult> DeleteProduct(int productId)
         {
@@ -85,6 +86,7 @@ namespace MyTown.Controllers
             return Ok(new { message = "Product deleted successfully" });
         }
 
+        [Authorize]
         [HttpDelete("delete_ProductVariant")]
         public async Task<IActionResult> DeleteVariant(int productId, int sku_VariantId)
         {
@@ -93,19 +95,21 @@ namespace MyTown.Controllers
         }
 
         // ---------------- Shopper APIs ----------------
-
+        [AllowAnonymous]
         [HttpGet("GetDiscountedProductsAsync")]
         public async Task<IActionResult> GetDiscountedProductsAsync()
         {
             return Ok(await _service.GetDiscountedProductsAsync());
         }
 
+        [AllowAnonymous]
         [HttpGet("GetProductsBySubCategory/{subCategoryId}")]
         public async Task<IActionResult> GetProductsBySubCategory(int subCategoryId)
         {
             return Ok(await _service.GetProductsBySubCategoryAsync(subCategoryId));
         }
 
+        [AllowAnonymous]
         [HttpPost("ShopperRecentViewProduct")]
         public async Task<IActionResult> ShopperRecentViewProduct(int shopperId, int productId)
         {
@@ -113,6 +117,7 @@ namespace MyTown.Controllers
             return Ok(new { message = "Product view recorded" });
         }
 
+        [AllowAnonymous]
         [HttpGet("TopPurchasedProductsByTown")]
         public async Task<IActionResult> GetTopPurchasedProductsByLocation(
             string location,
