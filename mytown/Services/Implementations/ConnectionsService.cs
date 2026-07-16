@@ -62,5 +62,20 @@ namespace mytown.Services.Implementations
         {
             return await _Connectrepo.GetCurrentBusinessProfileViewersAsync(busRegId, shopperRegId);
         }
+
+        public async Task<bool> ConnectBusinessAsync(BusinessConnection connection)
+        {
+            return await _Connectrepo.ConnectBusinessAsync(connection);
+        }
+
+        public async Task<bool> IsBusinessConnectedAsync(int busRegId, int shopperRegId)
+        {
+            return await _Connectrepo.IsBusinessConnectedAsync(busRegId, shopperRegId);
+        }
+
+        public async Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId)
+        {
+            return await _Connectrepo.GetConnectedShoppersAsync(busRegId);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
@@ -73,6 +74,47 @@ CreateExperience(
         public async Task<IActionResult> GetCurrentBusinessProfileViewers(int busRegId, int shopperRegId)
         {
             return Ok(await _service.GetCurrentBusinessProfileViewersAsync(busRegId, shopperRegId));
+        }
+
+        [HttpPost("connect-business")]
+        public async Task<IActionResult> ConnectBusiness(
+    [FromBody] BusinessConnectionDto request)
+        {
+            var connection = new BusinessConnection
+            {
+                BusRegId = request.BusRegId,
+                ShopperRegId = request.ShopperRegId
+            };
+
+            var result = await _service.ConnectBusinessAsync(connection);
+
+            if (!result)
+            {
+                return Ok(new
+                {
+                    message = "Shopper is already connected to this business."
+                });
+            }
+
+            return Ok(new
+            {
+                message = "Connected to business successfully."
+            });
+        }
+
+        [HttpGet("Shopper-connection-status-to-business")]
+        public async Task<IActionResult> GetBusinessConnectionStatus(int busRegId, int shopperRegId)
+        {
+            return Ok(new
+            {
+                isConnected = await _service.IsBusinessConnectedAsync(busRegId, shopperRegId)
+            });
+        }
+
+        [HttpGet("business-connected-shoppers/{busRegId}")]
+        public async Task<IActionResult> GetConnectedShoppers(int busRegId)
+        {
+            return Ok(await _service.GetConnectedShoppersAsync(busRegId));
         }
     }
 }
