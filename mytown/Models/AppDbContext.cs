@@ -96,6 +96,7 @@ namespace mytown.Models
             // shopper experience
             public DbSet<ShopperExperience> ShopperExperiences { get; set; }
             public DbSet<BusinessProfileViewer> BusinessProfileViewers { get; set; }
+            public DbSet<BusinessConnection> BusinessConnections { get; set; }
 
             // location images
             public DbSet<LocationImage> LocationImages { get; set; }

@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using mytown.Controllers.Helpers;
 using mytown.DataAccess.Interfaces;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
@@ -11,10 +13,12 @@ namespace mytown.DataAccess.Repositories
     public class ConnectionsRepository : IConnectionsRepository
     {
         private readonly AppDbContext _context;
+        private readonly ConnectionManager _connectionManager;
 
-        public ConnectionsRepository(AppDbContext context)
+        public ConnectionsRepository(AppDbContext context, ConnectionManager connectionManager)
         {
             _context = context;
+            _connectionManager = connectionManager;
         }
 
         public async Task<ShopperExperience> CreateExperienceAsync(ShopperExperience experience)
@@ -100,6 +104,49 @@ namespace mytown.DataAccess.Repositories
                     IsOnline = true
                 })
                 .Distinct()
+                .ToListAsync();
+        }
+
+        public async Task<bool> ConnectBusinessAsync(BusinessConnection connection)
+        {
+            var existing = await _context.BusinessConnections
+                .FirstOrDefaultAsync(x =>
+                    x.BusRegId == connection.BusRegId &&
+                    x.ShopperRegId == connection.ShopperRegId);
+
+            if (existing != null)
+                return false;
+
+            _context.BusinessConnections.Add(connection);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> IsBusinessConnectedAsync(
+    int busRegId,
+    int shopperRegId)
+        {
+            return await _context.BusinessConnections
+                .AnyAsync(x =>
+                    x.BusRegId == busRegId &&
+                    x.ShopperRegId == shopperRegId &&
+                    x.Status);
+        }
+        public async Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId)
+        {
+            return await _context.BusinessConnections
+                .Where(x => x.BusRegId == busRegId && x.Status)
+                .Select(x => new ConnectedShopperDto
+                {
+                    ShopperRegId = x.ShopperRegId,
+                    ShopperName = x.ShopperRegister.Username,
+                    ShopperPhoto = x.ShopperRegister.PhotoName,
+                    IsOnline = _connectionManager.GetConnection(
+                        x.ShopperRegId,
+                        UserType.Shopper) != null
+                })
                 .ToListAsync();
         }
     }
