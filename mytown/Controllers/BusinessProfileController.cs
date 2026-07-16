@@ -103,7 +103,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET SUBCATEGORIES FOR BUSINESS -------------------
-        [Authorize]
+      //  [Authorize]
         [HttpGet("GetProductCategoriesbybusregid")]
         public IActionResult GetProductSubCategories(int busRegId)
         {
@@ -137,7 +137,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET BUSINESS PROFILES BY BUSREGID -------------------
-        [Authorize]
+     //   [Authorize]
         [HttpGet("getBusinessProfilesByBusRegId")]
         public async Task<IActionResult> GetBusinessProfilesByBusRegId(int busRegId)
         {
@@ -150,7 +150,7 @@ namespace mytown.Controllers
         }
 
         // ------------------- GET PRODUCTS BY BUSREGID & SUBCATID -------------------
-        [Authorize]
+     //   [Authorize]
         [HttpGet("by-busreg-and-subcat")]
         public IActionResult GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId)
         {
