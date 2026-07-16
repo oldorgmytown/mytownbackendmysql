@@ -43,14 +43,14 @@ namespace MyTown.Controllers
             var result = await _service.GetMeasurementBySizeIdAsync(sizeId);
             return result == null ? NotFound() : Ok(result);
         }
-        [Authorize]
+      //  [Authorize]
         [HttpGet("GetProductandVariantDetails/{productId}")]
         public async Task<IActionResult> GetProductandVariantDetails(int productId)
         {
             var result = await _service.GetProductAndVariantAsync(productId);
             return result == null ? NotFound() : Ok(result);
         }
-        [Authorize]
+       // [Authorize]
         [HttpGet("GetAllProductsforbusid/{busRegId}")]
         public async Task<IActionResult> GetAllProducts(int busRegId)
         {
