@@ -7,6 +7,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
+using System.Diagnostics.Metrics;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -612,8 +613,13 @@ namespace mytown.DataAccess.Repositories
 
         // 27-05-26
         // get both business profiles and service profiles
-        public async Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
-            string? searchTerm, string? locationQuery)
+        public async Task<BusinessAndServiceSearchResultsDto>
+ GetBusinessAndServiceSearchResults(
+     string? searchTerm,
+     string? town,
+     string? city,
+     string? state,
+     string? country)
         {
             IQueryable<int> businessIds = Enumerable.Empty<int>().AsQueryable();
             IQueryable<int> serviceBusinessIds = Enumerable.Empty<int>().AsQueryable();
@@ -695,30 +701,26 @@ namespace mytown.DataAccess.Repositories
                     .Distinct();
             }
 
-            if (!string.IsNullOrWhiteSpace(locationQuery))
+            if (!string.IsNullOrWhiteSpace(town) ||
+                !string.IsNullOrWhiteSpace(city) ||
+                !string.IsNullOrWhiteSpace(state) ||
+                !string.IsNullOrWhiteSpace(country))
             {
-                locationQuery = locationQuery.Trim();
-
                 var locationBusinessIds = _context.BusinessRegisters
                     .Where(b =>
-                        (b.Town != null && EF.Functions.Like(b.Town, $"%{locationQuery}%")) ||
-                        (b.BusinessCity != null && EF.Functions.Like(b.BusinessCity, $"%{locationQuery}%")) ||
-                        (b.BusinessState != null && EF.Functions.Like(b.BusinessState, $"%{locationQuery}%")) ||
-                        (b.BusinessCountry != null && EF.Functions.Like(b.BusinessCountry, $"%{locationQuery}%")) ||
-                        (b.Address1 != null && EF.Functions.Like(b.Address1, $"%{locationQuery}%")) ||
-                        (b.Address2 != null && EF.Functions.Like(b.Address2, $"%{locationQuery}%")))
+                        (string.IsNullOrWhiteSpace(town) || b.Town == town) &&
+                        (string.IsNullOrWhiteSpace(city) || b.BusinessCity == city) &&
+                        (string.IsNullOrWhiteSpace(state) || b.BusinessState == state) &&
+                        (string.IsNullOrWhiteSpace(country) || b.BusinessCountry == country))
                     .Select(b => b.BusRegId);
 
-                if (string.IsNullOrWhiteSpace(searchTerm))
-                {
-                    businessIds = locationBusinessIds;
-                    serviceBusinessIds = locationBusinessIds;
-                }
-                else
-                {
-                    businessIds = businessIds.Intersect(locationBusinessIds);
-                    serviceBusinessIds = serviceBusinessIds.Intersect(locationBusinessIds);
-                }
+                businessIds = string.IsNullOrWhiteSpace(searchTerm)
+                    ? locationBusinessIds
+                    : businessIds.Intersect(locationBusinessIds);
+
+                serviceBusinessIds = string.IsNullOrWhiteSpace(searchTerm)
+                    ? locationBusinessIds
+                    : serviceBusinessIds.Intersect(locationBusinessIds);
             }
 
             var businessProfiles = await _context.BusinessProfiles

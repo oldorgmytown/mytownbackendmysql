@@ -121,12 +121,14 @@ namespace mytown.Controllers
         // get both business profiles and service profiles
         [HttpGet("getbusinessandservicesearchresults")]
         public async Task<IActionResult> GetBusinessAndServiceSearchResults(
-            string? searchTerm,
-            string? locationQuery)
+    string? searchTerm,
+    string? town,
+    string? city,
+    string? state,
+    string? country)
         {
             var result = await _searchService.GetBusinessAndServiceSearchResults(
-                searchTerm,
-                locationQuery);
+                searchTerm, town, city, state, country);
 
             return Ok(result);
         }

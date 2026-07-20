@@ -15,7 +15,12 @@ namespace mytown.DataAccess.Interfaces
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByLocationAsync(string location);
         List<BusinessProfile> GetBusinessProfilesByFilters(string? searchTerm, string? locationQuery);
         Task<IEnumerable<BusinessCategory>> GetBusinessCategoriesByProductAsync(string productName);
-        Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(string? searchTerm, string? locationQuery);
+        Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
+    string? searchTerm,
+    string? town,
+    string? city,
+    string? state,
+    string? country);
 
         //  New method
         Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId);

@@ -68,13 +68,20 @@ namespace mytown.Services
         }
 
         // get both business profiles and service profiles
-        public async Task<BusinessAndServiceSearchResultsDto> GetBusinessAndServiceSearchResults(
-            string? searchTerm,
-            string? locationQuery)
+        public async Task<BusinessAndServiceSearchResultsDto>
+    GetBusinessAndServiceSearchResults(
+        string? searchTerm,
+        string? town,
+        string? city,
+        string? state,
+        string? country)
         {
             return await _searchRepository.GetBusinessAndServiceSearchResults(
                 searchTerm,
-                locationQuery);
+                town,
+                city,
+                state,
+                country);
         }
 
         // Track order by tracking ID
