@@ -744,9 +744,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 InStock = (int)v.Quantity,
 
                 // ✅ Purchased per SKU (if you track SKU in order)
-                NoOfPurchased = _context.OrderDetails
-                    .Where(od => od.SkuId == v.SkuId)
-                    .Sum(od => (int?)od.Quantity) ?? 0,
+                NoOfPurchased = _context.Payments
+                .Where(p => p.PaymentStatus == "Paid")
+                .SelectMany(p => p.Order.OrderDetails)
+                .Where(od => od.SkuId == v.SkuId)
+                .Sum(od => (int?)od.Quantity) ?? 0,
 
                 ProductImage = v.Images
                     .OrderBy(i => i.SortOrder)
