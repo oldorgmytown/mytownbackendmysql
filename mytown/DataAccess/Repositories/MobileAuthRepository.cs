@@ -80,6 +80,7 @@ namespace mytown.DataAccess.Repositories
                         PostalCode = dto.PostalCode,
                         IsEmailVerified = false,
                         LicenseType = "Pending",
+                        Gstin = "",
                         BusServId = busServId,
                         BusCatId = busCatId
                     };
