@@ -219,7 +219,7 @@ namespace mytown.Services.Implementations
             Dictionary<int, decimal> storeWeights;
 
             // SHOPPER FLOW (existing) for main address or altrenate address
-            if (request.ShopperId.HasValue)
+            if (request.ShopperId.HasValue && request.ShopperId.Value > 0)
             {
                 var shopper = await _repo.GetShopperByIdAsync(request.ShopperId.Value)
                     ?? throw new Exception("Shopper not found");
@@ -249,7 +249,7 @@ namespace mytown.Services.Implementations
                     request.StoreIds);
             }
             // GUEST FLOW
-            else if (request.GuestCustomerId.HasValue)
+            else if (request.GuestCustomerId.HasValue && request.GuestCustomerId.Value > 0)
             {
                 var guest = await _repo.GetGuestDetailsByIdAsync(request.GuestCustomerId.Value)
                     ?? throw new Exception("Guest not found");
