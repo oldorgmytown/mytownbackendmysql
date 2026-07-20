@@ -60,7 +60,10 @@ namespace mytown.DataAccess.Repositories
                     break;
 
                 case "business":
-                    int busCatId = dto.BusinessType?.ToLower() == "services" ? 2 : 1;
+                    var businessType = dto.BusinessType?.ToLower();
+
+                    int busCatId = businessType == "services" ? 0 : 1;
+                    int busServId = businessType == "products" ? 0 : 1;
 
                     var business = new BusinessRegister
                     {
@@ -77,7 +80,8 @@ namespace mytown.DataAccess.Repositories
                         PostalCode = dto.PostalCode,
                         IsEmailVerified = false,
                         LicenseType = "Pending",
-                        BusServId = 0,
+                        Gstin = "",
+                        BusServId = busServId,
                         BusCatId = busCatId
                     };
                     _context.BusinessRegisters.Add(business);
