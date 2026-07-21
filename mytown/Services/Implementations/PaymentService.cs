@@ -17,6 +17,7 @@ namespace mytown.Services.Implementations
         {
             _paymentRepo = paymentRepo;
             StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+            Console.WriteLine($"Stripe Key Prefix: {StripeConfiguration.ApiKey?.Substring(0, 7)}");
         }
 
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId)
