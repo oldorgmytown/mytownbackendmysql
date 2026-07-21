@@ -30,8 +30,7 @@ namespace mytown.Services.Implementations
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId)
         {
 
-            throw new Exception("Backend Build Test - 21 July");
-
+            
             var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
             if (order == null)
                 throw new Exception("Order not found");
