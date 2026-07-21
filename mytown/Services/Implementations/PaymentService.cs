@@ -12,14 +12,21 @@ namespace mytown.Services.Implementations
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepo;
+        private readonly ILogger<PaymentService> _logger;
 
-        public PaymentService(IPaymentRepository paymentRepo, IConfiguration configuration)
+        public PaymentService(
+     IPaymentRepository paymentRepo,
+     IConfiguration configuration,
+     ILogger<PaymentService> logger)
         {
             _paymentRepo = paymentRepo;
-            StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
-            Console.WriteLine($"Stripe Key Prefix: {StripeConfiguration.ApiKey?.Substring(0, 7)}");
-        }
+            _logger = logger;
 
+            StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+
+            _logger.LogInformation("Stripe Key Prefix: {Prefix}",
+                StripeConfiguration.ApiKey?.Substring(0, 7));
+        }
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId)
         {
             var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
