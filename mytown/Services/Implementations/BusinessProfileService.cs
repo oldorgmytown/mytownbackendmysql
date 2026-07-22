@@ -41,7 +41,7 @@ namespace mytown.Services.Implementations
             var entity = new BusinessProfile
             {
                 BusRegId = businessProfileDto.BusRegId,
-                BusinessName = businessProfileDto.BusinessUsername,
+                BusinessName = businessProfileDto.Businessname,
                 BusinessLocation = businessProfileDto.BusinessLocation,
                 BusinessAbout = businessProfileDto.BusinessAbout,
                 ProfileStatus = businessProfileDto.ProfileStatus,
