@@ -173,13 +173,13 @@ namespace mytown.DataAccess.Repositories
     if (!string.IsNullOrWhiteSpace(dto.SupplierName))
         existingProduct.SupplierName = dto.SupplierName;
 
-    if (dto.ProductTypeId.HasValue)
+    if (dto.ProductTypeId.HasValue && dto.ProductTypeId > 0)
         existingProduct.ProductTypeId = dto.ProductTypeId;
 
-    if (dto.FabricId.HasValue)
+    if (dto.FabricId.HasValue && dto.FabricId > 0)
         existingProduct.FabricId = dto.FabricId;
 
-    if (dto.DesignId.HasValue)
+    if (dto.DesignId.HasValue && dto.DesignId > 0)
         existingProduct.DesignId = dto.DesignId;
 
     _context.products.Update(existingProduct);

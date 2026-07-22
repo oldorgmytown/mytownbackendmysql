@@ -7,8 +7,8 @@ namespace mytown.Models.DTO_s
         [Required(ErrorMessage = "BusRegId is required.")]
         public int BusRegId { get; set; }
 
-        [Required(ErrorMessage = "Business name is required.")]
-        [StringLength(100, ErrorMessage = "Business name cannot exceed 100 characters.")]
+        [Required(ErrorMessage = "Business username is required.")]
+        [StringLength(100, ErrorMessage = "Business username cannot exceed 100 characters.")]
         public string? Businessname { get; set; }
 
         [Required(ErrorMessage = "Business location is required.")]
