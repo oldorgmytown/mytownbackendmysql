@@ -83,6 +83,11 @@ namespace mytown.DataAccess.Repositories
         {
             var query = _context.ShippingDetails
                 .Where(sd => sd.BranchId == branchId);
+            query = query.Where(sd =>
+                sd.StoreOrder.Order.OrderStatus == "Paid" ||
+                _context.Payments.Any(p =>
+                    p.OrderId == sd.OrderId &&
+                    p.PaymentStatus == "Paid"));
 
             if (shippingStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
                 shippingStatus.Equals("NewOrders", StringComparison.OrdinalIgnoreCase))
