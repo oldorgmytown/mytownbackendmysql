@@ -20,6 +20,9 @@
         // new to check product avaliability based on product status
         public bool IsProductAvailable { get; set; }
 
+        public string Location { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+
 
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
     }
