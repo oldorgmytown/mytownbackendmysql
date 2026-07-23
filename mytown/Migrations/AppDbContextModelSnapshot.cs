@@ -459,6 +459,12 @@ namespace mytown.Migrations
                         .HasColumnName("business_name")
                         .HasAnnotation("Relational:JsonPropertyName", "business_name");
 
+                    b.Property<string>("BusinessTagline")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("business_tagline")
+                        .HasAnnotation("Relational:JsonPropertyName", "business_tagline");
+
                     b.Property<string>("LogoPath")
                         .HasMaxLength(255)
                         .HasColumnType("varchar(255)")
