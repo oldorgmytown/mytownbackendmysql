@@ -105,7 +105,7 @@ namespace mytown.Controllers
         }
 
         // ---------------- RECENTLY VIEWED PRODUCTS ----------------
-        [Authorize]
+       // [Authorize]
         [HttpGet("productsrecentlyviewedbyshopper/{shopperId}")]
         public async Task<IActionResult> GetRecentlyViewed(
             int shopperId,

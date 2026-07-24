@@ -8,6 +8,7 @@
         public int BusRegId { get; set; }
         public string StoreName { get; set; }
         public string StoreCity { get; set; }
+        public string StoreCountry { get; set; }
 
         public int SkuId { get; set; }
 

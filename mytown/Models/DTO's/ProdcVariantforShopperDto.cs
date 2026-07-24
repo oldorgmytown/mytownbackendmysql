@@ -11,6 +11,8 @@
        
         public int BuscatId { get; set; }
         public string? BuscatName { get; set; }
+         public string Location { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
 
         public int ProdcatId { get; set; }
         public string? ProdcatName { get; set; }

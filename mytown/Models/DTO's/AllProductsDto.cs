@@ -12,6 +12,8 @@ namespace mytown.Models.DTO_s
 
         public string StoreCity { get; set; }
 
+        public string StoreCountry { get; set; }
+
         public int? SkuId { get; set; }
 
         public decimal? Cost { get; set; }
