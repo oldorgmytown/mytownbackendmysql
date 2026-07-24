@@ -5,6 +5,7 @@ namespace mytown.Models.DTO_s
         public string City { get; set; }
         public string Country { get; set; }
         public int StoreCount { get; set; }
+        public int TownCount { get; set; }
         public string? ImageFileName { get; set; }
     }
 

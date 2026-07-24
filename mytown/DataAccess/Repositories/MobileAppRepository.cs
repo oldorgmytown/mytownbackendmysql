@@ -381,41 +381,43 @@ namespace mytown.DataAccess.Repositories
     return result;
 }
 
-public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
-{
-    var cities = await _context.BusinessRegisters
-        .Where(x => !string.IsNullOrEmpty(x.BusinessCity))
-        .GroupBy(x => new { x.BusinessCity, x.BusinessCountry })
-        .Select(g => new
+        public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
         {
-            City = g.Key.BusinessCity,
-            Country = g.Key.BusinessCountry,
-            StoreCount = g.Count()
-        })
-        .OrderByDescending(x => x.StoreCount)
-        .Take(12)
-        .ToListAsync();
+            var cities = await _context.BusinessRegisters
+                .Where(x => !string.IsNullOrEmpty(x.BusinessCity))
+                .GroupBy(x => new { x.BusinessCity, x.BusinessCountry })
+                .Select(g => new
+                {
+                    City = g.Key.BusinessCity,
+                    Country = g.Key.BusinessCountry,
+                    StoreCount = g.Count(),
+                    TownCount = g.Select(x => x.Town).Distinct().Count()
+                })
+                .OrderByDescending(x => x.StoreCount)
+                .Take(12)
+                .ToListAsync();
 
-    // Left join with CityImages in memory
-    var cityNames = cities.Select(c => c.City).ToList();
-    var images = await _context.CityImages
-        .Where(ci => cityNames.Contains(ci.City))
-        .ToListAsync();
+            var cityNames = cities.Select(c => c.City).ToList();
 
-    var result = cities.Select(c => new PopularCityDto
-    {
-        City = c.City,
-        Country = c.Country,
-        StoreCount = c.StoreCount,
-        ImageFileName = images
-            .FirstOrDefault(i => i.City == c.City && i.Country == c.Country)
-            ?.ImageFileName
-    }).ToList();
+            var images = await _context.CityImages
+                .Where(ci => cityNames.Contains(ci.City))
+                .ToListAsync();
 
-    return result;
-}
+            var result = cities.Select(c => new PopularCityDto
+            {
+                City = c.City,
+                Country = c.Country,
+                StoreCount = c.StoreCount,
+                TownCount = c.TownCount,
+                ImageFileName = images
+                    .FirstOrDefault(i => i.City == c.City && i.Country == c.Country)
+                    ?.ImageFileName
+            }).ToList();
 
-public async Task<List<LocationImageDto>> GetLocationImagesAsync()
+            return result;
+        }
+
+        public async Task<List<LocationImageDto>> GetLocationImagesAsync()
 {
     return await _context.LocationImages
         .Where(x => x.IsActive)

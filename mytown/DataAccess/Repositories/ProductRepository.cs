@@ -173,13 +173,13 @@ namespace mytown.DataAccess.Repositories
     if (!string.IsNullOrWhiteSpace(dto.SupplierName))
         existingProduct.SupplierName = dto.SupplierName;
 
-    if (dto.ProductTypeId.HasValue)
+    if (dto.ProductTypeId.HasValue && dto.ProductTypeId > 0)
         existingProduct.ProductTypeId = dto.ProductTypeId;
 
-    if (dto.FabricId.HasValue)
+    if (dto.FabricId.HasValue && dto.FabricId > 0)
         existingProduct.FabricId = dto.FabricId;
 
-    if (dto.DesignId.HasValue)
+    if (dto.DesignId.HasValue && dto.DesignId > 0)
         existingProduct.DesignId = dto.DesignId;
 
     _context.products.Update(existingProduct);
@@ -410,7 +410,10 @@ namespace mytown.DataAccess.Repositories
             ProductTypeId = p.ProductTypeId,
             FabricId = p.FabricId,
             DesignId = p.DesignId,
-            
+            IsProductAvailable = p.ProductStatus == "Approved",
+            Location = $"{p.BusinessRegister.BusinessCity}, {p.BusinessRegister.BusinessState}",
+            Country = p.BusinessRegister.BusinessCountry,
+
             // Variants
             Variants = p.Sku_ProductVariants
                 .Select(v => new Sku_ProductVariantDto
@@ -466,7 +469,9 @@ namespace mytown.DataAccess.Repositories
            BusinessName = v.Product.BusinessRegister.BusinessName,
 
            BuscatId = v.Product.BuscatId,
-         //  BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+           //  BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+           Location = $"{v.Product.BusinessRegister.BusinessCity}, {v.Product.BusinessRegister.BusinessState}",
+           Country = v.Product.BusinessRegister.BusinessCountry,
 
            ProdcatId = v.Product.ProdSubcatId,
            // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
@@ -540,6 +545,8 @@ namespace mytown.DataAccess.Repositories
 
             BuscatId = v.Product.BuscatId,
             //BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+            Location = $"{v.Product.BusinessRegister.BusinessCity}, {v.Product.BusinessRegister.BusinessState}",
+            Country = v.Product.BusinessRegister.BusinessCountry,
 
             ProdcatId = v.Product.ProdSubcatId,
             // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
@@ -612,11 +619,13 @@ namespace mytown.DataAccess.Repositories
 
             var query =
                 from bp in _context.BusinessProfiles
+                join br in _context.BusinessRegisters
+                on bp.BusRegId equals br.BusRegId
                 where bp.BusinessLocation != null && bp.BusinessLocation.Contains(location)
                 join p in _context.products on bp.BusRegId equals p.BusRegId
                 join v in _context.Sku_ProductVariants on p.ProductId equals v.ProductId
                 where p.ProductStatus == "Approved" && p.IsActive
-                select new { Product = p, Variant = v, Store = bp };
+                select new { Product = p, Variant = v, Store = bp, Business = br };
 
             var result = await query
                 .Select(x => new
@@ -624,6 +633,7 @@ namespace mytown.DataAccess.Repositories
                     Product = x.Product,
                     Variant = x.Variant,
                     Store = x.Store,
+                    Business = x.Business,
                     TotalOrders = _context.OrderDetails
                         .Where(o => o.ProductId == x.Product.ProductId)
                         .Sum(o => (int?)o.Quantity) ?? 0
@@ -639,6 +649,9 @@ namespace mytown.DataAccess.Repositories
 
                     BuscatId = x.Product.BuscatId,
                     //BuscatName = x.Product.BusinessRegister != null ? x.Product.BusinessRegister.Businesscategory_name : null,
+                    Location = x.Business.BusinessCity + ", " + x.Business.BusinessState,
+                    Country = x.Business.BusinessCountry,
+
 
                     ProdcatId = x.Product.ProdSubcatId,
                     // ProdcatName = x.Product.Productsubcategory_name,

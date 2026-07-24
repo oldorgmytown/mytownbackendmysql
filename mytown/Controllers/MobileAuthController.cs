@@ -32,7 +32,12 @@ namespace mytown.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Signup error for {Email}", dto.Email);
-                return StatusCode(500, new { error = "Something went wrong." });
+
+                return StatusCode(500, new
+                {
+                    error = ex.Message,
+                    innerError = ex.InnerException?.Message
+                });
             }
         }
 

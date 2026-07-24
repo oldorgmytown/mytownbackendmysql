@@ -335,6 +335,40 @@ namespace mytown.Migrations
                         });
                 });
 
+            modelBuilder.Entity("mytown.Models.BusinessConnection", b =>
+                {
+                    b.Property<int>("BusConnectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BusConnectionId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<DateTime>("ConnectedOn")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("connected_on");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<bool>("Status")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("status");
+
+                    b.HasKey("BusConnectionId");
+
+                    b.HasIndex("BusRegId");
+
+                    b.HasIndex("ShopperRegId");
+
+                    b.ToTable("business_connections");
+                });
+
             modelBuilder.Entity("mytown.Models.BusinessDBNotifications", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -424,6 +458,12 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("business_name")
                         .HasAnnotation("Relational:JsonPropertyName", "business_name");
+
+                    b.Property<string>("BusinessTagline")
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("business_tagline")
+                        .HasAnnotation("Relational:JsonPropertyName", "business_tagline");
 
                     b.Property<string>("LogoPath")
                         .HasMaxLength(255)
@@ -3648,6 +3688,25 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessRegister");
+                });
+
+            modelBuilder.Entity("mytown.Models.BusinessConnection", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
+                        .WithMany()
+                        .HasForeignKey("BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
+                        .WithMany()
+                        .HasForeignKey("ShopperRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegister");
+
+                    b.Navigation("ShopperRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessProfile", b =>

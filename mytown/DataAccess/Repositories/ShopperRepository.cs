@@ -6,6 +6,7 @@ using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
 using System;
+using System.Diagnostics.Metrics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -139,6 +140,8 @@ namespace mytown.DataAccess.Repositories
                     BusRegId = v.Product.BusRegId,
                     BusinessName = v.Product.BusinessRegister.BusinessName,
                     BuscatId = v.Product.BuscatId,
+                    Location = $"{v.Product.BusinessRegister.BusinessCity}, {v.Product.BusinessRegister.BusinessState}",
+                    Country = v.Product.BusinessRegister.BusinessCountry,
                     ProdcatId = v.Product.ProdSubcatId,
                     ProductTypeId = v.Product.ProductTypeId,
                     ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,

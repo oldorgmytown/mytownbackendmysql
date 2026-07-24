@@ -15,5 +15,13 @@ namespace mytown.DataAccess.Interfaces
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
         Task<List<CurrentBusinessProfileViewerDto>> GetCurrentBusinessProfileViewersAsync (int busRegId,int currentShopperRegId);
 
+        Task<bool> ConnectBusinessAsync(BusinessConnection connection);
+        Task<bool> IsBusinessConnectedAsync(int busRegId, int shopperRegId);
+
+        Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId);
+
+        
+
+
     }
 }
