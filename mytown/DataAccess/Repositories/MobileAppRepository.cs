@@ -81,7 +81,8 @@ namespace mytown.DataAccess.Repositories
 
                     BusRegId = x.Store.BusRegId,
                     StoreName = x.Store.BusinessName,
-                    StoreCity = x.Store.BusinessCity,
+                    StoreCity = $"{x.Store.BusinessCity}, {x.Store.BusinessState}",
+                    StoreCountry = x.Store.BusinessCountry,
 
                     SkuId = x.Variant.SkuId,
 
@@ -284,7 +285,8 @@ namespace mytown.DataAccess.Repositories
 
             BusRegId = b.BusRegId,
             StoreName = b.BusinessName,
-            StoreCity = b.BusinessCity,
+            StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
+            StoreCountry = b.BusinessCountry,
 
             SkuId = v.SkuId,
 
@@ -324,7 +326,8 @@ namespace mytown.DataAccess.Repositories
 
             BusRegId = b.BusRegId,
             StoreName = b.BusinessName,
-            StoreCity = b.BusinessCity,
+            StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
+            StoreCountry = b.BusinessCountry,
 
             SkuId = v.SkuId,
 
