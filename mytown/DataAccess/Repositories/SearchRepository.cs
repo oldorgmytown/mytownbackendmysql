@@ -554,10 +554,10 @@ namespace mytown.DataAccess.Repositories
 
                 var locationBusinessIds = _context.BusinessRegisters
                     .Where(b =>
-                        (b.Town != null && b.Town.Contains(locationQuery)) ||
-                        (b.BusinessCity != null && b.BusinessCity.Contains(locationQuery)) ||
-                        (b.BusinessState != null && b.BusinessState.Contains(locationQuery)) ||
-                        (b.BusinessCountry != null && b.BusinessCountry.Contains(locationQuery)) ||
+                            b.Town.ToLower().Contains(locationQuery.ToLower()) ||
+                            b.BusinessCity.ToLower().Contains(locationQuery.ToLower()) ||
+                            b.BusinessState.ToLower().Contains(locationQuery.ToLower()) ||
+                            b.BusinessCountry.ToLower().Contains(locationQuery.ToLower()) ||
                         (b.Address1 != null && b.Address1.Contains(locationQuery)) ||
                         (b.Address2 != null && b.Address2.Contains(locationQuery)))
                     .Select(b => b.BusRegId);
@@ -575,7 +575,7 @@ namespace mytown.DataAccess.Repositories
             return _context.BusinessProfiles
                 .Where(bp =>
                     businessIds.Contains(bp.BusRegId) &&
-                    bp.ProfileStatus == "approved")
+                     bp.ProfileStatus.ToLower() == "approved")
                 .ToList();
         }
 

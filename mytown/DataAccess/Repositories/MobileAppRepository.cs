@@ -238,36 +238,39 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<List<TownListDto>> GetTownListByCityAsync(string city)
         {
-        var stores = await _context.BusinessRegisters
-            .Where(x =>
-                x.BusinessCity == city &&
-                !string.IsNullOrEmpty(x.Town))
-            .Select(x => new
-            {
-                x.Town,
-                x.BusinessName
-            })
-            .ToListAsync();
+            var stores = await _context.BusinessRegisters
+                .Join(_context.BusinessProfiles,
+                    br => br.BusRegId,
+                    bp => bp.BusRegId,
+                    (br, bp) => new { br, bp })
+                .Where(x =>
+                    x.br.BusinessCity.ToLower() == city.ToLower() &&
+                    x.bp.ProfileStatus.ToLower() == "approved" &&
+                    !string.IsNullOrWhiteSpace(x.br.Town))
+                .Select(x => new
+                {
+                    Town = x.br.Town.Trim(),
+                    BusinessName = x.br.BusinessName
+                })
+                .ToListAsync();
 
-        var result = stores
-            .GroupBy(x => x.Town)
-            .Select(g => new TownListDto
-            {
-                TownName = g.Key,
+            var result = stores
+                .GroupBy(x => x.Town.ToLower())
+                .Select(g => new TownListDto
+                {
+                    TownName = g.First().Town,              // e.g. "Pune"
+                    ActiveStoreCount = g.Count(),           // approved businesses count
+                    PopularStores = g
+                        .Select(x => x.BusinessName)
+                        .Distinct()
+                        .ToList()                           // all business names
+                })
+                .OrderByDescending(x => x.ActiveStoreCount)
+                .ToList();
 
-                ActiveStoreCount = g.Count(),
+            return result;
+        }
 
-                PopularStores = g
-                    .Select(x => x.BusinessName)
-                    .Distinct()
-                    .Take(3)
-                    .ToList()
-            })
-            .OrderByDescending(x => x.ActiveStoreCount)
-            .ToList();
-
-        return result;
-}
         public async Task<List<AllProductsDto>> GetAllProductsAsync()
 {
     var result = await (
