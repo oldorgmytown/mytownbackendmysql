@@ -50,7 +50,7 @@ public class Startup
     private void RegisterApplicationServices(IServiceCollection services)
     {
         StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
-
+        //commitfor log
         Console.WriteLine($"Stripe mode: {(StripeConfiguration.ApiKey?.StartsWith("sk_test") == true ? "TEST" : "LIVE")}, prefix: {StripeConfiguration.ApiKey?.Substring(0, Math.Min(12, StripeConfiguration.ApiKey.Length))}");
         
         services.AddScoped<IUserRepository, UserRepository>();
