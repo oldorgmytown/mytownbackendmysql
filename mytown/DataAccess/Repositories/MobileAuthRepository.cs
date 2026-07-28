@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
 using MyTown.Models;
+using System.Text.Json;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -21,6 +23,27 @@ namespace mytown.DataAccess.Repositories
         private string GenerateOtp() =>
             new Random().Next(100000, 999999).ToString();
 
+        // Everything needed to build the real entity later, stored in JsonPayload
+        // until the OTP is verified.
+        private class PendingSignupPayload
+        {
+            public string Role { get; set; } = "";
+            public string ContactName { get; set; } = "";
+            public string Email { get; set; } = "";
+            public string HashedPassword { get; set; } = "";
+            public string? MobileNo { get; set; }
+            public string? Address { get; set; }
+            public string? Town { get; set; }
+            public string? City { get; set; }
+            public string? State { get; set; }
+            public string? Country { get; set; }
+            public string? PostalCode { get; set; }
+            public string? BusinessName { get; set; }
+            public string? BusinessType { get; set; }
+            public int? BusCatId { get; set; }
+            public int? BusServId { get; set; }
+        }
+
         public async Task<(bool success, string message)> SignupAsync(MobileSignupDto dto)
         {
             bool emailExists = await EmailExistsAsync(dto.Email);
@@ -30,148 +53,99 @@ namespace mytown.DataAccess.Repositories
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             string otp = GenerateOtp();
             DateTime expiry = DateTime.UtcNow.AddMinutes(5);
+            string role = dto.Role.ToLower();
 
-            switch (dto.Role.ToLower())
+            var payload = new PendingSignupPayload
+            {
+                Role = role,
+                ContactName = dto.ContactName,
+                Email = dto.Email,
+                HashedPassword = hashedPassword,
+                MobileNo = dto.MobileNo,
+                Address = dto.Address,
+                Town = dto.Town,
+                City = dto.City,
+                State = dto.State,
+                Country = dto.Country,
+                PostalCode = dto.PostalCode,
+                BusinessName = dto.BusinessName,
+                BusinessType = dto.BusinessType
+            };
+
+            if (role == "business")
+            {
+                var businessType = dto.BusinessType?.ToLower();
+                payload.BusCatId = businessType == "services" ? 0 : 1;
+                payload.BusServId = businessType == "products" ? 0 : 1;
+            }
+
+            string json = JsonSerializer.Serialize(payload);
+
+            switch (role)
             {
                 case "shopper":
-                    var shopper = new ShopperRegister
-                    {
-                        Username = dto.ContactName,
-                        Email = dto.Email,
-                        Password = hashedPassword,
-                        PhoneNumber = dto.MobileNo,
-                        Address = dto.Address ?? "",
-                        Town = dto.Town ?? "",
-                        City = dto.City ?? "",
-                        State = dto.State ?? "",
-                        Country = dto.Country ?? "",
-                        IsEmailVerified = false
-                    };
-                    _context.ShopperRegisters.Add(shopper);
-                    await _context.SaveChangesAsync();
-
-                    _context.PendingVerifications.Add(new PendingVerification
-                    {
-                        Email = dto.Email,
-                        Token = otp,
-                        ExpiryDate = expiry,
-                        JsonPayload = ""
-                    });
+                    await UpsertPendingAsync(
+                        () => _context.PendingVerifications.FirstOrDefaultAsync(x => x.Email == dto.Email),
+                        existing => { existing.Token = otp; existing.ExpiryDate = expiry; existing.JsonPayload = json; },
+                        () => _context.PendingVerifications.Add(new PendingVerification
+                        {
+                            Email = dto.Email,
+                            Token = otp,
+                            ExpiryDate = expiry,
+                            JsonPayload = json
+                        }));
                     break;
 
                 case "business":
-                    var businessType = dto.BusinessType?.ToLower();
-
-                    int busCatId = businessType == "services" ? 0 : 1;
-                    int busServId = businessType == "products" ? 0 : 1;
-
-                    var business = new BusinessRegister
-                    {
-                        BusinessName = dto.BusinessName ?? "",
-                        BusinessUsername = dto.ContactName,
-                        BusEmail = dto.Email,
-                        Password = hashedPassword,
-                        BusMobileNo = dto.MobileNo,
-                        Address1 = dto.Address ?? "",
-                        Town = dto.Town ?? "",
-                        BusinessCity = dto.City ?? "",
-                        BusinessState = dto.State ?? "",
-                        BusinessCountry = dto.Country ?? "",
-                        PostalCode = dto.PostalCode,
-                        IsEmailVerified = false,
-                        LicenseType = "Pending",
-                        Gstin = "",
-                        BusServId = busServId,
-                        BusCatId = busCatId
-                    };
-                    _context.BusinessRegisters.Add(business);
-                    await _context.SaveChangesAsync();
-
-                    _context.PendingBusinessVerifications.Add(new PendingBusinessVerification
-                    {
-                        Email = dto.Email,
-                        Token = otp,
-                        ExpiryDate = expiry,
-                        JsonPayload = ""
-                    });
+                    await UpsertPendingAsync(
+                        () => _context.PendingBusinessVerifications.FirstOrDefaultAsync(x => x.Email == dto.Email),
+                        existing => { existing.Token = otp; existing.ExpiryDate = expiry; existing.JsonPayload = json; },
+                        () => _context.PendingBusinessVerifications.Add(new PendingBusinessVerification
+                        {
+                            Email = dto.Email,
+                            Token = otp,
+                            ExpiryDate = expiry,
+                            JsonPayload = json
+                        }));
                     break;
 
                 case "sender":
-                    var sender = new SenderRegister
-                    {
-                        SenderName = dto.ContactName,
-                        Email = dto.Email,
-                        Password = hashedPassword,
-                        PhoneNumber = dto.MobileNo,
-                        Address = dto.Address ?? "",
-                        Town = dto.Town ?? "",
-                        City = dto.City ?? "",
-                        State = dto.State ?? "",
-                        Country = dto.Country ?? ""
-                    };
-                    _context.SenderRegisters.Add(sender);
-                    await _context.SaveChangesAsync();
-
-                    _context.PendingSenderVerifications.Add(new PendingSenderVerification
-                    {
-                        Email = dto.Email,
-                        Token = otp,
-                        ExpiryDate = expiry,
-                        JsonPayload = ""
-                    });
+                    await UpsertPendingAsync(
+                        () => _context.PendingSenderVerifications.FirstOrDefaultAsync(x => x.Email == dto.Email),
+                        existing => { existing.Token = otp; existing.ExpiryDate = expiry; existing.JsonPayload = json; },
+                        () => _context.PendingSenderVerifications.Add(new PendingSenderVerification
+                        {
+                            Email = dto.Email,
+                            Token = otp,
+                            ExpiryDate = expiry,
+                            JsonPayload = json
+                        }));
                     break;
 
                 case "transporter":
-                    var transporter = new TransporterRegister
-                    {
-                        TransporterName = dto.ContactName,
-                        Email = dto.Email,
-                        Password = hashedPassword,
-                        PhoneNumber = dto.MobileNo,
-                        Address = dto.Address ?? "",
-                        Town = dto.Town ?? "",
-                        City = dto.City ?? "",
-                        State = dto.State ?? "",
-                        Country = dto.Country ?? ""
-                    };
-                    _context.TransporterRegisters.Add(transporter);
-                    await _context.SaveChangesAsync();
-
-                    _context.PendingTransporterVerifications.Add(new PendingTransporterVerification
-                    {
-                        Email = dto.Email,
-                        Token = otp,
-                        ExpiryDate = expiry,
-                        JsonPayload = ""
-                    });
+                    await UpsertPendingAsync(
+                        () => _context.PendingTransporterVerifications.FirstOrDefaultAsync(x => x.Email == dto.Email),
+                        existing => { existing.Token = otp; existing.ExpiryDate = expiry; existing.JsonPayload = json; },
+                        () => _context.PendingTransporterVerifications.Add(new PendingTransporterVerification
+                        {
+                            Email = dto.Email,
+                            Token = otp,
+                            ExpiryDate = expiry,
+                            JsonPayload = json
+                        }));
                     break;
 
                 case "courier":
-                    var courier = new CourierService
-                    {
-                        CourierServiceName = dto.BusinessName ?? dto.ContactName,
-                        CourierWebsiteName = "",
-                        CourierEmail = dto.Email,
-                        Password = hashedPassword,
-                        CourierPhone = dto.MobileNo,
-                        Address = dto.Address ?? "",
-                        Town = dto.Town ?? "",
-                        City = dto.City ?? "",
-                        State = dto.State ?? "",
-                        Country = dto.Country ?? "",
-                        PostalCode = dto.PostalCode ?? "",
-                        IsEmailVerified = false
-                    };
-                    _context.CourierService.Add(courier);
-                    await _context.SaveChangesAsync();
-
-                    _context.PendingCourierVerifications.Add(new PendingCourierVerification
-                    {
-                        Email = dto.Email,
-                        Token = otp,
-                        ExpiryDate = expiry,
-                        JsonPayload = ""
-                    });
+                    await UpsertPendingAsync(
+                        () => _context.PendingCourierVerifications.FirstOrDefaultAsync(x => x.Email == dto.Email),
+                        existing => { existing.Token = otp; existing.ExpiryDate = expiry; existing.JsonPayload = json; },
+                        () => _context.PendingCourierVerifications.Add(new PendingCourierVerification
+                        {
+                            Email = dto.Email,
+                            Token = otp,
+                            ExpiryDate = expiry,
+                            JsonPayload = json
+                        }));
                     break;
 
                 default:
@@ -181,6 +155,16 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
             await _emailService.SendOtpEmailAsync(dto.Email, dto.ContactName, otp);
             return (true, "Registration successful. OTP sent to your email.");
+        }
+
+        // Small helper so we don't duplicate the "update-if-exists-else-add" logic 5 times
+        private async Task UpsertPendingAsync<T>(Func<Task<T?>> find, Action<T> update, Action add) where T : class
+        {
+            var existing = await find();
+            if (existing != null)
+                update(existing);
+            else
+                add();
         }
 
         public async Task<(bool success, string message)> SendOtpAsync(string email, string role)
@@ -194,46 +178,56 @@ namespace mytown.DataAccess.Repositories
                 case "shopper":
                     var existing = await _context.PendingVerifications
                         .FirstOrDefaultAsync(x => x.Email == email);
-                    if (existing != null) { existing.Token = otp; existing.ExpiryDate = expiry; }
-                    else _context.PendingVerifications.Add(new PendingVerification { Email = email, Token = otp, ExpiryDate = expiry });
-                    var s = await _context.ShopperRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (s != null) name = s.Username;
+                    if (existing == null)
+                        return (false, "No pending signup found for this email.");
+                    existing.Token = otp;
+                    existing.ExpiryDate = expiry;
+                    var shopperPayload = Deserialize(existing.JsonPayload);
+                    if (shopperPayload != null) name = shopperPayload.ContactName;
                     break;
 
                 case "business":
                     var existingB = await _context.PendingBusinessVerifications
                         .FirstOrDefaultAsync(x => x.Email == email);
-                    if (existingB != null) { existingB.Token = otp; existingB.ExpiryDate = expiry; }
-                    else _context.PendingBusinessVerifications.Add(new PendingBusinessVerification { Email = email, Token = otp, ExpiryDate = expiry });
-                    var b = await _context.BusinessRegisters.FirstOrDefaultAsync(x => x.BusEmail == email);
-                    if (b != null) name = b.BusinessName;
+                    if (existingB == null)
+                        return (false, "No pending signup found for this email.");
+                    existingB.Token = otp;
+                    existingB.ExpiryDate = expiry;
+                    var businessPayload = Deserialize(existingB.JsonPayload);
+                    if (businessPayload != null) name = businessPayload.BusinessName ?? businessPayload.ContactName;
                     break;
 
                 case "sender":
                     var existingS = await _context.PendingSenderVerifications
                         .FirstOrDefaultAsync(x => x.Email == email);
-                    if (existingS != null) { existingS.Token = otp; existingS.ExpiryDate = expiry; }
-                    else _context.PendingSenderVerifications.Add(new PendingSenderVerification { Email = email, Token = otp, ExpiryDate = expiry });
-                    var sn = await _context.SenderRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (sn != null) name = sn.SenderName;
+                    if (existingS == null)
+                        return (false, "No pending signup found for this email.");
+                    existingS.Token = otp;
+                    existingS.ExpiryDate = expiry;
+                    var senderPayload = Deserialize(existingS.JsonPayload);
+                    if (senderPayload != null) name = senderPayload.ContactName;
                     break;
 
                 case "transporter":
                     var existingT = await _context.PendingTransporterVerifications
                         .FirstOrDefaultAsync(x => x.Email == email);
-                    if (existingT != null) { existingT.Token = otp; existingT.ExpiryDate = expiry; }
-                    else _context.PendingTransporterVerifications.Add(new PendingTransporterVerification { Email = email, Token = otp, ExpiryDate = expiry });
-                    var t = await _context.TransporterRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (t != null) name = t.TransporterName;
+                    if (existingT == null)
+                        return (false, "No pending signup found for this email.");
+                    existingT.Token = otp;
+                    existingT.ExpiryDate = expiry;
+                    var transporterPayload = Deserialize(existingT.JsonPayload);
+                    if (transporterPayload != null) name = transporterPayload.ContactName;
                     break;
 
                 case "courier":
                     var existingC = await _context.PendingCourierVerifications
                         .FirstOrDefaultAsync(x => x.Email == email);
-                    if (existingC != null) { existingC.Token = otp; existingC.ExpiryDate = expiry; }
-                    else _context.PendingCourierVerifications.Add(new PendingCourierVerification { Email = email, Token = otp, ExpiryDate = expiry });
-                    var c = await _context.CourierService.FirstOrDefaultAsync(x => x.CourierEmail == email);
-                    if (c != null) name = c.CourierServiceName;
+                    if (existingC == null)
+                        return (false, "No pending signup found for this email.");
+                    existingC.Token = otp;
+                    existingC.ExpiryDate = expiry;
+                    var courierPayload = Deserialize(existingC.JsonPayload);
+                    if (courierPayload != null) name = courierPayload.BusinessName ?? courierPayload.ContactName;
                     break;
 
                 default:
@@ -247,73 +241,201 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<(bool success, string message)> VerifyOtpAsync(string email, string otp, string role)
         {
-            bool isValid = false;
-
             switch (role.ToLower())
             {
                 case "shopper":
-                    var sv = await _context.PendingVerifications
-                        .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
-                    if (sv == null || sv.ExpiryDate < DateTime.UtcNow)
-                        return (false, "Invalid or expired OTP.");
-                    var sh = await _context.ShopperRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (sh != null) sh.IsEmailVerified = true;
-                    _context.PendingVerifications.Remove(sv);
-                    isValid = true;
-                    break;
+                    {
+                        var sv = await _context.PendingVerifications
+                            .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
+                        if (sv == null || sv.ExpiryDate < DateTime.UtcNow)
+                            return (false, "Invalid or expired OTP.");
+
+                        var payload = Deserialize(sv.JsonPayload);
+                        if (payload == null)
+                            return (false, "Signup data could not be found. Please sign up again.");
+
+                        var shopper = new ShopperRegister
+                        {
+                            Username = payload.ContactName,
+                            Email = payload.Email,
+                            Password = payload.HashedPassword,
+                            PhoneNumber = payload.MobileNo,
+                            Address = payload.Address ?? "",
+                            Town = payload.Town ?? "",
+                            City = payload.City ?? "",
+                            State = payload.State ?? "",
+                            Country = payload.Country ?? "",
+                            IsEmailVerified = true
+                        };
+                        _context.ShopperRegisters.Add(shopper);
+
+                        _context.PendingVerifications.Remove(sv);
+                        await _context.SaveChangesAsync();
+                        break;
+                    }
 
                 case "business":
-                    var bv = await _context.PendingBusinessVerifications
-                        .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
-                    if (bv == null || bv.ExpiryDate < DateTime.UtcNow)
-                        return (false, "Invalid or expired OTP.");
-                    var bus = await _context.BusinessRegisters.FirstOrDefaultAsync(x => x.BusEmail == email);
-                    if (bus != null) bus.IsEmailVerified = true;
-                    _context.PendingBusinessVerifications.Remove(bv);
-                    isValid = true;
-                    break;
+                    {
+                        var bv = await _context.PendingBusinessVerifications
+                            .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
+                        if (bv == null || bv.ExpiryDate < DateTime.UtcNow)
+                            return (false, "Invalid or expired OTP.");
+
+                        var payload = Deserialize(bv.JsonPayload);
+                        if (payload == null)
+                            return (false, "Signup data could not be found. Please sign up again.");
+
+                        var business = new BusinessRegister
+                        {
+                            BusinessName = payload.BusinessName ?? "",
+                            BusinessUsername = payload.ContactName,
+                            BusEmail = payload.Email,
+                            Password = payload.HashedPassword,
+                            BusMobileNo = payload.MobileNo,
+                            Address1 = payload.Address ?? "",
+                            Town = payload.Town ?? "",
+                            BusinessCity = payload.City ?? "",
+                            BusinessState = payload.State ?? "",
+                            BusinessCountry = payload.Country ?? "",
+                            PostalCode = payload.PostalCode,
+                            IsEmailVerified = true,
+                            LicenseType = "Pending",
+                            Gstin = "",
+                            BusServId = payload.BusServId ?? 1,
+                            BusCatId = payload.BusCatId ?? 1
+                        };
+                        _context.BusinessRegisters.Add(business);
+                        // Save now so EF populates business.BusRegId for the profile FK below
+                        await _context.SaveChangesAsync();
+
+                        var businessProfile = new BusinessProfile
+                        {
+                            BusRegId = business.BusRegId,
+                            ProfileStatus = "Incomplete",
+                            BusinessName = business.BusinessName,
+                            BusinessLocation = $"{business.Town}, {business.BusinessCity}, {business.BusinessState}, {business.BusinessCountry}"
+                        };
+                        _context.BusinessProfiles.Add(businessProfile);
+
+                        _context.PendingBusinessVerifications.Remove(bv);
+                        await _context.SaveChangesAsync();
+                        break;
+                    }
 
                 case "sender":
-                    var senv = await _context.PendingSenderVerifications
-                        .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
-                    if (senv == null || senv.ExpiryDate < DateTime.UtcNow)
-                        return (false, "Invalid or expired OTP.");
-                    var sen = await _context.SenderRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (sen != null) sen.IsEmailVerified = true;
-                    _context.PendingSenderVerifications.Remove(senv);
-                    isValid = true;
-                    break;
+                    {
+                        var senv = await _context.PendingSenderVerifications
+                            .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
+                        if (senv == null || senv.ExpiryDate < DateTime.UtcNow)
+                            return (false, "Invalid or expired OTP.");
+
+                        var payload = Deserialize(senv.JsonPayload);
+                        if (payload == null)
+                            return (false, "Signup data could not be found. Please sign up again.");
+
+                        var sender = new SenderRegister
+                        {
+                            SenderName = payload.ContactName,
+                            Email = payload.Email,
+                            Password = payload.HashedPassword,
+                            PhoneNumber = payload.MobileNo,
+                            Address = payload.Address ?? "",
+                            Town = payload.Town ?? "",
+                            City = payload.City ?? "",
+                            State = payload.State ?? "",
+                            Country = payload.Country ?? "",
+                            IsEmailVerified = true
+                        };
+                        _context.SenderRegisters.Add(sender);
+
+                        _context.PendingSenderVerifications.Remove(senv);
+                        await _context.SaveChangesAsync();
+                        break;
+                    }
 
                 case "transporter":
-                    var tv = await _context.PendingTransporterVerifications
-                        .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
-                    if (tv == null || tv.ExpiryDate < DateTime.UtcNow)
-                        return (false, "Invalid or expired OTP.");
-                    var tr = await _context.TransporterRegisters.FirstOrDefaultAsync(x => x.Email == email);
-                    if (tr != null) tr.IsEmailVerified = true;
-                    _context.PendingTransporterVerifications.Remove(tv);
-                    isValid = true;
-                    break;
+                    {
+                        var tv = await _context.PendingTransporterVerifications
+                            .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
+                        if (tv == null || tv.ExpiryDate < DateTime.UtcNow)
+                            return (false, "Invalid or expired OTP.");
+
+                        var payload = Deserialize(tv.JsonPayload);
+                        if (payload == null)
+                            return (false, "Signup data could not be found. Please sign up again.");
+
+                        var transporter = new TransporterRegister
+                        {
+                            TransporterName = payload.ContactName,
+                            Email = payload.Email,
+                            Password = payload.HashedPassword,
+                            PhoneNumber = payload.MobileNo,
+                            Address = payload.Address ?? "",
+                            Town = payload.Town ?? "",
+                            City = payload.City ?? "",
+                            State = payload.State ?? "",
+                            Country = payload.Country ?? "",
+                            IsEmailVerified = true
+                        };
+                        _context.TransporterRegisters.Add(transporter);
+
+                        _context.PendingTransporterVerifications.Remove(tv);
+                        await _context.SaveChangesAsync();
+                        break;
+                    }
 
                 case "courier":
-                    var cv = await _context.PendingCourierVerifications
-                        .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
-                    if (cv == null || cv.ExpiryDate < DateTime.UtcNow)
-                        return (false, "Invalid or expired OTP.");
-                    var co = await _context.CourierService.FirstOrDefaultAsync(x => x.CourierEmail == email);
-                    if (co != null) co.IsEmailVerified = true;
-                    _context.PendingCourierVerifications.Remove(cv);
-                    isValid = true;
-                    break;
+                    {
+                        var cv = await _context.PendingCourierVerifications
+                            .FirstOrDefaultAsync(x => x.Email == email && x.Token == otp);
+                        if (cv == null || cv.ExpiryDate < DateTime.UtcNow)
+                            return (false, "Invalid or expired OTP.");
+
+                        var payload = Deserialize(cv.JsonPayload);
+                        if (payload == null)
+                            return (false, "Signup data could not be found. Please sign up again.");
+
+                        var courier = new CourierService
+                        {
+                            CourierServiceName = payload.BusinessName ?? payload.ContactName,
+                            CourierWebsiteName = "",
+                            CourierEmail = payload.Email,
+                            Password = payload.HashedPassword,
+                            CourierPhone = payload.MobileNo,
+                            Address = payload.Address ?? "",
+                            Town = payload.Town ?? "",
+                            City = payload.City ?? "",
+                            State = payload.State ?? "",
+                            Country = payload.Country ?? "",
+                            PostalCode = payload.PostalCode ?? "",
+                            IsEmailVerified = true
+                        };
+                        _context.CourierService.Add(courier);
+
+                        _context.PendingCourierVerifications.Remove(cv);
+                        await _context.SaveChangesAsync();
+                        break;
+                    }
 
                 default:
                     return (false, "Invalid role.");
             }
 
-            if (isValid)
-                await _context.SaveChangesAsync();
-
             return (true, "Email verified successfully.");
+        }
+
+        private PendingSignupPayload? Deserialize(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return null;
+            try
+            {
+                return JsonSerializer.Deserialize<PendingSignupPayload>(json);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private async Task<bool> EmailExistsAsync(string email)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models.DTO_s;
 
@@ -9,7 +10,7 @@ namespace mytown.Controllers
     [ApiController]
     public class MobileAuthController : ControllerBase
     {
-        private readonly IMobileAuthRepository _authRepo;
+        private readonly mytown.DataAccess.Repositories.IMobileAuthRepository _authRepo;
         private readonly ILogger<MobileAuthController> _logger;
 
         public MobileAuthController(IMobileAuthRepository authRepo, ILogger<MobileAuthController> logger)
