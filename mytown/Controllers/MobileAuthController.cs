@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using mytown.DataAccess.Repositories;
+using mytown.DataAccess.Interfaces;
 using mytown.Models.DTO_s;
 
 namespace mytown.Controllers
