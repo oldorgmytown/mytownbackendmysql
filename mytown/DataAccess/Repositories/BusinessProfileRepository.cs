@@ -48,7 +48,7 @@ namespace mytown.DataAccess.Repositories
                     Businessname = br.BusinessName,
                     Businessusername = br.BusinessUsername,
                     business_location = bp.BusinessLocation,
-                   // business_tagline = bp.BusinessTagline,
+                    business_tagline = bp.BusinessTagline,
                     business_about = bp.BusinessAbout,
                     banner_path = bp.BannerPath,
                     logo_path = bp.LogoPath,
@@ -87,8 +87,8 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
                     existingProfile.BusinessLocation = businessProfile.BusinessLocation;
 
-                //if (!string.IsNullOrEmpty(businessProfile.BusinessTagline))
-                //    existingProfile.BusinessTagline = businessProfile.BusinessTagline;
+                if (!string.IsNullOrEmpty(businessProfile.BusinessTagline))
+                    existingProfile.BusinessTagline = businessProfile.BusinessTagline;
 
                 if (!string.IsNullOrEmpty(businessProfile.BusinessAbout))
                     existingProfile.BusinessAbout = businessProfile.BusinessAbout;

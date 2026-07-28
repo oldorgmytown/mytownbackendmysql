@@ -43,7 +43,7 @@ namespace mytown.Services.Implementations
                 BusRegId = businessProfileDto.BusRegId,
                 BusinessName = businessProfileDto.Businessname,
                 BusinessLocation = businessProfileDto.BusinessLocation,
-              //  BusinessTagline = businessProfileDto.BusinessTagline,
+                BusinessTagline = businessProfileDto.BusinessTagline,
                 BusinessAbout = businessProfileDto.BusinessAbout,
                 ProfileStatus = businessProfileDto.ProfileStatus,
                 BusCatId = businessProfileDto.Buscatid ?? 0,
