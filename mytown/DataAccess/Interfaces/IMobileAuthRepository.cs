@@ -1,6 +1,6 @@
 using mytown.Models.DTO_s;
 
-namespace mytown.DataAccess.Repositories
+namespace mytown.DataAccess.Interfaces
 {
     public interface IMobileAuthRepository
     {
