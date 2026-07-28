@@ -24,10 +24,10 @@ namespace mytown.Models
         [JsonPropertyName("business_name")]
         public string? BusinessName { get; set; }
 
-        [Column("business_tagline")]
-        [StringLength(150)]
-        [JsonPropertyName("business_tagline")]
-        public string? BusinessTagline { get; set; }
+        //[Column("business_tagline")]
+        //[StringLength(150)]
+        //[JsonPropertyName("business_tagline")]
+        //public string? BusinessTagline { get; set; }
 
         [Column("business_location")]
         [StringLength(255)]
