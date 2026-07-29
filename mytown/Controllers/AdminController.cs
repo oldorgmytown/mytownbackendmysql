@@ -5,7 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using System.Diagnostics;
-using static Org.BouncyCastle.Math.EC.ECCurve;
+//using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace mytown.Controllers
 {
