@@ -25,7 +25,7 @@ namespace mytown.Services.Implementations
      ILogger<PaymentService> logger)
         {
             _paymentRepo = paymentRepo;
-            _logger = logger;
+           // _logger = logger;
 
             StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
 
