@@ -53,4 +53,7 @@ public interface ICourierServiceRepository
       string shopperCountry,
 
       decimal packageWeightKg);
+
+    //add courier bank details
+    Task SaveCourierAccountDetails(CourierAccountDetail accountDetail);
 }

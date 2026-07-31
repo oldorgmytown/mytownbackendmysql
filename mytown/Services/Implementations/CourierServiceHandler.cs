@@ -149,6 +149,19 @@ namespace mytown.Services.Implementations
             };
 
             var created = await _repo.RegisterCourier(courier);
+
+            //add bank account details
+            var bank = new CourierAccountDetail
+            {
+                CourierId = created.CourierId,
+                AccountHolderName = courierDto.AccountHolderName,
+                BankName = courierDto.BankName,
+                AccountNumber = courierDto.AccountNumber,
+                IFSCCode = courierDto.IFSCCode,               
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _repo.SaveCourierAccountDetails(bank);
             await _repo.DeletePendingCourierVerification(token);
 
             return created;
