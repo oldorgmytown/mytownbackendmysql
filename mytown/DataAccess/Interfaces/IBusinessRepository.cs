@@ -32,5 +32,8 @@ namespace mytown.DataAccess
         List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId);
        
         IEnumerable<Products> GetProductsByBusRegIdAndSubcatId(int busRegId, int prodSubcatId);
+
+        //add bank account details
+        Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
     }
 }
