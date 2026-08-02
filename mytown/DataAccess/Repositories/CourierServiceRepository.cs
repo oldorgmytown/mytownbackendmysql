@@ -72,6 +72,12 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //add bank account details
+        public async Task SaveCourierAccountDetails(CourierAccountDetail accountDetail)
+        {
+            _context.CourierAccountDetails.Add(accountDetail);
+            await _context.SaveChangesAsync();
+        }
 
 
         //Upload CVS file for courier branches

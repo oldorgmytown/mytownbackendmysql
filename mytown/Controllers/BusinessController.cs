@@ -129,6 +129,20 @@ namespace mytown.Controllers
 
                 await _businessService.RegisterBusiness(newBusiness);
 
+                //add bank account details to that table
+
+                var bankDetails = new BusinessAccountDetail
+                {
+                    BusRegId = newBusiness.BusRegId,
+                    AccountHolderName = businessDto.AccountHolderName,
+                    BankName = businessDto.BankName,
+                    AccountNumber = businessDto.AccountNumber,
+                    IFSCCode = businessDto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _businessService.SaveBusinessAccountDetails(bankDetails);
+
                 var newProfile = new BusinessProfile
                 {
                     BusRegId = newBusiness.BusRegId,

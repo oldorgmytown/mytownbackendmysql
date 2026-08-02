@@ -77,5 +77,7 @@ namespace mytown.Models
         public ICollection<CourierBranch> CourierBranches { get; set; } = new List<CourierBranch>();
 
         public virtual ICollection<CourierVerification> CourierVerifications { get; set; } = new List<CourierVerification>();
+
+        public virtual CourierAccountDetail? CourierAccountDetail { get; set; }
     }
 }
