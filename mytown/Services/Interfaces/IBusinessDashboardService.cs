@@ -76,5 +76,8 @@ namespace mytown.Services.Interfaces
         //sales trend graph
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
 
+        //edit bankdetails
+        Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
+
     }
 }

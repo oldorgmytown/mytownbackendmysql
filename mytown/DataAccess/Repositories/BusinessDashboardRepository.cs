@@ -3,6 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 using static BusinessDashboardRepository;
 
 
@@ -1336,7 +1337,36 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             return await _context.ShippingPackageDetails
                 .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
         }
+
+    public async Task<bool> UpdateBusinessAccountDetailsAsync(
+     int busRegId,
+     UpdateBusinessAccountDetailDto dto)
+    {
+        var account = await _context.BusinessAccountDetails
+            .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
+
+        if (account == null)
+        {
+            account = new BusinessAccountDetail
+            {
+                BusRegId = busRegId,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.BusinessAccountDetails.Add(account);
+        }
+
+        account.AccountHolderName = dto.AccountHolderName;
+        account.BankName = dto.BankName;
+        account.AccountNumber = dto.AccountNumber;
+        account.IFSCCode = dto.IFSCCode;
+        account.UpdatedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
     }
+}
 
 
 

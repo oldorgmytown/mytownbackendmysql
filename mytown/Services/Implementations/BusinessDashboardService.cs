@@ -315,6 +315,13 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetSalesTrendAsync(storeId, fromDate, toDate);
         }
+
+        public async Task<bool> UpdateBusinessAccountDetailsAsync(
+    int busRegId,
+    UpdateBusinessAccountDetailDto dto)
+        {
+            return await _repository.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+        }
     }
 
     }

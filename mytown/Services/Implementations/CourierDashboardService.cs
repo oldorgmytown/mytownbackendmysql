@@ -266,5 +266,12 @@ namespace mytown.Services.Implementations
         {
             return await _repository.UploadDeliveryProofAsync(storeOrderId, file);
         }
+
+        public async Task<bool> UpdateCourierAccountDetailsAsync(
+    int courierId,
+    UpdateCourierAccountDetailDto dto)
+        {
+            return await _repository.UpdateCourierAccountDetailsAsync(courierId, dto);
+        }
     }
 }

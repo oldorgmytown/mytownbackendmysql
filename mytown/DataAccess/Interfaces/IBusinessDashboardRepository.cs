@@ -122,5 +122,7 @@ namespace mytown.DataAccess.Interfaces
 
         // store package details
         //Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
+
+        Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
     }
 }

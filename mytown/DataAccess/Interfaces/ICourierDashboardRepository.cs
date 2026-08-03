@@ -85,6 +85,9 @@ namespace mytown.DataAccess.Interfaces
 
         Task UpdateCourierAsync(CourierService courier);
 
+        // update or edit bank details
+        Task<bool> UpdateCourierAccountDetailsAsync(int courierId, UpdateCourierAccountDetailDto dto);
+
 
 
 
