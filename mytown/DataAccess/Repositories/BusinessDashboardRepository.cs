@@ -226,9 +226,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var finalFrequentCustomers = frequentCustomers.ToList();
 
-        //Customers Who Purchased (Names and Phones)
+        //Customers Who Purchased (Names and Phones) — exclude guest orders (no ShopperRegister)
         var customersWhoPurchasedQuery = _context.OrderDetails
             .Where(od => od.StoreId == storeId &&
+                         !od.Order.IsGuestOrder &&
+                         od.Order.ShopperRegId != null &&
                          (od.Order.Payments.Any() || od.Order.ShippingDetails.Any()))
             .Select(od => new
             { 
@@ -1221,8 +1223,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var query = from od in _context.OrderDetails
                     join o in _context.Orders on od.OrderId equals o.OrderId
                     join p in _context.Payments on o.OrderId equals p.OrderId
+                    join so in _context.StoreOrders on od.StoreOrderId equals so.StoreOrderId
+                    join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                     where od.StoreId == storeId
                           && p.PaymentStatus == "Paid"
+                          && sd.ShippingStatus == "Delivered"
                     select new
                     {
                         od.Quantity,
