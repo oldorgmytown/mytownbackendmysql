@@ -308,6 +308,37 @@ namespace mytown.Controllers
             var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
             return Ok(result);
         }
+
+        [HttpPut("update-business-account/{busRegId}")]
+        public async Task<IActionResult> UpdateBusinessAccount(
+    int busRegId,
+    [FromBody] UpdateBusinessAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _dasboardservice.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+
+                if (!updated)
+                {
+                    return NotFound(new
+                    {
+                        message = "Business account details not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Business account details updated successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
     }
 
 

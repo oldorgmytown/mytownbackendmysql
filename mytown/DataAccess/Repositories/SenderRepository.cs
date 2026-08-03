@@ -158,6 +158,7 @@ namespace mytown.DataAccess.Implementations
                 TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
                     DateTime.UtcNow,
                     "India Standard Time");
+            var pickupDateTime = order.PickupDate.Date.Add(TimeSpan.Parse(order.PickupTime));
 
             // Common matching query
             var matchingQuery = _context.TransporterTravelPlans
@@ -165,7 +166,7 @@ namespace mytown.DataAccess.Implementations
                 .Where(x =>
                     x.IsActive &&
                     x.PlanStatus == "Available" &&
-                    x.StartDate > bookingDateTime &&
+                     x.StartDate >= pickupDateTime &&
 
                     x.StartTown.ToLower() == order.PickupTown.ToLower() &&
                     x.StartCity.ToLower() == order.PickupCity.ToLower() &&
