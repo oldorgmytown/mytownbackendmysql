@@ -158,7 +158,12 @@ namespace mytown.DataAccess.Implementations
                 TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
                     DateTime.UtcNow,
                     "India Standard Time");
-            var pickupDateTime = order.PickupDate.Date.Add(TimeSpan.Parse(order.PickupTime));
+            var pickupTime = DateTime.ParseExact(order.PickupTime, "h:mm tt", System.Globalization.CultureInfo.InvariantCulture).TimeOfDay;
+
+            var pickupDateTime = order.PickupDate.Date.Add(pickupTime);
+
+            if (pickupDateTime < bookingDateTime)
+                throw new Exception("Pickup date and time cannot be in the past.");
 
             // Common matching query
             var matchingQuery = _context.TransporterTravelPlans

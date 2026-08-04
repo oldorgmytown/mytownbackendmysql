@@ -639,5 +639,20 @@ namespace mytown.DataAccess.Repositories
 
             return true;
         }
+
+        public async Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId)
+        {
+            return await _context.CourierAccountDetails
+                .Where(x => x.CourierId == courierId)
+                .Select(x => new UpdateCourierAccountDetailDto
+                {
+                    AccountHolderName = x.AccountHolderName,
+                    BankName = x.BankName,
+                    AccountNumber = x.AccountNumber,
+                    IFSCCode = x.IFSCCode,
+                    IsTermsAccepted = x.IsTermsAccepted
+                })
+                .FirstOrDefaultAsync();
+        }
     }
 }

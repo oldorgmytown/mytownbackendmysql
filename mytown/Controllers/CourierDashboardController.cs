@@ -310,6 +310,17 @@ namespace mytown.Controllers
             }
         }
 
+        [HttpGet("getcourier-bankaccount/{courierId}")]
+        public async Task<IActionResult> GetCourierAccountDetails(int courierId)
+        {
+            var account = await _courierService.GetCourierAccountDetailsByCourierIdAsync(courierId);
+
+            if (account == null)
+                return NotFound(new { message = "Courier account details not found." });
+
+            return Ok(account);
+        }
+
     }
 
 }

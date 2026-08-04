@@ -1,5 +1,6 @@
 ﻿using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -123,6 +124,8 @@ namespace mytown.DataAccess.Interfaces
         // store package details
         //Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
 
+        //bankdetails
         Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
+        Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
     }
 }
