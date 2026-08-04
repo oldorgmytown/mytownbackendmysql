@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using MyTown.Configurations;
 using MyTown.DTOs.Razorpay;
-using MyTown.Services.Interfaces;
+using mytown.Services.Interfaces;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
-namespace MyTown.Services.Implementations
+namespace mytown.Services.Implementations
 {
     public class RazorpayService : IRazorpayService
     {

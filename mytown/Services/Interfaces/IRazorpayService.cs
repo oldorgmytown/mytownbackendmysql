@@ -1,6 +1,6 @@
 ﻿using MyTown.DTOs.Razorpay;
 
-namespace MyTown.Services.Interfaces
+namespace mytown.Services.Interfaces
 {
     public interface IRazorpayService
     {
