@@ -60,5 +60,6 @@ namespace mytown.Services.Interfaces
 
         // update or edit bank details
         Task<bool> UpdateCourierAccountDetailsAsync(int courierId, UpdateCourierAccountDetailDto dto);
+        Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId);
     }
 }

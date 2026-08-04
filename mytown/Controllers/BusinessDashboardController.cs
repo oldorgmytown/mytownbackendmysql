@@ -339,6 +339,18 @@ namespace mytown.Controllers
                 });
             }
         }
+
+        // get business account details by busRegId
+        [HttpGet("getbusiness-bankaccount/{busRegId}")]
+        public async Task<IActionResult> GetBusinessAccountDetails(int busRegId)
+        {
+            var account = await _dasboardservice.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
+
+            if (account == null)
+                return NotFound(new { message = "Business account details not found." });
+
+            return Ok(account);
+        }
     }
 
 

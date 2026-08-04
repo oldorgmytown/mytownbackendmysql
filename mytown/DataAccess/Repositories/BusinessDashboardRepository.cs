@@ -698,7 +698,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(v =>
-                v.Product.ProductName.Contains(search) ||
+                v.Product.ProductId.ToString().Contains(search) ||
                 v.Product.SupplierName.Contains(search) ||
                 (v.Product.ProductSubCategory != null &&
                  v.Product.ProductSubCategory.ProdSubcatName.Contains(search)) ||
@@ -1365,6 +1365,20 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId)
+    {
+        return await _context.BusinessAccountDetails
+            .Where(x => x.BusRegId == busRegId)
+            .Select(x => new UpdateBusinessAccountDetailDto
+            {
+                AccountHolderName = x.AccountHolderName,
+                BankName = x.BankName,
+                AccountNumber = x.AccountNumber,
+                IFSCCode = x.IFSCCode
+            })
+            .FirstOrDefaultAsync();
     }
 }
 

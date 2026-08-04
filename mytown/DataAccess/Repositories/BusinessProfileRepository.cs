@@ -32,32 +32,73 @@ namespace mytown.DataAccess.Repositories
         {
             var result = await (
                 from bp in _context.BusinessProfiles
+
                 join br in _context.BusinessRegisters
                     on bp.BusRegId equals br.BusRegId
-                join bs in _context.BusinessServices
-                    on bp.BusServId equals bs.BusServId into bsGroup
-                from bs in bsGroup.DefaultIfEmpty()
+
+                // Category from BusinessProfile.BusCatId
                 join bc in _context.BusinessCategories
                     on bp.BusCatId equals bc.BusCatId into bcGroup
                 from bc in bcGroup.DefaultIfEmpty()
+
+                    // ServiceProfile for this business
+                join sp in _context.ServiceProfiles
+                    on bp.BusRegId equals sp.BusRegId into spGroup
+                from sp in spGroup.DefaultIfEmpty()
+
+                    // Service name from ServiceProfile.BusServId
+                join bs in _context.BusinessServices
+                    on sp.BusServId equals bs.BusServId into bsGroup
+                from bs in bsGroup.DefaultIfEmpty()
+
                 where bp.BusRegId == busRegId
+
                 select new busprofilepreview
                 {
                     businessprofile_id = bp.BusinessProfileId,
                     BusRegId = bp.BusRegId,
+
                     Businessname = br.BusinessName,
                     Businessusername = br.BusinessUsername,
+
                     business_location = bp.BusinessLocation,
                     business_tagline = bp.BusinessTagline,
                     business_about = bp.BusinessAbout,
+
                     banner_path = bp.BannerPath,
                     logo_path = bp.LogoPath,
                     profile_status = bp.ProfileStatus,
+
+                    // Category from BusinessProfile
                     BusCatId = bp.BusCatId,
-                    BusServId = bp.BusServId,
-                    // Left-joined rows may be null — fall back to empty string
-                    Businessservice_name = bs != null ? bs.BusinessServiceName : "",
-                    Businesscategory_name = bc != null ? bc.BusinessCategoryName : "",
+
+                    // Service from ServiceProfile
+                    BusServId = sp != null ? sp.BusServId : 0,
+
+                    Businesscategory_name = bc != null
+                        ? bc.BusinessCategoryName
+                        : "",
+
+                    Businessservice_name = bs != null
+                        ? bs.BusinessServiceName
+                        : "",
+
+                    // Service profile details
+                    ServiceBanner = sp != null
+                        ? sp.ServiceBanner
+                        : "",
+
+                    ServiceLogo = sp != null
+                        ? sp.ServiceLogo
+                        : "",
+
+                    bus_time = sp != null &&
+                               sp.WorkingStartTime.HasValue &&
+                               sp.WorkingEndTime.HasValue
+                        ? sp.WorkingStartTime.Value.ToString() + " - " +
+                          sp.WorkingEndTime.Value.ToString()
+                        : "",
+
                     Currency = br.Currency,
                     BusEmail = br.BusEmail,
                     BusPhone = br.BusMobileNo
