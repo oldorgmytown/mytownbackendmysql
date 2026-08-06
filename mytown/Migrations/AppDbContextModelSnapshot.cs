@@ -683,6 +683,10 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BranchServiceId"));
 
+                    b.Property<decimal>("BaseCharges")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("base_charges");
+
                     b.Property<int>("BranchId")
                         .HasColumnType("int")
                         .HasColumnName("branch_id");
