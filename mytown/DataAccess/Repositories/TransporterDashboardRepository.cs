@@ -501,6 +501,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
                 if (shipping != null)
                 {
+
+                    if (dto.NewStatus == "PickedUp" &&
+           shipping.ShippingStatus != "Ready to Ship")
+                    {
+                        return false;
+                    }
+
                     shipping.ShippingStatus = dto.NewStatus switch
                     {
                         "ReachedPickup" => "ReachedPickup",

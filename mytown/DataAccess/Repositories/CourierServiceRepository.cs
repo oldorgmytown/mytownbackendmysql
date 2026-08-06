@@ -420,7 +420,8 @@ namespace mytown.DataAccess.Repositories
                 s.BranchId == branch.BranchId &&
                 s.ShippingMode == r.ShippingMode &&
                 s.DistanceRange == r.DistanceRange &&
-                s.WeightRange == r.WeightRange
+                s.WeightRange == r.WeightRange &&
+                 s.Destinations == r.Destinations
             );
 
             if (serviceExists)
@@ -428,19 +429,36 @@ namespace mytown.DataAccess.Repositories
                 skippedDuplicates++;
                 continue;
             }
+                    //commision and gst addition
+                    decimal basePrice = r.Charges;
 
-            var serviceEntity = new CourierBranchService
-            {
-                BranchId = branch.BranchId,
-                ShippingMode = r.ShippingMode,
-                DistanceRange = r.DistanceRange,
-                WeightRange = r.WeightRange,
-                Charges = r.Charges,
-                EstimateDays = r.EstimateDays,
-                Destinations = r.Destinations
-            };
+                    // GST on base price
+                    decimal gstAmount = Math.Round(basePrice * 0.18m, 2);
 
-            _context.CourierBranchServices.Add(serviceEntity);
+                    // MyTown commission on base price
+                    decimal commissionAmount = Math.Round(basePrice * 0.20m, 2);
+
+                    // Final amount
+                    decimal finalCharge = Math.Round(basePrice + gstAmount + commissionAmount, 2);
+
+                    var serviceEntity = new CourierBranchService
+                    {
+                        BranchId = branch.BranchId,
+                        ShippingMode = r.ShippingMode,
+                        DistanceRange = r.DistanceRange,
+                        WeightRange = r.WeightRange,
+
+                        // Original courier/base rate
+                        BaseCharges = basePrice,
+
+                        // Base + GST + MyTown commission
+                        Charges = finalCharge,
+
+                        EstimateDays = r.EstimateDays,
+                        Destinations = r.Destinations
+                    };
+
+                    _context.CourierBranchServices.Add(serviceEntity);
             newRowsAdded++;
         }
 
@@ -484,80 +502,12 @@ namespace mytown.DataAccess.Repositories
         throw new Exception("SAVE ERROR: " + ex.Message);
     }
 }
-        //public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
-        // string storeCity,
-        // string storeState,
-        // string storeCountry,
-        // string shopperCity,
-        // decimal productWeightKg)
-        //{
-        //    try
-        //    {
-        //        var courierBranches = await _context.CourierBranches
-        //            .Where(cb =>
-        //                cb.City.ToLower() == storeCity.ToLower() &&
-        //                cb.State.ToLower() == storeState.ToLower() &&
-        //                cb.Country.ToLower() == storeCountry.ToLower() &&
-        //                !string.IsNullOrEmpty(cb.Destinations))
-        //            .AsNoTracking()
-        //            .ToListAsync();
-
-        //        var matchingCouriers = courierBranches
-        //            .Where(cb =>
-        //                cb.Destinations
-        //                  .Split(',', StringSplitOptions.RemoveEmptyEntries)
-        //                  .Select(d => d.Trim().ToLower())
-        //                  .Contains(shopperCity.ToLower()));
-
-        //        var bestCourierOptions = matchingCouriers
-        //            .Select(cb =>
-        //            {
-        //                var maxWeight = ExtractMaxWeight(cb.WeightRange);
-        //                var maxDays = GetMaxDeliveryDays(cb.ShippingMode);
-
-        //                return new
-        //                {
-        //                    Dto = new BestcourierinfoDto
-        //                    {
-        //                        BranchId = cb.BranchId,
-        //                        ShippingMode = cb.ShippingMode,
-        //                        Cost = cb.Charges,
-
-        //                        // ✅ Delivery info for frontend
-        //                        MaxDeliveryDays = maxDays,
-        //                        DeliveryDaysRange = GetDeliveryRangeText(maxDays),
-        //                        EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
-        //                    },
-        //                    MaxWeight = maxWeight
-        //                };
-        //            })
-
-        //            // ✅ Filter invalid couriers
-        //            .Where(x => x.MaxWeight >= productWeightKg)
-
-        //            // ✅ One best option per ShippingMode
-        //            .GroupBy(x => x.Dto.ShippingMode.ToLower())
-        //            .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
-
-        //            .ToList();
-
-        //        return bestCourierOptions;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
-        //        Console.WriteLine(ex.StackTrace);
-        //        return new List<BestcourierinfoDto>();
-        //    }
-        //}
-
-
         public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
-    string storeCity,
-    string storeState,
-    string storeCountry,
-    string shopperCity,
-    decimal productWeightKg)
+       string storeCity,
+       string storeState,
+       string storeCountry,
+       string shopperState,
+       decimal productWeightKg)
         {
             try
             {
@@ -565,10 +515,7 @@ namespace mytown.DataAccess.Repositories
                     from branch in _context.CourierBranches
                     join service in _context.CourierBranchServices
                         on branch.BranchId equals service.BranchId
-                    where branch.City.ToLower() == storeCity.ToLower()
-                       && branch.State.ToLower() == storeState.ToLower()
-                       && branch.Country.ToLower() == storeCountry.ToLower()
-                       && !string.IsNullOrEmpty(service.Destinations)
+                    where !string.IsNullOrEmpty(service.Destinations)
                     select new
                     {
                         branch.BranchId,
@@ -582,12 +529,19 @@ namespace mytown.DataAccess.Repositories
                 .AsNoTracking()
                 .ToListAsync();
 
+                // Match shopper's destination STATE
                 var matchingCouriers = data
                     .Where(x =>
                         x.Destinations
                             .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(d => d.Trim().ToLower())
-                            .Contains(shopperCity.ToLower())
+                            .Select(d => d.Trim())
+                            .Any(d =>
+                                string.Equals(
+                                    d,
+                                    shopperState?.Trim(),
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
                     );
 
                 var bestCourierOptions = matchingCouriers
@@ -596,23 +550,49 @@ namespace mytown.DataAccess.Repositories
                         var maxWeight = ExtractMaxWeight(x.WeightRange);
                         var maxDays = x.EstimateDays ?? GetMaxDeliveryDays(x.ShippingMode);
 
+                        // DB charge already contains your first 20% commission.
+                        decimal finalCharge = x.Charges;
+
+                        // Additional 20% only when STORE is outside Maharashtra/Kolhapur.
+                        bool storeIsKolhapurMaharashtra =
+                            //string.Equals(
+                            //    storeState?.Trim(),
+                            //    "Maharashtra",
+                            //    StringComparison.OrdinalIgnoreCase
+                            //)
+                            //&&
+                            string.Equals(
+                                storeCity?.Trim(),
+                                "Kolhapur",
+                                StringComparison.OrdinalIgnoreCase
+                            );
+
+                        if (!storeIsKolhapurMaharashtra)
+                        {
+                            finalCharge = Math.Round(
+                                finalCharge * 1.20m,
+                                2
+                            );
+                        }
+
                         return new
                         {
                             Dto = new BestcourierinfoDto
                             {
                                 BranchId = x.BranchId,
                                 ShippingMode = x.ShippingMode,
-                                Cost = x.Charges,
+                                Cost = finalCharge,
                                 MaxDeliveryDays = maxDays,
                                 DeliveryDaysRange = GetDeliveryRangeText(maxDays),
-                                EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+                                EstimatedDeliveryDate =
+                                    GetEstimatedDeliveryDate(maxDays)
                             },
                             MaxWeight = maxWeight
                         };
                     })
                     .Where(x => x.MaxWeight >= productWeightKg)
 
-                    // ✅ one best option per ShippingMode
+                    // One best option per shipping mode
                     .GroupBy(x => x.Dto.ShippingMode.ToLower())
                     .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
                     .ToList();
@@ -621,10 +601,88 @@ namespace mytown.DataAccess.Repositories
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
+                Console.WriteLine(
+                    $"Exception in GetBestCourierOptions: {ex.Message}"
+                );
+
                 return new List<BestcourierinfoDto>();
             }
         }
+
+
+        //    public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
+        //string storeCity,
+        //string storeState,
+        //string storeCountry,
+        //string shopperCity,
+        //decimal productWeightKg)
+        //    {
+        //        try
+        //        {
+        //            var data = await (
+        //                from branch in _context.CourierBranches
+        //                join service in _context.CourierBranchServices
+        //                    on branch.BranchId equals service.BranchId
+        //                where branch.City.ToLower() == storeCity.ToLower()
+        //                   && branch.State.ToLower() == storeState.ToLower()
+        //                   && branch.Country.ToLower() == storeCountry.ToLower()
+        //                   && !string.IsNullOrEmpty(service.Destinations)
+        //                select new
+        //                {
+        //                    branch.BranchId,
+        //                    service.Destinations,
+        //                    service.ShippingMode,
+        //                    service.Charges,
+        //                    service.WeightRange,
+        //                    service.EstimateDays
+        //                }
+        //            )
+        //            .AsNoTracking()
+        //            .ToListAsync();
+
+        //            var matchingCouriers = data
+        //                .Where(x =>
+        //                    x.Destinations
+        //                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        //                        .Select(d => d.Trim().ToLower())
+        //                        .Contains(shopperCity.ToLower())
+        //                );
+
+        //            var bestCourierOptions = matchingCouriers
+        //                .Select(x =>
+        //                {
+        //                    var maxWeight = ExtractMaxWeight(x.WeightRange);
+        //                    var maxDays = x.EstimateDays ?? GetMaxDeliveryDays(x.ShippingMode);
+
+        //                    return new
+        //                    {
+        //                        Dto = new BestcourierinfoDto
+        //                        {
+        //                            BranchId = x.BranchId,
+        //                            ShippingMode = x.ShippingMode,
+        //                            Cost = x.Charges,
+        //                            MaxDeliveryDays = maxDays,
+        //                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
+        //                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+        //                        },
+        //                        MaxWeight = maxWeight
+        //                    };
+        //                })
+        //                .Where(x => x.MaxWeight >= productWeightKg)
+
+        //                // ✅ one best option per ShippingMode
+        //                .GroupBy(x => x.Dto.ShippingMode.ToLower())
+        //                .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
+        //                .ToList();
+
+        //            return bestCourierOptions;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
+        //            return new List<BestcourierinfoDto>();
+        //        }
+        //    }
 
 
 
