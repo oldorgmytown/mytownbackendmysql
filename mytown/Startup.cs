@@ -56,7 +56,7 @@ public class Startup
         services.Configure<RazorpayXSettings>(Configuration.GetSection("RazorpayX"));
         services.AddHttpClient();
 
-        //services.AddScoped<IRazorpayService, RazorpayService>();
+        services.AddScoped<IRazorpayService, RazorpayService>();
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
