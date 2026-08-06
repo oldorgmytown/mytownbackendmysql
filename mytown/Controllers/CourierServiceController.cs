@@ -103,7 +103,7 @@ namespace mytown.Controllers
 
         // preview CSV
 
-        [Authorize]
+     //   [Authorize]
         [HttpPost("courierBranchUpload-preview")]
         public async Task<IActionResult> UploadCourierCsv(IFormFile file)
         {
@@ -116,7 +116,7 @@ namespace mytown.Controllers
 
         // save branches
 
-        [Authorize]
+     //   [Authorize]
         [HttpPost("save-courier-branches")]
         public async Task<IActionResult> SaveCourierBranches([FromBody] List<CourierBranchCsvRowDto> rows)
         {
