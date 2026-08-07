@@ -54,7 +54,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = orderAmount * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
@@ -113,7 +113,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = orderAmount * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
