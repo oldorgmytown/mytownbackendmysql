@@ -35,8 +35,7 @@ namespace mytown.Models
         [Column("charges", TypeName = "decimal(10,2)")]
         public decimal Charges { get; set; }
 
-        [Column("base_charges", TypeName = "decimal(10,2)")]
-        public decimal BaseCharges { get; set; }
+       
 
         [Column("estimate_days")]
         public int? EstimateDays { get; set; }
