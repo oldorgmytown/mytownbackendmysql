@@ -20,6 +20,9 @@ namespace mytown.Models
         public string Businessservice_name { get; set; }
         public string Businesscategory_name { get; set; }
 
+        public string ServiceBanner { get; set; } = string.Empty;
+        public string ServiceLogo { get; set; } = string.Empty;
+
         public string Currency { get; set; }  
 
         public string BusEmail { get; set; } = string.Empty;

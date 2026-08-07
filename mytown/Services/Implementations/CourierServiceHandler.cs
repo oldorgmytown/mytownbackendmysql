@@ -149,6 +149,19 @@ namespace mytown.Services.Implementations
             };
 
             var created = await _repo.RegisterCourier(courier);
+
+            //add bank account details
+            var bank = new CourierAccountDetail
+            {
+                CourierId = created.CourierId,
+                AccountHolderName = courierDto.AccountHolderName,
+                BankName = courierDto.BankName,
+                AccountNumber = courierDto.AccountNumber,
+                IFSCCode = courierDto.IFSCCode,               
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _repo.SaveCourierAccountDetails(bank);
             await _repo.DeletePendingCourierVerification(token);
 
             return created;
@@ -281,7 +294,8 @@ namespace mytown.Services.Implementations
 
                 var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
                     ? weight
-                    : 0;
+                    : 0m;
+                var totalweightkg = totalWeight + 0.05m;
 
                 // Standard + Express
                 var allCourierOptions = await _repo.GetBestCourierOptions(
@@ -289,7 +303,7 @@ namespace mytown.Services.Implementations
                     store.BusinessState,
                     store.BusinessCountry,
                     state,
-                    totalWeight
+                    totalweightkg
                 );
 
                 var cheapestSurface = allCourierOptions

@@ -57,5 +57,9 @@ namespace mytown.Services.Interfaces
 
         Task MarkEachNotificationReadAsync(int notificationId);
         Task<string> UploadDeliveryProofAsync(int storeOrderId, IFormFile file);
+
+        // update or edit bank details
+        Task<bool> UpdateCourierAccountDetailsAsync(int courierId, UpdateCourierAccountDetailDto dto);
+        Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId);
     }
 }

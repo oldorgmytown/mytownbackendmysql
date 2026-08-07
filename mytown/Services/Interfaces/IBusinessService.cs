@@ -29,5 +29,8 @@ namespace mytown.Services.Interfaces
 
         Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatId);
 
+        // add bank details
+        Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
+
     }
 }

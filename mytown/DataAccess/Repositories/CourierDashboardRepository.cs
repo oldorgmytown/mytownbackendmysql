@@ -610,5 +610,49 @@ namespace mytown.DataAccess.Repositories
             _context.CourierService.Update(courier);
             await _context.SaveChangesAsync();
         }
+
+        public async Task<bool> UpdateCourierAccountDetailsAsync(
+    int courierId,
+    UpdateCourierAccountDetailDto dto)
+        {
+            var account = await _context.CourierAccountDetails
+                .FirstOrDefaultAsync(x => x.CourierId == courierId);
+
+            if (account == null)
+            {
+                account = new CourierAccountDetail
+                {
+                    CourierId = courierId,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.CourierAccountDetails.Add(account);
+            }
+
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.IsTermsAccepted = dto.IsTermsAccepted;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId)
+        {
+            return await _context.CourierAccountDetails
+                .Where(x => x.CourierId == courierId)
+                .Select(x => new UpdateCourierAccountDetailDto
+                {
+                    AccountHolderName = x.AccountHolderName,
+                    BankName = x.BankName,
+                    AccountNumber = x.AccountNumber,
+                    IFSCCode = x.IFSCCode,
+                    IsTermsAccepted = x.IsTermsAccepted
+                })
+                .FirstOrDefaultAsync();
+        }
     }
 }

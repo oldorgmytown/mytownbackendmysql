@@ -19,25 +19,30 @@ namespace mytown.Controllers
         }
 
         [HttpPost("CheckEmail")]
-        public IActionResult CheckEmail([FromBody] string email)
+        public IActionResult CheckEmail([FromBody] string email, [FromQuery] string role)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("Email is required.");
 
-            if (_authService.EmailExists(email))
+            if (_authService.EmailExists(email,role))
                 return Ok(new { success = true });
 
             return NotFound("Email not registered.");
         }
 
         [HttpPost("forgot-password")]
-        public IActionResult ForgotPassword([FromBody] string email)
+        public IActionResult ForgotPassword(
+     [FromBody] string email,
+     [FromQuery] string role)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("Email is required.");
 
-            if (!_authService.EmailExists(email))
-                return NotFound("Email not found");
+            if (string.IsNullOrWhiteSpace(role))
+                return BadRequest("Role is required.");
+
+            if (!_authService.EmailExists(email, role))
+                return NotFound("Email not found for the selected role.");
 
             _authService.SendResetEmail(email);
 

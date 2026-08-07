@@ -2,6 +2,7 @@
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
+using MyTown.Models;
 using BusinessNotificationDto = mytown.Models.DTO_s.BusinessNotificationDto;
 
 namespace mytown.Services.Interfaces
@@ -75,6 +76,10 @@ namespace mytown.Services.Interfaces
 
         //sales trend graph
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
+
+        //edit bankdetails
+        Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
+        Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
 
     }
 }

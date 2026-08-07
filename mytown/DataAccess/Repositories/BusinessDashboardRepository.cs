@@ -3,6 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 using static BusinessDashboardRepository;
 
 
@@ -226,9 +227,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var finalFrequentCustomers = frequentCustomers.ToList();
 
-        //Customers Who Purchased (Names and Phones)
+        //Customers Who Purchased (Names and Phones) — exclude guest orders (no ShopperRegister)
         var customersWhoPurchasedQuery = _context.OrderDetails
             .Where(od => od.StoreId == storeId &&
+                         !od.Order.IsGuestOrder &&
+                         od.Order.ShopperRegId != null &&
                          (od.Order.Payments.Any() || od.Order.ShippingDetails.Any()))
             .Select(od => new
             { 
@@ -695,7 +698,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(v =>
-                v.Product.ProductName.Contains(search) ||
+                v.Product.ProductId.ToString().Contains(search) ||
                 v.Product.SupplierName.Contains(search) ||
                 (v.Product.ProductSubCategory != null &&
                  v.Product.ProductSubCategory.ProdSubcatName.Contains(search)) ||
@@ -1221,8 +1224,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var query = from od in _context.OrderDetails
                     join o in _context.Orders on od.OrderId equals o.OrderId
                     join p in _context.Payments on o.OrderId equals p.OrderId
+                    join so in _context.StoreOrders on od.StoreOrderId equals so.StoreOrderId
+                    join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                     where od.StoreId == storeId
                           && p.PaymentStatus == "Paid"
+                          && sd.ShippingStatus == "Delivered"
                     select new
                     {
                         od.Quantity,
@@ -1331,7 +1337,50 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             return await _context.ShippingPackageDetails
                 .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
         }
+
+    public async Task<bool> UpdateBusinessAccountDetailsAsync(
+     int busRegId,
+     UpdateBusinessAccountDetailDto dto)
+    {
+        var account = await _context.BusinessAccountDetails
+            .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
+
+        if (account == null)
+        {
+            account = new BusinessAccountDetail
+            {
+                BusRegId = busRegId,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.BusinessAccountDetails.Add(account);
+        }
+
+        account.AccountHolderName = dto.AccountHolderName;
+        account.BankName = dto.BankName;
+        account.AccountNumber = dto.AccountNumber;
+        account.IFSCCode = dto.IFSCCode;
+        account.UpdatedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
     }
+
+    public async Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId)
+    {
+        return await _context.BusinessAccountDetails
+            .Where(x => x.BusRegId == busRegId)
+            .Select(x => new UpdateBusinessAccountDetailDto
+            {
+                AccountHolderName = x.AccountHolderName,
+                BankName = x.BankName,
+                AccountNumber = x.AccountNumber,
+                IFSCCode = x.IFSCCode
+            })
+            .FirstOrDefaultAsync();
+    }
+}
 
 
 

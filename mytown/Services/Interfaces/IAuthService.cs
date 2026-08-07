@@ -4,7 +4,7 @@ namespace mytown.Services.Interfaces
 {
     public interface IAuthService
     {
-        bool EmailExists(string email);
+        bool EmailExists(string email, string role);
         void SendResetEmail(string email);
         object GetResetRequestByToken(string token);
         bool ResetPassword(string email, string newPassword);

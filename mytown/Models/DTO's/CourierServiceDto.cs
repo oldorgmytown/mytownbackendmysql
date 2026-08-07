@@ -1,4 +1,6 @@
-﻿namespace mytown.Models.DTO_s
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace mytown.Models.DTO_s
 {
 
     public class CourierServiceDto
@@ -20,7 +22,22 @@
         public bool IsState { get; set; }
 
         public string Password { get; set; }
-       // public string ConfirmPassword { get; set; }
+       
+        public string AccountHolderName { get; set; }
+
+    
+        public string BankName { get; set; }
+
+     
+        public string AccountNumber { get; set; }
+
+        [Compare("AccountNumber")]
+        public string ConfirmAccountNumber { get; set; }
+
+       
+        public string IFSCCode { get; set; }
+
+       
     }
 
 

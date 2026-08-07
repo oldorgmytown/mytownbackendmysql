@@ -72,6 +72,12 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //add bank account details
+        public async Task SaveCourierAccountDetails(CourierAccountDetail accountDetail)
+        {
+            _context.CourierAccountDetails.Add(accountDetail);
+            await _context.SaveChangesAsync();
+        }
 
 
         //Upload CVS file for courier branches
@@ -410,19 +416,19 @@ namespace mytown.DataAccess.Repositories
                         await _context.SaveChangesAsync();
                     }
 
-                    bool serviceExists = await _context.CourierBranchServices.AnyAsync(s =>
-                        s.BranchId == branch.BranchId &&
-                        s.ShippingMode == r.ShippingMode &&
-                        s.DistanceRange == r.DistanceRange &&
-                        s.WeightRange == r.WeightRange &&
-                         s.Destinations == r.Destinations
-                    );
+            bool serviceExists = await _context.CourierBranchServices.AnyAsync(s =>
+                s.BranchId == branch.BranchId &&
+                s.ShippingMode == r.ShippingMode &&
+                s.DistanceRange == r.DistanceRange &&
+                s.WeightRange == r.WeightRange &&
+                 s.Destinations == r.Destinations
+            );
 
-                    if (serviceExists)
-                    {
-                        skippedDuplicates++;
-                        continue;
-                    }
+            if (serviceExists)
+            {
+                skippedDuplicates++;
+                continue;
+            }
                     //commision and gst addition
                     decimal basePrice = r.Charges;
 
@@ -453,8 +459,8 @@ namespace mytown.DataAccess.Repositories
                     };
 
                     _context.CourierBranchServices.Add(serviceEntity);
-                    newRowsAdded++;
-                }
+            newRowsAdded++;
+        }
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
@@ -488,14 +494,14 @@ namespace mytown.DataAccess.Repositories
                         }
                     }
                 }
-                return "All rows saved successfully.";
-            }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception("SAVE ERROR: " + ex.Message);
-            }
-        }
+                    return "All rows saved successfully.";
+    }
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync();
+        throw new Exception("SAVE ERROR: " + ex.Message);
+    }
+}
         public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
        string storeCity,
        string storeState,
@@ -602,6 +608,81 @@ namespace mytown.DataAccess.Repositories
                 return new List<BestcourierinfoDto>();
             }
         }
+
+
+        //    public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
+        //string storeCity,
+        //string storeState,
+        //string storeCountry,
+        //string shopperCity,
+        //decimal productWeightKg)
+        //    {
+        //        try
+        //        {
+        //            var data = await (
+        //                from branch in _context.CourierBranches
+        //                join service in _context.CourierBranchServices
+        //                    on branch.BranchId equals service.BranchId
+        //                where branch.City.ToLower() == storeCity.ToLower()
+        //                   && branch.State.ToLower() == storeState.ToLower()
+        //                   && branch.Country.ToLower() == storeCountry.ToLower()
+        //                   && !string.IsNullOrEmpty(service.Destinations)
+        //                select new
+        //                {
+        //                    branch.BranchId,
+        //                    service.Destinations,
+        //                    service.ShippingMode,
+        //                    service.Charges,
+        //                    service.WeightRange,
+        //                    service.EstimateDays
+        //                }
+        //            )
+        //            .AsNoTracking()
+        //            .ToListAsync();
+
+        //            var matchingCouriers = data
+        //                .Where(x =>
+        //                    x.Destinations
+        //                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        //                        .Select(d => d.Trim().ToLower())
+        //                        .Contains(shopperCity.ToLower())
+        //                );
+
+        //            var bestCourierOptions = matchingCouriers
+        //                .Select(x =>
+        //                {
+        //                    var maxWeight = ExtractMaxWeight(x.WeightRange);
+        //                    var maxDays = x.EstimateDays ?? GetMaxDeliveryDays(x.ShippingMode);
+
+        //                    return new
+        //                    {
+        //                        Dto = new BestcourierinfoDto
+        //                        {
+        //                            BranchId = x.BranchId,
+        //                            ShippingMode = x.ShippingMode,
+        //                            Cost = x.Charges,
+        //                            MaxDeliveryDays = maxDays,
+        //                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
+        //                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+        //                        },
+        //                        MaxWeight = maxWeight
+        //                    };
+        //                })
+        //                .Where(x => x.MaxWeight >= productWeightKg)
+
+        //                // ✅ one best option per ShippingMode
+        //                .GroupBy(x => x.Dto.ShippingMode.ToLower())
+        //                .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
+        //                .ToList();
+
+        //            return bestCourierOptions;
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
+        //            return new List<BestcourierinfoDto>();
+        //        }
+        //    }
 
 
 

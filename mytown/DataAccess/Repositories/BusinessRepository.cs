@@ -91,6 +91,13 @@ namespace mytown.DataAccess.Repositories
             _context.BusinessProfiles.Add(profile);
             await _context.SaveChangesAsync();
         }
+
+        // add bank account details
+        public async Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail)
+        {
+            _context.BusinessAccountDetails.Add(businessAccountDetail);
+            await _context.SaveChangesAsync();
+        }
         //get business store types
         public async Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories()
         {

@@ -23,6 +23,10 @@ namespace mytown.Models
             public DbSet<BusinessCategory> BusinessCategories { get; set; }
             public DbSet<ProductSubCategory> product_sub_categories { get; set; }
 
+            //bank account details
+            public DbSet<BusinessAccountDetail> BusinessAccountDetails { get; set; }
+            public DbSet<CourierAccountDetail> CourierAccountDetails { get; set; }
+
             // services 
             public DbSet<ServiceSubCategory> ServiceSubCategory { get; set; }
             public DbSet<Service> Service { get; set; }

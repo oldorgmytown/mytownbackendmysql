@@ -4,19 +4,22 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using mytown.Controllers;
 using mytown.Controllers.Helpers;
+using mytown.DataAccess.Implementations;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Helpers;
+using mytown.Hubs;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
+using mytown.Services.Implementations;
+using mytown.Services.Interfaces;
+using MyTown.Configurations;
+using mytown.Services.Implementations;
+using mytown.Services.Interfaces;
+using Stripe;
 using Stripe.Climate;
 using System.Security.Claims;
 using System.Text;
-using mytown.Services.Interfaces;
-using mytown.Services.Implementations;
-using mytown.DataAccess.Implementations;
-using Stripe;
-using mytown.Hubs;
-using mytown.Helpers;
 
 
 
@@ -50,9 +53,11 @@ public class Startup
     private void RegisterApplicationServices(IServiceCollection services)
     {
         StripeConfiguration.ApiKey = Configuration["Stripe:SecretKey"];
-        //commitfor log
-        Console.WriteLine($"Stripe mode: {(StripeConfiguration.ApiKey?.StartsWith("sk_test") == true ? "TEST" : "LIVE")}, prefix: {StripeConfiguration.ApiKey?.Substring(0, Math.Min(12, StripeConfiguration.ApiKey.Length))}");
-        
+        services.Configure<RazorpayXSettings>(Configuration.GetSection("RazorpayX"));
+        services.AddHttpClient();
+
+        services.AddScoped<IRazorpayService, RazorpayService>();
+
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IShopperRepository, ShopperRepository>();
         services.AddScoped<IEmailService, EmailService>();

@@ -1,5 +1,6 @@
 ﻿using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -74,6 +75,12 @@ namespace mytown.Services
         public Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatid)
         {
             return _repo.BusinessSubCategoriesforStores(buscatid);
+        }
+
+        //add bank account details
+        public async Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail)
+        {
+            await _repo.SaveBusinessAccountDetails(businessAccountDetail);
         }
     }
 }

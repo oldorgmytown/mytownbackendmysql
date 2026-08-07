@@ -1,10 +1,11 @@
-﻿using mytown.DataAccess.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Services.Implementations;
 //using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
-using mytown.Services.Implementations;
-using Microsoft.EntityFrameworkCore;
+using MyTown.Models;
 
 namespace mytown.Services.Implementations
 {
@@ -314,6 +315,19 @@ namespace mytown.Services.Implementations
         public async Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate)
         {
             return await _repository.GetSalesTrendAsync(storeId, fromDate, toDate);
+        }
+
+        //bankdetails
+        public async Task<bool> UpdateBusinessAccountDetailsAsync(
+    int busRegId,
+    UpdateBusinessAccountDetailDto dto)
+        {
+            return await _repository.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+        }
+
+        public async Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId)
+        {
+            return await _repository.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
         }
     }
 

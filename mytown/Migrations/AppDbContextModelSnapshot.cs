@@ -22,6 +22,59 @@ namespace mytown.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("MyTown.Models.BusinessAccountDetail", b =>
+                {
+                    b.Property<int>("AccountDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("account_detail_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AccountDetailId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("account_holder_name");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("account_number");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("bank_name");
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("IFSCCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ifsc_code");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("AccountDetailId");
+
+                    b.HasIndex("BusRegId")
+                        .IsUnique();
+
+                    b.ToTable("business_account_details");
+                });
+
             modelBuilder.Entity("MyTown.Models.BusinessRegister", b =>
                 {
                     b.Property<int>("BusRegId")
@@ -598,6 +651,59 @@ namespace mytown.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("city_images");
+                });
+
+            modelBuilder.Entity("mytown.Models.CourierAccountDetail", b =>
+                {
+                    b.Property<int>("AccountDetailId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("account_detail_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AccountDetailId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("account_holder_name");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("account_number");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("bank_name");
+
+                    b.Property<int>("CourierId")
+                        .HasColumnType("int")
+                        .HasColumnName("courier_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("IFSCCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("ifsc_code");
+
+                    b.Property<bool>("IsTermsAccepted")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_terms_accepted");
+
+                    b.HasKey("AccountDetailId");
+
+                    b.HasIndex("CourierId")
+                        .IsUnique();
+
+                    b.ToTable("courier_account_details");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
@@ -3483,6 +3589,17 @@ namespace mytown.Migrations
                     b.ToTable("subcategoryimages_busregids", (string)null);
                 });
 
+            modelBuilder.Entity("MyTown.Models.BusinessAccountDetail", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
+                        .WithOne("BusinessAccountDetail")
+                        .HasForeignKey("MyTown.Models.BusinessAccountDetail", "BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegister");
+                });
+
             modelBuilder.Entity("MyTown.Models.BusinessRegister", b =>
                 {
                     b.HasOne("mytown.Models.BusinessCategory", "BusinessCategory")
@@ -3582,6 +3699,17 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessRegister");
+                });
+
+            modelBuilder.Entity("mytown.Models.CourierAccountDetail", b =>
+                {
+                    b.HasOne("mytown.Models.CourierService", "CourierService")
+                        .WithOne("CourierAccountDetail")
+                        .HasForeignKey("mytown.Models.CourierAccountDetail", "CourierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CourierService");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
@@ -4035,6 +4163,8 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("MyTown.Models.BusinessRegister", b =>
                 {
+                    b.Navigation("BusinessAccountDetail");
+
                     b.Navigation("BusinessProfile");
                 });
 
@@ -4045,6 +4175,8 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.CourierService", b =>
                 {
+                    b.Navigation("CourierAccountDetail");
+
                     b.Navigation("CourierBranches");
 
                     b.Navigation("CourierVerifications");
