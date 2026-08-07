@@ -294,7 +294,8 @@ namespace mytown.Services.Implementations
 
                 var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
                     ? weight
-                    : 0;
+                    : 0m;
+                var totalweightkg = totalWeight + 0.05m;
 
                 // Standard + Express
                 var allCourierOptions = await _repo.GetBestCourierOptions(
@@ -302,7 +303,7 @@ namespace mytown.Services.Implementations
                     store.BusinessState,
                     store.BusinessCountry,
                     state,
-                    totalWeight
+                    totalweightkg
                 );
 
                 var cheapestSurface = allCourierOptions
