@@ -5,7 +5,6 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using System.Diagnostics;
-//using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace mytown.Controllers
 {
@@ -17,14 +16,12 @@ namespace mytown.Controllers
 
         private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
-      //  private readonly string _connectionString;
 
         public AdminController(IAdminService adminService,
                                ILogger<AdminController> logger)
         {
             _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-           // _connectionString = config.GetConnectionString("DefaultConnection");
         }
 
         [Authorize]
@@ -47,7 +44,6 @@ namespace mytown.Controllers
             });
         }
 
-      //  [Authorize]
         [HttpGet("getBusinessesstoresByStatusPaginated")]
         public async Task<IActionResult> GetBusinessesstoresByStatusPaginated(
             [FromQuery] string status,
@@ -69,7 +65,6 @@ namespace mytown.Controllers
             });
         }
 
-       // [Authorize]
         [HttpGet("GetBusinessesservicesByStatusPaginated")]
 
         public async Task<IActionResult> GetBusinessesservicesByStatusPaginated(
@@ -97,7 +92,6 @@ namespace mytown.Controllers
             });
         }
 
-      //  [Authorize]
         [HttpGet("Businessprofilestatuscounts")]
         public async Task<IActionResult> Businessprofilestatuscounts()
         {
@@ -112,7 +106,6 @@ namespace mytown.Controllers
             }
         }
 
-    //    [Authorize]
         [HttpPost("updateprofilestatusbyadmin")]
         public async Task<IActionResult> UpdateProfileStatusByAdmin(
             [FromQuery] int busRegId,
@@ -209,27 +202,6 @@ namespace mytown.Controllers
             return Ok(new { count });
         }
 
-        //[Authorize]
-        //[HttpGet("getShopperRegistersPaginated")]
-        //public async Task<IActionResult> GetShopperRegistersPaginated(int page = 1, int pageSize = 10)
-        //{
-        //    if (page <= 0 || pageSize <= 0)
-        //        return BadRequest(new { message = "Page and page size must be greater than 0." });
-
-        //    var (shopperRegisters, totalRecords) = await _adminService.GetShopperRegistersPaginatedAsync(page, pageSize);
-
-        //    if (shopperRegisters == null || !shopperRegisters.Any())
-        //        return Ok(new { data = new List<object>(), message = "No shopper registers found.", totalRecords = 0 });
-
-        //    return Ok(new
-        //    {
-        //        data = shopperRegisters,
-        //        totalRecords,
-        //        currentPage = page,
-        //        pageSize
-        //    });
-        //}
-
         [HttpGet("shoppersonAdminpanel")]
         public async Task<IActionResult> GetShoppers(
   [FromQuery] string status,
@@ -257,7 +229,6 @@ namespace mytown.Controllers
         }
 
 
-      //  [Authorize]
         [HttpPost("updateshopperstatusbyadmin")]
         public async Task<IActionResult> UpdateShopperStatusByAdmin([FromQuery] int shopperId, [FromQuery] string status)
         {
@@ -274,17 +245,6 @@ namespace mytown.Controllers
             return Ok("Shopper status updated successfully.");
         }
 
-        //[HttpPut("SendReativateShopperemail")]
-        //public async Task<IActionResult> SendReativateShopperemail(int shopperRegId)
-        //{
-        //    var result = await _adminService.SendReativateShopperemail(shopperRegId);
-
-        //    if (!result)
-        //        return NotFound("Shopper not found");
-
-        //    return Ok(new { message = "Shopper Email successfully" });
-        //}
-
         [HttpPut("deactivateShopper")]
         public async Task<IActionResult> DeactivateShopper(int shopperRegId)
         {
@@ -295,27 +255,6 @@ namespace mytown.Controllers
 
             return Ok(new { message = "Shopper account deactivated successfully" });
         }
-
-      //  [Authorize]
-        //[HttpGet("getCourierRegistersPaginated")]
-        //public async Task<IActionResult> GetCourierRegistersPaginated(int page = 1, int pageSize = 10)
-        //{
-        //    if (page <= 0 || pageSize <= 0)
-        //        return BadRequest(new { message = "Page and page size must be greater than 0." });
-
-        //    var (courierRegisters, totalRecords) = await _adminService.GetCourierRegistersPaginatedAsync(page, pageSize);
-
-        //    if (courierRegisters == null || !courierRegisters.Any())
-        //        return Ok(new { data = new List<object>(), message = "No courier registers found.", totalRecords = 0 });
-
-        //    return Ok(new
-        //    {
-        //        data = courierRegisters,
-        //        totalRecords,
-        //        currentPage = page,
-        //        pageSize
-        //    });
-        //}
 
         [HttpGet("getCourierRegistersPaginated")]
         public async Task<IActionResult> GetCourierRegistersPaginated(string? search = null,
@@ -489,6 +428,52 @@ namespace mytown.Controllers
                     totalRecords = 0
                 });
             }
+
+            return Ok(new
+            {
+                data = records,
+                totalRecords,
+                currentPage = page,
+                pageSize
+            });
+        }
+
+        // Orders tab — full combined order details by store order code
+        [HttpGet("getOrderFullDetailsByStoreOrderId")]
+        public async Task<IActionResult> GetOrderFullDetailsByStoreOrderId([FromQuery] string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return BadRequest(new { message = "Store Order code is required." });
+
+            var result = await _adminService.GetOrderFullDetailsByStoreOrderCodeAsync(code);
+
+            if (result == null)
+                return NotFound(new { message = $"No order found for code {code}." });
+
+            return Ok(result);
+        }
+
+        // Orders tab — summary counts (Total / Pending / In Transit / Delivered / Cancelled)
+        [HttpGet("getOrdersSummaryCounts")]
+        public async Task<IActionResult> GetOrdersSummaryCounts()
+        {
+            var counts = await _adminService.GetOrdersSummaryCountsAsync();
+            return Ok(counts);
+        }
+
+        // Orders tab — full order list, paginated (status: pending | intransit | delivered | cancelled | current/all)
+        [HttpGet("getAllOrdersFullDetailsPaginated")]
+        public async Task<IActionResult> GetAllOrdersFullDetailsPaginated(
+            [FromQuery] string? status = "current",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null)
+        {
+            if (page < 1 || pageSize < 1)
+                return BadRequest(new { message = "Invalid pagination parameters." });
+
+            var (records, totalRecords) =
+                await _adminService.GetAllOrdersFullDetailsPaginatedAsync(page, pageSize, status, search);
 
             return Ok(new
             {
