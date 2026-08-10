@@ -1100,7 +1100,9 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
 
             int total = statuses.Count;
             int pending = statuses.Count(s => string.Equals(s, "Pending", StringComparison.OrdinalIgnoreCase));
-            int inTransit = statuses.Count(s => string.Equals(s, "In progress", StringComparison.OrdinalIgnoreCase));
+            int readyToShip = statuses.Count(s => string.Equals(s, "Ready to Ship", StringComparison.OrdinalIgnoreCase));
+            int inTransit = statuses.Count(s => string.Equals(s, "In Transit", StringComparison.OrdinalIgnoreCase)
+                                              || string.Equals(s, "In progress", StringComparison.OrdinalIgnoreCase));
             int delivered = statuses.Count(s => string.Equals(s, "Delivered", StringComparison.OrdinalIgnoreCase));
             int cancelled = statuses.Count(s => string.Equals(s, "Cancelled", StringComparison.OrdinalIgnoreCase));
 
@@ -1108,6 +1110,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             {
                 TotalOrders = total,
                 Pending = pending,
+                ReadyToShip = readyToShip,
                 InTransit = inTransit,
                 Delivered = delivered,
                 Cancelled = cancelled
@@ -1136,8 +1139,11 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
 
                 if (s == "pending")
                     query = query.Where(so => so.Storeorder_Status.ToLower() == "pending");
+                else if (s == "readytoship" || s == "ready to ship" || s == "ready_to_ship")
+                    query = query.Where(so => so.Storeorder_Status.ToLower() == "ready to ship");
                 else if (s == "intransit" || s == "in transit" || s == "in_transit")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "in progress");
+                    query = query.Where(so => so.Storeorder_Status.ToLower() == "in transit"
+                                            || so.Storeorder_Status.ToLower() == "in progress");
                 else if (s == "delivered")
                     query = query.Where(so => so.Storeorder_Status.ToLower() == "delivered");
                 else if (s == "cancelled" || s == "canceled")
