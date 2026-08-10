@@ -11,7 +11,6 @@ namespace mytown.DataAccess.Interfaces
         Task<(IEnumerable<object> Records, int TotalRecords)> GetBusinessRegistersPaginatedAsync(int page, int pageSize, string? search = null);
         Task<(List<BusinessRegister> Records, int TotalRecords)>
       GetBusinessesstoresByStatusPaginatedAsync(string status, int page, int pageSize, string? search);
-       // Task<(List<BusinessRegister> Records, int TotalRecords)> GetBusinessesservicesByStatusPaginated(string status, int page, int pageSize);
         Task<(List<BusinessRegister> Records, int TotalRecords)>
     GetBusinessesservicesByStatusPaginated(
         string status,
@@ -22,7 +21,6 @@ namespace mytown.DataAccess.Interfaces
 
         Task<bool> UpdateProfileStatusbyAdminAsync(int busRegId, string status, string? comments = null);
 
-        //Task<(IEnumerable<ShopperRegister> records, int totalRecords)> GetShopperRegistersPaginatedAsync(int page, int pageSize);
         Task<(List<ShopperRegister> records, int totalCount)>
        GetShoppersByStatusAsync(string status, int page, int pageSize, string? search);
 
@@ -74,5 +72,15 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
             int busRegId,
             string status,
             string? comments = null);
-    }}
 
+        // Orders tab — full combined order details by store order id
+        Task<OrderFullDetailsDto?> GetOrderFullDetailsByStoreOrderIdAsync(int storeOrderId);
+
+        // Orders tab — summary counts for dashboard cards
+        Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync();
+
+        // Orders tab — full order list, paginated, filterable by status tab + search
+        Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
+            GetAllOrdersFullDetailsPaginatedAsync(int page, int pageSize, string? status, string? search);
+    }
+}

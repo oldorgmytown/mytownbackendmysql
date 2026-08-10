@@ -30,12 +30,6 @@ namespace mytown.Services.Implementations
             return await _adminRepo.GetBusinessesstoresByStatusPaginatedAsync(status, page, pageSize, search);
         }
 
-        //public async Task<(IEnumerable<object> Records, int TotalRecords)>
-        //    GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize)
-        //{
-        //    return await _adminRepo.GetBusinessesservicesByStatusPaginated(status, page, pageSize);
-        //}
-
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
     GetBusinessesservicesByStatusPaginatedAsync(
         string status,
@@ -103,19 +97,16 @@ namespace mytown.Services.Implementations
 
         public async Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status)
         {
-            // 1️ Update status
             var updated = await _adminRepo.UpdateShopperStatusAsync(shopperId, status);
 
             if (!updated)
                 return false;
 
-            // 2️ Get shopper details
             var shopper = await _adminRepo.GetShopperByIdAsync(shopperId);
 
             if (shopper == null)
                 return false;
 
-            // 3️ Send email only if reactivated
             if (status.ToLower() == "active")
             {
                 await _emailService.SendShopperReactivationEmailAsync(
@@ -145,23 +136,6 @@ namespace mytown.Services.Implementations
 
             return result;
         }
-
-        //public async Task<bool> SendReativateShopperemail(int shopperRegId)
-        //{
-        //    var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
-
-        //    if (shopper == null)
-        //        return false;
-
-
-        //        await _emailService.SendShopperReactivationEmailAsync(
-        //            shopper.Email,
-        //            shopper.Username
-        //        );
-
-
-        //    return true;
-        //}
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
   GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
@@ -270,6 +244,33 @@ GetSenderRegistersPaginatedAsync(
                     busRegId,
                     status,
                     comments);
+        }
+
+        // Orders tab — full combined order details by store order code
+        public async Task<OrderFullDetailsDto?> GetOrderFullDetailsByStoreOrderCodeAsync(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return null;
+
+            var digits = new string(code.Where(char.IsDigit).ToArray());
+
+            if (!int.TryParse(digits, out int storeOrderId))
+                return null;
+
+            return await _adminRepo.GetOrderFullDetailsByStoreOrderIdAsync(storeOrderId);
+        }
+
+        // Orders tab — summary counts for dashboard cards
+        public async Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync()
+        {
+            return await _adminRepo.GetOrdersSummaryCountsAsync();
+        }
+
+        // Orders tab — full order list, paginated
+        public async Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
+            GetAllOrdersFullDetailsPaginatedAsync(int page, int pageSize, string? status, string? search)
+        {
+            return await _adminRepo.GetAllOrdersFullDetailsPaginatedAsync(page, pageSize, status, search);
         }
 
     }
