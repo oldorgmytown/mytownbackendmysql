@@ -1093,22 +1093,26 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         // Orders tab — summary counts for dashboard cards
         public async Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync()
         {
-            var statuses = await _context.StoreOrders
+            var totalOrders = await _context.StoreOrders.AsNoTracking().CountAsync();
+
+            var shippingStatuses = await _context.StoreOrders
                 .AsNoTracking()
-                .Select(so => so.Storeorder_Status)
+                .Join(_context.ShippingDetails.AsNoTracking(),
+                    so => so.StoreOrderId,
+                    sd => sd.StoreOrderId,
+                    (so, sd) => sd.ShippingStatus)
                 .ToListAsync();
 
-            int total = statuses.Count;
-            int pending = statuses.Count(s => string.Equals(s, "Pending", StringComparison.OrdinalIgnoreCase));
-            int readyToShip = statuses.Count(s => string.Equals(s, "Ready to Ship", StringComparison.OrdinalIgnoreCase));
-            int inTransit = statuses.Count(s => string.Equals(s, "In Transit", StringComparison.OrdinalIgnoreCase)
-                                              || string.Equals(s, "In progress", StringComparison.OrdinalIgnoreCase));
-            int delivered = statuses.Count(s => string.Equals(s, "Delivered", StringComparison.OrdinalIgnoreCase));
-            int cancelled = statuses.Count(s => string.Equals(s, "Cancelled", StringComparison.OrdinalIgnoreCase));
+            int pending = shippingStatuses.Count(s => string.Equals(s, "Pending", StringComparison.OrdinalIgnoreCase));
+            int readyToShip = shippingStatuses.Count(s => string.Equals(s, "Ready to Ship", StringComparison.OrdinalIgnoreCase));
+            int inTransit = shippingStatuses.Count(s => string.Equals(s, "In Progress", StringComparison.OrdinalIgnoreCase)
+                                                       || string.Equals(s, "In Transit", StringComparison.OrdinalIgnoreCase));
+            int delivered = shippingStatuses.Count(s => string.Equals(s, "Delivered", StringComparison.OrdinalIgnoreCase));
+            int cancelled = shippingStatuses.Count(s => string.Equals(s, "Cancelled", StringComparison.OrdinalIgnoreCase));
 
             return new OrdersSummaryCountsDto
             {
-                TotalOrders = total,
+                TotalOrders = totalOrders,
                 Pending = pending,
                 ReadyToShip = readyToShip,
                 InTransit = inTransit,
@@ -1138,16 +1142,21 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 var s = status.Trim().ToLower();
 
                 if (s == "pending")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "pending");
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "pending"));
                 else if (s == "readytoship" || s == "ready to ship" || s == "ready_to_ship")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "ready to ship");
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "ready to ship"));
                 else if (s == "intransit" || s == "in transit" || s == "in_transit")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "in transit"
-                                            || so.Storeorder_Status.ToLower() == "in progress");
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId &&
+                                   (sd.ShippingStatus.ToLower() == "in progress" || sd.ShippingStatus.ToLower() == "in transit")));
                 else if (s == "delivered")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "delivered");
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "delivered"));
                 else if (s == "cancelled" || s == "canceled")
-                    query = query.Where(so => so.Storeorder_Status.ToLower() == "cancelled");
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "cancelled"));
             }
 
             if (!string.IsNullOrWhiteSpace(search))
