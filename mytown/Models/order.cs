@@ -50,9 +50,18 @@ namespace mytown.Models
         [Column("order_date")]
         public DateTime OrderDate { get; set; }
 
+        //public virtual ICollection<orderdetails> OrderDetails { get; set; }
+        //public virtual ICollection<Payments> Payments { get; set; }
+        //public virtual ICollection<ShippingDetails> ShippingDetails { get; set; }
+
         public virtual ICollection<orderdetails> OrderDetails { get; set; }
+    = new List<orderdetails>();
+
         public virtual ICollection<Payments> Payments { get; set; }
+            = new List<Payments>();
+
         public virtual ICollection<ShippingDetails> ShippingDetails { get; set; }
+            = new List<ShippingDetails>();
     }
 
 }

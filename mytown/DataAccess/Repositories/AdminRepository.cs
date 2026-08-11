@@ -8,6 +8,7 @@ using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
 using MyTown.Models;
+using Razorpay.Api;
 using System.Data;
 using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -1159,6 +1160,10 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                         .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "cancelled"));
             }
 
+            // PAYMENT FILTER
+            query = query.Where(so => _context.Payments
+                .Any(p => p.OrderId == so.Order.OrderId &&
+                         p.PaymentStatus.ToLower() == "paid"));
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim().ToLower();
@@ -1190,10 +1195,21 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 .GroupBy(sd => sd.StoreOrderId)
                 .ToDictionary(g => g.Key, g => g.First());
 
+            var orderIds = storeOrders.Select(x => x.Order.OrderId).ToList();
+
+            var paymentLookup = await _context.Payments
+                .AsNoTracking()
+                .Where(p => orderIds.Contains(p.OrderId))
+                .ToListAsync();
+
+            var paymentByOrderId = paymentLookup
+                .GroupBy(p => p.OrderId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.PaymentDate).First());
+
             var records = storeOrders.Select(storeOrder =>
             {
                 shippingByStoreOrderId.TryGetValue(storeOrder.StoreOrderId, out var shipping);
-
+                paymentByOrderId.TryGetValue(storeOrder.Order.OrderId, out var payment);
                 return new OrderFullDetailsDto
                 {
                     StoreOrderId = storeOrder.StoreOrderId,
@@ -1208,6 +1224,10 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                     OrderStatus = storeOrder.Order.OrderStatus,
                     OrderDate = storeOrder.Order.OrderDate,
                     IsGuestOrder = storeOrder.Order.IsGuestOrder,
+
+                    PaymentMethod = payment?.PaymentMethod,
+                    PaymentStatus = payment?.PaymentStatus,
+                    
 
                     ShopperRegId = storeOrder.Order.ShopperRegId,
                     ShopperUsername = storeOrder.Order.ShopperRegister?.Username,
