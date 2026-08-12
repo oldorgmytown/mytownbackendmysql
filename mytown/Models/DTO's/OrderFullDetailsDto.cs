@@ -20,6 +20,9 @@ namespace mytown.Models.DTO_s
         public DateTime OrderDate { get; set; }
         public bool IsGuestOrder { get; set; }
 
+        public string? PaymentMethod { get; set; }
+
+        public string? PaymentStatus { get; set; }
         // Shopper
         public int? ShopperRegId { get; set; }
         public string? ShopperUsername { get; set; }
