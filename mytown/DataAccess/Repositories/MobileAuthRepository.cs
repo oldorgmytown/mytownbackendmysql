@@ -46,14 +46,21 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<(bool success, string message)> SignupAsync(MobileSignupDto dto)
         {
-            bool emailExists = await EmailExistsAsync(dto.Email);
+
+            string role = dto.Role.ToLower();
+
+            bool emailExists = await EmailExistsAsync(dto.Email, role);
+
             if (emailExists)
                 return (false, "Email already registered.");
+            //bool emailExists = await EmailExistsAsync(dto.Email);
+            //if (emailExists)
+            //    return (false, "Email already registered.");
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             string otp = GenerateOtp();
             DateTime expiry = DateTime.UtcNow.AddMinutes(5);
-            string role = dto.Role.ToLower();
+          //  string role = dto.Role.ToLower();
 
             var payload = new PendingSignupPayload
             {
@@ -438,13 +445,27 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
-        private async Task<bool> EmailExistsAsync(string email)
+        private async Task<bool> EmailExistsAsync(string email, string role)
         {
-            return await _context.ShopperRegisters.AnyAsync(x => x.Email == email)
-                || await _context.BusinessRegisters.AnyAsync(x => x.BusEmail == email)
-                || await _context.SenderRegisters.AnyAsync(x => x.Email == email)
-                || await _context.TransporterRegisters.AnyAsync(x => x.Email == email)
-                || await _context.CourierService.AnyAsync(x => x.CourierEmail == email);
+            return role.ToLower() switch
+            {
+                "shopper" => await _context.ShopperRegisters
+                    .AnyAsync(x => x.Email == email),
+
+                "business" => await _context.BusinessRegisters
+                    .AnyAsync(x => x.BusEmail == email),
+
+                "sender" => await _context.SenderRegisters
+                    .AnyAsync(x => x.Email == email),
+
+                "transporter" => await _context.TransporterRegisters
+                    .AnyAsync(x => x.Email == email),
+
+                "courier" => await _context.CourierService
+                    .AnyAsync(x => x.CourierEmail == email),
+
+                _ => false
+            };
         }
     }
 }

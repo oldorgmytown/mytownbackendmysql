@@ -2,6 +2,7 @@
 {
     public class AdminDashboardcountDto
     {
+        // new stats
         public int UniqueTowns { get; set; }
         public int UniqueCities { get; set; }
         public int UniqueStates { get; set; }

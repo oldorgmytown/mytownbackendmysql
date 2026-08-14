@@ -257,7 +257,10 @@ public class Startup
         app.UseStaticFiles();
 
         ConfigureSwagger(app, env, logger);
+        //   ApplyMigrations(app, logger);
 
+        //this is same and working and again changed
+        //app.UseCors("AllowFrontend");
         app.UseRouting();
         app.UseCors("AllowFrontend");
         app.UseAuthentication();
@@ -266,7 +269,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-            endpoints.MapHub<ChatHub>("/chatHub");
+          //  endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);

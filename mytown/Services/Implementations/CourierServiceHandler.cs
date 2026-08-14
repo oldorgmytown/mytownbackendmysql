@@ -337,7 +337,7 @@ namespace mytown.Services.Implementations
                     store.Town,
                     store.BusinessCity,
                     store.BusinessState,
-                    store.BusinessCountry,
+                    store.BusinessCountry,                    
                     town,
                     city,
                     state,

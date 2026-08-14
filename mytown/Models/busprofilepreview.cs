@@ -9,7 +9,7 @@ namespace mytown.Models
         public string Businessname { get; set; }
         public string Businessusername { get; set; }
         public string business_location { get; set; }
-        public string business_tagline { get; set; }
+         public string business_tagline { get; set; }
         public string business_about { get; set; }
         public string banner_path { get; set; }
         public string logo_path { get; set; }

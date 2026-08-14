@@ -586,8 +586,9 @@ GetTransporterByIdAsync(int transporterId)
             {
                 query = query.Where(x =>
                     x.DeliveryStatus == "Pending");
-
             }
+
+            //sender In Progress status error fixed - changed to In Progress from InProgress
 
             else if (orderStatus == "In Progress")
             {

@@ -17,7 +17,8 @@ namespace mytown.Services.Implementations
 
         private static readonly HashSet<string> ValidStatuses =
        new() { "Pending","New Order", "Ready to Ship", "In Progress", "Delivered" };
-        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService)
+        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService
+            )
         {
             _repository = repository;
             _orderRepository = orderRepository;
@@ -67,6 +68,7 @@ namespace mytown.Services.Implementations
         {
             var shipment = await _repository.GetByStoreOrderIdAsync(storeOrderId);
 
+            // allow tracking id allotment only for ready to ship orders
             if (shipment.ShippingStatus != "Ready to Ship")
                 throw new Exception("Tracking can be added only after Ready to Ship notification from Store");
 

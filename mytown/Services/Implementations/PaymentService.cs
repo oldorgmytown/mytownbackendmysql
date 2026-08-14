@@ -99,12 +99,6 @@ namespace mytown.Services.Implementations
             if (intent.Status != "succeeded")
                 throw new Exception("Payment not completed");
 
-            // Check if this Payment Intent was already processed
-            var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(stripePaymentIntentId);
-
-            if (existingPayment != null)
-                throw new Exception("Payment has already been processed.");
-
             // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 
             // 1️ Order Amount

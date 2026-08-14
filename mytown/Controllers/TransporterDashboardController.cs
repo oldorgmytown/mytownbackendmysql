@@ -313,9 +313,9 @@ namespace mytown.Controllers
 
         [HttpPut("transporter-update-delivery-status_senderorder")]
         public async Task<IActionResult> UpdateTransporterDeliveryStatus(
-      int senderOrderId,
-      int transporterRegId,
-      string deliveryStatus)
+     int senderOrderId,
+     int transporterRegId,
+     string deliveryStatus)
         {
             try
             {

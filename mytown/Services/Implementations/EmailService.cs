@@ -975,7 +975,8 @@ public class EmailService : IEmailService
       </td>
     </tr>
 
-    <!-- ===== VIEW ORDER BUTTON ===== -->
+    <!-- ===== VIEW ORDER BUTTON only for shopper ===== -->
+
     {(!orderdto.IsGuestOrder
 ? @"
 <tr>
@@ -3545,7 +3546,7 @@ public class EmailService : IEmailService
                 using (var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail, "ITISMYTOWN"),
-                    Subject = $"Tracking Information for Order - {orderdto.OrderId}",
+                    Subject = $"Tracking Information for Order - {orderdto.OrderId}", //subject name change
                     Body = htmlBody,
                     IsBodyHtml = true
                 })
@@ -3702,7 +3703,7 @@ public class EmailService : IEmailService
               <tr>
                 <td style=""color:#6B7280;font-size:14px;font-weight:500;padding-bottom:10px;
                             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Store Order ID</td>
-               <td align=""right"" style=""padding-bottom:10px;"">
+                <td align=""right"" style=""padding-bottom:10px;"">
                     <span style=""color:#004481;font-size:14px;font-weight:600;
                                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
                         {store.StoreOrderId}

@@ -557,7 +557,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             await _context.SaveChangesAsync();
 
-            // send tracking id email to guests
+            // send tracking id email to guests only
             if (dto.NewStatus == "PickedUp" &&
               delivery.OrderId.HasValue)
             {

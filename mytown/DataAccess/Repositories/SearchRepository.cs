@@ -765,7 +765,7 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-        // Track order by tracking ID
+        // Track order by tracking ID but not working on QA
        public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
 {
     var shipping = await _context.ShippingDetails
@@ -909,7 +909,7 @@ namespace mytown.DataAccess.Repositories
     ? $"{transporter.Address}, {transporter.Town}, {transporter.City}, {transporter.State}, {transporter.Country}"
     : null,
 
-    // Courier Details
+    // Courier Details added new
     CourierName = courierBranch?.CourierServiceName,
     BranchContactPerson = courierBranch?.BranchContactPerson,
     BranchEmail = courierBranch?.BranchEmailId,

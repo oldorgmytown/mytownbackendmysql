@@ -366,6 +366,7 @@ namespace mytown.DataAccess.Repositories
             var Senderscount = await _context.SenderRegisters.CountAsync();
             var transporterscount = await _context.TransporterRegisters.CountAsync();
 
+            // Return everything in a DTO
             return new AdminDashboardcountDto
             {
                 UniqueTowns = uniqueTowns,
