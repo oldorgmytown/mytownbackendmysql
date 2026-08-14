@@ -65,6 +65,7 @@ namespace mytown.Services.Interfaces
 
         // Orders tab — summary counts for dashboard cards
         Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync();
+        Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync();
 
         // Orders tab — full order list, paginated
         Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>

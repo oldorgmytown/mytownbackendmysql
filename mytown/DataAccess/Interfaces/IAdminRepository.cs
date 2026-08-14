@@ -78,6 +78,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
 
         // Orders tab — summary counts for dashboard cards
         Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync();
+        Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync();
 
         // Orders tab — full order list, paginated, filterable by status tab + search
         Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
