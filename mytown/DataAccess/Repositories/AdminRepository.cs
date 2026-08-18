@@ -1121,6 +1121,40 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 Cancelled = cancelled
             };
         }
+        public async Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync()
+{
+    var businesses = await _context.BusinessRegisters
+        .Where(b => !string.IsNullOrEmpty(b.BusinessCountry) && !string.IsNullOrEmpty(b.Town))
+        .Select(b => new { b.BusinessCountry, b.Town })
+        .ToListAsync();
+
+    var totalCountries = businesses
+        .Select(b => b.BusinessCountry.Trim().ToLower())
+        .Distinct()
+        .Count();
+
+    var totalTowns = businesses
+        .Select(b => b.Town.Trim().ToLower())
+        .Distinct()
+        .Count();
+
+    var breakdown = businesses
+        .GroupBy(b => b.BusinessCountry.Trim())
+        .Select(g => new CountryTownCountDto
+        {
+            Country = g.Key,
+            TownCount = g.Select(x => x.Town.Trim().ToLower()).Distinct().Count()
+        })
+        .OrderByDescending(x => x.TownCount)
+        .ToList();
+
+    return new BusinessLocationCountsDto
+    {
+        TotalCountries = totalCountries,
+        TotalTowns = totalTowns,
+        CountryBreakdown = breakdown
+    };
+}
 
         // Orders tab — full order list, paginated, filterable by status tab + search
         public async Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
