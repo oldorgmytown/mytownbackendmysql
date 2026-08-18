@@ -1962,30 +1962,29 @@ namespace mytown.Migrations
                     b.Property<long>("VariantAttributeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("variant_attribute_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "variant_attribute_id");
+                        .HasColumnName("variant_attribute_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("VariantAttributeId"));
 
                     b.Property<long>("AttributeId")
                         .HasColumnType("bigint")
-                        .HasColumnName("attribute_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "attribute_id");
+                        .HasColumnName("attribute_id");
 
-                    b.Property<long>("AttributeValueId")
+                    b.Property<string>("AttributeValue")
+                        .HasColumnType("longtext")
+                        .HasColumnName("attribute_value");
+
+                    b.Property<long?>("AttributeValueId")
                         .HasColumnType("bigint")
-                        .HasColumnName("attribute_value_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "attribute_value_id");
+                        .HasColumnName("attribute_value_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
-                        .HasColumnName("created_at")
-                        .HasAnnotation("Relational:JsonPropertyName", "created_at");
+                        .HasColumnName("created_at");
 
                     b.Property<long>("VariantId")
                         .HasColumnType("bigint")
-                        .HasColumnName("variant_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "variant_id");
+                        .HasColumnName("variant_id");
 
                     b.HasKey("VariantAttributeId");
 

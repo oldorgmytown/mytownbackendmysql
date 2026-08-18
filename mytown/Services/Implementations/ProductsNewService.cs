@@ -117,27 +117,27 @@ namespace mytown.Services.Implementations
                         var attributeRequest
                         in variantRequest.Attributes)
                     {
-                        var variantAttribute =
-                            new ProductVariantAttributeNew
-                            {
-                                // IMPORTANT:
-                                // Connect attribute to variant
-                                Variant = variant,
+                        var attribute =
+                             new ProductVariantAttributeNew
+                             {
+                                 Variant = variant,
 
-                                AttributeId =
-                                    attributeRequest.AttributeId,
+                                 AttributeId =
+                                     attributeRequest.AttributeId,
 
-                                AttributeValueId =
-                                    attributeRequest
-                                        .AttributeValueId,
+                                 AttributeValueId =
+                                     attributeRequest.AttributeValueId,
 
-                                CreatedAt =
-                                    DateTime.UtcNow
-                            };
+                                 AttributeValue =
+                                     attributeRequest.AttributeValue,
+
+                                 CreatedAt =
+                                     DateTime.UtcNow
+                             };
 
 
                         _repository.AddVariantAttribute(
-                            variantAttribute);
+                            attribute);
                     }
                 }
 

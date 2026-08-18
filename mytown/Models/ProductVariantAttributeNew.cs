@@ -8,29 +8,24 @@ namespace mytown.Models
     public class ProductVariantAttributeNew
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("variant_attribute_id")]
-        [JsonPropertyName("variant_attribute_id")]
         public long VariantAttributeId { get; set; }
 
-        [ForeignKey(nameof(Variant))]
         [Column("variant_id")]
-        [JsonPropertyName("variant_id")]
         public long VariantId { get; set; }
 
         [Column("attribute_id")]
-        [JsonPropertyName("attribute_id")]
         public long AttributeId { get; set; }
 
         [Column("attribute_value_id")]
-        [JsonPropertyName("attribute_value_id")]
-        public long AttributeValueId { get; set; }
+        public long? AttributeValueId { get; set; }
+
+        [Column("attribute_value")]
+        public string? AttributeValue { get; set; }
 
         [Column("created_at")]
-        [JsonPropertyName("created_at")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-
-        // Parent Variant
+        public DateTime CreatedAt { get; set; }
 
         [JsonIgnore]
         public virtual ProductVariantNew? Variant { get; set; }
