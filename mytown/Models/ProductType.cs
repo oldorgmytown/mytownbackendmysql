@@ -18,7 +18,7 @@ namespace mytown.Models
         public int ProdSubcatId { get; set; }
 
 
-        [Column("prod_group_id")]
+        [Column("product_group_id")]
         [JsonPropertyName("prod_group_id")]
         public int ProdGroupId { get; set; }
 

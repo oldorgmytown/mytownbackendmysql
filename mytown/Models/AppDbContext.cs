@@ -109,6 +109,14 @@ namespace mytown.Models
             public DbSet<LocationImage> LocationImages { get; set; }
             public DbSet<CityImage> CityImages { get; set; }
 
+            //new product form
+
+            public DbSet<ProductsNew> ProductsNew { get; set; }
+
+            public DbSet<ProductVariantNew> ProductVariantsNew { get; set; }
+
+            public DbSet<ProductVariantAttributeNew> ProductVariantAttributesNew { get; set; }
+
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {
                 base.OnModelCreating(modelBuilder);
