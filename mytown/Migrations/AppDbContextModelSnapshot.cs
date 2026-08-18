@@ -49,19 +49,75 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(150)")
                         .HasColumnName("bank_name");
 
+                    b.Property<string>("BankVerificationMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("bank_verification_message");
+
+                    b.Property<string>("BankVerificationReference")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("bank_verification_reference");
+
+                    b.Property<int>("BankVerificationStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("int")
+                        .HasColumnName("bank_verification_status");
+
+                    b.Property<DateTime?>("BankVerifiedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("bank_verified_date");
+
                     b.Property<int>("BusRegId")
                         .HasColumnType("int")
                         .HasColumnName("bus_reg_id");
 
+                    b.Property<DateTime?>("ContactCreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("contact_created_date");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_date");
+
+                    b.Property<DateTime?>("FundAccountCreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("fund_account_created_date");
 
                     b.Property<string>("IFSCCode")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("ifsc_code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("RazorpayContactId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("razorpay_contact_id");
+
+                    b.Property<int>("RazorpayContactStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("int")
+                        .HasColumnName("razorpay_contact_status");
+
+                    b.Property<string>("RazorpayFundAccountId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("razorpay_fund_account_id");
+
+                    b.Property<int>("RazorpayFundAccountStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("int")
+                        .HasColumnName("razorpay_fund_account_status");
+
+                    b.Property<string>("Remarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("remarks");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime(6)")
@@ -788,6 +844,10 @@ namespace mytown.Migrations
                         .HasColumnName("branch_service_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BranchServiceId"));
+
+                    b.Property<decimal>("BaseCharges")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("base_charges");
 
                     b.Property<int>("BranchId")
                         .HasColumnType("int")
@@ -1787,6 +1847,11 @@ namespace mytown.Migrations
                         .HasAnnotation("Relational:JsonPropertyName", "prod_type_id");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProdTypeId"));
+
+                    b.Property<int>("ProdGroupId")
+                        .HasColumnType("int")
+                        .HasColumnName("prod_group_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_group_id");
 
                     b.Property<int>("ProdSubcatId")
                         .HasColumnType("int")
