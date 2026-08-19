@@ -62,6 +62,10 @@ namespace mytown.Repositories
         }
 
 
+        public void AddVariantImage(ProductVariantImageNew image)
+        {
+            _context.ProductVariantImagesNew.Add(image);
+        }
         // -----------------------------------------
         // SAVE EVERYTHING
         // -----------------------------------------

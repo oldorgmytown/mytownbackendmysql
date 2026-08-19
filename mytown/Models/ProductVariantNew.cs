@@ -8,7 +8,7 @@ namespace mytown.Models
     public class ProductVariantNew
     {
         [Key]
-        [Column("variant_id")]
+        [Column("sku_id")]
         [JsonPropertyName("variant_id")]
         public long VariantId { get; set; }
 
@@ -47,6 +47,8 @@ namespace mytown.Models
         [JsonPropertyName("brand")]
         public string? Brand { get; set; }
 
+       
+
         [Column("is_active")]
         [JsonPropertyName("is_active")]
         public bool IsActive { get; set; } = true;
@@ -71,5 +73,9 @@ namespace mytown.Models
         [JsonPropertyName("attributes")]
         public virtual ICollection<ProductVariantAttributeNew> Attributes { get; set; }
             = new List<ProductVariantAttributeNew>();
+
+        [JsonPropertyName("images")]
+        public virtual ICollection<ProductVariantImageNew> Images { get; set; }
+    = new List<ProductVariantImageNew>();
     }
 }

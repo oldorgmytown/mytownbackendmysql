@@ -16,7 +16,6 @@ namespace mytown.Controllers
             _service = service;
         }
 
-
         // =========================================
         // CREATE PRODUCT
         // =========================================
@@ -35,7 +34,6 @@ namespace mytown.Controllers
                 });
             }
 
-
             try
             {
                 var productId = await _service.CreateProductAsync(request);
@@ -43,7 +41,6 @@ namespace mytown.Controllers
                 return Ok(new
                 {
                     success = true,
-
                     message = "Product and variants saved successfully.",
                     productId = productId
                 });
@@ -55,10 +52,36 @@ namespace mytown.Controllers
                     new
                     {
                         success = false,
-
                         message = "Failed to save product.",
-                        error = ex.Message
+                        error = ex.Message,
+                        inner = ex.InnerException?.Message,
+                        innerInner = ex.InnerException?.InnerException?.Message
                     });
+            }
+        }
+
+        // =========================================
+        // UPLOAD VARIANT IMAGE
+        // =========================================
+
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadVariantImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest(new { success = false, message = "No file provided." });
+            }
+
+            try
+            {
+                var fileName = await _service.UploadToBlobAsync(file, "product");
+                return Ok(new { success = true, fileName });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new { success = false, message = "Failed to upload image.", error = ex.Message });
             }
         }
     }

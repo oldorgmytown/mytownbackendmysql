@@ -114,6 +114,8 @@ namespace mytown.DataAccess.Repositories
                 .Include(p => p.BusinessRegister)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.Attributes)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.Images)
                 .FirstOrDefaultAsync(p => p.ProductId == productId);
 
             if (product == null) return null;
@@ -147,11 +149,11 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)
+        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto)
         {
             var variant = await _context.ProductVariantsNew
                 .Include(v => v.Attributes)
-                .Include(v => v.Product)
+                .Include(v => v.Images)
                 .FirstOrDefaultAsync(v => v.VariantId == dto.SkuId_Productvariant);
 
             if (variant == null) return null;
@@ -163,38 +165,50 @@ namespace mytown.DataAccess.Repositories
             if (dto.Discount.HasValue) variant.Discount = dto.Discount.Value;
             variant.UpdatedAt = DateTime.UtcNow;
 
-            if (!string.IsNullOrWhiteSpace(dto.Color) || dto.SizeId.HasValue)
+            // Replace attributes entirely with what was submitted
+            if (dto.Attributes != null)
             {
-                await UpsertColorSizeAttributesAsync(
-                    variant, dto.Color, dto.SizeId,
-                    variant.Product?.ProdSubcatId, variant.Product?.BusCatId);
+                _context.ProductVariantAttributesNew.RemoveRange(variant.Attributes);
+
+                foreach (var attr in dto.Attributes)
+                {
+                    _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                    {
+                        VariantId = variant.VariantId,
+                        AttributeId = attr.AttributeId,
+                        AttributeValueId = attr.AttributeValueId,
+                        AttributeValue = attr.AttributeValue,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
             }
 
-            if (files != null && files.Any())
+            // Replace images entirely with the submitted filename list
+            if (dto.UpdatedImageFileNames != null)
             {
-                var oldImages = await _context.ProductImages
-                    .Where(i => i.SkuId == (int)variant.VariantId).ToListAsync();
+                var oldFileNames = variant.Images.Select(i => i.FileName).ToList();
+                var removedFileNames = oldFileNames.Except(dto.UpdatedImageFileNames).ToList();
 
-                foreach (var img in oldImages)
-                    await DeleteFromBlobAsync(img.FileName);
-                _context.ProductImages.RemoveRange(oldImages);
+                foreach (var fileName in removedFileNames)
+                    await DeleteFromBlobAsync(fileName);
+
+                _context.ProductVariantImagesNew.RemoveRange(variant.Images);
 
                 int order = 1;
-                foreach (var file in files)
+                foreach (var fileName in dto.UpdatedImageFileNames)
                 {
-                    var storedFileName = await UploadToBlobAsync(file, "product");
-                    _context.ProductImages.Add(new ProductImage
+                    _context.ProductVariantImagesNew.Add(new ProductVariantImageNew
                     {
-                        ProductId = (int)variant.ProductId,
-                        SkuId = (int)variant.VariantId,
-                        FileName = storedFileName,
-                        SortOrder = order++
+                        VariantId = variant.VariantId,
+                        FileName = fileName,
+                        SortOrder = order++,
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
             }
 
             await _context.SaveChangesAsync();
-            return MapVariantToOld(variant, dto.Color, dto.SizeId);
+            return MapVariantToOld(variant, null, null);
         }
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
@@ -239,22 +253,24 @@ namespace mytown.DataAccess.Repositories
                 var product = await _context.ProductsNew
                     .Include(p => p.Variants)
                         .ThenInclude(v => v.Attributes)
+                    .Include(p => p.Variants)
+                        .ThenInclude(v => v.Images)
                     .FirstOrDefaultAsync(p => p.ProductId == productId);
 
                 if (product == null) return;
 
-                var variantIds = product.Variants.Select(v => (int)v.VariantId).ToList();
+                var variantIds = product.Variants.Select(v => v.VariantId).ToList();
 
-var images = await _context.ProductImages
-    .Where(i => i.SkuId.HasValue && variantIds.Contains(i.SkuId.Value))
-    .ToListAsync();
+                var images = await _context.ProductVariantImagesNew
+                    .Where(i => variantIds.Contains(i.VariantId))
+                    .ToListAsync();
 
                 foreach (var img in images)
                     await DeleteFromBlobAsync(img.FileName);
-                _context.ProductImages.RemoveRange(images);
+                _context.ProductVariantImagesNew.RemoveRange(images);
 
                 var attrs = product.Variants.SelectMany(v => v.Attributes).ToList();
-                _context.RemoveRange(attrs);
+                _context.ProductVariantAttributesNew.RemoveRange(attrs);
 
                 _context.ProductVariantsNew.RemoveRange(product.Variants);
                 _context.ProductsNew.Remove(product);
@@ -276,18 +292,16 @@ var images = await _context.ProductImages
             {
                 var variant = await _context.ProductVariantsNew
                     .Include(v => v.Attributes)
+                    .Include(v => v.Images)
                     .FirstOrDefaultAsync(v => v.ProductId == productId && v.VariantId == skuId);
 
                 if (variant == null) return;
 
-                var images = await _context.ProductImages
-                    .Where(i => i.SkuId == skuId).ToListAsync();
-
-                foreach (var img in images)
+                foreach (var img in variant.Images)
                     await DeleteFromBlobAsync(img.FileName);
-                _context.ProductImages.RemoveRange(images);
+                _context.ProductVariantImagesNew.RemoveRange(variant.Images);
 
-                _context.RemoveRange(variant.Attributes);
+                _context.ProductVariantAttributesNew.RemoveRange(variant.Attributes);
                 _context.ProductVariantsNew.Remove(variant);
 
                 await _context.SaveChangesAsync();
@@ -307,6 +321,8 @@ var images = await _context.ProductImages
                 .Include(p => p.BusinessRegister)
                 .Include(p => p.Variants)
                     .ThenInclude(v => v.Attributes)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.Images)
                 .ToListAsync();
 
             return products.Select(MapProductToDto).ToList();
@@ -411,6 +427,12 @@ var images = await _context.ProductImages
 
         private ProdVariantdetailsDto MapProductToDto(ProductsNew p)
         {
+            var biz = p.BusinessRegister;
+            var location = biz != null
+                ? string.Join(", ", new[] { biz.Town, biz.BusinessCity, biz.BusinessState }
+                    .Where(s => !string.IsNullOrWhiteSpace(s)))
+                : "";
+
             return new ProdVariantdetailsDto
             {
                 ProductId = (int)p.ProductId,
@@ -419,33 +441,32 @@ var images = await _context.ProductImages
                 ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
                 ProductName = p.ProductName,
                 ProductDescription = p.ProductDescription,
-                SupplierName = p.BusinessRegister?.BusinessName,
+                SupplierName = biz?.BusinessName,
                 IsProductAvailable = p.ProductStatus == "Approved" && p.IsActive,
+                Location = location,
+                Country = biz?.BusinessCountry ?? "",
 
-                Variants = p.Variants.Select(v =>
+                Variants = p.Variants.Select(v => new Sku_ProductVariantDto
                 {
-                    var colorAttr = v.Attributes.FirstOrDefault(a =>
-                        _context.ProductAttributes.Any(pa => pa.AttributeId == a.AttributeId && pa.AttributeName.ToLower() == "color"));
-                    var sizeAttr = v.Attributes.FirstOrDefault(a =>
-                        _context.ProductAttributes.Any(pa => pa.AttributeId == a.AttributeId && pa.AttributeName.ToLower() == "size"));
-
-                    return new Sku_ProductVariantDto
-                    {
-                        SkuId_Productvariant = (int)v.VariantId,
-                        ProductId = (int)v.ProductId,
-                        Color = colorAttr?.AttributeValue,
-                        SizeId = sizeAttr?.AttributeValueId.HasValue == true ? (int)sizeAttr.AttributeValueId.Value : null,
-                        Sku_Cost = v.Price,
-                        DiscountPrice = v.DiscountPrice,
-                        Quantity = v.StockQuantity,
-                        Weight = v.Weight,
-                        Discount = v.Discount,
-                        Images = _context.ProductImages
-                            .Where(i => i.SkuId == (int)v.VariantId)
-                            .OrderBy(i => i.SortOrder)
-                            .Select(i => new ProductImageDto { FileName = i.FileName, SortOrder = i.SortOrder })
-                            .ToList()
-                    };
+                    SkuId_Productvariant = (int)v.VariantId,
+                    ProductId = (int)v.ProductId,
+                    Sku_Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.StockQuantity,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+                    Images = v.Images
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto { FileName = i.FileName, SortOrder = i.SortOrder })
+                        .ToList(),
+                    Attributes = v.Attributes
+                        .Select(a => new VariantAttributeDto
+                        {
+                            AttributeId = a.AttributeId,
+                            AttributeValueId = a.AttributeValueId,
+                            AttributeValue = a.AttributeValue
+                        })
+                        .ToList()
                 }).ToList()
             };
         }

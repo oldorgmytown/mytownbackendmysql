@@ -1995,6 +1995,51 @@ namespace mytown.Migrations
                     b.HasAnnotation("Relational:JsonPropertyName", "attributes");
                 });
 
+            modelBuilder.Entity("mytown.Models.ProductVariantImageNew", b =>
+                {
+                    b.Property<long>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("image_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "image_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("ImageId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("file_name")
+                        .HasAnnotation("Relational:JsonPropertyName", "file_name");
+
+                    b.Property<long?>("ProductVariantVariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_variant_variant_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Relational:JsonPropertyName", "sort_order");
+
+                    b.Property<long>("VariantId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("variant_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "variant_id");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ProductVariantVariantId");
+
+                    b.ToTable("product_variant_images");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "images");
+                });
+
             modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
                 {
                     b.Property<long>("VariantId")
@@ -4374,6 +4419,15 @@ namespace mytown.Migrations
                     b.Navigation("Variant");
                 });
 
+            modelBuilder.Entity("mytown.Models.ProductVariantImageNew", b =>
+                {
+                    b.HasOne("mytown.Models.ProductVariantNew", "ProductVariant")
+                        .WithMany("Images")
+                        .HasForeignKey("ProductVariantVariantId");
+
+                    b.Navigation("ProductVariant");
+                });
+
             modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
                 {
                     b.HasOne("mytown.Models.ProductsNew", "Product")
@@ -4733,6 +4787,8 @@ namespace mytown.Migrations
             modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
                 {
                     b.Navigation("Attributes");
+
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("mytown.Models.Products", b =>

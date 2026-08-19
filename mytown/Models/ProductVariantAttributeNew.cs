@@ -12,7 +12,7 @@ namespace mytown.Models
         [Column("variant_attribute_id")]
         public long VariantAttributeId { get; set; }
 
-        [Column("variant_id")]
+        [Column("sku_id")]
         public long VariantId { get; set; }
 
         [Column("attribute_id")]
@@ -27,6 +27,7 @@ namespace mytown.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
+        [ForeignKey(nameof(VariantId))]
         [JsonIgnore]
         public virtual ProductVariantNew? Variant { get; set; }
     }
