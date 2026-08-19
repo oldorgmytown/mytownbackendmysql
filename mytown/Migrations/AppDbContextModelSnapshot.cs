@@ -1982,13 +1982,17 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at");
 
-                    b.Property<long>("VariantId")
+                    b.Property<long>("SkuId")
                         .HasColumnType("bigint")
-                        .HasColumnName("variant_id");
+                        .HasColumnName("sku_id");
+
+                    b.Property<long?>("VariantSkuId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("variant_sku_id");
 
                     b.HasKey("VariantAttributeId");
 
-                    b.HasIndex("VariantId");
+                    b.HasIndex("VariantSkuId");
 
                     b.ToTable("product_variant_attributes");
 
@@ -2017,9 +2021,13 @@ namespace mytown.Migrations
                         .HasColumnName("file_name")
                         .HasAnnotation("Relational:JsonPropertyName", "file_name");
 
-                    b.Property<long?>("ProductVariantVariantId")
+                    b.Property<long?>("ProductVariantSkuId")
                         .HasColumnType("bigint")
-                        .HasColumnName("product_variant_variant_id");
+                        .HasColumnName("product_variant_sku_id");
+
+                    b.Property<long>("SkuId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sku_id");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("int")
@@ -2028,12 +2036,11 @@ namespace mytown.Migrations
 
                     b.Property<long>("VariantId")
                         .HasColumnType("bigint")
-                        .HasColumnName("variant_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "variant_id");
+                        .HasColumnName("variant_id");
 
                     b.HasKey("ImageId");
 
-                    b.HasIndex("ProductVariantVariantId");
+                    b.HasIndex("ProductVariantSkuId");
 
                     b.ToTable("product_variant_images");
 
@@ -2042,13 +2049,12 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
                 {
-                    b.Property<long>("VariantId")
+                    b.Property<long>("SkuId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("variant_id")
-                        .HasAnnotation("Relational:JsonPropertyName", "variant_id");
+                        .HasColumnName("sku_id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("VariantId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("SkuId"));
 
                     b.Property<string>("Brand")
                         .HasMaxLength(200)
@@ -2107,7 +2113,7 @@ namespace mytown.Migrations
                         .HasColumnName("weight")
                         .HasAnnotation("Relational:JsonPropertyName", "weight");
 
-                    b.HasKey("VariantId");
+                    b.HasKey("SkuId");
 
                     b.HasIndex("ProductId");
 
@@ -4405,9 +4411,7 @@ namespace mytown.Migrations
                 {
                     b.HasOne("mytown.Models.ProductVariantNew", "Variant")
                         .WithMany("Attributes")
-                        .HasForeignKey("VariantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("VariantSkuId");
 
                     b.Navigation("Variant");
                 });
@@ -4416,7 +4420,7 @@ namespace mytown.Migrations
                 {
                     b.HasOne("mytown.Models.ProductVariantNew", "ProductVariant")
                         .WithMany("Images")
-                        .HasForeignKey("ProductVariantVariantId");
+                        .HasForeignKey("ProductVariantSkuId");
 
                     b.Navigation("ProductVariant");
                 });

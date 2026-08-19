@@ -8,9 +8,9 @@ namespace mytown.Models
     public class ProductVariantNew
     {
         [Key]
-        [Column("variant_id")]
-        [JsonPropertyName("variant_id")]
-        public long VariantId { get; set; }
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("sku_id")]
+        public long SkuId { get; set; }
 
         [ForeignKey(nameof(Product))]
         [Column("product_id")]

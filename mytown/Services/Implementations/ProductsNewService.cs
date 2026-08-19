@@ -63,7 +63,7 @@ public class ProductsNewService : IProductsNewService
                         var fileName = await UploadToBlobAsync(file, "product");
                         _repository.AddVariantImage(new ProductVariantImageNew
                         {
-                            VariantId = variant.VariantId,
+                            SkuId = variant.SkuId,
                             FileName = fileName,
                             SortOrder = order++,
                             CreatedAt = DateTime.UtcNow

@@ -13,8 +13,8 @@ namespace mytown.Models
         [JsonPropertyName("image_id")]
         public long ImageId { get; set; }
 
-        [Column("variant_id")]
-        [JsonPropertyName("variant_id")]
+        [Column("sku_id")]
+        public long SkuId { get; set; }
         public long VariantId { get; set; }
 
         [Required]

@@ -12,8 +12,8 @@ namespace mytown.Models
         [Column("variant_attribute_id")]
         public long VariantAttributeId { get; set; }
 
-        [Column("variant_id")]
-        public long VariantId { get; set; }
+        [Column("sku_id")]
+        public long SkuId { get; set; }
 
         [Column("attribute_id")]
         public long AttributeId { get; set; }
