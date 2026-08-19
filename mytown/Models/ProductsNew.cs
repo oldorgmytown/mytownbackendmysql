@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using MyTown.Models;   // <-- ADDED: BusinessRegister lives here
 
 namespace mytown.Models
 {
@@ -11,6 +12,11 @@ namespace mytown.Models
         [Column("product_id")]
         [JsonPropertyName("product_id")]
         public long ProductId { get; set; }
+
+        [ForeignKey(nameof(BusinessRegister))]
+        [Column("bus_reg_id")]
+        [JsonPropertyName("bus_reg_id")]
+        public int BusRegId { get; set; }
 
         [Column("bus_cat_id")]
         [JsonPropertyName("bus_cat_id")]
@@ -54,8 +60,10 @@ namespace mytown.Models
         [JsonPropertyName("updated_at")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-
         // Relationships
+
+        [JsonIgnore]
+        public virtual BusinessRegister? BusinessRegister { get; set; }
 
         [JsonPropertyName("variants")]
         public virtual ICollection<ProductVariantNew> Variants { get; set; }

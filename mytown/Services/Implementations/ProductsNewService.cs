@@ -33,6 +33,8 @@ namespace mytown.Services.Implementations
 
                 var product = new ProductsNew
                 {
+                    BusRegId = request.BusRegId,   // <-- ADDED
+
                     BusCatId = request.BusCatId,
 
                     ProdSubcatId = request.ProdSubcatId,
@@ -172,8 +174,6 @@ namespace mytown.Services.Implementations
 
                 throw;
             }
-
-
-        }
         }
     }
+}

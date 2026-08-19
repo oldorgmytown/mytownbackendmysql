@@ -2180,6 +2180,11 @@ namespace mytown.Migrations
                         .HasColumnName("bus_cat_id")
                         .HasAnnotation("Relational:JsonPropertyName", "bus_cat_id");
 
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "bus_reg_id");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at")
@@ -2229,6 +2234,8 @@ namespace mytown.Migrations
                         .HasAnnotation("Relational:JsonPropertyName", "updated_at");
 
                     b.HasKey("ProductId");
+
+                    b.HasIndex("BusRegId");
 
                     b.ToTable("products_new");
                 });
@@ -4413,6 +4420,17 @@ namespace mytown.Migrations
                     b.Navigation("ProductSubCategory");
 
                     b.Navigation("ProductType");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductsNew", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
+                        .WithMany()
+                        .HasForeignKey("BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
