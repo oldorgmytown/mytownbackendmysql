@@ -80,7 +80,7 @@ namespace mytown.DataAccess.Repositories
                     _context.ProductImages.Add(new ProductImage
                     {
                         ProductId = (int)variant.ProductId,
-                        SkuId = (int)variant.VariantId,
+                        SkuId = (int)variant.SkuId,
                         FileName = fileName,
                         SortOrder = order++
                     });
@@ -154,7 +154,7 @@ namespace mytown.DataAccess.Repositories
             var variant = await _context.ProductVariantsNew
                 .Include(v => v.Attributes)
                 .Include(v => v.Images)
-                .FirstOrDefaultAsync(v => v.VariantId == dto.SkuId_Productvariant);
+                .FirstOrDefaultAsync(v => v.SkuId== dto.SkuId_Productvariant);
 
             if (variant == null) return null;
 
@@ -174,7 +174,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
                     {
-                        VariantId = variant.VariantId,
+                        SkuId = variant.SkuId,
                         AttributeId = attr.AttributeId,
                         AttributeValueId = attr.AttributeValueId,
                         AttributeValue = attr.AttributeValue,
@@ -199,7 +199,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     _context.ProductVariantImagesNew.Add(new ProductVariantImageNew
                     {
-                        VariantId = variant.VariantId,
+                        SkuId = variant.SkuId,
                         FileName = fileName,
                         SortOrder = order++,
                         CreatedAt = DateTime.UtcNow
@@ -259,10 +259,10 @@ namespace mytown.DataAccess.Repositories
 
                 if (product == null) return;
 
-                var variantIds = product.Variants.Select(v => v.VariantId).ToList();
+                var variantIds = product.Variants.Select(v => v.SkuId).ToList();
 
                 var images = await _context.ProductVariantImagesNew
-                    .Where(i => variantIds.Contains(i.VariantId))
+                    .Where(i => variantIds.Contains(i.SkuId))
                     .ToListAsync();
 
                 foreach (var img in images)
@@ -293,7 +293,7 @@ namespace mytown.DataAccess.Repositories
                 var variant = await _context.ProductVariantsNew
                     .Include(v => v.Attributes)
                     .Include(v => v.Images)
-                    .FirstOrDefaultAsync(v => v.ProductId == productId && v.VariantId == skuId);
+                    .FirstOrDefaultAsync(v => v.ProductId == productId && v.SkuId == skuId);
 
                 if (variant == null) return;
 
@@ -367,12 +367,12 @@ namespace mytown.DataAccess.Repositories
                 if (colorAttr != null)
                 {
                     var row = await _context.ProductVariantAttributesNew.FirstOrDefaultAsync(a =>
-                        a.VariantId == variant.VariantId && a.AttributeId == colorAttr.AttributeId);
+                        a.SkuId == variant.SkuId && a.AttributeId == colorAttr.AttributeId);
 
                     if (row == null)
                         _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
                         {
-                            VariantId = variant.VariantId,
+                            SkuId = variant.SkuId,
                             AttributeId = colorAttr.AttributeId,
                             AttributeValue = color,
                             CreatedAt = DateTime.UtcNow
@@ -391,12 +391,12 @@ namespace mytown.DataAccess.Repositories
                 if (sizeAttr != null)
                 {
                     var row = await _context.ProductVariantAttributesNew.FirstOrDefaultAsync(a =>
-                        a.VariantId == variant.VariantId && a.AttributeId == sizeAttr.AttributeId);
+                        a.SkuId == variant.SkuId && a.AttributeId == sizeAttr.AttributeId);
 
                     if (row == null)
                         _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
                         {
-                            VariantId = variant.VariantId,
+                            SkuId = variant.SkuId,
                             AttributeId = sizeAttr.AttributeId,
                             AttributeValueId = sizeId.Value,
                             CreatedAt = DateTime.UtcNow
@@ -413,7 +413,7 @@ namespace mytown.DataAccess.Repositories
         {
             return new Sku_ProductVariant
             {
-                SkuId = (int)v.VariantId,
+                SkuId = (int)v.SkuId,
                 ProductId = (int)v.ProductId,
                 Color = color,
                 SizeId = sizeId,
@@ -448,7 +448,7 @@ namespace mytown.DataAccess.Repositories
 
                 Variants = p.Variants.Select(v => new Sku_ProductVariantDto
                 {
-                    SkuId_Productvariant = (int)v.VariantId,
+                    SkuId_Productvariant = (int)v.SkuId,
                     ProductId = (int)v.ProductId,
                     Sku_Cost = v.Price,
                     DiscountPrice = v.DiscountPrice,
