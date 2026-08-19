@@ -23,6 +23,8 @@ namespace mytown.DTOs.ProductsNew
 
         public bool IsActive { get; set; } = true;
 
+        public List<IFormFile>? Images { get; set; }
+
         public List<CreateProductVariantAttributeRequest> Attributes { get; set; }
             = new List<CreateProductVariantAttributeRequest>();
     }

@@ -1,179 +1,129 @@
-﻿using mytown.DTOs.ProductsNew;
+﻿using Azure.Storage.Blobs;
+using mytown.DTOs.ProductsNew;
 using mytown.Models;
 using mytown.Repositories.Interfaces;
 using mytown.Services.Interfaces;
 
-namespace mytown.Services.Implementations
+public class ProductsNewService : IProductsNewService
 {
-    public class ProductsNewService : IProductsNewService
+    private readonly IProductsNewRepository _repository;
+    private readonly IConfiguration _configuration;
+
+    public ProductsNewService(IProductsNewRepository repository, IConfiguration configuration)
     {
-        private readonly IProductsNewRepository _repository;
+        _repository = repository;
+        _configuration = configuration;
+    }
 
-        public ProductsNewService(
-            IProductsNewRepository repository)
+    public async Task<long> CreateProductAsync(CreateProductNewRequest request)
+    {
+        await _repository.BeginTransactionAsync();
+        try
         {
-            _repository = repository;
-        }
-
-
-        // =========================================
-        // CREATE PRODUCT + VARIANTS + ATTRIBUTES
-        // =========================================
-
-        public async Task<long> CreateProductAsync(
-            CreateProductNewRequest request)
-        {
-            await _repository.BeginTransactionAsync();
-
-            try
+            var product = new ProductsNew
             {
-                // =====================================
-                // 1. CREATE MAIN PRODUCT
-                // =====================================
+                BusCatId = request.BusCatId,
+                ProdSubcatId = request.ProdSubcatId,
+                ProductGroupId = request.ProductGroupId,
+                ProdTypeId = request.ProdTypeId,
+                ProductName = request.ProductName,
+                ProductDescription = request.ProductDescription,
+                ProductStatus = request.ProductStatus,
+                IsActive = request.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            _repository.AddProduct(product);
+            await _repository.SaveChangesAsync();
 
-                var product = new ProductsNew
+            foreach (var variantRequest in request.Variants)
+            {
+                var variant = new ProductVariantNew
                 {
-                    BusCatId = request.BusCatId,
-
-                    ProdSubcatId = request.ProdSubcatId,
-
-                    ProductGroupId = request.ProductGroupId,
-
-                    ProdTypeId = request.ProdTypeId,
-
-                    ProductName = request.ProductName,
-
-                    ProductDescription =
-                        request.ProductDescription,
-
-                    ProductStatus =
-                        request.ProductStatus,
-
-                    IsActive =
-                        request.IsActive,
-
+                    Product = product,
+                    StockQuantity = variantRequest.StockQuantity,
+                    Weight = variantRequest.Weight,
+                    MeasurementUnit = variantRequest.MeasurementUnit,
+                    Price = variantRequest.Price,
+                    Discount = variantRequest.Discount,
+                    DiscountPrice = variantRequest.DiscountPrice,
+                    Brand = variantRequest.Brand,
+                    IsActive = variantRequest.IsActive,
                     CreatedAt = DateTime.UtcNow,
-
                     UpdatedAt = DateTime.UtcNow
                 };
+                _repository.AddVariant(variant);
+                await _repository.SaveChangesAsync();
 
-
-                _repository.AddProduct(product);
-
-
-                // =====================================
-                // 2. CREATE ALL VARIANTS
-                // =====================================
-
-                foreach (var variantRequest
-                         in request.Variants)
+                if (variantRequest.Images != null && variantRequest.Images.Any())
                 {
-                    var variant = new ProductVariantNew
+                    int order = 1;
+                    foreach (var file in variantRequest.Images)
                     {
-                        // IMPORTANT:
-                        // Connect variant to product
-                        Product = product,
-
-                        StockQuantity =
-                            variantRequest.StockQuantity,
-
-                        Weight =
-                            variantRequest.Weight,
-
-                        MeasurementUnit =
-                            variantRequest.MeasurementUnit,
-
-                        Price =
-                            variantRequest.Price,
-
-                        Discount =
-                            variantRequest.Discount,
-
-                        DiscountPrice =
-                            variantRequest.DiscountPrice,
-
-                        Brand =
-                            variantRequest.Brand,
-
-                        IsActive =
-                            variantRequest.IsActive,
-
-                        CreatedAt =
-                            DateTime.UtcNow,
-
-                        UpdatedAt =
-                            DateTime.UtcNow
-                    };
-
-
-                    _repository.AddVariant(variant);
-
-
-                    // =================================
-                    // 3. CREATE VARIANT ATTRIBUTES
-                    // =================================
-
-                    foreach (
-                        var attributeRequest
-                        in variantRequest.Attributes)
-                    {
-                        var attribute =
-                             new ProductVariantAttributeNew
-                             {
-                                 Variant = variant,
-
-                                 AttributeId =
-                                     attributeRequest.AttributeId,
-
-                                 AttributeValueId =
-                                     attributeRequest.AttributeValueId,
-
-                                 AttributeValue =
-                                     attributeRequest.AttributeValue,
-
-                                 CreatedAt =
-                                     DateTime.UtcNow
-                             };
-
-
-                        _repository.AddVariantAttribute(
-                            attribute);
+                        var fileName = await UploadToBlobAsync(file, "product");
+                        _repository.AddVariantImage(new ProductVariantImageNew
+                        {
+                            VariantId = variant.VariantId,
+                            FileName = fileName,
+                            SortOrder = order++,
+                            CreatedAt = DateTime.UtcNow
+                        });
                     }
                 }
 
-
-                // =====================================
-                // 4. SAVE EVERYTHING ONCE
-                // =====================================
-
-                await _repository.SaveChangesAsync();
-
-
-                // =====================================
-                // 5. COMMIT EVERYTHING
-                // =====================================
-
-                await _repository.CommitTransactionAsync();
-
-
-                // Database generated ProductId
-                return product.ProductId;
+                if (variantRequest.Attributes != null && variantRequest.Attributes.Any())
+                {
+                    foreach (var attributeRequest in variantRequest.Attributes)
+                    {
+                        _repository.AddVariantAttribute(new ProductVariantAttributeNew
+                        {
+                            Variant = variant,
+                            AttributeId = attributeRequest.AttributeId,
+                            AttributeValueId = attributeRequest.AttributeValueId,
+                            AttributeValue = attributeRequest.AttributeValue,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+                }
             }
 
-            catch (Exception ex)
-            {
-                Console.WriteLine(
-                    "SERVICE ERROR:");
-
-                Console.WriteLine(
-                    ex.ToString());
-
-                await _repository.RollbackTransactionAsync();
-
-                throw;
-            }
-
-
+            await _repository.SaveChangesAsync();
+            await _repository.CommitTransactionAsync();
+            return product.ProductId;
         }
+        catch
+        {
+            await _repository.RollbackTransactionAsync();
+            throw;
         }
     }
+
+    public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
+    {
+        var containerName = _configuration["AzureBlobStorage:ContainerName"];
+        var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+        var blobServiceClient = new BlobServiceClient(connectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+        await containerClient.CreateIfNotExistsAsync();
+        await containerClient.SetAccessPolicyAsync(Azure.Storage.Blobs.Models.PublicAccessType.Blob);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmssfff");
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(file.FileName);
+        var fileExtension = Path.GetExtension(file.FileName);
+        var newFileName = $"{imageType}_{fileNameWithoutExtension}_{timestamp}{fileExtension}";
+        var blobClient = containerClient.GetBlobClient(newFileName);
+
+        using var stream = file.OpenReadStream();
+        await blobClient.UploadAsync(stream, overwrite: true);
+        return newFileName;
+    }
+
+    public async Task DeleteFromBlobAsync(string fileName)
+    {
+        var containerName = _configuration["AzureBlobStorage:ContainerName"];
+        var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+        var blobServiceClient = new BlobServiceClient(connectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+        await containerClient.GetBlobClient(fileName).DeleteIfExistsAsync();
+    }
+}

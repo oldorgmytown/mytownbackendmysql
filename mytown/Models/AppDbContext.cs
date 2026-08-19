@@ -116,6 +116,7 @@ namespace mytown.Models
             public DbSet<ProductVariantNew> ProductVariantsNew { get; set; }
 
             public DbSet<ProductVariantAttributeNew> ProductVariantAttributesNew { get; set; }
+            public DbSet<ProductVariantImageNew> ProductVariantImagesNew { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {

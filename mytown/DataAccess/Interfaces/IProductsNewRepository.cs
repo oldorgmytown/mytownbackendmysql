@@ -10,6 +10,8 @@ namespace mytown.Repositories.Interfaces
 
         void AddVariant(ProductVariantNew variant);
 
+        void AddVariantImage(ProductVariantImageNew image);
+
         void AddVariantAttribute(
             ProductVariantAttributeNew variantAttribute);
 
