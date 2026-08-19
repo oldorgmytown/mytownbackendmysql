@@ -23,7 +23,9 @@ namespace mytown.DTOs.ProductsNew
 
         public bool IsActive { get; set; } = true;
 
-        public List<IFormFile>? Images { get; set; }
+        // Filenames returned by POST /api/products-new/upload-image,
+        // uploaded separately before this request is sent.
+        public List<string>? Images { get; set; }
 
         public List<CreateProductVariantAttributeRequest> Attributes { get; set; }
             = new List<CreateProductVariantAttributeRequest>();

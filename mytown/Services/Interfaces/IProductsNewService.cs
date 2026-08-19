@@ -6,5 +6,7 @@ namespace mytown.Services.Interfaces
     {
         Task<long> CreateProductAsync(
             CreateProductNewRequest request);
+
+        Task<string> UploadToBlobAsync(IFormFile file, string imageType);    
     }
 }

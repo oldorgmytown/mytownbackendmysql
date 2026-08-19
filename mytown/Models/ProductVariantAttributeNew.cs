@@ -27,6 +27,7 @@ namespace mytown.Models
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
+        [ForeignKey(nameof(VariantId))]
         [JsonIgnore]
         public virtual ProductVariantNew? Variant { get; set; }
     }

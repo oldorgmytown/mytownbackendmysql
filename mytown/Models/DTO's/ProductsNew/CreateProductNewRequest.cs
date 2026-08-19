@@ -4,6 +4,9 @@ namespace mytown.DTOs.ProductsNew
 {
     public class CreateProductNewRequest
     {
+        [Required]
+        public int BusRegId { get; set; }
+
         public long? BusCatId { get; set; }
 
         public long? ProdSubcatId { get; set; }

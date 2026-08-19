@@ -22,6 +22,7 @@ public class ProductsNewService : IProductsNewService
         {
             var product = new ProductsNew
             {
+                BusRegId = request.BusRegId,
                 BusCatId = request.BusCatId,
                 ProdSubcatId = request.ProdSubcatId,
                 ProductGroupId = request.ProductGroupId,
@@ -58,9 +59,8 @@ public class ProductsNewService : IProductsNewService
                 if (variantRequest.Images != null && variantRequest.Images.Any())
                 {
                     int order = 1;
-                    foreach (var file in variantRequest.Images)
+                    foreach (var fileName in variantRequest.Images)
                     {
-                        var fileName = await UploadToBlobAsync(file, "product");
                         _repository.AddVariantImage(new ProductVariantImageNew
                         {
                             SkuId = variant.SkuId,
