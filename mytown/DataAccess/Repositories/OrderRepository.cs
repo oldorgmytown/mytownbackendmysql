@@ -40,18 +40,18 @@ namespace mytown.DataAccess.Repositories
                     return 0;
 
                 var productIds = cartItems
-                    .Select(c => (int)c.ProductId)
+                    .Select(c => (long)c.ProductId)
                     .Distinct()
                     .ToList();
 
                 var products = await _context.ProductsNew
-                    .Where(p => productIds.Contains((int)p.ProductId))
+                    .Where(p => productIds.Contains(p.ProductId))
                     .ToListAsync();
 
                 items = cartItems.Select(c =>
                 {
                     var product = products.FirstOrDefault(p =>
-                        p.ProductId == (int)c.ProductId);
+                        p.ProductId == (long)c.ProductId);
 
                     if (product == null)
                         throw new Exception(
@@ -59,8 +59,8 @@ namespace mytown.DataAccess.Repositories
 
                     return new
                     {
-                        ProductId = (int)c.ProductId,
-                        SkuId = (int)c.SkuId,
+                        ProductId = (long)c.ProductId,
+                        SkuId = (long)c.SkuId,
                         BusRegId = product.BusRegId,
                         Quantity = c.ProdQty,
                         Price = c.ProductPrice
@@ -90,7 +90,9 @@ namespace mytown.DataAccess.Repositories
 
                 items = request.Items.Select(i =>
                 {
-                    var product = products.FirstOrDefault(p => p.ProductId == i.ProductId);
+                    var product = products.FirstOrDefault(p =>
+                        p.ProductId == i.ProductId);
+
                     if (product == null)
                         throw new Exception($"Product not found: {i.ProductId}");
 
@@ -220,7 +222,7 @@ namespace mytown.DataAccess.Repositories
             _context.StoreOrders.AddRange(storeOrders);
             await _context.SaveChangesAsync();
 
-            var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => (long)s.StoreOrderId);
+            var storeOrderMap = storeOrders.ToDictionary(s => (long) s.StoreId, s => s.StoreOrderId);
 
             // 6️⃣ NOTIFICATIONS
             var notifications = storeOrders.Select(so => new BusinessDBNotifications
