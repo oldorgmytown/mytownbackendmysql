@@ -77,12 +77,12 @@ namespace mytown.DataAccess.Repositories
                 {
                     var fileName = await UploadToBlobAsync(file, "product");
 
-                    _context.ProductImages.Add(new ProductImage
+                    _context.ProductVariantImagesNew.Add(new ProductVariantImageNew
                     {
-                        ProductId = (int)variant.ProductId,
-                        SkuId = (int)variant.SkuId,
+                        SkuId = variant.SkuId,
                         FileName = fileName,
-                        SortOrder = order++
+                        SortOrder = order++,
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
                 await _context.SaveChangesAsync();
