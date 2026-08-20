@@ -60,8 +60,8 @@ namespace mytown.Models.DTO_s
     public class OrderFullDetailItemDto
     {
         public int OrderDetailId { get; set; }
-        public int ProductId { get; set; }
-        public int SkuId { get; set; }
+        public long ProductId { get; set; }
+        public long SkuId { get; set; }
         public int Quantity { get; set; }
         public decimal Price { get; set; }
     }

@@ -27,24 +27,44 @@ namespace mytown.DataAccess.Repositories
 
             // 1️⃣ GET ITEMS (Cart OR BuyNow)
             if (request.UseCart)
-             {
+            {
                 if (!request.ShopperRegId.HasValue)
                     throw new Exception("ShopperId is required for cart checkout.");
 
                 var cartItems = await _context.addtocart
-                    .Where(c => c.ShopperRegId == request.ShopperRegId && c.orderstatus == "Cart")
+                    .Where(c => c.ShopperRegId == request.ShopperRegId &&
+                                c.orderstatus == "Cart")
                     .ToListAsync();
 
                 if (!cartItems.Any())
                     return 0;
 
-                items = cartItems.Select(c => new
+                var productIds = cartItems
+                    .Select(c => (long)c.ProductId)
+                    .Distinct()
+                    .ToList();
+
+                var products = await _context.ProductsNew
+                    .Where(p => productIds.Contains(p.ProductId))
+                    .ToListAsync();
+
+                items = cartItems.Select(c =>
                 {
-                    ProductId = c.ProductId,
-                    SkuId = c.SkuId,
-                    BusRegId = c.BusRegId,
-                    Quantity = c.ProdQty,
-                    Price = c.ProductPrice
+                    var product = products.FirstOrDefault(p =>
+                        p.ProductId == (long)c.ProductId);
+
+                    if (product == null)
+                        throw new Exception(
+                            $"Product {c.ProductId} not found.");
+
+                    return new
+                    {
+                        ProductId = (long)c.ProductId,
+                        SkuId = (long)c.SkuId,
+                        BusRegId = product.BusRegId,
+                        Quantity = c.ProdQty,
+                        Price = c.ProductPrice
+                    };
                 }).ToList<dynamic>();
             }
             else
@@ -52,14 +72,14 @@ namespace mytown.DataAccess.Repositories
                 if (request.Items == null || !request.Items.Any())
                     throw new Exception("Items required for Buy Now");
 
-                var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
+                var productIds = request.Items.Select(i => (long)i.ProductId).Distinct().ToList();
 
                 var products = await (
-                    from p in _context.products
+                    from p in _context.ProductsNew
                     join bp in _context.BusinessProfiles
                         on p.BusRegId equals bp.BusRegId
                     where productIds.Contains(p.ProductId)
-                          && p.ProductStatus == "Approved"
+                          && p.ProductStatus == "ACTIVE"
                           && p.IsActive
                           && bp.ProfileStatus == "approved"
                     select p
@@ -86,15 +106,15 @@ namespace mytown.DataAccess.Repositories
             }
 
             // 2️⃣ VALIDATION
-            var productIdsList = items.Select(c => (int)c.ProductId).Distinct().ToList();
+            var productIdsList = items.Select(c => (long)c.ProductId).Distinct().ToList();
 
             var invalidItems = await (
-                from p in _context.products
+                from p in _context.ProductsNew
                 join bp in _context.BusinessProfiles
                     on p.BusRegId equals bp.BusRegId
                 where productIdsList.Contains(p.ProductId)
                       && (
-                            p.ProductStatus != "Approved"
+                            p.ProductStatus != "ACTIVE"
                             || !p.IsActive
                             || bp.ProfileStatus != "approved"
                          )
@@ -200,7 +220,7 @@ namespace mytown.DataAccess.Repositories
             _context.StoreOrders.AddRange(storeOrders);
             await _context.SaveChangesAsync();
 
-            var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => s.StoreOrderId);
+            var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => (long)s.StoreOrderId);
 
             // 6️⃣ NOTIFICATIONS
             var notifications = storeOrders.Select(so => new BusinessDBNotifications
@@ -652,9 +672,9 @@ namespace mytown.DataAccess.Repositories
             {
                 var items = await (
                     from oi in _context.OrderDetails
-                    join v in _context.Sku_ProductVariants
+                    join v in _context.ProductVariantsNew
                         on oi.SkuId equals v.SkuId
-                    join p in _context.products
+                    join p in _context.ProductsNew
                         on v.ProductId equals p.ProductId
                     where oi.StoreOrderId == store.StoreOrderId
                     select new OrderItemDto
@@ -663,9 +683,9 @@ namespace mytown.DataAccess.Repositories
                         Productdesc = p.ProductDescription,
                         Quantity = oi.Quantity,
                         FinalPrice = oi.Price,
-                        OriginalPrice = v.Sku_Cost,
-                        DiscountAmount = v.Sku_Cost - oi.Price,
-                        ImageUrl = _context.ProductImages
+                        OriginalPrice = v.Price,
+                        DiscountAmount = v.Price - oi.Price,
+                        ImageUrl = _context.ProductVariantImagesNew
                             .Where(img => img.SkuId == v.SkuId)
                             .OrderBy(img => img.SortOrder)
                             .Select(img => img.FileName)

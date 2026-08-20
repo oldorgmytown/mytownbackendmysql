@@ -1,5 +1,6 @@
 ﻿
 using MyTown.Models;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -27,19 +28,36 @@ namespace mytown.Models
         [ForeignKey("StoreOrderId")]
         public StoreOrder StoreOrder { get; set; }
 
+        //[Required]
+        //[Column("product_id")]
+        //public int ProductId { get; set; } // Foreign Key - Products
+
+        //public Products Product { get; set; }
+
+        //[Required]
+        //[Column("sku_id")]
+        //[JsonPropertyName("sku_id")]
+        //public int SkuId { get; set; }
+
+        //[ForeignKey("SkuId")]
+        //public Sku_ProductVariant Variant { get; set; }
+
+        // NEW PRODUCT TABLE
         [Required]
         [Column("product_id")]
-        public int ProductId { get; set; } // Foreign Key - Products
+        public long ProductId { get; set; }
 
-        public Products Product { get; set; }
+        [ForeignKey("ProductId")]
+        public ProductsNew Product { get; set; }
 
+        // NEW VARIANT TABLE
         [Required]
         [Column("sku_id")]
         [JsonPropertyName("sku_id")]
-        public int SkuId { get; set; }
+        public long SkuId { get; set; }
 
         [ForeignKey("SkuId")]
-        public Sku_ProductVariant Variant { get; set; }
+        public ProductVariantNew Variant { get; set; }
 
         [Required]
         [Column("store_id")]
