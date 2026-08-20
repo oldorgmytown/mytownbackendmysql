@@ -74,7 +74,7 @@ namespace MyTown.Controllers
             return result == null ? NotFound() : Ok(result);
         }
 
-        // ---------------- Delete ----------------
+
 
         [HttpDelete("deleteProduct")]
         public async Task<IActionResult> DeleteProduct(int productId)
