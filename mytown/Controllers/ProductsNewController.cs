@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs.ProductsNew;
+using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
 namespace mytown.Controllers
@@ -65,23 +66,32 @@ namespace mytown.Controllers
         // =========================================
 
         [HttpPost("upload-image")]
-        public async Task<IActionResult> UploadVariantImage([FromForm] IFormFile file)
+        public async Task<IActionResult> UploadVariantImage(
+     [FromForm] UploadVariantImageRequestDto request)
         {
-            if (file == null || file.Length == 0)
-            {
+            if (request.File == null || request.File.Length == 0)
                 return BadRequest(new { success = false, message = "No file provided." });
-            }
 
             try
             {
-                var fileName = await _service.UploadToBlobAsync(file, "product");
-                return Ok(new { success = true, fileName });
+                var fileName = await _service.UploadToBlobAsync(request.File, "product");
+
+                return Ok(new
+                {
+                    success = true,
+                    fileName
+                });
             }
             catch (Exception ex)
             {
                 return StatusCode(
                     StatusCodes.Status500InternalServerError,
-                    new { success = false, message = "Failed to upload image.", error = ex.Message });
+                    new
+                    {
+                        success = false,
+                        message = "Failed to upload image.",
+                        error = ex.Message
+                    });
             }
         }
     }
