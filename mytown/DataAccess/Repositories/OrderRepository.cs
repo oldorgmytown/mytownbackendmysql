@@ -40,18 +40,18 @@ namespace mytown.DataAccess.Repositories
                     return 0;
 
                 var productIds = cartItems
-                    .Select(c => (long)c.ProductId)
+                    .Select(c => (int)c.ProductId)
                     .Distinct()
                     .ToList();
 
                 var products = await _context.ProductsNew
-                    .Where(p => productIds.Contains(p.ProductId))
+                    .Where(p => productIds.Contains((int)p.ProductId))
                     .ToListAsync();
 
                 items = cartItems.Select(c =>
                 {
                     var product = products.FirstOrDefault(p =>
-                        p.ProductId == (long)c.ProductId);
+                        p.ProductId == (int)c.ProductId);
 
                     if (product == null)
                         throw new Exception(
@@ -59,8 +59,8 @@ namespace mytown.DataAccess.Repositories
 
                     return new
                     {
-                        ProductId = (long)c.ProductId,
-                        SkuId = (long)c.SkuId,
+                        ProductId = (int)c.ProductId,
+                        SkuId = (int)c.SkuId,
                         BusRegId = product.BusRegId,
                         Quantity = c.ProdQty,
                         Price = c.ProductPrice
