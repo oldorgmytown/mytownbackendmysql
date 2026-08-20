@@ -27,15 +27,15 @@ namespace mytown.Services.Implementations
                 .GetCurrentOrdersByShopperAsync(shopperRegId, search, pageNumber, pageSize);
         }
 
-        public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
-            int storeOrderId,
-            string? search,
-            int pageNumber,
-            int pageSize)
-        {
-            return await _shopperdashboardRepository
-                .GetShopperOrderDetailsAsync(storeOrderId, search, pageNumber, pageSize);
-        }
+        //public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
+        //    int storeOrderId,
+        //    string? search,
+        //    int pageNumber,
+        //    int pageSize)
+        //{
+        //    return await _shopperdashboardRepository
+        //        .GetShopperOrderDetailsAsync(storeOrderId, search, pageNumber, pageSize);
+        //}
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
        int shopperRegId,
        string? search,

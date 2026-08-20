@@ -242,7 +242,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     ProductId = od.ProductId,
                     ProductName = od.Product.ProductName,
-                    VariantId = od.SkuId,
+                    SkuId = od.SkuId,
                     VariantCost = od.Price,
                     Quantity = od.Quantity,
 
@@ -252,10 +252,10 @@ namespace mytown.DataAccess.Repositories
                         .Select(i => i.FileName)
                         .FirstOrDefault() ?? "",
 
-                    Weight = od.Variant.Weight,
-                    Length = od.Variant.Length,
-                    Width = od.Variant.Width,
-                    Height = od.Variant.Height
+                    //Weight = od.Variant.Weight,
+                    //Length = od.Variant.Length,
+                    //Width = od.Variant.Width,
+                    //Height = od.Variant.Height
                 }).ToList(),
 
                 TotalProductAmount = productTotal,

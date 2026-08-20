@@ -57,7 +57,7 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-
+        //------------------------Uncomment again --------------------------------//
         public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
        int storeOrderId,
        string? search,
@@ -126,40 +126,40 @@ namespace mytown.DataAccess.Repositories
             // ===============================
             var productQuery =
                 from od in _context.OrderDetails
-                join pr in _context.products on od.ProductId equals pr.ProductId
+                join pr in _context.ProductsNew on od.ProductId equals pr.ProductId
 
                 // Variant
-                join v in _context.Sku_ProductVariants
+                join v in _context.ProductVariantsNew
                     on od.SkuId equals v.SkuId
 
                 // SKU image
-                join skuImg in _context.ProductImages
+                join skuImg in _context.ProductVariantImagesNew
                     .Where(i => i.SortOrder == 1)
                     on od.SkuId equals skuImg.SkuId into skuImages
                 from skuImg in skuImages.DefaultIfEmpty()
 
-                 
 
-                //    // Product image fallback
-                //join prodImg in _context.ProductImages
-                //    .Where(i => i.SortOrder == 1)
-                //    on pr.ProductId equals prodImg.ProductId into prodImages
-                //from prodImg in prodImages.DefaultIfEmpty()
+
+                    //    // Product image fallback
+                    //join prodImg in _context.ProductImages
+                    //    .Where(i => i.SortOrder == 1)
+                    //    on pr.ProductId equals prodImg.ProductId into prodImages
+                    //from prodImg in prodImages.DefaultIfEmpty()
 
                 where od.StoreOrderId == storeOrderId
 
                 select new OrderProductItemDto
                 {
-                    ProductId = pr.ProductId,
+                    ProductId = (int)pr.ProductId,
                     ProductName = pr.ProductName!,
-                    SkuId = od.SkuId,
+                    SkuId = (int)od.SkuId,
 
                     UnitPrice = od.Price,
                     Quantity = od.Quantity,
 
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
+                    //Length = v.Length,
+                    //Width = v.Width,
+                    //Height = v.Height,
                     Weight = v.Weight,
 
                     ProductImage = skuImg != null
@@ -227,9 +227,9 @@ namespace mytown.DataAccess.Repositories
                     on o.OrderId equals pay.OrderId
                 join od in _context.OrderDetails
                     on o.OrderId equals od.OrderId
-                join pr in _context.products
+                join pr in _context.ProductsNew
                     on od.ProductId equals pr.ProductId
-                join sku in _context.Sku_ProductVariants
+                join sku in _context.ProductVariantsNew
                     on od.SkuId equals sku.SkuId
                 join s in _context.BusinessRegisters
                     on od.StoreId equals s.BusRegId
@@ -243,7 +243,7 @@ namespace mytown.DataAccess.Repositories
                     od.SkuId,
                     od.StoreId,
                     pr.ProductName,
-                    pr.ProductImage,
+                    sku.Images,
                     s.BusinessName
                 }
                 into g
@@ -253,13 +253,12 @@ namespace mytown.DataAccess.Repositories
                     SkuId = g.Key.SkuId,
                     ProductName = g.Key.ProductName,
 
-                    VariantImage =
-                        g.SelectMany(x => x.sku.Images)
-                         .OrderBy(i => i.SortOrder)
-                         .ThenBy(i => i.ImageId)
-                         .Select(i => i.FileName)
-                         .FirstOrDefault()
-                        ?? g.Key.ProductImage,
+                    VariantImage = _context.ProductVariantImagesNew
+        .Where(i => i.SkuId == g.Key.SkuId)
+        .OrderBy(i => i.SortOrder)
+        .ThenBy(i => i.ImageId)
+        .Select(i => i.FileName)
+        .FirstOrDefault(),
 
                     StoreId = g.Key.StoreId,
                     StoreName = g.Key.BusinessName,
@@ -267,12 +266,12 @@ namespace mytown.DataAccess.Repositories
                     LastOrderedOn = g.Max(x => x.o.OrderDate),
 
                     Price = g.OrderByDescending(x => x.o.OrderDate)
-                             .Select(x => x.od.Price)
-                             .First(),
+             .Select(x => x.od.Price)
+             .First(),
 
                     Quantity = g.OrderByDescending(x => x.o.OrderDate)
-                                .Select(x => x.od.Quantity)
-                                .First()
+                .Select(x => x.od.Quantity)
+                .First()
                 };
 
 
@@ -300,16 +299,16 @@ namespace mytown.DataAccess.Repositories
             var query =
                 from w in _context.Wishlist
 
-                join p in _context.products
+                join p in _context.ProductsNew
                     on w.ProductId equals p.ProductId
 
                 join s in _context.BusinessRegisters
                     on w.BusRegId equals s.BusRegId
 
-                join sku in _context.Sku_ProductVariants
+                join sku in _context.ProductVariantsNew
                     on w.SkuId equals sku.SkuId
 
-                join skuImg in _context.ProductImages
+                join skuImg in _context.ProductVariantImagesNew
                     .Where(i => i.SortOrder == 1)
                     on w.SkuId equals skuImg.SkuId into skuImgJoin
                 from skuImg in skuImgJoin.DefaultIfEmpty()
@@ -324,15 +323,15 @@ namespace mytown.DataAccess.Repositories
                 select new WishlistItemDto
                 {
                     WishlistId = w.WishlistId,
-                    ProductId = p.ProductId,
+                    ProductId = (int)p.ProductId,
                     ProductName = p.ProductName,
                     SkuId = w.SkuId,
-                    Buscatid = p.BuscatId,
-                    prod_sub_catid = p.ProdSubcatId,
+                    Buscatid = (int)p.BusCatId,
+                    prod_sub_catid = (int)p.ProdSubcatId,
 
                     VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
 
-                    Price = sku.DiscountPrice ?? sku.Sku_Cost,
+                    Price = sku.DiscountPrice ?? sku.Price,
 
                     StoreId = s.BusRegId,
                     StoreName = s.BusinessName,

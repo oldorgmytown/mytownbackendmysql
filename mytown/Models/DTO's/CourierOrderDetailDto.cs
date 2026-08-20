@@ -55,9 +55,9 @@
 
     public class CourierOrderProductDto
     {
-        public int ProductId { get; set; }
+        public long ProductId { get; set; }
         public string ProductName { get; set; }
-        public int VariantId { get; set; }
+        public long SkuId { get; set; }
         public string VariantImage { get; set; }
         public decimal VariantCost { get; set; }
         public int Quantity { get; set; }
