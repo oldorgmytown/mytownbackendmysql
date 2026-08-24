@@ -13,11 +13,11 @@ namespace mytown.DataAccess.Interfaces
       int pageNumber,
       int pageSize);
 
-        //Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
-        //    int storeOrderId,
-        //    string? search,
-        //    int pageNumber,
-        //    int pageSize);
+        Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
+           int storeOrderId,
+           string? search,
+           int pageNumber,
+           int pageSize);
         Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
       int shopperRegId,
       string? search,
