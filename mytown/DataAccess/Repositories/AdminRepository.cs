@@ -196,16 +196,16 @@ namespace mytown.DataAccess.Repositories
             {
                 profile.ApprovedDate = DateTime.Now;
 
-                await _context.products
+                await _context.ProductsNew
                     .Where(p => p.BusRegId == busRegId &&
                                 p.ProductStatus == "Pending")
                     .ExecuteUpdateAsync(p => p
-                        .SetProperty(x => x.ProductStatus, "Approved")
+                        .SetProperty(x => x.ProductStatus, "ACTIVE")
                         .SetProperty(x => x.IsActive, true));
             }
             else if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
             {
-                        await _context.products
+                        await _context.ProductsNew
                .Where(p => p.BusRegId == busRegId)
                .ExecuteUpdateAsync(p => p
                    .SetProperty(x => x.ProductStatus, "Rejected")
@@ -213,7 +213,7 @@ namespace mytown.DataAccess.Repositories
             }
             else if (status.Equals("suspended", StringComparison.OrdinalIgnoreCase))
             {
-                await _context.products
+                await _context.ProductsNew
                     .Where(p => p.BusRegId == busRegId)
                     .ExecuteUpdateAsync(p => p
                         .SetProperty(x => x.IsActive, false));
@@ -235,7 +235,7 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
 
-            if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
+            if (status.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase))
             {
                 var notification = new BusinessDBNotifications
                 {

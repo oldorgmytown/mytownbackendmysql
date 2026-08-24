@@ -515,36 +515,41 @@ namespace mytown.DataAccess.Repositories
                     .Where(c => c.BusinessCategoryName.Contains(searchTerm))
                     .Select(c => c.BusCatId);
 
-                var categoryBusinessIds = _context.products
-                    .Where(p => categoryIds.Contains(p.BuscatId))
+                var categoryBusinessIds = _context.ProductsNew
+                    .Where(p => categoryIds.Contains((int)p.BusCatId))
                     .Select(p => p.BusRegId);
 
                 var subcategoryIds = _context.product_sub_categories
                     .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
                     .Select(sc => sc.ProdSubcatId);
 
-                var subcategoryBusinessIds = _context.products
-                    .Where(p => subcategoryIds.Contains(p.ProdSubcatId))
+                var subcategoryBusinessIds = _context.ProductsNew
+                    .Where(p => subcategoryIds.Contains((int)p.ProdSubcatId))
                     .Select(p => p.BusRegId);
 
-                var productFieldBusinessIds = _context.products
+                var productFieldBusinessIds = _context.ProductsNew
                     .Where(p =>
-                        p.ProductName.Contains(searchTerm) ||
-                        p.ProductSubject.Contains(searchTerm) ||
+                        p.ProductName.Contains(searchTerm) ||                      
                         p.ProductDescription.Contains(searchTerm))
                     .Select(p => p.BusRegId);
 
-                var skuBusinessIds = _context.Sku_ProductVariants
-                    .Where(v =>
-                        v.Color.Contains(searchTerm) ||
-                        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
-                    .Select(v => v.Product.BusRegId);
+                //var skuBusinessIds = _context.ProductVariantsNew
+                //    .Where(v =>
+                //        v.Color.Contains(searchTerm) ||
+                //        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
+                //    .Select(v => v.Product.BusRegId);
 
+
+                var attributeBusinessIds = _context.ProductVariantAttributesNew
+    .Where(a =>
+        a.AttributeValue != null &&
+        EF.Functions.Like(a.AttributeValue, $"%{searchTerm}%"))
+    .Select(a => a.Variant.Product.BusRegId);
                 businessIds = storeNameIds
                     .Union(categoryBusinessIds)
                     .Union(subcategoryBusinessIds)
                     .Union(productFieldBusinessIds)
-                    .Union(skuBusinessIds)
+                    .Union(attributeBusinessIds)
                     .Distinct();
             }
 

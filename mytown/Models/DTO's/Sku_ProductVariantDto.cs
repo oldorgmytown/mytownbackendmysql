@@ -6,8 +6,8 @@ namespace mytown.Models.DTO_s
 {
     public class Sku_ProductVariantDto
     {
-        public int SkuId_Productvariant { get; set; }
-        public int ProductId { get; set; }          
+        public long SkuId_Productvariant { get; set; }
+        public long ProductId { get; set; }          
         public string? Color { get; set; }
         public int? SizeId { get; set; }
         public string? SizeName { get; set; }

@@ -328,27 +328,328 @@ namespace mytown.DataAccess.Repositories
             return products.Select(MapProductToDto).ToList();
         }
 
-        // ---------------- Shopper-facing queries: still pending attribute-name confirmation ----------------
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
+        {
+            return await (
+                from v in _context.ProductVariantsNew
 
-        public Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
-            => throw new NotImplementedException("Pending attribute-name confirmation");
+                join p in _context.ProductsNew
+                    on v.ProductId equals p.ProductId
 
-        public Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId)
-            => throw new NotImplementedException("Pending attribute-name confirmation");
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
 
-        public Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
-            => throw new NotImplementedException("Pending attribute-name confirmation");
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals(long?) pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
 
+      
+
+                where v.Discount != null
+                      && v.Discount > 0
+                      && p.ProductStatus == "ACTIVE"
+                      && p.IsActive
+
+                select new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)p.ProductId,
+
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
+
+                    BuscatId = (int)p.BusCatId,
+
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
+
+                    ProdcatId = (int)p.ProdSubcatId,
+
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
+
+                 
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = bp.BusinessName,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
+                new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = (int)v.SkuId,
+                    ProductId = (int)v.ProductId,
+
+                    Sku_Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.StockQuantity,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+
+                    Images = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList(),
+
+                 Attributes = v.Attributes
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
+
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
+
+                        AttributeValue = a.AttributeValue
+                            ?? _context.ProductAttributeValues
+                                .Where(av =>
+                                    a.AttributeValueId.HasValue &&
+                                    av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                    })
+                    .ToList()
+                }
+                    }
+                }
+            ).ToListAsync();
+        }
+
+
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId)
+        {
+            return await (
+                from v in _context.ProductVariantsNew
+                join p in _context.ProductsNew
+                    on v.ProductId equals p.ProductId
+
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+                where p.ProdSubcatId == subCategoryId
+                      && p.ProductStatus == "ACTIVE"
+                      && p.IsActive
+
+                select new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)p.ProductId,
+
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
+
+                    BuscatId = (int)p.BusCatId,
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
+
+                    ProdcatId = (int)p.ProdSubcatId,
+
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+                    SupplierName = bp.BusinessName,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
+                new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = (int)v.SkuId,
+                    ProductId = (int)v.ProductId,
+
+                    Sku_Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.StockQuantity,
+                    Weight = v.Weight,
+                    Discount = v.Discount,
+
+                    Images = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => new ProductImageDto
+                        {
+                            FileName = i.FileName,
+                            SortOrder = i.SortOrder
+                        })
+                        .ToList(),
+
+                   Attributes = v.Attributes
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
+
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
+
+                        AttributeValue = a.AttributeValue
+                            ?? _context.ProductAttributeValues
+                                .Where(av =>
+                                    a.AttributeValueId.HasValue &&
+                                    av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                    })
+                    .ToList()
+                }
+                    }
+                }
+            ).ToListAsync();
+        }
+
+        // save shopper recently viewd products
         public async Task SaveProductViewAsync(int shopperId, int productId)
         {
-            _context.ShopperProductRecentViews.Add(new ShopperProductRecentView
+            var view = new ShopperProductRecentView
             {
                 ShopperId = shopperId,
                 ProductId = productId,
                 LastViewedAt = DateTime.UtcNow
-            });
+            };
+
+            _context.ShopperProductRecentViews.Add(view);
             await _context.SaveChangesAsync();
         }
+
+
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
+        {
+            if (string.IsNullOrEmpty(location))
+                return new List<ProdcVariantforShopperDto>();
+
+            var query =
+                from bp in _context.BusinessProfiles
+                join br in _context.BusinessRegisters
+                    on bp.BusRegId equals br.BusRegId
+                where bp.BusinessLocation != null &&
+                      bp.BusinessLocation.Contains(location)
+
+                join p in _context.ProductsNew
+                    on bp.BusRegId equals p.BusRegId
+
+                join v in _context.ProductVariantsNew
+                    on p.ProductId equals v.ProductId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+                where p.ProductStatus == "ACTIVE" &&
+                      p.IsActive
+
+                select new
+                {
+                    Product = p,
+                    Variant = v,
+                    Store = bp,
+                    Business = br,
+                    ProductType = pt
+                };
+
+            var result = await query
+                .Select(x => new
+                {
+                    Product = x.Product,
+                    Variant = x.Variant,
+                    Store = x.Store,
+                    Business = x.Business,
+                    ProductType = x.ProductType,
+
+                    TotalOrders = _context.OrderDetails
+                        .Where(o => o.ProductId == x.Product.ProductId)
+                        .Sum(o => (int?)o.Quantity) ?? 0
+                })
+                .Where(x => x.TotalOrders > minOrders)
+                .OrderByDescending(x => x.TotalOrders)
+                .Select(x => new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)x.Product.ProductId,
+
+                    BusRegId = x.Store.BusRegId,
+                    BusinessName = x.Store.BusinessName,
+
+                    BuscatId = (int)x.Product.BusCatId,
+
+                    Location = x.Business.BusinessCity + ", " +
+                               x.Business.BusinessState,
+
+                    Country = x.Business.BusinessCountry,
+
+                    ProdcatId = (int)x.Product.ProdSubcatId,
+
+                    ProductTypeId = (int?)x.Product.ProdTypeId,
+
+                    ProductTypeName = x.ProductType != null
+                        ? x.ProductType.ProdTypeName
+                        : null,
+
+                    ProductName = x.Product.ProductName,
+                    ProductDescription = x.Product.ProductDescription,
+
+                    SupplierName = x.Store.BusinessName,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
+                new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = (int)x.Variant.SkuId,
+                    ProductId = (int)x.Variant.ProductId,
+
+                    Sku_Cost = x.Variant.Price,
+                    DiscountPrice = x.Variant.DiscountPrice,
+                    Quantity = x.Variant.StockQuantity,
+                    Weight = x.Variant.Weight,
+                    Discount = x.Variant.Discount,
+                        Images = _context.ProductVariantImagesNew
+                            .Where(i => i.SkuId == x.Variant.SkuId)
+                            .OrderBy(i => i.SortOrder)
+                            .Select(i => new ProductImageDto
+                            {
+                                FileName = i.FileName,
+                                SortOrder = i.SortOrder
+                            })
+                            .ToList(),
+
+                        Attributes = x.Variant.Attributes
+                            .Select(a => new VariantAttributeDto
+                            {
+                                AttributeId = (int)a.AttributeId,
+
+                                AttributeValueId = a.AttributeValueId.HasValue
+                                    ? (int?)a.AttributeValueId.Value
+                                    : null,
+
+                                AttributeValue = a.AttributeValue
+                                    ?? _context.ProductAttributeValues
+                                        .Where(av =>
+                                            a.AttributeValueId.HasValue &&
+                                            av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                        .Select(av => av.AttributeValue)
+                                        .FirstOrDefault()
+                            })
+                            .ToList()
+                }
+                    }
+                })
+                .ToListAsync();
+
+            return result;
+        }
+
 
         // ---------------- Helpers ----------------
 
@@ -442,7 +743,7 @@ namespace mytown.DataAccess.Repositories
                 ProductName = p.ProductName,
                 ProductDescription = p.ProductDescription,
                 SupplierName = biz?.BusinessName,
-                IsProductAvailable = p.ProductStatus == "Approved" && p.IsActive,
+                IsProductAvailable = p.ProductStatus == "ACTIVE" && p.IsActive,
                 Location = location,
                 Country = biz?.BusinessCountry ?? "",
 
@@ -455,10 +756,15 @@ namespace mytown.DataAccess.Repositories
                     Quantity = v.StockQuantity,
                     Weight = v.Weight,
                     Discount = v.Discount,
-                    Images = v.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto { FileName = i.FileName, SortOrder = i.SortOrder })
-                        .ToList(),
+                    Images = _context.ProductVariantImagesNew
+                    .Where(i => i.SkuId == v.SkuId)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new ProductImageDto
+                    {
+                        FileName = i.FileName,
+                        SortOrder = i.SortOrder
+                    })
+                    .ToList(),
                     Attributes = v.Attributes
                         .Select(a => new VariantAttributeDto
                         {
