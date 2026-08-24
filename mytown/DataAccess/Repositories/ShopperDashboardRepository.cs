@@ -216,37 +216,43 @@ namespace mytown.DataAccess.Repositories
             };
         }
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
-     int shopperRegId,
-     string? search,
-     int pageNumber,
-     int pageSize)
+      int shopperRegId,
+      string? search,
+      int pageNumber,
+      int pageSize)
         {
             var query =
                 from o in _context.Orders
                 join pay in _context.Payments
                     on o.OrderId equals pay.OrderId
+
                 join od in _context.OrderDetails
                     on o.OrderId equals od.OrderId
+
                 join pr in _context.ProductsNew
                     on od.ProductId equals pr.ProductId
+
                 join sku in _context.ProductVariantsNew
                     on od.SkuId equals sku.SkuId
+
                 join s in _context.BusinessRegisters
                     on od.StoreId equals s.BusRegId
+
                 where o.ShopperRegId == shopperRegId
                       && pay.PaymentStatus == "Paid"
-                      && pr.ProductStatus == "Approved"
-                      && pr.IsActive == true
+                      && pr.ProductStatus == "ACTIVE"
+                      && pr.IsActive
+
                 group new { o, od, pr, sku, s } by new
                 {
                     od.ProductId,
                     od.SkuId,
                     od.StoreId,
                     pr.ProductName,
-                    sku.Images,
                     s.BusinessName
                 }
                 into g
+
                 select new BuyAgainProductDto
                 {
                     ProductId = g.Key.ProductId,
@@ -254,36 +260,39 @@ namespace mytown.DataAccess.Repositories
                     ProductName = g.Key.ProductName,
 
                     VariantImage = _context.ProductVariantImagesNew
-        .Where(i => i.SkuId == g.Key.SkuId)
-        .OrderBy(i => i.SortOrder)
-        .ThenBy(i => i.ImageId)
-        .Select(i => i.FileName)
-        .FirstOrDefault(),
+                        .Where(i => i.SkuId == g.Key.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .ThenBy(i => i.ImageId)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault(),
 
                     StoreId = g.Key.StoreId,
                     StoreName = g.Key.BusinessName,
 
                     LastOrderedOn = g.Max(x => x.o.OrderDate),
 
-                    Price = g.OrderByDescending(x => x.o.OrderDate)
-             .Select(x => x.od.Price)
-             .First(),
+                    Price = g
+                        .OrderByDescending(x => x.o.OrderDate)
+                        .Select(x => x.od.Price)
+                        .First(),
 
-                    Quantity = g.OrderByDescending(x => x.o.OrderDate)
-                .Select(x => x.od.Quantity)
-                .First()
+                    Quantity = g
+                        .OrderByDescending(x => x.o.OrderDate)
+                        .Select(x => x.od.Quantity)
+                        .First()
                 };
 
-
-            // 🔎 SEARCH
-            if (!string.IsNullOrEmpty(search))
+            //  SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
             {
+                search = search.Trim();
+
                 query = query.Where(x =>
                     x.ProductName.Contains(search) ||
                     x.StoreName.Contains(search));
             }
 
-
+            //  PAGINATION
             return await query
                 .OrderByDescending(x => x.LastOrderedOn)
                 .Skip((pageNumber - 1) * pageSize)
