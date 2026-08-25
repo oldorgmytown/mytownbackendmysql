@@ -8,6 +8,7 @@
         public int BuscatId { get; set; }
         public int ProdSubcatId { get; set; }
         public int? ProductTypeId { get; set; }
+        public int? ProductGroupId { get; set; }
         public string ProdTypename { get; set; }
         public int? FabricId { get; set; }
         public int? DesignId { get; set; }

@@ -740,6 +740,8 @@ namespace mytown.DataAccess.Repositories
                 BusRegId = p.BusRegId,
                 BuscatId = (int)(p.BusCatId ?? 0),
                 ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+                ProductGroupId = p.ProductGroupId.HasValue ? (int)p.ProductGroupId.Value : (int?)null,
+                ProductTypeId = p.ProdTypeId.HasValue ? (int)p.ProdTypeId.Value : (int?)null,
                 ProductName = p.ProductName,
                 ProductDescription = p.ProductDescription,
                 SupplierName = biz?.BusinessName,

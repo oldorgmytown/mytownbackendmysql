@@ -691,158 +691,81 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         };
     }
     public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
-    int storeId,
-    string? search,
-    int pageNumber,
-    int pageSize)
+       int storeId,
+       string? search,
+       int pageNumber,
+       int pageSize)
     {
-        var query = _context.Sku_ProductVariants
-            .Where(v => v.Product.BusRegId == storeId);
+        var query =
+            from v in _context.ProductVariantsNew
+            join p in _context.ProductsNew
+                on v.ProductId equals p.ProductId
+            join pt in _context.Product_Types
+                on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+            from pt in ptJoin.DefaultIfEmpty()
+            where p.BusRegId == storeId
+            select new { v, p, pt };
 
-        // Search (on product fields)
-        if (!string.IsNullOrEmpty(search))
+        // Search
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(v =>
-                v.Product.ProductId.ToString().Contains(search) ||
-                v.Product.SupplierName.Contains(search) ||
-                (v.Product.ProductSubCategory != null &&
-                 v.Product.ProductSubCategory.ProdSubcatName.Contains(search)) ||
-                (v.Product.ProductType != null &&
-                 v.Product.ProductType.ProdTypeName.Contains(search))
-            );
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.p.ProductId.ToString().Contains(search) ||
+                x.p.ProductName.Contains(search) ||
+                (x.p.ProductDescription != null &&
+                 x.p.ProductDescription.Contains(search)) ||
+                (x.pt != null &&
+                 x.pt.ProdTypeName.Contains(search)));
         }
 
         return await query
-            .OrderByDescending(v => v.SkuId)
+            .OrderByDescending(x => x.v.SkuId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(v => new BusinessProductDashboardDto
+            .Select(x => new BusinessProductDashboardDto
             {
-                ProductId = v.ProductId,
-                ProductName = v.Product.ProductName,
+                ProductId = (int)x.p.ProductId,
+                ProductName = x.p.ProductName,
 
-                // ✅ SKU specific
-                SkuId = v.SkuId,
+                SkuId = (int)x.v.SkuId,
 
-                Supplier = v.Product.SupplierName,
+                Supplier = null,
 
-                CategoryName = v.Product.ProductSubCategory != null
-                    ? v.Product.ProductSubCategory.ProdSubcatName
+                CategoryName = null,
+
+                ProductType = x.pt != null
+                    ? x.pt.ProdTypeName
                     : null,
 
-                ProductType = v.Product.ProductType != null
-                    ? v.Product.ProductType.ProdTypeName
-                    : null,
+                Fabric = null,
+                Design = null,
 
-                Fabric = v.Product.Fabric != null
-                    ? v.Product.Fabric.FabricName
-                    : null,
+                ProductDescription = x.p.ProductDescription,
 
-                Design = v.Product.Design != null
-                    ? v.Product.Design.DesignName
-                    : null,
+                ProductAmount = x.v.DiscountPrice ?? x.v.Price,
 
-                ProductDescription = v.Product.ProductDescription,
+                Discount = x.v.Discount,
 
-                // ✅ Per SKU pricing
-                ProductAmount = v.DiscountPrice ?? v.Sku_Cost,
+                InStock = (int)x.v.StockQuantity,
 
-                Discount = v.Discount,
-
-                InStock = (int)v.Quantity,
-
-                // ✅ Purchased per SKU (if you track SKU in order)
                 NoOfPurchased = _context.Payments
-                .Where(p => p.PaymentStatus == "Paid")
-                .SelectMany(p => p.Order.OrderDetails)
-                .Where(od => od.SkuId == v.SkuId)
-                .Sum(od => (int?)od.Quantity) ?? 0,
+                    .Where(payment => payment.PaymentStatus == "Paid")
+                    .SelectMany(payment => payment.Order.OrderDetails)
+                    .Where(od => od.SkuId == x.v.SkuId)
+                    .Sum(od => (int?)od.Quantity) ?? 0,
 
-                ProductImage = v.Images
+                ProductImage = _context.ProductVariantImagesNew
+                    .Where(i => i.SkuId == x.v.SkuId)
                     .OrderBy(i => i.SortOrder)
+                    .ThenBy(i => i.ImageId)
                     .Select(i => i.FileName)
                     .FirstOrDefault()
             })
             .ToListAsync();
     }
-
-    // public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
-    //public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
-    // int storeId,
-    // string? search,
-    // int pageNumber,
-    // int pageSize)
-    //{
-    //    var query = _context.products
-    //        .Where(p => p.BusRegId == storeId);
-
-    //    // 🔍 Search
-    //    if (!string.IsNullOrEmpty(search))
-    //    {
-    //        query = query.Where(p =>
-    //            p.ProductName.Contains(search) ||
-    //            p.SupplierName.Contains(search) ||
-    //            (p.ProductSubCategory != null && p.ProductSubCategory.ProdSubcatName.Contains(search)) ||
-    //            (p.ProductType != null && p.ProductType.ProdTypeName.Contains(search))
-    //        );
-    //    }
-
-    //    return await query
-    //        .OrderByDescending(p => p.ProductId)
-    //        .Skip((pageNumber - 1) * pageSize)
-    //        .Take(pageSize)
-    //        .Select(p => new BusinessProductDashboardDto
-    //        {
-    //            ProductId = p.ProductId,
-    //            ProductName = p.ProductName,
-    //            SkuId = 
-
-    //            CategoryName = p.ProductSubCategory != null
-    //                ? p.ProductSubCategory.ProdSubcatName
-    //                : null,
-
-    //            ProductType = p.ProductType != null
-    //                ? p.ProductType.ProdTypeName
-    //                : null,
-
-    //            Fabric = p.Fabric != null
-    //                ? p.Fabric.FabricName
-    //                : null,
-
-    //            Design = p.Design != null
-    //                ? p.Design.DesignName
-    //                : null,
-
-    //            Supplier = p.SupplierName,
-    //            ProductDescription = p.ProductDescription,
-
-    //            ProductAmount = p.Sku_ProductVariants
-    //                .Min(v => v.DiscountPrice ?? v.Sku_Cost),
-
-    //            InStock = p.Sku_ProductVariants
-    //                .Sum(v => (int)v.Quantity),
-
-    //            Discount = p.Sku_ProductVariants
-    //                .Max(v => v.Discount),
-
-    //            NoOfPurchased = _context.OrderDetails
-    //                .Where(od => od.ProductId == p.ProductId)
-    //                .Sum(od => od.Quantity),
-
-    //            ProductImage =
-    //                p.Sku_ProductVariants
-    //                    .SelectMany(v => v.Images)
-    //                    .OrderBy(i => i.SortOrder)
-    //                    .Select(i => i.FileName)
-    //                    .FirstOrDefault()
-    //                ??
-    //                p.Images
-    //                    .OrderBy(i => i.SortOrder)
-    //                    .Select(i => i.FileName)
-    //                    .FirstOrDefault()
-    //        })
-    //        .ToListAsync();
-    //}
+ 
     private IQueryable<StoreOrder> GetDeliveredPaidOrders(int storeId)
     {
         var query =
