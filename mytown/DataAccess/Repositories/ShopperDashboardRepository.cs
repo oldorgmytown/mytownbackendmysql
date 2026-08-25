@@ -322,10 +322,10 @@ namespace mytown.DataAccess.Repositories
                     on w.SkuId equals skuImg.SkuId into skuImgJoin
                 from skuImg in skuImgJoin.DefaultIfEmpty()
 
-                join prodImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1 && i.SkuId == null)
-                    on p.ProductId equals prodImg.ProductId into prodImgJoin
-                from prodImg in prodImgJoin.DefaultIfEmpty()
+                join prodImg in _context.ProductVariantImagesNew
+                     .Where(i => i.SortOrder == 1)
+                     on w.SkuId equals prodImg.SkuId into prodImgJoin
+                                from prodImg in prodImgJoin.DefaultIfEmpty()
 
                 where w.ShopperRegId == shopperId
 
@@ -346,7 +346,7 @@ namespace mytown.DataAccess.Repositories
                     StoreName = s.BusinessName,
 
                     IsProductAvailable =
-                        p.ProductStatus == "Approved"
+                        p.ProductStatus == "ACTIVE"
                         && p.IsActive == true
                 };
 
