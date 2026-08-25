@@ -63,7 +63,7 @@ namespace mytown.Services.Interfaces
         // Orders tab — full combined order details by store order code
         Task<OrderFullDetailsDto?> GetOrderFullDetailsByStoreOrderCodeAsync(string code);
 
-        // Orders tab — summary counts for dashboard cards
+
         Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync();
         Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync();
 
