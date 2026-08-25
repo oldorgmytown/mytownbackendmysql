@@ -1,4 +1,5 @@
-﻿using mytown.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using MyTown.Models;
 using System.Threading.Tasks;
@@ -28,6 +29,12 @@ namespace mytown.Services.Interfaces
         Task<IEnumerable<BusinessCategory>> GetBusinessCategories();
 
         Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatId);
+
+        Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId);
+
+        Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId);
+
+        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId);
 
         // add bank details
         Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);

@@ -616,33 +616,38 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         // 🔹 Products
         var products = await (
             from od in _context.OrderDetails
-            join pr in _context.products on od.ProductId equals pr.ProductId
-            join sku in _context.Sku_ProductVariants on od.SkuId equals sku.SkuId into skuJoin
-            from sku in skuJoin.DefaultIfEmpty()
 
-            join skuImg in _context.ProductImages
+            join pr in _context.ProductsNew
+                on od.ProductId equals pr.ProductId
+
+            join sku in _context.ProductVariantsNew
+                on od.SkuId equals sku.SkuId
+
+            join skuImg in _context.ProductVariantImagesNew
                 .Where(i => i.SortOrder == 1)
                 on sku.SkuId equals skuImg.SkuId into skuImgJoin
+
             from skuImg in skuImgJoin.DefaultIfEmpty()
 
-            join prodImg in _context.ProductImages
-                .Where(i => i.SortOrder == 1 && i.SkuId == null)
-                on pr.ProductId equals prodImg.ProductId into prodImgJoin
-            from prodImg in prodImgJoin.DefaultIfEmpty()
-
             where od.StoreOrderId == storeOrderId
+
             select new BusinessOrderProductDto
             {
-                ProductId = sku.SkuId,
+                ProductId = (int)sku.SkuId,
+
                 ProductName = pr.ProductName,
+
                 Quantity = od.Quantity,
+
                 UnitPrice = od.Price,
+
                 Amount = od.Price * od.Quantity,
-                Weight = sku != null ? sku.Weight : null,
-                Length = sku != null ? sku.Length : null,
-                Width = sku != null ? sku.Width : null,
-                Height = sku != null ? sku.Height : null,
-                ProductImage = skuImg.FileName ?? prodImg.FileName
+
+                Weight = sku.Weight,
+
+                ProductImage = skuImg != null
+                    ? skuImg.FileName
+                    : null
             }
         ).ToListAsync();
 
@@ -1137,7 +1142,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 on so.StoreOrderId equals sd.StoreOrderId
             join od in _context.OrderDetails
                 on so.StoreOrderId equals od.StoreOrderId
-            join pr in _context.products
+            join pr in _context.ProductsNew
                 on od.ProductId equals pr.ProductId
             where so.StoreId == storeId
                   && p.PaymentStatus == "Paid"
@@ -1150,7 +1155,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             into g
             select new ProductSalesDto
             {
-                ProductId = g.Key.ProductId,
+                ProductId = (int)g.Key.ProductId,
                 ProductName = g.Key.ProductName,
                 TotalQuantitySold = g.Sum(x => x.od.Quantity),
                 TotalRevenue = g.Sum(x => x.od.Quantity * x.od.Price)

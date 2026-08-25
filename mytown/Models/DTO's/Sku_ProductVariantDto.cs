@@ -6,8 +6,8 @@ namespace mytown.Models.DTO_s
 {
     public class Sku_ProductVariantDto
     {
-        public int SkuId_Productvariant { get; set; }
-        public int ProductId { get; set; }          
+        public long SkuId_Productvariant { get; set; }
+        public long ProductId { get; set; }          
         public string? Color { get; set; }
         public int? SizeId { get; set; }
         public string? SizeName { get; set; }
@@ -25,13 +25,14 @@ namespace mytown.Models.DTO_s
         public string? VariantName => $"{SkuId_Productvariant}-{Color}";
 
         
+        // Existing image metadata (returned on GET)
         public List<ProductImageDto> Images { get; set; } = new();
 
-        //  public List<ProductImageDto>? Images { get; set; }
+        // On UPDATE: full replacement filename list (already-uploaded via
+        // /api/products-new/upload-image, same as create flow).
+        public List<string>? UpdatedImageFileNames { get; set; }
 
-      
-
-       
-
+        // Full replacement attribute list (same shape as create).
+        public List<VariantAttributeDto> Attributes { get; set; } = new();
     }
 }

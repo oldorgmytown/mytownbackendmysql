@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using MyTown.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -24,8 +25,13 @@ namespace mytown.DataAccess
         Task<ActionResult<IEnumerable<BusinessCategory>>> GetBusinessCategories();
         Task<ActionResult<IEnumerable<BusinessService>>> GetBusinessServices();
         Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatId);
-       
-       
+
+        Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId);
+
+        Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId);
+        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId);
+
+
         Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath);
 
       

@@ -13,10 +13,10 @@ namespace mytown.Services.Interfaces
      int pageSize);
 
         Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
-            int storeOrderId,
-            string? search,
-            int pageNumber,
-            int pageSize);
+           int storeOrderId,
+           string? search,
+           int pageNumber,
+           int pageSize);
         Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
      int shopperRegId,
      string? search,

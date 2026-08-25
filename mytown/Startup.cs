@@ -11,11 +11,12 @@ using mytown.Helpers;
 using mytown.Hubs;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
+using mytown.Repositories;
+using mytown.Repositories.Interfaces;
 using mytown.Services.Implementations;
+using mytown.Services.Interfaces;
 using mytown.Services.Interfaces;
 using MyTown.Configurations;
-using mytown.Services.Implementations;
-using mytown.Services.Interfaces;
 using Stripe;
 using Stripe.Climate;
 using System.Security.Claims;
@@ -86,6 +87,11 @@ public class Startup
         services.AddScoped<ISenderRepository, SenderRepository>();
         services.AddScoped<IConnectionsRepository, ConnectionsRepository>();
         services.AddScoped<IMobileAppRepository, MobileAppRepository>();
+        services.AddScoped<IProductsNewRepository, ProductsNewRepository>(); 
+
+        services.AddScoped<IProductsNewService, ProductsNewService>();
+
+
 
         // Mobile Auth
         services.AddScoped<IMobileAuthRepository, MobileAuthRepository>();

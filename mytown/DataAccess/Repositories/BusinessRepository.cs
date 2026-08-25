@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
 using static mytown.Models.busprofilepreview;
@@ -169,6 +170,62 @@ namespace mytown.DataAccess.Repositories
             return _context.products
                            .Where(p => p.BusRegId == busRegId && p.ProdSubcatId == prodSubcatId)
                            .ToList();
+        }
+
+        public async Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId)
+        {
+            return await _context.Product_Groups
+                .Where(x => x.ProdSubcatId == prodSubcatId)
+                .Select(x => new ProductGroupResponseDto
+                {
+                    ProdGroupId = x.ProdGroupId,
+                    ProdGroupName = x.ProdGroupName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(
+    int prodSubcatId,
+    int prodGroupId)
+        {
+            return await _context.Product_Types
+                .Where(x =>
+                    x.ProdSubcatId == prodSubcatId &&
+                    x.ProdGroupId == prodGroupId)
+                .Select(x => new ProductType
+                {
+                    ProdTypeId = x.ProdTypeId,
+                    ProdSubcatId = x.ProdSubcatId,
+                    ProdGroupId = x.ProdGroupId,
+                    ProdTypeName = x.ProdTypeName
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(
+       int prodSubcatId,
+       int busCatId)
+        {
+            return await _context.ProductAttributes
+                .Where(x => x.ProdSubcatId == prodSubcatId &&
+                            x.BusCatId == busCatId)
+                .Select(x => new ProductAttributeDto
+                {
+                    AttributeId = x.AttributeId,
+                    AttributeName = x.AttributeName,
+                    ProdSubcatId = x.ProdSubcatId,
+                    BusCatId = x.BusCatId,
+
+                    Values = _context.ProductAttributeValues
+                        .Where(v => v.AttributeId == x.AttributeId)
+                        .Select(v => new ProductAttributeValueDto
+                        {
+                            AttributeValueId = v.AttributeValueId,
+                            AttributeValue = v.AttributeValue
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
         }
     }
 

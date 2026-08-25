@@ -483,5 +483,18 @@ namespace mytown.Controllers
                 pageSize
             });
         }
+        [HttpGet("getBusinessLocationCounts")]
+public async Task<IActionResult> GetBusinessLocationCounts()
+{
+    try
+    {
+        var result = await _adminService.GetBusinessLocationCountsAsync();
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Error retrieving business location counts", error = ex.Message });
+    }
+}
     }
 }

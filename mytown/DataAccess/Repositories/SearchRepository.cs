@@ -515,36 +515,41 @@ namespace mytown.DataAccess.Repositories
                     .Where(c => c.BusinessCategoryName.Contains(searchTerm))
                     .Select(c => c.BusCatId);
 
-                var categoryBusinessIds = _context.products
-                    .Where(p => categoryIds.Contains(p.BuscatId))
+                var categoryBusinessIds = _context.ProductsNew
+                    .Where(p => categoryIds.Contains((int)p.BusCatId))
                     .Select(p => p.BusRegId);
 
                 var subcategoryIds = _context.product_sub_categories
                     .Where(sc => sc.ProdSubcatName.Contains(searchTerm))
                     .Select(sc => sc.ProdSubcatId);
 
-                var subcategoryBusinessIds = _context.products
-                    .Where(p => subcategoryIds.Contains(p.ProdSubcatId))
+                var subcategoryBusinessIds = _context.ProductsNew
+                    .Where(p => subcategoryIds.Contains((int)p.ProdSubcatId))
                     .Select(p => p.BusRegId);
 
-                var productFieldBusinessIds = _context.products
+                var productFieldBusinessIds = _context.ProductsNew
                     .Where(p =>
-                        p.ProductName.Contains(searchTerm) ||
-                        p.ProductSubject.Contains(searchTerm) ||
+                        p.ProductName.Contains(searchTerm) ||                      
                         p.ProductDescription.Contains(searchTerm))
                     .Select(p => p.BusRegId);
 
-                var skuBusinessIds = _context.Sku_ProductVariants
-                    .Where(v =>
-                        v.Color.Contains(searchTerm) ||
-                        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
-                    .Select(v => v.Product.BusRegId);
+                //var skuBusinessIds = _context.ProductVariantsNew
+                //    .Where(v =>
+                //        v.Color.Contains(searchTerm) ||
+                //        (v.Size != null && v.Size.SizeName.Contains(searchTerm)))
+                //    .Select(v => v.Product.BusRegId);
 
+
+                var attributeBusinessIds = _context.ProductVariantAttributesNew
+    .Where(a =>
+        a.AttributeValue != null &&
+        EF.Functions.Like(a.AttributeValue, $"%{searchTerm}%"))
+    .Select(a => a.Variant.Product.BusRegId);
                 businessIds = storeNameIds
                     .Union(categoryBusinessIds)
                     .Union(subcategoryBusinessIds)
                     .Union(productFieldBusinessIds)
-                    .Union(skuBusinessIds)
+                    .Union(attributeBusinessIds)
                     .Distinct();
             }
 
@@ -632,48 +637,100 @@ namespace mytown.DataAccess.Repositories
                     .Where(b => EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
                     .Select(b => b.BusRegId);
 
-                var categoryIds = _context.BusinessCategories
-                    .Where(c => EF.Functions.Like(c.BusinessCategoryName, $"%{searchTerm}%"))
-                    .Select(c => c.BusCatId);
+                // ==============================
+                // CATEGORY SEARCH
+                // ==============================
 
-                var categoryBusinessIds = _context.products
-                    .Where(p => categoryIds.Contains(p.BuscatId))
+                var categoryIds = _context.BusinessCategories
+     .Where(c => EF.Functions.Like(
+         c.BusinessCategoryName,
+         $"%{searchTerm}%"))
+     .Select(c => (long)c.BusCatId);
+
+                var categoryBusinessIds = _context.ProductsNew
+                    .Where(p => p.BusCatId.HasValue &&
+                                categoryIds.Contains(p.BusCatId.Value))
                     .Select(p => p.BusRegId);
+                // ==============================
+                // SUBCATEGORY SEARCH
+                // ==============================
 
                 var subcategoryIds = _context.product_sub_categories
-                    .Where(sc => EF.Functions.Like(sc.ProdSubcatName, $"%{searchTerm}%"))
+                    .Where(sc => EF.Functions.Like(
+                        sc.ProdSubcatName,
+                        $"%{searchTerm}%"))
                     .Select(sc => sc.ProdSubcatId);
 
-                var subcategoryBusinessIds = _context.products
-                    .Where(p => subcategoryIds.Contains(p.ProdSubcatId))
-                    .Select(p => p.BusRegId);
+     //           var subcategoryBusinessIds = _context.ProductsNew
+     //.Where(p => p.ProdSubcatId.HasValue &&
+     //            subcategoryIds.Contains(p.ProdSubcatId.Value))
+     //.Select(p => p.BusRegId);
 
-                var productFieldBusinessIds = _context.products
+                // ==============================
+                // PRODUCT NAME / DESCRIPTION
+                // ==============================
+
+                var productFieldBusinessIds = _context.ProductsNew
                     .Where(p =>
-                        EF.Functions.Like(p.ProductName, $"%{searchTerm}%") ||
-                        EF.Functions.Like(p.ProductSubject, $"%{searchTerm}%") ||
-                        EF.Functions.Like(p.ProductDescription, $"%{searchTerm}%"))
+                        EF.Functions.Like(
+                            p.ProductName,
+                            $"%{searchTerm}%")
+                        ||
+                        EF.Functions.Like(
+                            p.ProductDescription,
+                            $"%{searchTerm}%"))
                     .Select(p => p.BusRegId);
 
-                var skuBusinessIds = _context.Sku_ProductVariants
+                // ==============================
+                // VARIANT / BRAND SEARCH
+                // ==============================
+
+                var variantBusinessIds = _context.ProductVariantsNew
                     .Where(v =>
-                        EF.Functions.Like(v.Color, $"%{searchTerm}%") ||
-                        (v.Size != null && EF.Functions.Like(v.Size.SizeName, $"%{searchTerm}%")))
+                        v.Brand != null &&
+                        EF.Functions.Like(
+                            v.Brand,
+                            $"%{searchTerm}%"))
                     .Select(v => v.Product.BusRegId);
+
+                // ==============================
+                // ATTRIBUTE VALUE SEARCH
+                // ==============================
+
+                var attributeBusinessIds = _context.ProductVariantAttributesNew
+                    .Where(va =>
+                        va.AttributeValue != null &&
+                        EF.Functions.Like(
+                            va.AttributeValue,
+                            $"%{searchTerm}%"))
+                    .Select(va => va.Variant.Product.BusRegId);
+
+                // ==============================
+                // COMBINE PRODUCT SEARCH
+                // ==============================
 
                 businessIds = storeNameIds
                     .Union(categoryBusinessIds)
-                    .Union(subcategoryBusinessIds)
+                    //.Union(subcategoryBusinessIds)
                     .Union(productFieldBusinessIds)
-                    .Union(skuBusinessIds)
+                    .Union(variantBusinessIds)
+                    .Union(attributeBusinessIds)
                     .Distinct();
 
+                // ==============================
+                // SERVICE SEARCH
+                // ==============================
+
                 var serviceBusinessNameIds = _context.BusinessRegisters
-                    .Where(b => EF.Functions.Like(b.BusinessName, $"%{searchTerm}%"))
+                    .Where(b => EF.Functions.Like(
+                        b.BusinessName,
+                        $"%{searchTerm}%"))
                     .Select(b => b.BusRegId);
 
                 var serviceCategoryIds = _context.BusinessServices
-                    .Where(bs => EF.Functions.Like(bs.BusinessServiceName, $"%{searchTerm}%"))
+                    .Where(bs => EF.Functions.Like(
+                        bs.BusinessServiceName,
+                        $"%{searchTerm}%"))
                     .Select(bs => bs.BusServId);
 
                 var serviceCategoryBusinessIds = _context.Service
@@ -681,8 +738,10 @@ namespace mytown.DataAccess.Repositories
                     .Select(s => s.BusRegId);
 
                 var serviceSubcategoryIds = _context.ServiceSubCategory
-                    .Where(ss => EF.Functions.Like(ss.ServiceTypeName, $"%{searchTerm}%"))
-                    .Select(ss => ss.ServSubcatId);
+      .Where(ss => EF.Functions.Like(
+          ss.ServiceTypeName,
+          $"%{searchTerm}%"))
+      .Select(ss => ss.ServSubcatId);
 
                 var serviceSubcategoryBusinessIds = _context.Service
                     .Where(s => serviceSubcategoryIds.Contains(s.ServSubcatId))
@@ -691,7 +750,9 @@ namespace mytown.DataAccess.Repositories
                 var serviceLocationBusinessIds = _context.ServiceProfiles
                     .Where(sp =>
                         sp.ServiceAvailableLocations != null &&
-                        EF.Functions.Like(sp.ServiceAvailableLocations, $"%{searchTerm}%"))
+                        EF.Functions.Like(
+                            sp.ServiceAvailableLocations,
+                            $"%{searchTerm}%"))
                     .Select(sp => sp.BusRegId);
 
                 serviceBusinessIds = serviceBusinessNameIds
@@ -804,11 +865,11 @@ namespace mytown.DataAccess.Repositories
         from od in _context.OrderDetails
         join p in _context.products on od.ProductId equals p.ProductId
 
-        join sku in _context.Sku_ProductVariants
+        join sku in _context.ProductVariantsNew
             on od.SkuId equals sku.SkuId into skuGroup
         from sku in skuGroup.DefaultIfEmpty()
 
-        join img in _context.ProductImages
+        join img in _context.ProductVariantImagesNew
             on sku.SkuId equals img.SkuId into imgGroup
         from img in imgGroup
             .OrderBy(i => i.SortOrder)

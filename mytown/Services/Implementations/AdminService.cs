@@ -265,6 +265,10 @@ GetSenderRegistersPaginatedAsync(
         {
             return await _adminRepo.GetOrdersSummaryCountsAsync();
         }
+        public async Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync()
+{
+    return await _adminRepo.GetBusinessLocationCountsAsync();
+}
 
         // Orders tab — full order list, paginated
         public async Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>

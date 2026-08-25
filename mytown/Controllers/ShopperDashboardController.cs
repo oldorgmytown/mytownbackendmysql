@@ -33,21 +33,21 @@ namespace mytown.Controllers
         }
 
 
-        [HttpGet("storeorderid_details")]
-        public async Task<IActionResult> GetShopperOrderDetails(
-            [FromQuery] int storeOrderId,
-            [FromQuery] string? search,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 100)
-        {
-            var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(
-                storeOrderId, search, pageNumber, pageSize);
+[HttpGet("storeorderid_details")]
+public async Task<IActionResult> GetShopperOrderDetails(
+    [FromQuery] int storeOrderId,
+    [FromQuery] string? search,
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 100)
+{
+    var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(
+        storeOrderId, search, pageNumber, pageSize);
 
-            if (result == null)
-                return NotFound();
+    if (result == null)
+        return NotFound();
 
-            return Ok(result);
-        }
+    return Ok(result);
+}
 
         [HttpGet("shopperDBbuy-again")]
         public async Task<IActionResult> GetBuyAgainProducts(
