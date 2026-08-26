@@ -151,8 +151,8 @@ namespace mytown.Services.Implementations
             ? order.ShippingDetails.Sum(s => s.Cost)
             : 0;
         decimal subTotal = orderAmount + shippingTotal;
-        decimal gstAmount = orderAmount * 0.18m;
-        decimal finalAmount = subTotal + gstAmount;
+        decimal gstAmount = orderAmount * 0;// now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
 
         // Razorpay also expects amount in paise
         int amountInPaise = (int)(finalAmount * 100);
@@ -212,8 +212,8 @@ public async Task<Payments> AddRazorpayPaymentAsync(
             ? order.ShippingDetails.Sum(s => s.Cost)
             : 0;
         decimal subTotal = orderAmount + shippingTotal;
-        decimal gstAmount = orderAmount * 0.18m;
-        decimal finalAmount = subTotal + gstAmount;
+        decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
 
         var payment = await _paymentRepo.AddPaymentAsync(
             orderId,
