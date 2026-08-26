@@ -21,37 +21,90 @@ namespace mytown.DataAccess.Repositories
             _connectionManager = connectionManager;
         }
 
-        public async Task<ShopperExperience> CreateExperienceAsync(ShopperExperience experience)
+        public async Task<ShopperExperience> CreateExperienceAsync(
+      ShopperExperience experience)
         {
             _context.ShopperExperiences.Add(experience);
+
             await _context.SaveChangesAsync();
+
             return experience;
+        }
+
+        public async Task CreateExperiencePhotosAsync(
+            List<ShopperExperiencePhoto> photos)
+        {
+            if (photos == null || photos.Count == 0)
+                return;
+
+            _context.ShopperExperiencePhotos.AddRange(photos);
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId)
         {
-            return await (from e in _context.ShopperExperiences
-                          join s in _context.ShopperRegisters on e.ShopperRegId equals s.ShopperRegId
-                          join b in _context.BusinessRegisters on e.BusRegId equals b.BusRegId
-                          where e.BusRegId == busRegId && e.Status == "Approved"
-                          orderby e.CreatedDate descending
-                          select new ShopperExperienceDto
-                          {
-                              ShopperExperienceId = e.ShopperExperienceId,
-                              ShopperRegId = e.ShopperRegId,
-                              ShopperName = e.IsAnonymous ? "Anonymous" : s.Username,
-                              BusRegId = e.BusRegId,
-                              BusinessName = b.BusinessName,
-                              PostType = e.PostType,
-                              Rating = e.Rating,
-                              Title = e.Title,
-                              Experience = e.Experience,
-                              IsAnonymous = e.IsAnonymous,
-                              Status = e.Status,
-                              CreatedDate = e.CreatedDate
-                          }).ToListAsync();
-        }
+            // Get experiences
+            var experiences = await (
+                from e in _context.ShopperExperiences
+                join s in _context.ShopperRegisters
+                    on e.ShopperRegId equals s.ShopperRegId
+                join b in _context.BusinessRegisters
+                    on e.BusRegId equals b.BusRegId
+                where e.BusRegId == busRegId
+                      && e.Status == "Approved"
+                orderby e.CreatedDate descending
+                select new ShopperExperienceDto
+                {
+                    ShopperExperienceId = e.ShopperExperienceId,
+                    ShopperRegId = e.ShopperRegId,
+                    ShopperName = e.IsAnonymous
+                        ? "Anonymous"
+                        : s.Username,
+                    BusRegId = e.BusRegId,
+                    BusinessName = b.BusinessName,
+                    PostType = e.PostType,
+                    Rating = e.Rating,
+                    Title = e.Title,
+                    Experience = e.Experience,
+                    IsAnonymous = e.IsAnonymous,
+                    Status = e.Status,
+                    CreatedDate = e.CreatedDate,
 
+                    PhotoUrls = new List<string>()
+                }
+            ).ToListAsync();
+
+
+            // Get all photos for these experiences
+            var experienceIds = experiences
+                .Select(x => x.ShopperExperienceId)
+                .ToList();
+
+            if (experienceIds.Any())
+            {
+                var photos = await _context.ShopperExperiencePhotos
+                    .Where(p => experienceIds.Contains(p.ShopperExperienceId))
+                    .Select(p => new
+                    {
+                        p.ShopperExperienceId,
+                        p.PhotoUrl
+                    })
+                    .ToListAsync();
+
+
+                // Attach photos to corresponding experience
+                foreach (var experience in experiences)
+                {
+                    experience.PhotoUrls = photos
+                        .Where(p => p.ShopperExperienceId == experience.ShopperExperienceId)
+                        .Select(p => p.PhotoUrl)
+                        .ToList();
+                }
+            }
+
+            return experiences;
+        }
         // Online visitors
         public async Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request)
         {

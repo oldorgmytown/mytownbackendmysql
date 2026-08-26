@@ -8,7 +8,11 @@ namespace mytown.DataAccess.Interfaces
     {
         // Shopper Experinces
 
-        Task<ShopperExperience> CreateExperienceAsync(ShopperExperience experience);
+        Task<ShopperExperience> CreateExperienceAsync(
+     ShopperExperience experience);
+
+        Task CreateExperiencePhotosAsync(
+            List<ShopperExperiencePhoto> photos);
         Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
 
         // online visitors
