@@ -1,4 +1,5 @@
 ﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.Repositories.Interfaces
 {
@@ -20,5 +21,7 @@ namespace mytown.Repositories.Interfaces
         Task CommitTransactionAsync();
 
         Task RollbackTransactionAsync();
+
+        Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId);
     }
 }

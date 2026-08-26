@@ -94,5 +94,32 @@ namespace mytown.Controllers
                     });
             }
         }
+
+        [HttpGet("product-filter-names/{busRegId}")]
+        public async Task<IActionResult> GetProductMasterNames(int busRegId)
+        {
+            try
+            {
+                var result = await _service
+                    .GetProductMasterNamesByBusinessAsync(busRegId);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        success = false,
+                        message = "Failed to get product master names.",
+                        error = ex.Message
+                    });
+            }
+        }
     }
 }

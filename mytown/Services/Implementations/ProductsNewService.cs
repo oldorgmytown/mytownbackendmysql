@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using mytown.DTOs.ProductsNew;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Repositories.Interfaces;
 using mytown.Services.Interfaces;
 
@@ -125,5 +126,11 @@ public class ProductsNewService : IProductsNewService
         var blobServiceClient = new BlobServiceClient(connectionString);
         var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
         await containerClient.GetBlobClient(fileName).DeleteIfExistsAsync();
+    }
+
+    public async Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId)
+    {
+        return await _repository
+            .GetProductMasterNamesByBusinessAsync(busRegId);
     }
 }
