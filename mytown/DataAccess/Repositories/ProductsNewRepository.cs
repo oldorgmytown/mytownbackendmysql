@@ -102,6 +102,7 @@ namespace mytown.Repositories
             }
         }
 
+        //Filter dropdown for product categories, subcategories and product types
 
         public async Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId)
         {
