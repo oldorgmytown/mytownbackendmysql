@@ -58,5 +58,7 @@ namespace MyTown.Models
 
         [ForeignKey(nameof(BusRegId))]
         public virtual BusinessRegister BusinessRegister { get; set; }
+        public virtual ICollection<ShopperExperiencePhoto> Photos { get; set; }
+       = new List<ShopperExperiencePhoto>();
     }
 }

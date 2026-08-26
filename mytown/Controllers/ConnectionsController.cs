@@ -41,6 +41,36 @@ CreateExperience(
             }
         }
 
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadReviewImage(
+  [FromForm] UploadVariantImageRequestDto request)
+        {
+            if (request.File == null || request.File.Length == 0)
+                return BadRequest(new { success = false, message = "No file provided." });
+
+            try
+            {
+                var fileName = await _service.UploadToBlobAsync(request.File, "ReviewImage");
+
+                return Ok(new
+                {
+                    success = true,
+                    fileName
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        success = false,
+                        message = "Failed to upload image.",
+                        error = ex.Message
+                    });
+            }
+        }
+
         [HttpGet("getexperiencesbybusiness/{busRegId}")]
         public async Task<IActionResult> GetExperiencesByBusiness(int busRegId)
         {

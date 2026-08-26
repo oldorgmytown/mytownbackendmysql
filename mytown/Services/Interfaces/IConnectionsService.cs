@@ -9,6 +9,9 @@ namespace mytown.Services.Interfaces
         // Shopper Experiences
 
         Task<ShopperExperienceDto> CreateExperienceAsync(CreateShopperExperienceDto dto);
+
+       
+        Task<string> UploadToBlobAsync(IFormFile file, string imageType);
         Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
 
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);

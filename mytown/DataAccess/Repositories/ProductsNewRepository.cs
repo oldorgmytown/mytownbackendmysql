@@ -105,48 +105,51 @@ namespace mytown.Repositories
 
         public async Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId)
         {
-            // 1. Get the IDs first and completely execute this query
             var productIds = await _context.ProductsNew
                 .Where(p => p.BusRegId == busRegId && p.IsActive)
                 .Select(p => new
                 {
-                    p.BusCatId,
+                    p.ProdSubcatId,
                     p.ProductGroupId,
                     p.ProdTypeId
                 })
                 .ToListAsync();
 
-            // 2. Extract IDs in memory
-            var categoryIds = productIds
-                .Where(x => x.BusCatId.HasValue)
-                .Select(x => x.BusCatId!.Value)
+            // Extract SubCategory IDs
+            var subCategoryIds = productIds
+                .Where(x => x.ProdSubcatId.HasValue)
+                .Select(x => x.ProdSubcatId!.Value)
                 .Distinct()
                 .ToList();
 
+            // Extract Product Group IDs
             var groupIds = productIds
                 .Where(x => x.ProductGroupId.HasValue)
                 .Select(x => x.ProductGroupId!.Value)
                 .Distinct()
                 .ToList();
 
+            // Extract Product Type IDs
             var typeIds = productIds
                 .Where(x => x.ProdTypeId.HasValue)
                 .Select(x => x.ProdTypeId!.Value)
                 .Distinct()
                 .ToList();
 
-            // 3. Categories
-            var categories = await _context.BusinessCategories
-                .Where(c => categoryIds.Contains((long)c.BusCatId))
-                .Select(c => new ProductCategoryDto
+
+            // Product SubCategories
+            var subCategories = await _context.product_sub_categories
+                .Where(sc => subCategoryIds.Contains((long)sc.ProdSubcatId))
+                .Select(sc => new ProductSubCategoryDto
                 {
-                    BusCatId = c.BusCatId,
-                    BusCatName = c.BusinessCategoryName
+                    ProdSubcatId = sc.ProdSubcatId,
+                    ProdSubCatName = sc.ProdSubcatName
                 })
-                .OrderBy(c => c.BusCatName)
+                .OrderBy(sc => sc.ProdSubCatName)
                 .ToListAsync();
 
-            // 4. Product Groups
+
+            // Product Groups
             var groups = await _context.Product_Groups
                 .Where(g => groupIds.Contains((long)g.ProdGroupId))
                 .Select(g => new ProductGroupDto
@@ -157,7 +160,8 @@ namespace mytown.Repositories
                 .OrderBy(g => g.ProductGroupName)
                 .ToListAsync();
 
-            // 5. Product Types
+
+            // Product Types
             var types = await _context.Product_Types
                 .Where(t => typeIds.Contains((long)t.ProdTypeId))
                 .Select(t => new ProductTypeDto
@@ -168,9 +172,10 @@ namespace mytown.Repositories
                 .OrderBy(t => t.ProductTypeName)
                 .ToListAsync();
 
+
             return new ProductMasterNamesDto
             {
-                ProductCategories = categories,
+                ProductSubCategories = subCategories,
                 ProductGroups = groups,
                 ProductTypes = types
             };

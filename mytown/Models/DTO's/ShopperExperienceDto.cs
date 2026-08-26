@@ -25,5 +25,7 @@
         public string Status { get; set; }
 
         public DateTime CreatedDate { get; set; }
+
+        public List<string> PhotoUrls { get; set; } = new();
     }
 }

@@ -2,15 +2,15 @@
 {
     public class ProductMasterNamesDto
     {
-        public List<ProductCategoryDto> ProductCategories { get; set; } = new();
+        public List<ProductSubCategoryDto> ProductSubCategories { get; set; } = new();
         public List<ProductGroupDto> ProductGroups { get; set; } = new();
         public List<ProductTypeDto> ProductTypes { get; set; } = new();
     }
 
-    public class ProductCategoryDto
+    public class ProductSubCategoryDto
     {
-        public long BusCatId { get; set; }
-        public string BusCatName { get; set; } = string.Empty;
+        public long ProdSubcatId { get; set; }
+        public string ProdSubCatName { get; set; } = string.Empty;
     }
 
     public class ProductGroupDto
