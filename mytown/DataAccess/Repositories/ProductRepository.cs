@@ -757,6 +757,7 @@ namespace mytown.DataAccess.Repositories
                     DiscountPrice = v.DiscountPrice,
                     Quantity = v.StockQuantity,
                     Weight = v.Weight,
+                    metric = v.MeasurementUnit,
                     Discount = v.Discount,
                     Images = _context.ProductVariantImagesNew
                     .Where(i => i.SkuId == v.SkuId)
@@ -768,13 +769,25 @@ namespace mytown.DataAccess.Repositories
                     })
                     .ToList(),
                     Attributes = v.Attributes
-                        .Select(a => new VariantAttributeDto
-                        {
-                            AttributeId = a.AttributeId,
-                            AttributeValueId = a.AttributeValueId,
-                            AttributeValue = a.AttributeValue
-                        })
-                        .ToList()
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
+
+                        AttributeName = _context.ProductAttributes
+                            .Where(pa => pa.AttributeId == a.AttributeId)
+                            .Select(pa => pa.AttributeName)
+                            .FirstOrDefault(),
+
+                        AttributeValueId = (int?)a.AttributeValueId,
+
+                        AttributeValue = a.AttributeValueId != null
+                            ? _context.ProductAttributeValues
+                                .Where(av => av.AttributeValueId == a.AttributeValueId)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                            : a.AttributeValue
+                    })
+                    .ToList()
                 }).ToList()
             };
         }
