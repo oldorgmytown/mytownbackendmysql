@@ -20,7 +20,7 @@ namespace mytown.Models.DTO_s
         public decimal? Height { get; set; }
         public decimal? Weight { get; set; }
         public decimal? Discount { get; set; }
-
+         public string? metric { get; set; }
 
         public string? VariantName => $"{SkuId_Productvariant}-{Color}";
 
