@@ -12,7 +12,7 @@ namespace mytown.Services.Interfaces
 
        
         Task<string> UploadToBlobAsync(IFormFile file, string imageType);
-        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
+        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId, int shopperRegId);
 
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
 

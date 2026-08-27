@@ -13,7 +13,8 @@ namespace mytown.DataAccess.Interfaces
 
         Task CreateExperiencePhotosAsync(
             List<ShopperExperiencePhoto> photos);
-        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
+        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId, int shopperRegId);
+
 
         // online visitors
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
