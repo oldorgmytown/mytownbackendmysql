@@ -101,9 +101,9 @@ namespace mytown.Services.Implementations
         }
 
 
-        public async Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId)
+        public async Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId, int shopperRegId)
         {
-            return await _Connectrepo.GetExperiencesByBusinessAsync(busRegId);
+            return await _Connectrepo.GetExperiencesByBusinessAsync(busRegId, shopperRegId);
         }
 
         public async Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request)

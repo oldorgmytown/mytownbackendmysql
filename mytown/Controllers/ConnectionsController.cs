@@ -72,11 +72,11 @@ CreateExperience(
         }
 
         [HttpGet("getexperiencesbybusiness/{busRegId}")]
-        public async Task<IActionResult> GetExperiencesByBusiness(int busRegId)
+        public async Task<IActionResult> GetExperiencesByBusiness(int busRegId, [FromQuery] int shopperRegId)
         {
             try
             {
-                var result = await _service.GetExperiencesByBusinessAsync(busRegId);
+                var result = await _service.GetExperiencesByBusinessAsync(busRegId, shopperRegId);
                 return Ok(result);
             }
             catch (Exception ex)
