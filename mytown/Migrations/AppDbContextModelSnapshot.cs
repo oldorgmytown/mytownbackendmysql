@@ -49,75 +49,19 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(150)")
                         .HasColumnName("bank_name");
 
-                    b.Property<string>("BankVerificationMessage")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("bank_verification_message");
-
-                    b.Property<string>("BankVerificationReference")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("bank_verification_reference");
-
-                    b.Property<int>("BankVerificationStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("int")
-                        .HasColumnName("bank_verification_status");
-
-                    b.Property<DateTime?>("BankVerifiedDate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("bank_verified_date");
-
                     b.Property<int>("BusRegId")
                         .HasColumnType("int")
                         .HasColumnName("bus_reg_id");
 
-                    b.Property<DateTime?>("ContactCreatedDate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("contact_created_date");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_date");
-
-                    b.Property<DateTime?>("FundAccountCreatedDate")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("fund_account_created_date");
 
                     b.Property<string>("IFSCCode")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)")
                         .HasColumnName("ifsc_code");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("RazorpayContactId")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("razorpay_contact_id");
-
-                    b.Property<int>("RazorpayContactStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("int")
-                        .HasColumnName("razorpay_contact_status");
-
-                    b.Property<string>("RazorpayFundAccountId")
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)")
-                        .HasColumnName("razorpay_fund_account_id");
-
-                    b.Property<int>("RazorpayFundAccountStatus")
-                        .HasMaxLength(20)
-                        .HasColumnType("int")
-                        .HasColumnName("razorpay_fund_account_status");
-
-                    b.Property<string>("Remarks")
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)")
-                        .HasColumnName("remarks");
 
                     b.Property<DateTime?>("UpdatedDate")
                         .HasColumnType("datetime(6)")
@@ -312,6 +256,67 @@ namespace mytown.Migrations
                     b.HasIndex("ShopperRegId");
 
                     b.ToTable("shopper_experiences");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ShopperExperienceComment", b =>
+                {
+                    b.Property<int>("ShopperExperienceCommentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_comment_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperienceCommentId"));
+
+                    b.Property<string>("CommentText")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("comment_text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_anonymous");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.HasKey("ShopperExperienceCommentId");
+
+                    b.ToTable("shopper_experience_comments");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ShopperExperienceLike", b =>
+                {
+                    b.Property<int>("ShopperExperienceLikeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_like_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperienceLikeId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.HasKey("ShopperExperienceLikeId");
+
+                    b.ToTable("shopper_experience_likes");
                 });
 
             modelBuilder.Entity("mytown.Models.AddToCart", b =>
@@ -1986,13 +1991,9 @@ namespace mytown.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("sku_id");
 
-                    b.Property<long?>("VariantSkuId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("variant_sku_id");
-
                     b.HasKey("VariantAttributeId");
 
-                    b.HasIndex("VariantSkuId");
+                    b.HasIndex("SkuId");
 
                     b.ToTable("product_variant_attributes");
 
@@ -2021,10 +2022,6 @@ namespace mytown.Migrations
                         .HasColumnName("file_name")
                         .HasAnnotation("Relational:JsonPropertyName", "file_name");
 
-                    b.Property<long?>("ProductVariantSkuId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("product_variant_sku_id");
-
                     b.Property<long>("SkuId")
                         .HasColumnType("bigint")
                         .HasColumnName("sku_id");
@@ -2034,13 +2031,9 @@ namespace mytown.Migrations
                         .HasColumnName("sort_order")
                         .HasAnnotation("Relational:JsonPropertyName", "sort_order");
 
-                    b.Property<long>("VariantId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("variant_id");
-
                     b.HasKey("ImageId");
 
-                    b.HasIndex("ProductVariantSkuId");
+                    b.HasIndex("SkuId");
 
                     b.ToTable("product_variant_images");
 
@@ -3143,6 +3136,35 @@ namespace mytown.Migrations
                     b.ToTable("shopper_db_notifications");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperExperiencePhoto", b =>
+                {
+                    b.Property<int>("ShopperExperiencePhotoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_photo_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperiencePhotoId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("PhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("photo_url");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.HasKey("ShopperExperiencePhotoId");
+
+                    b.HasIndex("ShopperExperienceId");
+
+                    b.ToTable("shopper_experience_photos");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
                 {
                     b.Property<int>("RecentViewId")
@@ -3156,8 +3178,8 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_viewed_at");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
                     b.Property<int>("ShopperId")
@@ -4073,16 +4095,16 @@ namespace mytown.Migrations
                         .HasColumnType("decimal(65,30)")
                         .HasColumnName("price");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int")
                         .HasColumnName("quantity");
 
-                    b.Property<int>("SkuId")
-                        .HasColumnType("int")
+                    b.Property<long>("SkuId")
+                        .HasColumnType("bigint")
                         .HasColumnName("sku_id")
                         .HasAnnotation("Relational:JsonPropertyName", "sku_id");
 
@@ -4418,7 +4440,9 @@ namespace mytown.Migrations
                 {
                     b.HasOne("mytown.Models.ProductVariantNew", "Variant")
                         .WithMany("Attributes")
-                        .HasForeignKey("VariantSkuId");
+                        .HasForeignKey("SkuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Variant");
                 });
@@ -4427,7 +4451,9 @@ namespace mytown.Migrations
                 {
                     b.HasOne("mytown.Models.ProductVariantNew", "ProductVariant")
                         .WithMany("Images")
-                        .HasForeignKey("ProductVariantSkuId");
+                        .HasForeignKey("SkuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("ProductVariant");
                 });
@@ -4555,9 +4581,20 @@ namespace mytown.Migrations
                     b.Navigation("ShopperRegister");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperExperiencePhoto", b =>
+                {
+                    b.HasOne("MyTown.Models.ShopperExperience", "ShopperExperience")
+                        .WithMany("Photos")
+                        .HasForeignKey("ShopperExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopperExperience");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
                 {
-                    b.HasOne("mytown.Models.Products", "Product")
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4723,13 +4760,13 @@ namespace mytown.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mytown.Models.Products", "Product")
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mytown.Models.Sku_ProductVariant", "Variant")
+                    b.HasOne("mytown.Models.ProductVariantNew", "Variant")
                         .WithMany()
                         .HasForeignKey("SkuId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4763,6 +4800,11 @@ namespace mytown.Migrations
                     b.Navigation("BusinessAccountDetail");
 
                     b.Navigation("BusinessProfile");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
+                {
+                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
