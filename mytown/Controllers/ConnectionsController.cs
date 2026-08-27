@@ -145,5 +145,81 @@ CreateExperience(
         {
             return Ok(await _service.GetConnectedShoppersAsync(busRegId));
         }
+
+
+        // likes and comments
+        [HttpPost("toggle-like")]
+        public async Task<IActionResult> ToggleExperienceLike(
+    [FromBody] ShopperExperienceLikeDto dto)
+        {
+            try
+            {
+                var isLiked =
+                    await _service.ToggleExperienceLikeAsync(dto);
+
+                return Ok(new
+                {
+                    shopperExperienceId = dto.ShopperExperienceId,
+                    isLiked = isLiked
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error toggling experience like");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while updating like.");
+            }
+        }
+
+        [HttpPost("add-comment")]
+        public async Task<IActionResult> AddExperienceComment(
+    [FromBody] CreateShopperExperienceCommentDto dto)
+        {
+            try
+            {
+                var result =
+                    await _service.AddExperienceCommentAsync(dto);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error adding experience comment");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while adding comment.");
+            }
+        }
+
+        [HttpGet("getcomments")]
+        public async Task<IActionResult> GetExperienceComments(
+    int shopperExperienceId)
+        {
+            try
+            {
+                var result =
+                    await _service.GetExperienceCommentsAsync(
+                        shopperExperienceId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error getting experience comments");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while getting comments.");
+            }
+        }
     }
 }

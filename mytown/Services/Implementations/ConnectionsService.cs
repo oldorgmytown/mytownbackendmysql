@@ -130,5 +130,82 @@ namespace mytown.Services.Implementations
         {
             return await _Connectrepo.GetConnectedShoppersAsync(busRegId);
         }
+
+        // for likes and comments
+        public async Task<bool> ToggleExperienceLikeAsync(
+    ShopperExperienceLikeDto dto)
+        {
+            var alreadyLiked =
+                await _Connectrepo.IsExperienceLikedAsync(
+                    dto.ShopperExperienceId,
+                    dto.ShopperRegId);
+
+            if (alreadyLiked)
+            {
+                await _Connectrepo.RemoveExperienceLikeAsync(
+                    dto.ShopperExperienceId,
+                    dto.ShopperRegId);
+
+                return false;
+            }
+
+            var like = new ShopperExperienceLike
+            {
+                ShopperExperienceId = dto.ShopperExperienceId,
+                ShopperRegId = dto.ShopperRegId,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            await _Connectrepo.AddExperienceLikeAsync(like);
+
+            return true;
+        }
+
+        //comments
+        public async Task<ShopperExperienceCommentDto>
+    AddExperienceCommentAsync(
+        CreateShopperExperienceCommentDto dto)
+        {
+            var comment = new ShopperExperienceComment
+            {
+                ShopperExperienceId = dto.ShopperExperienceId,
+                ShopperRegId = dto.ShopperRegId,
+                CommentText = dto.CommentText,
+                IsAnonymous = dto.IsAnonymous,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            var result =
+                await _Connectrepo.AddExperienceCommentAsync(comment);
+
+            return new ShopperExperienceCommentDto
+            {
+                ShopperExperienceCommentId =
+                    result.ShopperExperienceCommentId,
+
+                ShopperExperienceId =
+                    result.ShopperExperienceId,
+
+                ShopperRegId =
+                    result.ShopperRegId,
+
+                CommentText =
+                    result.CommentText,
+
+                IsAnonymous =
+                    result.IsAnonymous,
+
+                CreatedDate =
+                    result.CreatedDate
+            };
+        }
+
+        public async Task<List<ShopperExperienceCommentDto>>
+    GetExperienceCommentsAsync(
+        int shopperExperienceId)
+        {
+            return await _Connectrepo
+                .GetExperienceCommentsAsync(shopperExperienceId);
+        }
     }
 }

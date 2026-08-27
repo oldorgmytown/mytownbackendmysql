@@ -202,5 +202,106 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
+
+        // like
+        public async Task<ShopperExperienceLike> AddExperienceLikeAsync(
+    ShopperExperienceLike like)
+        {
+            _context.ShopperExperienceLikes.Add(like);
+
+            await _context.SaveChangesAsync();
+
+            return like;
+        }
+
+        public async Task<bool> RemoveExperienceLikeAsync(
+    int shopperExperienceId,
+    int shopperRegId)
+        {
+            var like = await _context.ShopperExperienceLikes
+                .FirstOrDefaultAsync(x =>
+                    x.ShopperExperienceId == shopperExperienceId &&
+                    x.ShopperRegId == shopperRegId);
+
+            if (like == null)
+                return false;
+
+            _context.ShopperExperienceLikes.Remove(like);
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        //check if liked by shopper
+
+        public async Task<bool> IsExperienceLikedAsync(
+    int shopperExperienceId,
+    int shopperRegId)
+        {
+            return await _context.ShopperExperienceLikes
+                .AnyAsync(x =>
+                    x.ShopperExperienceId == shopperExperienceId &&
+                    x.ShopperRegId == shopperRegId);
+        }
+
+        //like count
+
+        public async Task<int> GetExperienceLikeCountAsync(
+    int shopperExperienceId)
+        {
+            return await _context.ShopperExperienceLikes
+                .CountAsync(x =>
+                    x.ShopperExperienceId == shopperExperienceId);
+        }
+
+        //addcomment
+        public async Task<ShopperExperienceComment> AddExperienceCommentAsync(
+    ShopperExperienceComment comment)
+        {
+            _context.ShopperExperienceComments.Add(comment);
+
+            await _context.SaveChangesAsync();
+
+            return comment;
+        }
+
+        //get comment
+        public async Task<List<ShopperExperienceCommentDto>> GetExperienceCommentsAsync(
+    int shopperExperienceId)
+        {
+            return await (
+                from c in _context.ShopperExperienceComments
+                join s in _context.ShopperRegisters
+                    on c.ShopperRegId equals s.ShopperRegId
+                where c.ShopperExperienceId == shopperExperienceId
+                orderby c.CreatedDate descending
+                select new ShopperExperienceCommentDto
+                {
+                    ShopperExperienceCommentId =
+                        c.ShopperExperienceCommentId,
+
+                    ShopperExperienceId =
+                        c.ShopperExperienceId,
+
+                    ShopperRegId =
+                        c.ShopperRegId,
+
+                    ShopperName =
+                        c.IsAnonymous
+                            ? "Anonymous"
+                            : s.Username,
+
+                    CommentText =
+                        c.CommentText,
+
+                    IsAnonymous =
+                        c.IsAnonymous,
+
+                    CreatedDate =
+                        c.CreatedDate
+                }
+            ).ToListAsync();
+        }
     }
 }

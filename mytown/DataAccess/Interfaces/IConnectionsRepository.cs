@@ -24,7 +24,28 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId);
 
-        
+
+        Task<ShopperExperienceLike> AddExperienceLikeAsync(
+    ShopperExperienceLike like);
+
+        Task<bool> RemoveExperienceLikeAsync(
+            int shopperExperienceId,
+            int shopperRegId);
+
+        Task<bool> IsExperienceLikedAsync(
+            int shopperExperienceId,
+            int shopperRegId);
+
+        Task<int> GetExperienceLikeCountAsync(
+            int shopperExperienceId);
+
+        Task<ShopperExperienceComment> AddExperienceCommentAsync(
+            ShopperExperienceComment comment);
+
+        Task<List<ShopperExperienceCommentDto>> GetExperienceCommentsAsync(
+            int shopperExperienceId);
+
+
 
 
     }

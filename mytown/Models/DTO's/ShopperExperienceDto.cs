@@ -27,5 +27,13 @@
         public DateTime CreatedDate { get; set; }
 
         public List<string> PhotoUrls { get; set; } = new();
+
+        // Likes
+        public int LikeCount { get; set; }
+
+        public bool IsLiked { get; set; }
+
+        // Comments
+        public int CommentCount { get; set; }
     }
 }

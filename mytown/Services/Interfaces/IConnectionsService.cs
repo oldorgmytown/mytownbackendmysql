@@ -22,6 +22,17 @@ namespace mytown.Services.Interfaces
         Task<bool> IsBusinessConnectedAsync(int busRegId, int shopperRegId);
         Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId);
 
+        //likes and comments
+
+        Task<bool> ToggleExperienceLikeAsync(
+    ShopperExperienceLikeDto dto);
+
+        Task<ShopperExperienceCommentDto> AddExperienceCommentAsync(
+            CreateShopperExperienceCommentDto dto);
+
+        Task<List<ShopperExperienceCommentDto>> GetExperienceCommentsAsync(
+            int shopperExperienceId);
+
 
 
     }
