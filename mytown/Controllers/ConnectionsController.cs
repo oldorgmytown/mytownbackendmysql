@@ -42,12 +42,42 @@ CreateExperience(
             }
         }
 
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadReviewImage(
+  [FromForm] UploadVariantImageRequestDto request)
+        {
+            if (request.File == null || request.File.Length == 0)
+                return BadRequest(new { success = false, message = "No file provided." });
+
+            try
+            {
+                var fileName = await _service.UploadToBlobAsync(request.File, "ReviewImage");
+
+                return Ok(new
+                {
+                    success = true,
+                    fileName
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    StatusCodes.Status500InternalServerError,
+                    new
+                    {
+                        success = false,
+                        message = "Failed to upload image.",
+                        error = ex.Message
+                    });
+            }
+        }
+
         [HttpGet("getexperiencesbybusiness/{busRegId}")]
-        public async Task<IActionResult> GetExperiencesByBusiness(int busRegId)
+        public async Task<IActionResult> GetExperiencesByBusiness(int busRegId, [FromQuery] int shopperRegId)
         {
             try
             {
-                var result = await _service.GetExperiencesByBusinessAsync(busRegId);
+                var result = await _service.GetExperiencesByBusinessAsync(busRegId, shopperRegId);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -115,6 +145,82 @@ CreateExperience(
         public async Task<IActionResult> GetConnectedShoppers(int busRegId)
         {
             return Ok(await _service.GetConnectedShoppersAsync(busRegId));
+        }
+
+
+        // likes and comments
+        [HttpPost("toggle-like")]
+        public async Task<IActionResult> ToggleExperienceLike(
+    [FromBody] ShopperExperienceLikeDto dto)
+        {
+            try
+            {
+                var isLiked =
+                    await _service.ToggleExperienceLikeAsync(dto);
+
+                return Ok(new
+                {
+                    shopperExperienceId = dto.ShopperExperienceId,
+                    isLiked = isLiked
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error toggling experience like");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while updating like.");
+            }
+        }
+
+        [HttpPost("add-comment")]
+        public async Task<IActionResult> AddExperienceComment(
+    [FromBody] CreateShopperExperienceCommentDto dto)
+        {
+            try
+            {
+                var result =
+                    await _service.AddExperienceCommentAsync(dto);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error adding experience comment");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while adding comment.");
+            }
+        }
+
+        [HttpGet("getcomments")]
+        public async Task<IActionResult> GetExperienceComments(
+    int shopperExperienceId)
+        {
+            try
+            {
+                var result =
+                    await _service.GetExperienceCommentsAsync(
+                        shopperExperienceId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error getting experience comments");
+
+                return StatusCode(
+                    500,
+                    "An error occurred while getting comments.");
+            }
         }
     }
 }

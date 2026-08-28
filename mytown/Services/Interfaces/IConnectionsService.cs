@@ -9,7 +9,10 @@ namespace mytown.Services.Interfaces
         // Shopper Experiences
 
         Task<ShopperExperienceDto> CreateExperienceAsync(CreateShopperExperienceDto dto);
-        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
+
+       
+        Task<string> UploadToBlobAsync(IFormFile file, string imageType);
+        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId, int shopperRegId);
 
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
 
@@ -18,6 +21,17 @@ namespace mytown.Services.Interfaces
         Task<bool> ConnectBusinessAsync(BusinessConnection connection);
         Task<bool> IsBusinessConnectedAsync(int busRegId, int shopperRegId);
         Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId);
+
+        //likes and comments
+
+        Task<bool> ToggleExperienceLikeAsync(
+    ShopperExperienceLikeDto dto);
+
+        Task<ShopperExperienceCommentDto> AddExperienceCommentAsync(
+            CreateShopperExperienceCommentDto dto);
+
+        Task<List<ShopperExperienceCommentDto>> GetExperienceCommentsAsync(
+            int shopperExperienceId);
 
 
 

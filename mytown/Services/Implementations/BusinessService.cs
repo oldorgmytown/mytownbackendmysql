@@ -1,4 +1,5 @@
-﻿using mytown.DataAccess;
+﻿using Microsoft.AspNetCore.Mvc;
+using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Models;
@@ -77,6 +78,22 @@ namespace mytown.Services
             return _repo.BusinessSubCategoriesforStores(buscatid);
         }
 
+        public async Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId)
+        {
+            return await _repo.GetProductGroupsBySubCategoryId(prodSubcatId);
+        }
+
+        public async Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId)
+        {
+            return await _repo.GetProductTypesByGroupAndSubCategory(prodSubcatId, prodGroupId);            
+        }
+
+        public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId)
+        {
+            return await _repo.GetAttributesBySubCategoryId(prodSubcatId, busCatId);
+        }
+
+       
         //add bank account details
         public async Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail)
         {

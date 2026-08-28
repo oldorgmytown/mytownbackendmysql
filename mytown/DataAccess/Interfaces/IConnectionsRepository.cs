@@ -8,8 +8,13 @@ namespace mytown.DataAccess.Interfaces
     {
         // Shopper Experinces
 
-        Task<ShopperExperience> CreateExperienceAsync(ShopperExperience experience);
-        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId);
+        Task<ShopperExperience> CreateExperienceAsync(
+     ShopperExperience experience);
+
+        Task CreateExperiencePhotosAsync(
+            List<ShopperExperiencePhoto> photos);
+        Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId, int shopperRegId);
+
 
         // online visitors
         Task CaptureBusinessProfileViewAsync(CaptureBusinessProfileViewDto request);
@@ -20,7 +25,28 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<ConnectedShopperDto>> GetConnectedShoppersAsync(int busRegId);
 
-        
+
+        Task<ShopperExperienceLike> AddExperienceLikeAsync(
+    ShopperExperienceLike like);
+
+        Task<bool> RemoveExperienceLikeAsync(
+            int shopperExperienceId,
+            int shopperRegId);
+
+        Task<bool> IsExperienceLikedAsync(
+            int shopperExperienceId,
+            int shopperRegId);
+
+        Task<int> GetExperienceLikeCountAsync(
+            int shopperExperienceId);
+
+        Task<ShopperExperienceComment> AddExperienceCommentAsync(
+            ShopperExperienceComment comment);
+
+        Task<List<ShopperExperienceCommentDto>> GetExperienceCommentsAsync(
+            int shopperExperienceId);
+
+
 
 
     }

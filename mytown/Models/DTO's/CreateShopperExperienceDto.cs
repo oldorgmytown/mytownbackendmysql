@@ -14,7 +14,7 @@
 
         public string ExperienceText { get; set; }
 
-        public string? PhotoUrl { get; set; }
+        public List<string> PhotoUrls { get; set; } = new List<string>();
 
         public bool IsAnonymous { get; set; }
     }

@@ -243,7 +243,7 @@ namespace mytown.DataAccess.Repositories
 
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
         {
-            var result = (from product in _context.products
+            var result = (from product in _context.ProductsNew
                           join subCategory in _context.product_sub_categories
                               on product.ProdSubcatId equals subCategory.ProdSubcatId
                           join subCatImage in _context.Subcategoryimages_Busregids

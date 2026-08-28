@@ -300,6 +300,35 @@ namespace mytown.Controllers
             return Ok(await _businessService.BusinessSubCategoriesforStores(buscatid));
         }
 
+       // [Authorize]
+        [HttpGet("SubCategorybyProductsubcat")]
+        public async Task<ActionResult<IEnumerable<ProductGroupResponseDto>>> ProductGroupsBySubCategory(int prodSubcatId)
+        {
+            return Ok(await _businessService.GetProductGroupsBySubCategoryId(prodSubcatId));
+        }
+
+      //  [Authorize]
+        [HttpGet("ProductTypesByGroupAndSubCategory")]
+        public async Task<ActionResult<IEnumerable<ProductType>>> ProductTypesByGroupAndSubCategory(
+    int prodSubcatId,
+    int prodGroupId)
+        {
+            return Ok(await _businessService.GetProductTypesByGroupAndSubCategory(
+                prodSubcatId,
+                prodGroupId));
+        }
+
+        //[Authorize]
+        [HttpGet("ProductAttributesBySubCategory")]
+        public async Task<ActionResult<IEnumerable<ProductAttributes>>> ProductAttributesBySubCategory(
+    int prodSubcatId,
+    int busCatId)
+        {
+            return Ok(await _businessService.GetAttributesBySubCategoryId(
+                prodSubcatId,
+                busCatId));
+        }
+
 
         // ================== UPLOAD IMAGE ===================
         [Authorize]

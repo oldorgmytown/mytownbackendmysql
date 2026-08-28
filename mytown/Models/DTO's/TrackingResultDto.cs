@@ -62,7 +62,7 @@ namespace mytown.Models.DTO_s
     public class TrackingProductDto
     {
         public int ProductId { get; set; }
-        public int? SkuId { get; set; }
+        public long? SkuId { get; set; }
         public string ProductName { get; set; }
         public string ProductImage { get; set; }
         public int Quantity { get; set; }

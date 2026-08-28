@@ -55,6 +55,9 @@ namespace mytown.Models
             public DbSet<ShopperProductRecentView> ShopperProductRecentViews { get; set; }
             public DbSet<ProductImage> ProductImages { get; set; }
             public DbSet<ProductType> Product_Types { get; set; }
+            public DbSet<ProductGroup> Product_Groups { get; set; }
+            public DbSet<ProductAttributes> ProductAttributes { get; set; }
+            public DbSet<ProductAttributeValue> ProductAttributeValues { get; set; }
             public DbSet<Fabric> Fabrics { get; set; }
             public DbSet<Design> Designs { get; set; }
             public DbSet<ProductSize> ProductSizes { get; set; }
@@ -99,12 +102,26 @@ namespace mytown.Models
 
             // shopper experience
             public DbSet<ShopperExperience> ShopperExperiences { get; set; }
+            public DbSet<ShopperExperiencePhoto> ShopperExperiencePhotos { get; set; }
+
+            public DbSet<ShopperExperienceLike> ShopperExperienceLikes { get; set; }
+
+            public DbSet<ShopperExperienceComment> ShopperExperienceComments { get; set; }
             public DbSet<BusinessProfileViewer> BusinessProfileViewers { get; set; }
             public DbSet<BusinessConnection> BusinessConnections { get; set; }
 
             // location images
             public DbSet<LocationImage> LocationImages { get; set; }
             public DbSet<CityImage> CityImages { get; set; }
+
+            //new product form
+
+            public DbSet<ProductsNew> ProductsNew { get; set; }
+
+            public DbSet<ProductVariantNew> ProductVariantsNew { get; set; }
+
+            public DbSet<ProductVariantAttributeNew> ProductVariantAttributesNew { get; set; }
+            public DbSet<ProductVariantImageNew> ProductVariantImagesNew { get; set; }
 
             protected override void OnModelCreating(ModelBuilder modelBuilder)
             {

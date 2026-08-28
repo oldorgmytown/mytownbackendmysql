@@ -115,74 +115,105 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
-            int shopperId, int days = 7, int limit = 10)
+      int shopperId, int days = 7, int limit = 10)
         {
             var sinceDate = DateTime.UtcNow.AddDays(-days);
 
-            var productDtos = await _context.ShopperProductRecentViews
-                .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate && v.Product.IsActive
-                    && v.Product.ProductStatus == "Approved")
-                .OrderByDescending(v => v.LastViewedAt)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.BusinessRegister)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Sku_ProductVariants)
-                        .ThenInclude(s => s.Images)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.ProductType)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Fabric)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Design)
-                .Select(v => new ProdcVariantforShopperDto
+            var productDtos = await (
+                from rv in _context.ShopperProductRecentViews
+
+                join p in _context.ProductsNew
+                    on rv.ProductId equals p.ProductId
+
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+                where rv.ShopperId == shopperId
+                      && rv.LastViewedAt >= sinceDate
+                      && p.IsActive
+                      && p.ProductStatus == "ACTIVE"
+
+                orderby rv.LastViewedAt descending
+
+                select new ProdcVariantforShopperDto
                 {
-                    ProductId = v.Product.ProductId,
-                    BusRegId = v.Product.BusRegId,
-                    BusinessName = v.Product.BusinessRegister.BusinessName,
-                    BuscatId = v.Product.BuscatId,
-                    Location = $"{v.Product.BusinessRegister.BusinessCity}, {v.Product.BusinessRegister.BusinessState}",
-                    Country = v.Product.BusinessRegister.BusinessCountry,
-                    ProdcatId = v.Product.ProdSubcatId,
-                    ProductTypeId = v.Product.ProductTypeId,
-                    ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,
-                    FabricId = v.Product.FabricId,
-                    FabricName = v.Product.Fabric != null ? v.Product.Fabric.FabricName : null,
-                    DesignId = v.Product.DesignId,
-                    DesignName = v.Product.Design != null ? v.Product.Design.DesignName : null,
-                    ProductName = v.Product.ProductName,
-                    ProductDescription = v.Product.ProductDescription,
-                    SupplierName = v.Product.SupplierName,
-                    Variants = v.Product.Sku_ProductVariants.Select(s => new Sku_ProductVariantDto
-                    {
-                        SkuId_Productvariant = s.SkuId,
-                        ProductId = s.ProductId,
-                        Color = s.Color,
-                        SizeId = s.SizeId,
-                        SizeName = s.Size != null ? s.Size.SizeName : null,
-                        Sku_Cost = s.Sku_Cost,
-                        DiscountPrice = s.DiscountPrice,
-                        Quantity = s.Quantity,
-                        Length = s.Length,
-                        Width = s.Width,
-                        Height = s.Height,
-                        Weight = s.Weight,
-                        Discount = s.Discount,
-                        Images = s.Images
-                            .OrderBy(i => i.SortOrder)
-                            .Select(img => new ProductImageDto
-                            {
-                                FileName = img.FileName,
-                                SortOrder = img.SortOrder
-                            })
-                            .ToList()
-                    }).ToList()
-                })
-                .Take(limit)
-                .ToListAsync();
+                    ProductId = (int)p.ProductId,
+
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
+
+                    BuscatId = (int)(p.BusCatId ?? 0),
+
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
+
+                    ProdcatId = (int)(p.ProdSubcatId ?? 0),
+
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = bp.BusinessName,
+
+                    Variants = _context.ProductVariantsNew
+                        .Where(v => v.ProductId == p.ProductId)
+                        .Select(v => new Sku_ProductVariantDto
+                        {
+                            SkuId_Productvariant = (int)v.SkuId,
+                            ProductId = (int)v.ProductId,
+
+                            Sku_Cost = v.Price,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.StockQuantity,
+                            Weight = v.Weight,
+                            Discount = v.Discount,
+
+                            Images = _context.ProductVariantImagesNew
+                                .Where(i => i.SkuId == v.SkuId)
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList(),
+
+                            Attributes = v.Attributes
+                                .Select(a => new VariantAttributeDto
+                                {
+                                    AttributeId = (int)a.AttributeId,
+
+                                    AttributeValueId = a.AttributeValueId.HasValue
+                                        ? (int?)a.AttributeValueId.Value
+                                        : null,
+
+                                    AttributeValue = a.AttributeValue
+                                        ?? _context.ProductAttributeValues
+                                            .Where(av =>
+                                                a.AttributeValueId.HasValue &&
+                                                av.AttributeValueId ==
+                                                (int)a.AttributeValueId.Value)
+                                            .Select(av => av.AttributeValue)
+                                            .FirstOrDefault()
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                }
+            )
+            .Take(limit)
+            .ToListAsync();
 
             return productDtos;
         }
-
         public async Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesByShopperIdAsync(int shopperRegId)
         {
             return await _context.ShopperAlternateAddresses

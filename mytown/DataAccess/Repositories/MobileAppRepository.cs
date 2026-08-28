@@ -52,15 +52,14 @@ namespace mytown.DataAccess.Repositories
                 .Select(g => g.OrderByDescending(x => x.TotalSold).First())
                 .ToDictionary(x => x.ProductId, x => x.SkuId);
 
-            // Step 3: Load products + store + variant data
+            // Step 3: Load products + store + variant data (NEW tables)
             var products = await (
-                from p in _context.products
+                from p in _context.ProductsNew
                 join b in _context.BusinessRegisters
                     on p.BusRegId equals b.BusRegId
-                join v in _context.Sku_ProductVariants
-                    .Include(x => x.Images)
+                join v in _context.ProductVariantsNew
                     on p.ProductId equals v.ProductId
-                where topProductIds.Contains(p.ProductId)
+                where topProductIds.Contains((int)p.ProductId)
                 select new
                 {
                     Product = p,
@@ -72,11 +71,11 @@ namespace mytown.DataAccess.Repositories
             // Step 4: Filter best variant in memory and map DTO
             var result = products
                 .Where(x =>
-                    bestVariantLookup.ContainsKey(x.Product.ProductId) &&
-                    bestVariantLookup[x.Product.ProductId] == x.Variant.SkuId)
+                    bestVariantLookup.ContainsKey((int)x.Product.ProductId) &&
+                    bestVariantLookup[(int)x.Product.ProductId] == (int)x.Variant.SkuId)
                 .Select(x => new PopularProductDto
                 {
-                    ProductId = x.Product.ProductId,
+                    ProductId = (int)x.Product.ProductId,
                     ProductName = x.Product.ProductName,
 
                     BusRegId = x.Store.BusRegId,
@@ -84,19 +83,20 @@ namespace mytown.DataAccess.Repositories
                     StoreCity = $"{x.Store.BusinessCity}, {x.Store.BusinessState}",
                     StoreCountry = x.Store.BusinessCountry,
 
-                    SkuId = x.Variant.SkuId,
+                    SkuId = (int)x.Variant.SkuId,
 
-                    Cost = x.Variant.Sku_Cost,
+                    Cost = x.Variant.Price,
                     DiscountPrice = x.Variant.DiscountPrice,
                     DiscountPercent = x.Variant.Discount,
 
-                    ImageName = x.Variant.Images
+                    ImageName = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == x.Variant.SkuId)
                         .OrderBy(i => i.SortOrder)
                         .Select(i => i.FileName)
                         .FirstOrDefault(),
 
                     TotalOrders = topProducts
-                        .First(tp => tp.ProductId == x.Product.ProductId)
+                        .First(tp => tp.ProductId == (int)x.Product.ProductId)
                         .TotalOrders
                 })
                 .OrderByDescending(x => x.TotalOrders)
@@ -227,7 +227,7 @@ namespace mytown.DataAccess.Repositories
                     DestinationCountry = tp.DestinationCountry,
                     StartDate = tp.StartDate,
                     ArrivalDate = tp.ArrivalDate,
-                    
+
                     MaxWeightKg = tp.MaxWeightKg,
 
                     PreferredContact = tp.PreferredContact,
@@ -258,12 +258,12 @@ namespace mytown.DataAccess.Repositories
                 .GroupBy(x => x.Town.ToLower())
                 .Select(g => new TownListDto
                 {
-                    TownName = g.First().Town,              // e.g. "Pune"
-                    ActiveStoreCount = g.Count(),           // approved businesses count
+                    TownName = g.First().Town,
+                    ActiveStoreCount = g.Count(),
                     PopularStores = g
                         .Select(x => x.BusinessName)
                         .Distinct()
-                        .ToList()                           // all business names
+                        .ToList()
                 })
                 .OrderByDescending(x => x.ActiveStoreCount)
                 .ToList();
@@ -272,120 +272,120 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<List<AllProductsDto>> GetAllProductsAsync()
-{
-    var result = await (
-        from p in _context.products
-        join b in _context.BusinessRegisters
-            on p.BusRegId equals b.BusRegId
-        join v in _context.Sku_ProductVariants
-            .Include(x => x.Images)
-            on p.ProductId equals v.ProductId
-
-        select new AllProductsDto
         {
-            ProductId = p.ProductId,
-            ProductName = p.ProductName,
+            var result = await (
+                from p in _context.ProductsNew
+                join b in _context.BusinessRegisters
+                    on p.BusRegId equals b.BusRegId
+                join v in _context.ProductVariantsNew
+                    on p.ProductId equals v.ProductId
+                where p.IsActive
+                      && p.ProductStatus == "ACTIVE"
+                select new AllProductsDto
+                {
+                    ProductId = (int)p.ProductId,
+                    ProductName = p.ProductName,
 
-            BusRegId = b.BusRegId,
-            StoreName = b.BusinessName,
-            StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
-            StoreCountry = b.BusinessCountry,
+                    BusRegId = b.BusRegId,
+                    StoreName = b.BusinessName,
+                    StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
+                    StoreCountry = b.BusinessCountry,
 
-            SkuId = v.SkuId,
+                    SkuId = (int)v.SkuId,
 
-            Cost = v.Sku_Cost,
-            DiscountPrice = v.DiscountPrice,
-            DiscountPercent = v.Discount,
+                    Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    DiscountPercent = v.Discount,
 
-            ImageName = v.Images
-                .OrderBy(i => i.SortOrder)
-                .Select(i => i.FileName)
-                .FirstOrDefault(),
+                    ImageName = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault(),
 
-            ProductDescription = p.ProductDescription,
-            AvailableQuantity = v.Quantity
-        })
-        .ToListAsync();
+                    ProductDescription = p.ProductDescription,
+                    AvailableQuantity = (int)v.StockQuantity
+                })
+                .ToListAsync();
 
-    return result;
-}
+            return result;
+        }
 
-
-    public async Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId)
-{
-    var result = await (
-        from p in _context.products
-        join b in _context.BusinessRegisters
-            on p.BusRegId equals b.BusRegId
-        join v in _context.Sku_ProductVariants
-            .Include(x => x.Images)
-            on p.ProductId equals v.ProductId
-        where p.ProdSubcatId == subCategoryId
-              && p.IsActive == true
-        select new AllProductsDto
+        public async Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId)
         {
-            ProductId = p.ProductId,
-            ProductName = p.ProductName,
+            var result = await (
+                from p in _context.ProductsNew
+                join b in _context.BusinessRegisters
+                    on p.BusRegId equals b.BusRegId
+                join v in _context.ProductVariantsNew
+                    on p.ProductId equals v.ProductId
+                where p.ProdSubcatId == subCategoryId
+                      && p.IsActive
+                      && p.ProductStatus == "ACTIVE"
+                select new AllProductsDto
+                {
+                    ProductId = (int)p.ProductId,
+                    ProductName = p.ProductName,
 
-            BusRegId = b.BusRegId,
-            StoreName = b.BusinessName,
-            StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
-            StoreCountry = b.BusinessCountry,
+                    BusRegId = b.BusRegId,
+                    StoreName = b.BusinessName,
+                    StoreCity = $"{b.BusinessCity}, {b.BusinessState}",
+                    StoreCountry = b.BusinessCountry,
 
-            SkuId = v.SkuId,
+                    SkuId = (int)v.SkuId,
 
-            Cost = v.Sku_Cost,
-            DiscountPrice = v.DiscountPrice,
-            DiscountPercent = v.Discount,
+                    Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    DiscountPercent = v.Discount,
 
-            ImageName = v.Images
-                .OrderBy(i => i.SortOrder)
-                .Select(i => i.FileName)
-                .FirstOrDefault(),
+                    ImageName = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault(),
 
-            ProductDescription = p.ProductDescription,
+                    ProductDescription = p.ProductDescription,
 
-            AvailableQuantity = (int)v.Quantity
-        })
-        .ToListAsync();
+                    AvailableQuantity = (int)v.StockQuantity
+                })
+                .ToListAsync();
 
-    return result;
-}
-
+            return result;
+        }
 
         public async Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId)
-{
-    var result = await (
-        from p in _context.products
-        join br in _context.BusinessRegisters
-            on p.BusRegId equals br.BusRegId
-        join bp in _context.BusinessProfiles
-            on br.BusRegId equals bp.BusRegId
-        where p.ProdSubcatId == prodSubcatId
-              && p.IsActive
-        select new StoreBySubCategoryDto
         {
-            BusRegId = br.BusRegId,
+            var result = await (
+                from p in _context.ProductsNew
+                join br in _context.BusinessRegisters
+                    on p.BusRegId equals br.BusRegId
+                join bp in _context.BusinessProfiles
+                    on br.BusRegId equals bp.BusRegId
+                where p.ProdSubcatId == prodSubcatId
+                      && p.IsActive
+                select new StoreBySubCategoryDto
+                {
+                    BusRegId = br.BusRegId,
 
-            StoreName = br.BusinessName,
-            StoreCity = br.BusinessCity,
-            StoreState = br.BusinessState,
-            StoreCountry = br.BusinessCountry,
+                    StoreName = br.BusinessName,
+                    StoreCity = br.BusinessCity,
+                    StoreState = br.BusinessState,
+                    StoreCountry = br.BusinessCountry,
 
-            StorePhone = br.BusMobileNo,
-            StoreEmail = br.BusEmail,
+                    StorePhone = br.BusMobileNo,
+                    StoreEmail = br.BusEmail,
 
-            StoreLogo = bp.LogoPath,
-            StoreBanner = bp.BannerPath,
+                    StoreLogo = bp.LogoPath,
+                    StoreBanner = bp.BannerPath,
 
-            StoreDescription = bp.BusinessAbout,
-            StoreLocation = bp.BusinessLocation
-        })
-        .Distinct()
-        .ToListAsync();
+                    StoreDescription = bp.BusinessAbout,
+                    StoreLocation = bp.BusinessLocation
+                })
+                .Distinct()
+                .ToListAsync();
 
-    return result;
-}
+            return result;
+        }
 
         public async Task<List<PopularCityDto>> GetPopularCitiesAsync()
         {
@@ -424,70 +424,68 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<List<LocationImageDto>> GetLocationImagesAsync()
-{
-    return await _context.LocationImages
-        .Where(x => x.IsActive)
-        .Select(x => new LocationImageDto
         {
-            Id = x.Id,
-            Country = x.Country,
-            StateName = x.StateName,
-            City = x.City,
-            Image = x.Image
-        })
-        .ToListAsync();
-}
+            return await _context.LocationImages
+                .Where(x => x.IsActive)
+                .Select(x => new LocationImageDto
+                {
+                    Id = x.Id,
+                    Country = x.Country,
+                    StateName = x.StateName,
+                    City = x.City,
+                    Image = x.Image
+                })
+                .ToListAsync();
+        }
 
-public async Task<List<LocationImageDto>> GetLocationImageCountriesAsync()
-{
-    return await _context.LocationImages
-        .Where(x => x.IsActive)
-        .GroupBy(x => x.Country)
-        .Select(g => new LocationImageDto
+        public async Task<List<LocationImageDto>> GetLocationImageCountriesAsync()
         {
-            Id = g.FirstOrDefault().Id,
-            Country = g.Key,
-            Image = g.FirstOrDefault().Image
-        })
-        .ToListAsync();
-}
+            return await _context.LocationImages
+                .Where(x => x.IsActive)
+                .GroupBy(x => x.Country)
+                .Select(g => new LocationImageDto
+                {
+                    Id = g.FirstOrDefault().Id,
+                    Country = g.Key,
+                    Image = g.FirstOrDefault().Image
+                })
+                .ToListAsync();
+        }
 
-public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
-{
-    return await _context.LocationImages
-        .Where(x => x.IsActive)
-        .GroupBy(x => x.City)
-        .Select(g => new LocationImageDto
+        public async Task<List<LocationImageDto>> GetLocationImageCitiesAsync()
         {
-            Id = g.FirstOrDefault().Id,
-            City = g.Key,
-            Country = g.FirstOrDefault().Country,
-            Image = g.FirstOrDefault().Image
-        })
-        .ToListAsync();
-}
+            return await _context.LocationImages
+                .Where(x => x.IsActive)
+                .GroupBy(x => x.City)
+                .Select(g => new LocationImageDto
+                {
+                    Id = g.FirstOrDefault().Id,
+                    City = g.Key,
+                    Country = g.FirstOrDefault().Country,
+                    Image = g.FirstOrDefault().Image
+                })
+                .ToListAsync();
+        }
 
-public async Task<List<CountryDto>> GetAllCountriesAsync()
-{
-    var result = await (
-        from li in _context.LocationImages
-        join br in _context.BusinessRegisters
-            on li.Country equals br.BusinessCountry into stores
-        group new { li, stores } by li.Country into g
-        select new CountryDto
+        public async Task<List<CountryDto>> GetAllCountriesAsync()
         {
-            Country = g.Key,
-            ImageUrl = g.First().li.Image,
-            StoreCount = g.SelectMany(x => x.stores)
-                          .Select(x => x.BusRegId)
-                          .Distinct()
-                          .Count()
-        })
-        .ToListAsync();
+            var result = await (
+                from li in _context.LocationImages
+                join br in _context.BusinessRegisters
+                    on li.Country equals br.BusinessCountry into stores
+                group new { li, stores } by li.Country into g
+                select new CountryDto
+                {
+                    Country = g.Key,
+                    ImageUrl = g.First().li.Image,
+                    StoreCount = g.SelectMany(x => x.stores)
+                                  .Select(x => x.BusRegId)
+                                  .Distinct()
+                                  .Count()
+                })
+                .ToListAsync();
 
-    return result;
-}
-    
-
+            return result;
+        }
     }
 }

@@ -567,13 +567,13 @@ namespace mytown.DataAccess.Repositories
                                 StringComparison.OrdinalIgnoreCase
                             );
 
-                        if (!storeIsKolhapurMaharashtra)
-                        {
-                            finalCharge = Math.Round(
-                                finalCharge * 1.20m,
-                                2
-                            );
-                        }
+                        //if (!storeIsKolhapurMaharashtra)
+                        //{
+                        //    finalCharge = Math.Round(
+                        //        finalCharge * 1.20m,
+                        //        2
+                        //    );
+                        //}
 
                         return new
                         {

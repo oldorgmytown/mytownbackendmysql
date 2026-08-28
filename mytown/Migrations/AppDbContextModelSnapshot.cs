@@ -258,6 +258,67 @@ namespace mytown.Migrations
                     b.ToTable("shopper_experiences");
                 });
 
+            modelBuilder.Entity("MyTown.Models.ShopperExperienceComment", b =>
+                {
+                    b.Property<int>("ShopperExperienceCommentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_comment_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperienceCommentId"));
+
+                    b.Property<string>("CommentText")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("comment_text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_anonymous");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.HasKey("ShopperExperienceCommentId");
+
+                    b.ToTable("shopper_experience_comments");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ShopperExperienceLike", b =>
+                {
+                    b.Property<int>("ShopperExperienceLikeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_like_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperienceLikeId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.HasKey("ShopperExperienceLikeId");
+
+                    b.ToTable("shopper_experience_likes");
+                });
+
             modelBuilder.Entity("mytown.Models.AddToCart", b =>
                 {
                     b.Property<int>("CartId")
@@ -1626,6 +1687,92 @@ namespace mytown.Migrations
                     b.ToTable("pending_verifications");
                 });
 
+            modelBuilder.Entity("mytown.Models.ProductAttributeValue", b =>
+                {
+                    b.Property<int>("AttributeValueId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("attribute_value_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "attribute_value_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AttributeValueId"));
+
+                    b.Property<int>("AttributeId")
+                        .HasColumnType("int")
+                        .HasColumnName("attribute_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "attribute_id");
+
+                    b.Property<string>("AttributeValue")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("attribute_value")
+                        .HasAnnotation("Relational:JsonPropertyName", "attribute_value");
+
+                    b.HasKey("AttributeValueId");
+
+                    b.ToTable("product_attribute_values");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductAttributes", b =>
+                {
+                    b.Property<int>("AttributeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("attribute_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "attribute_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AttributeId"));
+
+                    b.Property<string>("AttributeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("attribute_name")
+                        .HasAnnotation("Relational:JsonPropertyName", "attribute_name");
+
+                    b.Property<int>("BusCatId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_cat_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "bus_cat_id");
+
+                    b.Property<int>("ProdSubcatId")
+                        .HasColumnType("int")
+                        .HasColumnName("prod_subcat_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_subcat_id");
+
+                    b.HasKey("AttributeId");
+
+                    b.ToTable("product_attributes");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductGroup", b =>
+                {
+                    b.Property<int>("ProdGroupId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("product_group_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_group_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProdGroupId"));
+
+                    b.Property<string>("ProdGroupName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("product_group_name")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_group_name");
+
+                    b.Property<int>("ProdSubcatId")
+                        .HasColumnType("int")
+                        .HasColumnName("prod_subcat_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_subcat_id");
+
+                    b.HasKey("ProdGroupId");
+
+                    b.ToTable("product_group");
+                });
+
             modelBuilder.Entity("mytown.Models.ProductImage", b =>
                 {
                     b.Property<int>("ImageId")
@@ -1792,6 +1939,11 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProdTypeId"));
 
+                    b.Property<int>("ProdGroupId")
+                        .HasColumnType("int")
+                        .HasColumnName("product_group_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_group_id");
+
                     b.Property<int>("ProdSubcatId")
                         .HasColumnType("int")
                         .HasColumnName("prod_subcat_id")
@@ -1808,6 +1960,159 @@ namespace mytown.Migrations
                     b.ToTable("product_type");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "product_type");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductVariantAttributeNew", b =>
+                {
+                    b.Property<long>("VariantAttributeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("variant_attribute_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("VariantAttributeId"));
+
+                    b.Property<long>("AttributeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("attribute_id");
+
+                    b.Property<string>("AttributeValue")
+                        .HasColumnType("longtext")
+                        .HasColumnName("attribute_value");
+
+                    b.Property<long?>("AttributeValueId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("attribute_value_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<long>("SkuId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sku_id");
+
+                    b.HasKey("VariantAttributeId");
+
+                    b.HasIndex("SkuId");
+
+                    b.ToTable("product_variant_attributes");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "attributes");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductVariantImageNew", b =>
+                {
+                    b.Property<long>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("image_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "image_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("ImageId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("file_name")
+                        .HasAnnotation("Relational:JsonPropertyName", "file_name");
+
+                    b.Property<long>("SkuId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("sku_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("sort_order")
+                        .HasAnnotation("Relational:JsonPropertyName", "sort_order");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("SkuId");
+
+                    b.ToTable("product_variant_images");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "images");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
+                {
+                    b.Property<long>("SkuId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("sku_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("SkuId"));
+
+                    b.Property<string>("Brand")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("brand")
+                        .HasAnnotation("Relational:JsonPropertyName", "brand");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "created_at");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("discount")
+                        .HasAnnotation("Relational:JsonPropertyName", "discount");
+
+                    b.Property<decimal?>("DiscountPrice")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("discount_price")
+                        .HasAnnotation("Relational:JsonPropertyName", "discount_price");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active")
+                        .HasAnnotation("Relational:JsonPropertyName", "is_active");
+
+                    b.Property<string>("MeasurementUnit")
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("measurement_unit")
+                        .HasAnnotation("Relational:JsonPropertyName", "measurement_unit");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("price")
+                        .HasAnnotation("Relational:JsonPropertyName", "price");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_id");
+
+                    b.Property<decimal>("StockQuantity")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("stock_quantity")
+                        .HasAnnotation("Relational:JsonPropertyName", "stock_quantity");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "updated_at");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("weight")
+                        .HasAnnotation("Relational:JsonPropertyName", "weight");
+
+                    b.HasKey("SkuId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("product_variants");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "variants");
                 });
 
             modelBuilder.Entity("mytown.Models.Products", b =>
@@ -1902,6 +2207,81 @@ namespace mytown.Migrations
                     b.HasIndex("ProductTypeId");
 
                     b.ToTable("products");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductsNew", b =>
+                {
+                    b.Property<long>("ProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("ProductId"));
+
+                    b.Property<long?>("BusCatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bus_cat_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "bus_cat_id");
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "bus_reg_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "created_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active")
+                        .HasAnnotation("Relational:JsonPropertyName", "is_active");
+
+                    b.Property<long?>("ProdSubcatId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("prod_subcat_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_subcat_id");
+
+                    b.Property<long?>("ProdTypeId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("prod_type_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "prod_type_id");
+
+                    b.Property<string>("ProductDescription")
+                        .HasColumnType("longtext")
+                        .HasColumnName("product_description")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_description");
+
+                    b.Property<long?>("ProductGroupId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_group_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_group_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("product_name")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_name");
+
+                    b.Property<string>("ProductStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("product_status")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at")
+                        .HasAnnotation("Relational:JsonPropertyName", "updated_at");
+
+                    b.HasKey("ProductId");
+
+                    b.HasIndex("BusRegId");
+
+                    b.ToTable("products_new");
                 });
 
             modelBuilder.Entity("mytown.Models.Registration", b =>
@@ -2587,6 +2967,35 @@ namespace mytown.Migrations
                     b.ToTable("shopper_db_notifications");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperExperiencePhoto", b =>
+                {
+                    b.Property<int>("ShopperExperiencePhotoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_photo_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ShopperExperiencePhotoId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("PhotoUrl")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("photo_url");
+
+                    b.Property<int>("ShopperExperienceId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_experience_id");
+
+                    b.HasKey("ShopperExperiencePhotoId");
+
+                    b.HasIndex("ShopperExperienceId");
+
+                    b.ToTable("shopper_experience_photos");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
                 {
                     b.Property<int>("RecentViewId")
@@ -2600,8 +3009,8 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("last_viewed_at");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
                     b.Property<int>("ShopperId")
@@ -3487,16 +3896,16 @@ namespace mytown.Migrations
                         .HasColumnType("decimal(65,30)")
                         .HasColumnName("price");
 
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int")
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
                         .HasColumnName("product_id");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int")
                         .HasColumnName("quantity");
 
-                    b.Property<int>("SkuId")
-                        .HasColumnType("int")
+                    b.Property<long>("SkuId")
+                        .HasColumnType("bigint")
                         .HasColumnName("sku_id")
                         .HasAnnotation("Relational:JsonPropertyName", "sku_id");
 
@@ -3857,6 +4266,39 @@ namespace mytown.Migrations
                     b.Navigation("Size");
                 });
 
+            modelBuilder.Entity("mytown.Models.ProductVariantAttributeNew", b =>
+                {
+                    b.HasOne("mytown.Models.ProductVariantNew", "Variant")
+                        .WithMany("Attributes")
+                        .HasForeignKey("SkuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Variant");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductVariantImageNew", b =>
+                {
+                    b.HasOne("mytown.Models.ProductVariantNew", "ProductVariant")
+                        .WithMany("Images")
+                        .HasForeignKey("SkuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductVariant");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
+                {
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
+                        .WithMany("Variants")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("mytown.Models.Products", b =>
                 {
                     b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
@@ -3892,6 +4334,17 @@ namespace mytown.Migrations
                     b.Navigation("ProductSubCategory");
 
                     b.Navigation("ProductType");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductsNew", b =>
+                {
+                    b.HasOne("MyTown.Models.BusinessRegister", "BusinessRegister")
+                        .WithMany()
+                        .HasForeignKey("BusRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BusinessRegister");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
@@ -3958,9 +4411,20 @@ namespace mytown.Migrations
                     b.Navigation("ShopperRegister");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperExperiencePhoto", b =>
+                {
+                    b.HasOne("MyTown.Models.ShopperExperience", "ShopperExperience")
+                        .WithMany("Photos")
+                        .HasForeignKey("ShopperExperienceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ShopperExperience");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
                 {
-                    b.HasOne("mytown.Models.Products", "Product")
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4126,13 +4590,13 @@ namespace mytown.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mytown.Models.Products", "Product")
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("mytown.Models.Sku_ProductVariant", "Variant")
+                    b.HasOne("mytown.Models.ProductVariantNew", "Variant")
                         .WithMany()
                         .HasForeignKey("SkuId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -4168,6 +4632,11 @@ namespace mytown.Migrations
                     b.Navigation("BusinessProfile");
                 });
 
+            modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
+                {
+                    b.Navigation("Photos");
+                });
+
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
                 {
                     b.Navigation("Services");
@@ -4191,11 +4660,23 @@ namespace mytown.Migrations
                     b.Navigation("ShippingDetails");
                 });
 
+            modelBuilder.Entity("mytown.Models.ProductVariantNew", b =>
+                {
+                    b.Navigation("Attributes");
+
+                    b.Navigation("Images");
+                });
+
             modelBuilder.Entity("mytown.Models.Products", b =>
                 {
                     b.Navigation("Images");
 
                     b.Navigation("Sku_ProductVariants");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductsNew", b =>
+                {
+                    b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("mytown.Models.Sku_ProductVariant", b =>

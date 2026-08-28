@@ -12,10 +12,8 @@ namespace mytown.Models.DTO_s
         public int ProductId { get; set; }
 
         [StringLength(50, ErrorMessage = "Color cannot exceed 50 characters.")]
-        [Required(ErrorMessage = "Color is required.")]
-        public string Color { get; set; }
+        public string? Color { get; set; }
 
-        [Required(ErrorMessage = "SizeId is required.")]
         [Range(1, int.MaxValue, ErrorMessage = "SizeId must be greater than 0.")]
         public int? SizeId { get; set; }
 

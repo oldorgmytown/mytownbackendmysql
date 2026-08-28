@@ -8,10 +8,10 @@ using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
 using MyTown.Models;
+using Razorpay.Api;
 using System.Data;
 using System.Diagnostics;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-//using MySql.Data.MySqlClient; 
 
 
 namespace mytown.DataAccess.Repositories
@@ -22,7 +22,6 @@ namespace mytown.DataAccess.Repositories
         private readonly IEmailService _emailService;
         private readonly string _connectionString;
         private readonly IMemoryCache _cache;
-        //private readonly AppDbContext _context;
 
         public AdminRepository(AppDbContext context, IEmailService emailservice, IConfiguration config,IMemoryCache cache)
         {
@@ -32,9 +31,6 @@ namespace mytown.DataAccess.Repositories
             _cache = cache;
         }
 
-        
-
-      
         //ADMIN PANEL
 
         //to get all business profiles with status
@@ -42,7 +38,6 @@ namespace mytown.DataAccess.Repositories
         {
             var skip = (page - 1) * pageSize;
 
-            // Step 1: start query
             var query = from b in _context.BusinessRegisters
                         join bp in _context.BusinessProfiles
                             on b.BusRegId equals bp.BusRegId into bpJoin
@@ -76,7 +71,6 @@ namespace mytown.DataAccess.Repositories
                                 b.BusServId == 1 ? "service" : "none"
                         };
 
-            // Step 2: apply search if provided
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(b =>
@@ -91,10 +85,8 @@ namespace mytown.DataAccess.Repositories
                     b.ProfileStatus.ToLower().Contains(search));
             }
 
-            // Step 3: get total records after filtering
             var totalRecords = await query.CountAsync();
 
-            // Step 4: apply pagination
             var records = await query
                 .OrderByDescending(b => b.BusRegId)
                 .Skip(skip)
@@ -120,7 +112,6 @@ namespace mytown.DataAccess.Repositories
                         )
                         select br;
 
-            //  Apply search filter if provided
             if (!string.IsNullOrEmpty(search))
             {
                 search = search.ToLower();
@@ -159,7 +150,6 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
 
-            // Stores
             var storeCounts = allStatuses.ToDictionary(
                 status => status,
                 status => businessProfiles.Count(bp =>
@@ -168,7 +158,6 @@ namespace mytown.DataAccess.Repositories
                 )
             );
 
-            // Services
             var serviceCounts = allStatuses.ToDictionary(
                 status => status,
                 status => businessProfiles.Count(bp =>
@@ -177,7 +166,6 @@ namespace mytown.DataAccess.Repositories
                 )
             );
 
-            // Final structure
             var result = new Dictionary<string, Dictionary<string, int>>
     {
         { "stores", storeCounts },
@@ -188,8 +176,6 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        // Admin  - Approve, Reject, Block business profiles .
-        // Then change products status also. Approve, reject  - for the pending product status - 16/02/26
         public async Task<bool> UpdateProfileStatusbyAdminAsync(
     int busRegId,
     string status,
@@ -210,18 +196,16 @@ namespace mytown.DataAccess.Repositories
             {
                 profile.ApprovedDate = DateTime.Now;
 
-                //  Activate ONLY Pending products - added new
-                await _context.products
+                await _context.ProductsNew
                     .Where(p => p.BusRegId == busRegId &&
                                 p.ProductStatus == "Pending")
                     .ExecuteUpdateAsync(p => p
-                        .SetProperty(x => x.ProductStatus, "Approved")
+                        .SetProperty(x => x.ProductStatus, "ACTIVE")
                         .SetProperty(x => x.IsActive, true));
             }
             else if (status.Equals("rejected", StringComparison.OrdinalIgnoreCase))
             {
-                //Reject all products for that busregid
-                        await _context.products
+                        await _context.ProductsNew
                .Where(p => p.BusRegId == busRegId)
                .ExecuteUpdateAsync(p => p
                    .SetProperty(x => x.ProductStatus, "Rejected")
@@ -229,14 +213,12 @@ namespace mytown.DataAccess.Repositories
             }
             else if (status.Equals("suspended", StringComparison.OrdinalIgnoreCase))
             {
-                //  Suspend → ALL products inactive - added new
-                await _context.products
+                await _context.ProductsNew
                     .Where(p => p.BusRegId == busRegId)
                     .ExecuteUpdateAsync(p => p
                         .SetProperty(x => x.IsActive, false));
             }
 
-            //  Save admin comments
             if (!string.IsNullOrEmpty(comments))
             {
                 var adminComment = new AdminComment
@@ -253,8 +235,7 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
 
-            // 🔔 Notification only for Approved
-            if (status.Equals("approved", StringComparison.OrdinalIgnoreCase))
+            if (status.Equals("ACTIVE", StringComparison.OrdinalIgnoreCase))
             {
                 var notification = new BusinessDBNotifications
                 {
@@ -269,7 +250,6 @@ namespace mytown.DataAccess.Repositories
                 await _context.SaveChangesAsync();
             }
 
-            // 📧 Send email
             var business = profile.BusinessRegister;
             if (business != null)
             {
@@ -302,7 +282,6 @@ namespace mytown.DataAccess.Repositories
                             ServiceProfile = sp
                         };
 
-            // Status filter
             query = query.Where(x =>
                 (x.ServiceProfile != null &&
                  x.ServiceProfile.Status.ToLower() == status.ToLower())
@@ -310,7 +289,6 @@ namespace mytown.DataAccess.Repositories
                 (x.ServiceProfile == null &&
                  status.ToLower() == "incomplete"));
 
-            // Search
             if (!string.IsNullOrWhiteSpace(searchTerm))
             {
                 searchTerm = searchTerm.Trim().ToLower();
@@ -336,7 +314,6 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<AdminDashboardcountDto> GetDashboardCountsAsync()
         {
-            // Unique Towns
             var uniqueTowns = await _context.BusinessRegisters
                 .Select(b => b.Town)
                 .Where(town => !string.IsNullOrEmpty(town))
@@ -348,7 +325,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Unique Cities
             var uniqueCities = await _context.BusinessRegisters
                 .Select(b => b.BusinessCity)
                 .Where(city => !string.IsNullOrEmpty(city))
@@ -360,7 +336,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Unique States
             var uniqueStates = await _context.BusinessRegisters
                 .Select(b => b.BusinessState)
                 .Where(state => !string.IsNullOrEmpty(state))
@@ -372,7 +347,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Unique Countries
             var uniqueCountries = await _context.BusinessRegisters
                 .Select(b => b.BusinessCountry)
                 .Where(country => !string.IsNullOrEmpty(country))
@@ -384,7 +358,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Other counts
             var businessCount = await _context.BusinessRegisters.CountAsync();
             var storesCount = await _context.BusinessProfiles.CountAsync();
             var servicesCount = await _context.ServiceProfiles.CountAsync();
@@ -439,7 +412,6 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
 
-            // Notification
             var notification = new BusinessDBNotifications
             {
                 BusRegId = busRegId,
@@ -452,7 +424,6 @@ namespace mytown.DataAccess.Repositories
             await _context.BusinessDBNotifications.AddAsync(notification);
             await _context.SaveChangesAsync();
 
-            // Email
             var business = await _context.BusinessRegisters
                 .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
 
@@ -480,7 +451,6 @@ namespace mytown.DataAccess.Repositories
             .Distinct()
             .CountAsync();
 
-            // Fetch unique cities from both tables
             var uniqueCities = await _context.BusinessRegisters
                 .Select(b => b.BusinessCity)
                 .Where(city => !string.IsNullOrEmpty(city))
@@ -492,8 +462,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Fetch unique states from both tables
-            // Fetch unique states from both tables
             var uniqueStates = await _context.BusinessRegisters
                 .Select(b => b.BusinessState)
                 .Where(state => !string.IsNullOrEmpty(state))
@@ -505,7 +473,6 @@ namespace mytown.DataAccess.Repositories
                 .Distinct()
                 .CountAsync();
 
-            // Fetch unique countries from both tables
             var uniqueCountries = await _context.BusinessRegisters
                 .Select(b => b.BusinessCountry)
                 .Where(country => !string.IsNullOrEmpty(country))
@@ -522,7 +489,6 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<int> GetBusinessRegisterCountAsync()
         {
-            // Count the rows in the BusinessRegister table
             int count = await _context.BusinessRegisters.CountAsync();
             return count;
         }
@@ -534,7 +500,6 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
         {
             var query = _context.ShopperRegisters.AsQueryable();
 
-            //  Status Filter
             if (!string.IsNullOrEmpty(status))
             {
                 status = status.ToLower();
@@ -553,7 +518,6 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
                 }
             }
 
-            // Search Filter
             if (!string.IsNullOrEmpty(search))
             {
                 int.TryParse(search, out int shopperId);
@@ -571,10 +535,8 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
             }
 
-            // Total Count
             var totalCount = await query.CountAsync();
 
-            //  Pagination
             var records = await query
                 .OrderByDescending(s => s.ShopperRegId)
                 .Skip((page - 1) * pageSize)
@@ -583,30 +545,6 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
             return (records, totalCount);
         }
-        //  public async Task<(List<ShopperRegister> records, int totalCount)>
-        //GetShoppersByStatusAsync(string status, int page, int pageSize)
-        //  {
-        //      var query = _context.ShopperRegisters.AsQueryable();
-
-        //      if (status == "active")
-        //      {
-        //          query = query.Where(s => s.Status == null || s.Status != "Deactivated");
-        //      }
-        //      else if (status == "deactivated")
-        //      {
-        //          query = query.Where(s => s.Status == "Deactivated");
-        //      }
-
-        //      var totalCount = await query.CountAsync();
-
-        //      var records = await query
-        //          .OrderByDescending(s => s.ShopperRegId)
-        //          .Skip((page - 1) * pageSize)
-        //          .Take(pageSize)
-        //          .ToListAsync();
-
-        //      return (records, totalCount);
-        //  }
 
 
         //Shopper summary on Admin panel
@@ -623,16 +561,10 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
             var result = new ShopperStatsDto
             {
-                // Total
                 TotalShoppers = await allShoppers.CountAsync(),
-
-                // Active
                 TotalActiveShoppers = await activeShoppers.CountAsync(),
-
-                //  Deactivated
                 TotalDeactivatedShoppers = await deactivatedShoppers.CountAsync(),
 
-                // Location stats based only on ACTIVE shoppers
                 TotalTowns = await activeShoppers
                     .Select(s => s.Town)
                     .Where(t => t != null)
@@ -681,7 +613,6 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
         public async Task<int> GetShoppersRegisterCountAsync()
         {
-            // Count the rows in the BusinessRegister table
             int count = await _context.ShopperRegisters.CountAsync();
             return count;
         }
@@ -702,7 +633,6 @@ GetShoppersByStatusAsync(string status, int page, int pageSize, string? search)
 
         public async Task<int> GetCourierserviceCountAsync()
         {
-            // Count the rows in the BusinessRegister table
             int count = await _context.CourierService.CountAsync();
             return count;
         }
@@ -713,7 +643,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
             var query = _context.CourierService.AsQueryable();
 
-            // 🔍 SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.ToLower();
@@ -747,7 +676,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
             var query = _context.TransporterRegisters.AsQueryable();
 
-            // 🔍 SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.ToLower();
@@ -792,27 +720,15 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
 
             return (records, totalRecords);
         }
-        //public async Task<(IEnumerable<CourierService> records, int totalRecords)> GetCourierRegistersPaginatedAsync(int page, int pageSize)
-        //{
-        //    var totalRecords = await _context.CourierService.CountAsync();
-        //    var records = await _context.CourierService
-        //        .Skip((page - 1) * pageSize)
-        //        .Take(pageSize)
-        //        .ToListAsync();
-
-        //    return (records, totalRecords);
-        //}
 
 
         // landing page
         public async Task<List<LocationStoresDto>> GetLocationsWithCompletedStoresAsync()
         {
-            // 1. Get all pending profiles from DB
             var pendingProfiles = await _context.BusinessProfiles
                 .Where(bp => bp.ProfileStatus.ToLower() == "approved")
-                .ToListAsync(); // Materialize here!
+                .ToListAsync();
 
-            // 2. Group and process in memory
             var result = pendingProfiles
                 .GroupBy(bp => bp.BusinessLocation.Trim())
                 .Where(g => g.Count() >= 3)
@@ -824,7 +740,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                     var city = parts.Length > 1 ? parts[1] : "";
                     var country = parts.Length > 3 ? parts[3] : "";
 
-                    // Clean join, skips empty values
                     var locationDisplay = string.Join(", ", new[] { town, city, country }.Where(x => !string.IsNullOrWhiteSpace(x)));
 
                     return new LocationStoresDto
@@ -888,7 +803,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             sw.Stop();
             Console.WriteLine($"EF execution time (repo): {sw.ElapsedMilliseconds} ms");
 
-            // Cache the result for 5 minutes
             _cache.Set("dashboardLocations", result, TimeSpan.FromMinutes(5));
 
             return result;
@@ -902,7 +816,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         public async Task TestConnectionAsync()
         {
             using var conn = new MySqlConnection(_connectionString);
-            await conn.OpenAsync(); // will throw if connection fails
+            await conn.OpenAsync();
         }
 
 
@@ -910,7 +824,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
             const string cacheKey = "dapper_locations_completed";
 
-            // 1️⃣ Return from cache if exists
             if (_cache.TryGetValue(cacheKey, out List<LocationStoresDto> cached))
                 return cached;
 
@@ -966,7 +879,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 })
                 .ToList();
 
-            // 2️⃣ Cache result
             _cache.Set(
                 cacheKey,
                 result,
@@ -1062,7 +974,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
             var query = _context.SenderRegisters.AsQueryable();
 
-            // SEARCH
             if (!string.IsNullOrWhiteSpace(search))
             {
                 search = search.ToLower();
@@ -1103,6 +1014,292 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                     SenderRegDate = x.SenderRegDate
                 })
                 .ToListAsync();
+
+            return (records, totalRecords);
+        }
+
+        // Orders tab — full combined order details by store order id
+        public async Task<OrderFullDetailsDto?> GetOrderFullDetailsByStoreOrderIdAsync(int storeOrderId)
+        {
+            var storeOrder = await _context.StoreOrders
+                .AsNoTracking()
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.ShopperRegister)
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.GuestRegister)
+                .Include(so => so.Store)
+                .Include(so => so.OrderDetails)
+                .FirstOrDefaultAsync(so => so.StoreOrderId == storeOrderId);
+
+            if (storeOrder == null || storeOrder.Order == null || storeOrder.Store == null)
+                return null;
+
+            var shipping = await _context.ShippingDetails
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
+
+            var dto = new OrderFullDetailsDto
+            {
+                StoreOrderId = storeOrder.StoreOrderId,
+                StoreOrderCode = $"#BI{storeOrder.StoreOrderId:D7}",
+                CourierType = storeOrder.CourierType,
+                StoreTotalAmount = storeOrder.StoreTotalAmount,
+                StoreOrderStatus = storeOrder.Storeorder_Status,
+
+                OrderId = storeOrder.Order.OrderId,
+                OrderTotalAmount = storeOrder.Order.TotalAmount,
+                ShippingType = storeOrder.Order.ShippingType,
+                OrderStatus = storeOrder.Order.OrderStatus,
+                OrderDate = storeOrder.Order.OrderDate,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
+
+                ShopperRegId = storeOrder.Order.ShopperRegId,
+                ShopperUsername = storeOrder.Order.ShopperRegister?.Username,
+                ShopperEmail = storeOrder.Order.ShopperRegister?.Email,
+                ShopperPhoneNumber = storeOrder.Order.ShopperRegister?.PhoneNumber,
+
+                GuestRegId = storeOrder.Order.GuestRegId,
+
+                BusRegId = storeOrder.Store.BusRegId,
+                BusinessName = storeOrder.Store.BusinessName,
+                BusEmail = storeOrder.Store.BusEmail,
+                BusMobileNo = storeOrder.Store.BusMobileNo,
+                BusinessTown = storeOrder.Store.Town,
+                BusinessCity = storeOrder.Store.BusinessCity,
+                BusinessState = storeOrder.Store.BusinessState,
+                BusinessCountry = storeOrder.Store.BusinessCountry,
+
+                TrackingId = shipping?.TrackingId,
+                ShippingStatus = shipping?.ShippingStatus,
+                EstimatedDays = shipping?.EstimatedDays,
+                DeliveredDate = shipping?.DeliveredDate,
+                ShippingCost = shipping?.Cost,
+                DeliveryAddress = shipping?.DeliveryAddress,
+                DeliveryProofFileName = shipping?.DeliveryProofFileName,
+                TransporterRegId = shipping?.TransporterRegId,
+                BranchId = shipping?.BranchId,
+
+                Items = storeOrder.OrderDetails?.Select(od => new OrderFullDetailItemDto
+                {
+                    OrderDetailId = od.OrderDetailId,
+                    ProductId = od.ProductId,
+                    SkuId = od.SkuId,
+                    Quantity = od.Quantity,
+                    Price = od.Price
+                }).ToList() ?? new List<OrderFullDetailItemDto>()
+            };
+
+            return dto;
+        }
+
+        // Orders tab — summary counts for dashboard cards
+        public async Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync()
+        {
+            var totalOrders = await _context.StoreOrders.AsNoTracking().CountAsync();
+
+            var shippingStatuses = await _context.StoreOrders
+                .AsNoTracking()
+                .Join(_context.ShippingDetails.AsNoTracking(),
+                    so => so.StoreOrderId,
+                    sd => sd.StoreOrderId,
+                    (so, sd) => sd.ShippingStatus)
+                .ToListAsync();
+
+            int pending = shippingStatuses.Count(s => string.Equals(s, "Pending", StringComparison.OrdinalIgnoreCase));
+            int readyToShip = shippingStatuses.Count(s => string.Equals(s, "Ready to Ship", StringComparison.OrdinalIgnoreCase));
+            int inTransit = shippingStatuses.Count(s => string.Equals(s, "In Progress", StringComparison.OrdinalIgnoreCase)
+                                                       || string.Equals(s, "In Transit", StringComparison.OrdinalIgnoreCase));
+            int delivered = shippingStatuses.Count(s => string.Equals(s, "Delivered", StringComparison.OrdinalIgnoreCase));
+            int cancelled = shippingStatuses.Count(s => string.Equals(s, "Cancelled", StringComparison.OrdinalIgnoreCase));
+
+            return new OrdersSummaryCountsDto
+            {
+                TotalOrders = totalOrders,
+                Pending = pending,
+                ReadyToShip = readyToShip,
+                InTransit = inTransit,
+                Delivered = delivered,
+                Cancelled = cancelled
+            };
+        }
+        public async Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync()
+{
+    var businesses = await _context.BusinessRegisters
+        .Where(b => !string.IsNullOrEmpty(b.BusinessCountry) && !string.IsNullOrEmpty(b.Town))
+        .Select(b => new { b.BusinessCountry, b.Town })
+        .ToListAsync();
+
+    var totalCountries = businesses
+        .Select(b => b.BusinessCountry.Trim().ToLower())
+        .Distinct()
+        .Count();
+
+    var totalTowns = businesses
+        .Select(b => b.Town.Trim().ToLower())
+        .Distinct()
+        .Count();
+
+    var breakdown = businesses
+        .GroupBy(b => b.BusinessCountry.Trim())
+        .Select(g => new CountryTownCountDto
+        {
+            Country = g.Key,
+            TownCount = g.Select(x => x.Town.Trim().ToLower()).Distinct().Count()
+        })
+        .OrderByDescending(x => x.TownCount)
+        .ToList();
+
+    return new BusinessLocationCountsDto
+    {
+        TotalCountries = totalCountries,
+        TotalTowns = totalTowns,
+        CountryBreakdown = breakdown
+    };
+}
+
+        // Orders tab — full order list, paginated, filterable by status tab + search
+        public async Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
+            GetAllOrdersFullDetailsPaginatedAsync(int page, int pageSize, string? status, string? search)
+        {
+            var query = _context.StoreOrders
+                .AsNoTracking()
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.ShopperRegister)
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.GuestRegister)
+                .Include(so => so.Store)
+                .Include(so => so.OrderDetails)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status) &&
+                !status.Equals("current", StringComparison.OrdinalIgnoreCase) &&
+                !status.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                var s = status.Trim().ToLower();
+
+                if (s == "pending")
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "pending"));
+                else if (s == "readytoship" || s == "ready to ship" || s == "ready_to_ship")
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "ready to ship"));
+                else if (s == "intransit" || s == "in transit" || s == "in_transit")
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId &&
+                                   (sd.ShippingStatus.ToLower() == "in progress" || sd.ShippingStatus.ToLower() == "in transit")));
+                else if (s == "delivered")
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "delivered"));
+                else if (s == "cancelled" || s == "canceled")
+                    query = query.Where(so => _context.ShippingDetails
+                        .Any(sd => sd.StoreOrderId == so.StoreOrderId && sd.ShippingStatus.ToLower() == "cancelled"));
+            }
+
+            // PAYMENT FILTER
+            query = query.Where(so => _context.Payments
+                .Any(p => p.OrderId == so.Order.OrderId &&
+                         p.PaymentStatus.ToLower() == "paid"));
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                query = query.Where(so =>
+                    (so.Order.ShopperRegister != null && so.Order.ShopperRegister.Username.ToLower().Contains(term)) ||
+                    so.Store.BusinessName.ToLower().Contains(term) ||
+                    so.Store.Town.ToLower().Contains(term) ||
+                    so.Store.BusinessState.ToLower().Contains(term) ||
+                    so.Store.BusinessCountry.ToLower().Contains(term)
+                );
+            }
+
+            var totalRecords = await query.CountAsync();
+
+            var storeOrders = await query
+                .OrderByDescending(so => so.StoreOrderId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var storeOrderIds = storeOrders.Select(so => so.StoreOrderId).ToList();
+
+            var shippingLookup = await _context.ShippingDetails
+                .AsNoTracking()
+                .Where(sd => storeOrderIds.Contains(sd.StoreOrderId))
+                .ToListAsync();
+
+            var shippingByStoreOrderId = shippingLookup
+                .GroupBy(sd => sd.StoreOrderId)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var orderIds = storeOrders.Select(x => x.Order.OrderId).ToList();
+
+            var paymentLookup = await _context.Payments
+                .AsNoTracking()
+                .Where(p => orderIds.Contains(p.OrderId))
+                .ToListAsync();
+
+            var paymentByOrderId = paymentLookup
+                .GroupBy(p => p.OrderId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.PaymentDate).First());
+
+            var records = storeOrders.Select(storeOrder =>
+            {
+                shippingByStoreOrderId.TryGetValue(storeOrder.StoreOrderId, out var shipping);
+                paymentByOrderId.TryGetValue(storeOrder.Order.OrderId, out var payment);
+                return new OrderFullDetailsDto
+                {
+                    StoreOrderId = storeOrder.StoreOrderId,
+                    StoreOrderCode = $"#BI{storeOrder.StoreOrderId:D7}",
+                    CourierType = storeOrder.CourierType,
+                    StoreTotalAmount = storeOrder.StoreTotalAmount,
+                    StoreOrderStatus = storeOrder.Storeorder_Status,
+
+                    OrderId = storeOrder.Order.OrderId,
+                    OrderTotalAmount = storeOrder.Order.TotalAmount,
+                    ShippingType = storeOrder.Order.ShippingType,
+                    OrderStatus = storeOrder.Order.OrderStatus,
+                    OrderDate = storeOrder.Order.OrderDate,
+                    IsGuestOrder = storeOrder.Order.IsGuestOrder,
+
+                    PaymentMethod = payment?.PaymentMethod,
+                    PaymentStatus = payment?.PaymentStatus,
+                    
+
+                    ShopperRegId = storeOrder.Order.ShopperRegId,
+                    ShopperUsername = storeOrder.Order.ShopperRegister?.Username,
+                    ShopperEmail = storeOrder.Order.ShopperRegister?.Email,
+                    ShopperPhoneNumber = storeOrder.Order.ShopperRegister?.PhoneNumber,
+
+                    GuestRegId = storeOrder.Order.GuestRegId,
+
+                    BusRegId = storeOrder.Store.BusRegId,
+                    BusinessName = storeOrder.Store.BusinessName,
+                    BusEmail = storeOrder.Store.BusEmail,
+                    BusMobileNo = storeOrder.Store.BusMobileNo,
+                    BusinessTown = storeOrder.Store.Town,
+                    BusinessCity = storeOrder.Store.BusinessCity,
+                    BusinessState = storeOrder.Store.BusinessState,
+                    BusinessCountry = storeOrder.Store.BusinessCountry,
+
+                    TrackingId = shipping?.TrackingId,
+                    ShippingStatus = shipping?.ShippingStatus,
+                    EstimatedDays = shipping?.EstimatedDays,
+                    DeliveredDate = shipping?.DeliveredDate,
+                    ShippingCost = shipping?.Cost,
+                    DeliveryAddress = shipping?.DeliveryAddress,
+                    DeliveryProofFileName = shipping?.DeliveryProofFileName,
+                    TransporterRegId = shipping?.TransporterRegId,
+                    BranchId = shipping?.BranchId,
+
+                    Items = storeOrder.OrderDetails?.Select(od => new OrderFullDetailItemDto
+                    {
+                        OrderDetailId = od.OrderDetailId,
+                        ProductId = od.ProductId,
+                        SkuId = od.SkuId,
+                        Quantity = od.Quantity,
+                        Price = od.Price
+                    }).ToList() ?? new List<OrderFullDetailItemDto>()
+                };
+            }).ToList();
 
             return (records, totalRecords);
         }

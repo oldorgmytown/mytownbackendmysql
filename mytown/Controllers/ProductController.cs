@@ -69,11 +69,9 @@ namespace MyTown.Controllers
 
         [Authorize]
         [HttpPut("UpdateProductVariants")]
-        public async Task<IActionResult> UpdateVariant(
-            [FromForm] Sku_ProductVariantDto dto,
-            [FromForm] List<IFormFile>? images)
+        public async Task<IActionResult> UpdateVariant([FromBody] Sku_ProductVariantDto dto)
         {
-            var result = await _service.UpdateVariantAsync(dto, images ?? new());
+            var result = await _service.UpdateVariantAsync(dto);
             return result == null ? NotFound() : Ok(result);
         }
 
