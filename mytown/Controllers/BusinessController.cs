@@ -317,12 +317,14 @@ namespace mytown.Controllers
         //[Authorize]
         [HttpGet("ProductAttributesBySubCategory")]
         public async Task<ActionResult<IEnumerable<ProductAttributes>>> ProductAttributesBySubCategory(
-    int prodSubcatId,
-    int busCatId)
+     int prodSubcatId,
+     int busCatId,
+     int productGroupId)
         {
             return Ok(await _businessService.GetAttributesBySubCategoryId(
                 prodSubcatId,
-                busCatId));
+                busCatId,
+                productGroupId));
         }
 
 

@@ -7,6 +7,7 @@
         public int ProdSubcatId { get; set; }
         public int BusCatId { get; set; }
 
+        public int? ProductGroupId { get; set; }
         public List<ProductAttributeValueDto> Values { get; set; }
             = new List<ProductAttributeValueDto>();
     }

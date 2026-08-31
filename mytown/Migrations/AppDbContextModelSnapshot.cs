@@ -1741,6 +1741,11 @@ namespace mytown.Migrations
                         .HasColumnName("prod_subcat_id")
                         .HasAnnotation("Relational:JsonPropertyName", "prod_subcat_id");
 
+                    b.Property<int?>("ProductGroupId")
+                        .HasColumnType("int")
+                        .HasColumnName("product_group_id")
+                        .HasAnnotation("Relational:JsonPropertyName", "product_group_id");
+
                     b.HasKey("AttributeId");
 
                     b.ToTable("product_attributes");

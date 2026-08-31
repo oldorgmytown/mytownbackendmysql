@@ -25,5 +25,11 @@ namespace mytown.Models
         [Column("bus_cat_id")]
         [JsonPropertyName("bus_cat_id")]
         public int BusCatId { get; set; }
+
+        [Column("product_group_id")]
+        [JsonPropertyName("product_group_id")]
+        public int? ProductGroupId { get; set; }
+
+
     }
 }
