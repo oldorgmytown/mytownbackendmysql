@@ -948,17 +948,17 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(v => new Sku_ProductVariantDto
             {
                 SkuId_Productvariant = v.SkuId,
-                Color = v.Color,
-                SizeName = v.Size != null ? v.Size.SizeName : null,
+                //Color = v.Color,
+                //SizeName = v.Size != null ? v.Size.SizeName : null,
 
                 Sku_Cost = v.Sku_Cost,
                 DiscountPrice = v.DiscountPrice,
                 Quantity = v.Quantity,
 
-                Length = v.Length,
-                Width = v.Width,
-                Height = v.Height,
-                Weight = v.Weight,
+                //Length = v.Length,
+                //Width = v.Width,
+                //Height = v.Height,
+                //Weight = v.Weight,
                 Images = v.Images
     .Where(i => i.SortOrder == 1)
     .Select(i => new ProductImageDto

@@ -88,9 +88,9 @@ namespace mytown.Services
             return await _repo.GetProductTypesByGroupAndSubCategory(prodSubcatId, prodGroupId);            
         }
 
-        public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId)
+        public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId, int productGroupId)
         {
-            return await _repo.GetAttributesBySubCategoryId(prodSubcatId, busCatId);
+            return await _repo.GetAttributesBySubCategoryId(prodSubcatId, busCatId, productGroupId);
         }
 
        

@@ -29,7 +29,7 @@ namespace mytown.DataAccess
         Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId);
 
         Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId);
-        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId);
+        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId, int productGroupId);
 
 
         Task<bool> UpdateBannerPathAsync(int busRegId, string bannerPath);

@@ -30,5 +30,15 @@ namespace mytown.Models
         [ForeignKey(nameof(SkuId))]
         [JsonIgnore]
         public virtual ProductVariantNew? Variant { get; set; }
+
+        // Attribute relationship
+        [ForeignKey(nameof(AttributeId))]
+        [JsonIgnore]
+        public virtual ProductAttributes? ProductAttribute { get; set; }
+
+        // Attribute value relationship
+        [ForeignKey(nameof(AttributeValueId))]
+        [JsonIgnore]
+        public virtual ProductAttributeValue? ProductAttributeValue { get; set; }
     }
 }

@@ -203,18 +203,25 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(
-       int prodSubcatId,
-       int busCatId)
+      int prodSubcatId,
+      int busCatId,
+      int productGroupId)
         {
             return await _context.ProductAttributes
-                .Where(x => x.ProdSubcatId == prodSubcatId &&
-                            x.BusCatId == busCatId)
+                .Where(x =>
+                    x.ProdSubcatId == prodSubcatId &&
+                    x.BusCatId == busCatId &&
+                    (
+                        x.ProductGroupId == null ||
+                        x.ProductGroupId == productGroupId
+                    ))
                 .Select(x => new ProductAttributeDto
                 {
                     AttributeId = x.AttributeId,
                     AttributeName = x.AttributeName,
                     ProdSubcatId = x.ProdSubcatId,
                     BusCatId = x.BusCatId,
+                    ProductGroupId = x.ProductGroupId,
 
                     Values = _context.ProductAttributeValues
                         .Where(v => v.AttributeId == x.AttributeId)

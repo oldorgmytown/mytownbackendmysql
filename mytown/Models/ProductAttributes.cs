@@ -10,7 +10,7 @@ namespace mytown.Models
         [Key]
         [Column("attribute_id")]
         [JsonPropertyName("attribute_id")]
-        public int AttributeId { get; set; }
+        public long AttributeId { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -25,5 +25,11 @@ namespace mytown.Models
         [Column("bus_cat_id")]
         [JsonPropertyName("bus_cat_id")]
         public int BusCatId { get; set; }
+
+        [Column("product_group_id")]
+        [JsonPropertyName("product_group_id")]
+        public int? ProductGroupId { get; set; }
+
+
     }
 }

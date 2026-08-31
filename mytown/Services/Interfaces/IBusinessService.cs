@@ -34,7 +34,7 @@ namespace mytown.Services.Interfaces
 
         Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId);
 
-        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId);
+        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId, int productGroupId);
 
         // add bank details
         Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
