@@ -10,11 +10,11 @@ namespace mytown.Models
         [Key]
         [Column("attribute_value_id")]
         [JsonPropertyName("attribute_value_id")]
-        public int AttributeValueId { get; set; }
+        public long AttributeValueId { get; set; }
 
         [Column("attribute_id")]
         [JsonPropertyName("attribute_id")]
-        public int AttributeId { get; set; }
+        public long AttributeId { get; set; }
 
         [Required]
         [StringLength(100)]

@@ -316,16 +316,69 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId)
         {
-            var products = await _context.ProductsNew
+            return await _context.ProductsNew
+                .AsNoTracking()
                 .Where(p => p.BusRegId == busRegId)
-                .Include(p => p.BusinessRegister)
-                .Include(p => p.Variants)
-                    .ThenInclude(v => v.Attributes)
-                .Include(p => p.Variants)
-                    .ThenInclude(v => v.Images)
-                .ToListAsync();
+                .Select(p => new ProdVariantdetailsDto
+                {
+                    ProductId = (int)p.ProductId,
+                    BusRegId = p.BusRegId,
+                    BuscatId = (int)(p.BusCatId ?? 0),
+                    ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
 
-            return products.Select(MapProductToDto).ToList();
+                    ProductGroupId = p.ProductGroupId.HasValue
+                        ? (int)p.ProductGroupId.Value
+                        : null,
+
+                    ProductTypeId = p.ProdTypeId.HasValue
+                        ? (int)p.ProdTypeId.Value
+                        : null,
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = p.BusinessRegister != null
+                        ? p.BusinessRegister.BusinessName
+                        : null,
+
+                    IsProductAvailable = p.ProductStatus == "ACTIVE"
+                                         && p.IsActive,
+
+                    Country = p.BusinessRegister != null
+                        ? p.BusinessRegister.BusinessCountry
+                        : "",
+
+                    Location = p.BusinessRegister != null
+                        ? p.BusinessRegister.Town + ", "
+                          + p.BusinessRegister.BusinessCity + ", "
+                          + p.BusinessRegister.BusinessState
+                        : "",
+
+                    Variants = p.Variants
+                        .Select(v => new Sku_ProductVariantDto
+                        {
+                            SkuId_Productvariant = (int)v.SkuId,
+                            ProductId = (int)v.ProductId,
+
+                            Sku_Cost = v.Price,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.StockQuantity,
+                            Weight = v.Weight,
+                            metric = v.MeasurementUnit,
+                            Discount = v.Discount,
+
+                            Images = v.Images
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
         }
 
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
@@ -774,15 +827,17 @@ namespace mytown.DataAccess.Repositories
                         AttributeId = (int)a.AttributeId,
 
                         AttributeName = _context.ProductAttributes
-                            .Where(pa => pa.AttributeId == a.AttributeId)
+                            .Where(pa => pa.AttributeId == (int)a.AttributeId)
                             .Select(pa => pa.AttributeName)
                             .FirstOrDefault(),
 
-                        AttributeValueId = (int?)a.AttributeValueId,
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
 
-                        AttributeValue = a.AttributeValueId != null
+                        AttributeValue = a.AttributeValueId.HasValue
                             ? _context.ProductAttributeValues
-                                .Where(av => av.AttributeValueId == a.AttributeValueId)
+                                .Where(av => av.AttributeValueId == (int)a.AttributeValueId.Value)
                                 .Select(av => av.AttributeValue)
                                 .FirstOrDefault()
                             : a.AttributeValue

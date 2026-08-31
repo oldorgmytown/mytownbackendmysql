@@ -1689,16 +1689,16 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.ProductAttributeValue", b =>
                 {
-                    b.Property<int>("AttributeValueId")
+                    b.Property<long>("AttributeValueId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("attribute_value_id")
                         .HasAnnotation("Relational:JsonPropertyName", "attribute_value_id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AttributeValueId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AttributeValueId"));
 
-                    b.Property<int>("AttributeId")
-                        .HasColumnType("int")
+                    b.Property<long>("AttributeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("attribute_id")
                         .HasAnnotation("Relational:JsonPropertyName", "attribute_id");
 
@@ -1716,13 +1716,13 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.ProductAttributes", b =>
                 {
-                    b.Property<int>("AttributeId")
+                    b.Property<long>("AttributeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("bigint")
                         .HasColumnName("attribute_id")
                         .HasAnnotation("Relational:JsonPropertyName", "attribute_id");
 
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AttributeId"));
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("AttributeId"));
 
                     b.Property<string>("AttributeName")
                         .IsRequired()
@@ -1992,6 +1992,10 @@ namespace mytown.Migrations
                         .HasColumnName("sku_id");
 
                     b.HasKey("VariantAttributeId");
+
+                    b.HasIndex("AttributeId");
+
+                    b.HasIndex("AttributeValueId");
 
                     b.HasIndex("SkuId");
 
@@ -4438,11 +4442,25 @@ namespace mytown.Migrations
 
             modelBuilder.Entity("mytown.Models.ProductVariantAttributeNew", b =>
                 {
+                    b.HasOne("mytown.Models.ProductAttributes", "ProductAttribute")
+                        .WithMany()
+                        .HasForeignKey("AttributeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ProductAttributeValue", "ProductAttributeValue")
+                        .WithMany()
+                        .HasForeignKey("AttributeValueId");
+
                     b.HasOne("mytown.Models.ProductVariantNew", "Variant")
                         .WithMany("Attributes")
                         .HasForeignKey("SkuId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ProductAttribute");
+
+                    b.Navigation("ProductAttributeValue");
 
                     b.Navigation("Variant");
                 });

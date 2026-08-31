@@ -334,16 +334,16 @@ namespace mytown.DataAccess.Repositories
                 {
                     SkuId_Productvariant = v.SkuId,
                     ProductId = v.ProductId,
-                    Color = v.Color,
-                    SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
+                    //Color = v.Color,
+                    //SizeId = v.SizeId,
+                    //SizeName = v.Size != null ? v.Size.SizeName : null,
                     Sku_Cost = v.Sku_Cost,
                     DiscountPrice = v.DiscountPrice,
                     Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
-                    Weight = v.Weight,
+                    //Length = v.Length,
+                    //Width = v.Width,
+                    //Height = v.Height,
+                    //Weight = v.Weight,
                     Discount = v.Discount,
                     Images = v.Images
                         .OrderBy(i => i.SortOrder)

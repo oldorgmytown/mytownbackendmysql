@@ -2,7 +2,7 @@
 {
     public class ProductAttributeDto
     {
-        public int AttributeId { get; set; }
+        public long AttributeId { get; set; }
         public string AttributeName { get; set; }
         public int ProdSubcatId { get; set; }
         public int BusCatId { get; set; }
@@ -13,7 +13,7 @@
 
     public class ProductAttributeValueDto
     {
-        public int AttributeValueId { get; set; }
+        public long AttributeValueId { get; set; }
         public string AttributeValue { get; set; }
     }
 }
