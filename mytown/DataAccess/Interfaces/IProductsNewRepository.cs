@@ -1,4 +1,5 @@
-﻿using mytown.Models;
+﻿using MimeKit.Tnef;
+using mytown.Models;
 using mytown.Models.DTO_s;
 
 namespace mytown.Repositories.Interfaces
@@ -23,5 +24,8 @@ namespace mytown.Repositories.Interfaces
         Task RollbackTransactionAsync();
 
         Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId);
+
+        Task<List<ProductSearchResultDto>> SearchProductsAsync(
+    ProductSearchRequestDto request);
     }
 }

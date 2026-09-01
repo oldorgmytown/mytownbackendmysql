@@ -133,4 +133,23 @@ public class ProductsNewService : IProductsNewService
         return await _repository
             .GetProductMasterNamesByBusinessAsync(busRegId);
     }
+
+    public async Task<List<ProductSearchResultDto>> SearchProductsAsync(
+     ProductSearchRequestDto request)
+    {
+        if (request.BusRegId <= 0)
+            throw new ArgumentException(
+                "Invalid business registration ID.");
+
+        if (request.Page < 1)
+            request.Page = 1;
+
+        if (request.PageSize < 1)
+            request.PageSize = 20;
+
+        if (request.PageSize > 100)
+            request.PageSize = 100;
+
+        return await _repository.SearchProductsAsync(request);
+    }
 }

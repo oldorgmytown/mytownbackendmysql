@@ -11,5 +11,7 @@ namespace mytown.Services.Interfaces
         Task<string> UploadToBlobAsync(IFormFile file, string imageType);
 
         Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId);
+        Task<List<ProductSearchResultDto>> SearchProductsAsync(
+     ProductSearchRequestDto request);
     }
 }

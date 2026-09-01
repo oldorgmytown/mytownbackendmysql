@@ -121,5 +121,33 @@ namespace mytown.Controllers
                     });
             }
         }
+
+
+        [HttpPost("searchProducts")]
+        public async Task<IActionResult> SearchProducts(
+    [FromBody] ProductSearchRequestDto request)
+        {
+            if (request.BusRegId <= 0)
+            {
+                return BadRequest(new
+                {
+                    message = "Valid busRegId is required."
+                });
+            }
+
+            var products =
+                await _service.SearchProductsAsync(request);
+
+            return Ok(new
+            {
+                busRegId = request.BusRegId,
+                search = request.Search,
+                page = request.Page,
+                pageSize = request.PageSize,
+                count = products.Count,
+                data = products
+            });
+        }
     }
-}
+    }
+
