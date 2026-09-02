@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using mytown.DTOs.ProductsNew;
 
 namespace mytown.Models.DTO_s
 {
     public class Sku_CreateVariantDto
     {
+        public List<CreateProductVariantAttributeRequest> Attributes { get; set; } = new();
         public int SkuId_Productvariant { get; set; }
         [Required(ErrorMessage = "ProductId is required.")]
         [Range(1, int.MaxValue, ErrorMessage = "ProductId must be greater than 0.")]
