@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
 using System.Text.Json.Serialization;
 
 namespace mytown.Models.DTO_s
@@ -22,7 +24,28 @@ namespace mytown.Models.DTO_s
         public decimal? Discount { get; set; }
          public string? metric { get; set; }
 
-        public string? VariantName => $"{SkuId_Productvariant}-{Color}";
+        public string? VariantName
+        {
+            get
+            {
+                var parts = new List<string>();
+                if (!string.IsNullOrWhiteSpace(Color)) parts.Add(Color);
+                if (!string.IsNullOrWhiteSpace(SizeName)) parts.Add(SizeName);
+                if (parts.Count > 0) return string.Join(" - ", parts);
+
+                if (Attributes != null && Attributes.Count > 0)
+                {
+                    var attrParts = Attributes
+                        .Where(a => !string.IsNullOrWhiteSpace(a.AttributeValue))
+                        .Select(a => a.AttributeValue)
+                        .Take(2)
+                        .ToList();
+                    if (attrParts.Count > 0) return string.Join(", ", attrParts);
+                }
+
+                return $"Variant {SkuId_Productvariant}";
+            }
+        }
 
         
         // Existing image metadata (returned on GET)

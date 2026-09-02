@@ -70,6 +70,22 @@ namespace mytown.DataAccess.Repositories
                 variant, dto.Color, dto.SizeId,
                 parentProduct.ProdSubcatId, parentProduct.BusCatId);
 
+            if (dto.Attributes != null && dto.Attributes.Any())
+            {
+                foreach (var attr in dto.Attributes)
+                {
+                    _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                    {
+                        SkuId = variant.SkuId,
+                        AttributeId = attr.AttributeId,
+                        AttributeValueId = attr.AttributeValueId,
+                        AttributeValue = attr.AttributeValue,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+
             if (dto.Images != null && dto.Images.Any())
             {
                 int order = 1;
