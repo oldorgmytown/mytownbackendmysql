@@ -38,6 +38,12 @@ namespace mytown.Services.Interfaces
 
         // add bank details
         Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
+        Task<BankVerificationResponseDto> VerifyBankAccountAsync(
+       BankVerificationRequestDto request);
 
-    }
+        Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
+        CreateCashfreeBeneficiaryRequest request);
+    
+
+}
 }

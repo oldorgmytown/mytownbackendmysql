@@ -17,6 +17,7 @@ using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 using mytown.Services.Interfaces;
 using MyTown.Configurations;
+using MyTown.Models;
 using Stripe;
 using Stripe.Climate;
 using System.Security.Claims;
@@ -125,6 +126,11 @@ public class Startup
         services.AddScoped<IMobileAppService, MobileAppService>();
 
         services.AddSingleton<ConnectionManager>();
+
+        services.Configure<CashfreePayoutOptions>(
+    Configuration.GetSection("CashfreePayout"));
+
+        services.AddHttpClient("CashfreePayout");
     }
 
     private void RegisterControllersAndSwagger(IServiceCollection services)

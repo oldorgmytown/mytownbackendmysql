@@ -4,6 +4,9 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
+using Stripe;
+using System.Text;
+using System.Text.Json;
 using static mytown.Models.busprofilepreview;
 
 
@@ -12,10 +15,15 @@ namespace mytown.DataAccess.Repositories
     public class BusinessRepository : IBusinessRepository
     {
         private readonly AppDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public BusinessRepository(AppDbContext context)
+        private readonly HttpClient _httpClient;
+
+        public BusinessRepository(AppDbContext context, HttpClient httpClient, IConfiguration configuration)
         {
             _context = context;
+            _httpClient = httpClient;
+            _configuration = configuration;
         }
 
         public async Task<bool> IsEmailTaken(string email)
@@ -233,6 +241,82 @@ namespace mytown.DataAccess.Repositories
                         .ToList()
                 })
                 .ToListAsync();
+        }
+
+        public async Task<BankVerificationResponseDto> VerifyBankAccountAsync(
+       BankVerificationRequestDto request)
+        {
+            var clientId = _configuration["CashfreeVerification:ClientId"];
+            var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
+
+            var url =
+                "https://sandbox.cashfree.com/verification/bank-account/sync";
+
+            var payload = new
+            {
+                bank_account = request.AccountNumber,
+                ifsc = request.Ifsc
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                url);
+
+            httpRequest.Headers.Add("x-client-id", clientId);
+            httpRequest.Headers.Add("x-client-secret", clientSecret);
+
+            httpRequest.Content = new StringContent(
+                json,
+                Encoding.UTF8,
+                "application/json");
+
+            var response = await _httpClient.SendAsync(httpRequest);
+
+            var responseContent =
+                await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BankVerificationResponseDto
+                {
+                    Success = false,
+                    Message = responseContent
+                };
+            }
+
+            using var document =
+                JsonDocument.Parse(responseContent);
+
+            var root = document.RootElement;
+
+            string? accountHolderName = null;
+            string? bankName = null;
+
+            if (root.TryGetProperty(
+                    "name_at_bank",
+                    out var nameProperty))
+            {
+                accountHolderName =
+                    nameProperty.GetString();
+            }
+
+            if (root.TryGetProperty(
+                    "bank_name",
+                    out var bankProperty))
+            {
+                bankName =
+                    bankProperty.GetString();
+            }
+
+            return new BankVerificationResponseDto
+            {
+                Success = true,
+                AccountHolderName = accountHolderName,
+                BankName = bankName,
+                Message = "Bank account verified successfully."
+            };
         }
     }
 
