@@ -10,8 +10,26 @@ namespace mytown.Models.DTO_s
         public string PlanStatus { get; set; }
 
         // Route
-        public string StartLocation { get; set; }
-        public string Destination { get; set; }
+
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        public string StartTown { get; set; }
+        public string StartCity { get; set; }
+        public string StartState { get; set; }
+        public string StartCountry { get; set; }
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        public string DestinationTown { get; set; }
+        public string DestinationCity { get; set; }
+        public string DestinationState { get; set; }
+        public string DestinationCountry { get; set; }
+        //public string StartLocation { get; set; }
+        //public string Destination { get; set; }
         public string PreferredRoute { get; set; }
         public decimal? DistanceKm { get; set; }
 
@@ -85,12 +103,18 @@ namespace mytown.Models.DTO_s
     {
         public int DeliveryReqId { get; set; }
         public int PlanId { get; set; }
+        public int? StoreOrderId { get; set; }   // ← ADD THIS
+        public int? OrderId { get; set; }
         public string DeliveryCode { get; set; } // DEL-XXXX
         public string CustomerName { get; set; }
         public string PickupLocation { get; set; }
         public string DropoffLocation { get; set; }
         public int NumberOfPackages { get; set; }
         public decimal PackageWeightKg { get; set; }
+        public decimal? PackageLengthCm { get; set; }
+        public decimal? PackageWidthCm { get; set; }
+        public decimal? PackageHeightCm { get; set; }
+
         public decimal DeliveryFee { get; set; }
         public string PackageTags { get; set; }
         public string DeliveryStatus { get; set; }
@@ -197,8 +221,24 @@ namespace mytown.Models.DTO_s
         public string TransporterName { get; set; }
         public string VehicleType { get; set; }
         public string VehicleName { get; set; }
-        public string StartLocation { get; set; }
-        public string Destination { get; set; }
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        public string StartTown { get; set; }
+        public string StartCity { get; set; }
+        public string StartState { get; set; }
+        public string StartCountry { get; set; }
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        public string DestinationTown { get; set; }
+        public string DestinationCity { get; set; }
+        public string DestinationState { get; set; }
+        public string DestinationCountry { get; set; }
+
         public DateTime StartDate { get; set; }
         public DateTime ArrivalDate { get; set; }
         public decimal MaxWeightKg { get; set; }
@@ -206,6 +246,7 @@ namespace mytown.Models.DTO_s
         public bool AcceptsFragile { get; set; }
         public bool AcceptsPerishable { get; set; }
         public string PreferredContact { get; set; }
+        public string PreferredRoute { get; set; }
     }
 }
 
@@ -215,8 +256,11 @@ namespace mytown.Models.DTO_s
     public class ShopperDeliveryRequestDto
     {
         public int PlanId { get; set; }
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
         public int? OrderId { get; set; }
+        public int StoreOrderId { get; set; } // link to store order for easier tracking
         public string PickupLocation { get; set; }
         public string DropoffLocation { get; set; }
         public decimal PackageWeightKg { get; set; }

@@ -3,6 +3,7 @@ using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using MyTown.Models;
 
 namespace mytown.Services.Implementations
 {
@@ -30,9 +31,18 @@ namespace mytown.Services.Implementations
         }
 
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
-            GetBusinessesservicesByStatusPaginatedAsync(string status, int page, int pageSize)
+    GetBusinessesservicesByStatusPaginatedAsync(
+        string status,
+        string? searchTerm,
+        int page,
+        int pageSize)
         {
-            return await _adminRepo.GetBusinessesservicesByStatusPaginated(status, page, pageSize);
+            return await _adminRepo
+                .GetBusinessesservicesByStatusPaginated(
+                    status,
+                    searchTerm,
+                    page,
+                    pageSize);
         }
 
         public async Task<object> BusinessprofilestatuscountsAsync()
@@ -87,19 +97,16 @@ namespace mytown.Services.Implementations
 
         public async Task<bool> UpdateShopperStatusByAdminAsync(int shopperId, string status)
         {
-            // 1️ Update status
             var updated = await _adminRepo.UpdateShopperStatusAsync(shopperId, status);
 
             if (!updated)
                 return false;
 
-            // 2️ Get shopper details
             var shopper = await _adminRepo.GetShopperByIdAsync(shopperId);
 
             if (shopper == null)
                 return false;
 
-            // 3️ Send email only if reactivated
             if (status.ToLower() == "active")
             {
                 await _emailService.SendShopperReactivationEmailAsync(
@@ -130,29 +137,17 @@ namespace mytown.Services.Implementations
             return result;
         }
 
-        //public async Task<bool> SendReativateShopperemail(int shopperRegId)
-        //{
-        //    var shopper = await _adminRepo.GetShopperByIdAsync(shopperRegId);
-
-        //    if (shopper == null)
-        //        return false;
-
-           
-        //        await _emailService.SendShopperReactivationEmailAsync(
-        //            shopper.Email,
-        //            shopper.Username
-        //        );
-
-
-        //    return true;
-        //}
-
         public async Task<(IEnumerable<object> Records, int TotalRecords)>
-            GetCourierRegistersPaginatedAsync(int page, int pageSize)
+  GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         {
-            return await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize);
+            return await _adminRepo.GetCourierRegistersPaginatedAsync(page, pageSize, search);
         }
 
+        public async Task<(IEnumerable<object> Records, int TotalRecords)>
+    GetTransporterRegistersPaginatedAsync(int page, int pageSize, string? search)
+        {
+            return await _adminRepo.GetTransporterRegistersPaginatedAsync(page, pageSize, search);
+        }
         public async Task<IEnumerable<object>> GetLocationsWithCompletedStoresAsync()
         {
             return await _adminRepo.GetLocationsWithCompletedStoresAsync();
@@ -224,6 +219,62 @@ namespace mytown.Services.Implementations
         public async Task<CourierBranchDto> GetBranchAsync(int branchId)
         {
             return await _adminRepo.GetBranchAsync(branchId);
+        }
+
+        public async Task<(IEnumerable<object> Records, int TotalRecords)>
+GetSenderRegistersPaginatedAsync(
+    int page,
+    int pageSize,
+    string? search)
+        {
+            return await _adminRepo
+                .GetSenderRegistersPaginatedAsync(
+                    page,
+                    pageSize,
+                    search);
+        }
+
+        public async Task<bool> UpdateServiceProfileStatusByAdminAsync(
+    int busRegId,
+    string status,
+    string? comments = null)
+        {
+            return await _adminRepo
+                .UpdateServiceProfileStatusByAdminAsync(
+                    busRegId,
+                    status,
+                    comments);
+        }
+
+        // Orders tab — full combined order details by store order code
+        public async Task<OrderFullDetailsDto?> GetOrderFullDetailsByStoreOrderCodeAsync(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                return null;
+
+            var digits = new string(code.Where(char.IsDigit).ToArray());
+
+            if (!int.TryParse(digits, out int storeOrderId))
+                return null;
+
+            return await _adminRepo.GetOrderFullDetailsByStoreOrderIdAsync(storeOrderId);
+        }
+
+        // Orders tab — summary counts for dashboard cards
+        public async Task<OrdersSummaryCountsDto> GetOrdersSummaryCountsAsync()
+        {
+            return await _adminRepo.GetOrdersSummaryCountsAsync();
+        }
+        public async Task<BusinessLocationCountsDto> GetBusinessLocationCountsAsync()
+{
+    return await _adminRepo.GetBusinessLocationCountsAsync();
+}
+
+        // Orders tab — full order list, paginated
+        public async Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
+            GetAllOrdersFullDetailsPaginatedAsync(int page, int pageSize, string? status, string? search)
+        {
+            return await _adminRepo.GetAllOrdersFullDetailsPaginatedAsync(page, pageSize, status, search);
         }
 
     }

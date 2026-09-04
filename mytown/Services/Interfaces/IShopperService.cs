@@ -19,5 +19,9 @@ namespace mytown.Services.Interfaces
         Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesAsync(int shopperRegId);
         Task<ShopperAlternateAddressDto> AddAddressAsync(ShopperAlternateAddressDto dto);
         Task<bool> DeleteAddressAsync(int id);
+
+        Task<(bool exists, string message)> CheckEmailExistsAsync(string email);
+
+        
     }
 }

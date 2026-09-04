@@ -284,7 +284,42 @@ namespace mytown.Controllers
             });
         }
 
-      
+        //update or edit bank details
+       
+
+        [HttpPut("update-courier-account/{courierId}")]
+        public async Task<IActionResult> UpdateCourierAccount(
+    int courierId,
+    [FromBody] UpdateCourierAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _courierService.UpdateCourierAccountDetailsAsync(courierId, dto);
+
+                return Ok(new
+                {
+                    message = "Courier account details saved successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("getcourier-bankaccount/{courierId}")]
+        public async Task<IActionResult> GetCourierAccountDetails(int courierId)
+        {
+            var account = await _courierService.GetCourierAccountDetailsByCourierIdAsync(courierId);
+
+            if (account == null)
+                return NotFound(new { message = "Courier account details not found." });
+
+            return Ok(account);
+        }
 
     }
 

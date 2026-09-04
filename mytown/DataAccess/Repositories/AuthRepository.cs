@@ -21,10 +21,33 @@ namespace mytown.DataAccess.Repositories
             _configuration = configuration;
         }
 
-        public bool EmailExists(string email)
+        public bool EmailExists(string email, string role)
         {
-            return _context.ShopperRegisters.Any(u => u.Email == email) ||
-                   _context.BusinessRegisters.Any(u => u.BusEmail == email);
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(role))
+                return false;
+
+            email = email.Trim().ToLower();
+            role = role.Trim().ToLower();
+
+            return role switch
+            {
+                "shopper" => _context.ShopperRegisters
+                    .Any(u => u.Email.ToLower() == email),
+
+                "business" => _context.BusinessRegisters
+                    .Any(u => u.BusEmail.ToLower() == email),
+
+                "courier" => _context.CourierService
+                    .Any(u => u.CourierEmail.ToLower() == email),
+
+                "transporter" => _context.TransporterRegisters
+                    .Any(u => u.Email.ToLower() == email),
+
+                "sender" => _context.SenderRegisters
+                    .Any(u => u.Email.ToLower() == email),
+
+                _ => false
+            };
         }
 
 
@@ -48,8 +71,8 @@ namespace mytown.DataAccess.Repositories
 
         public async Task SendResetEmail(string email)
         {
-            if (!EmailExists(email))
-                throw new Exception("Email not found.");
+            //if (!EmailExists(email))
+            //    throw new Exception("Email not found.");
 
             var token = CreatePasswordResetToken(email);
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];

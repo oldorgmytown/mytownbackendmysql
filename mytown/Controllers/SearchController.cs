@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
 using mytown.Services.Interfaces;
+using Stripe;
 
 namespace mytown.Controllers
 {
@@ -114,5 +116,89 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        // 27-05-26
+        // get both business profiles and service profiles
+        [HttpGet("getbusinessandservicesearchresults")]
+        public async Task<IActionResult> GetBusinessAndServiceSearchResults(
+    string? searchTerm,
+    string? town,
+    string? city,
+    string? state,
+    string? country)
+        {
+            var result = await _searchService.GetBusinessAndServiceSearchResults(
+                searchTerm, town, city, state, country);
+
+            return Ok(result);
+        }
+
+        // Track order by tracking ID
+        //this is not working on QA
+        [AllowAnonymous]
+        [HttpGet("track/{trackingId}")]
+        public async Task<IActionResult> TrackOrder(string trackingId)
+        {
+            try
+            {
+                var result = await _searchService.TrackOrderByTrackingIdAsync(trackingId);
+
+                if (result == null)
+                    return NotFound(new { error = "Tracking ID not found." });
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error tracking order {TrackingId}", trackingId);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
+
+        // ✅ Get popular cities
+        [AllowAnonymous]
+        [HttpGet("popular-cities")]
+        public async Task<IActionResult> GetPopularCities()
+        {
+            try
+            {
+                var result = await _searchService.GetPopularCitiesAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching popular cities");
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
+
+        // Sender Order Tracking
+[AllowAnonymous]
+[HttpGet("sendertrack/{trackingId}")]
+public async Task<IActionResult> GetSenderOrderTracking(string trackingId)
+{
+    try
+    {
+        var result = await _searchService
+            .GetSenderOrderTrackingAsync(trackingId);
+
+        if (result == null)
+            return NotFound(new { error = "Tracking ID not found." });
+
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex,
+            "Error fetching sender order tracking {TrackingId}",
+            trackingId);
+
+        return StatusCode(500,
+            new { error = "Something went wrong." });
+    }
+}
+
+
+
     }
 }

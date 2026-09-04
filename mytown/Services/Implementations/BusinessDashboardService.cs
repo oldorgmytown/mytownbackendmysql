@@ -1,18 +1,23 @@
-﻿using mytown.DataAccess.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using mytown.Services.Implementations;
 //using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
+using MyTown.Models;
 
 namespace mytown.Services.Implementations
 {
     public class BusinessDashboardService : IBusinessDashboardService
     {
         private readonly IBusinessDashboardRepository _repository;
+        private readonly IEmailService _emailService;
 
-        public BusinessDashboardService(IBusinessDashboardRepository repository)
+        public BusinessDashboardService(IBusinessDashboardRepository repository,IEmailService emailService)
         {
             _repository = repository;
+            _emailService = emailService; // Consider using DI for better testability
         }
 
         public Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
@@ -110,40 +115,184 @@ namespace mytown.Services.Implementations
             return await _repository.GetTopProductsAsync(storeId, topCount);
         }
 
-        //Notification to coueir - Reday to ship 
-        public async Task MarkReadyToShipAsync(int storeOrderId)
+
+        //  Saving package details
+
+        public async Task<ShippingPackageDetailsDto> SavePackageDetailsAsync(ShippingPackageDetailsDto dto)
         {
+            var model = new ShippingPackageDetails
+            {
+                StoreOrderId = dto.StoreOrderId,
+
+                PackageLength = dto.PackageLength,
+                PackageWidth = dto.PackageWidth,
+                PackageHeight = dto.PackageHeight,
+                PackageWeight = dto.PackageWeight,
+
+                DimensionUnit = dto.DimensionUnit ?? "cm",
+                WeightUnit = dto.WeightUnit ?? "kg"
+            };
+
+            var result = await _repository.AddOrUpdateShippingPackageDetailsAsync(model);
+            return new ShippingPackageDetailsDto
+            {
+                StoreOrderId = result.StoreOrderId,
+
+                PackageLength = result.PackageLength,
+                PackageWidth = result.PackageWidth,
+                PackageHeight = result.PackageHeight,
+                PackageWeight = result.PackageWeight,
+
+                DimensionUnit = result.DimensionUnit,
+                WeightUnit = result.WeightUnit
+            };
+        }
+
+        public async Task<ShippingPackageDetailsDto?> GetPackageDetailsAsync(int storeOrderId)
+        {
+            var result = await _repository.GetShippingPackageDetailsByStoreOrderIdAsync(storeOrderId);
+
+            if (result == null)
+                return null;
+
+            return new ShippingPackageDetailsDto
+            {
+                StoreOrderId = result.StoreOrderId,
+
+                PackageLength = result.PackageLength,
+                PackageWidth = result.PackageWidth,
+                PackageHeight = result.PackageHeight,
+                PackageWeight = result.PackageWeight,
+
+                DimensionUnit = result.DimensionUnit,
+                WeightUnit = result.WeightUnit,
+                Notified = result.Notified
+            };
+        }
+
+        //Notification and email  to coueir and transporter - Reday to ship 
+
+        // Service
+        public async Task MarkReadyToShipAsync(ReadyToShipDto dto)
+        {
+            int storeOrderId = dto.StoreOrderId;
+
             // 1️⃣ Update shipping status
             await _repository.UpdateShippingStatusAsync(
                 storeOrderId,
                 "Ready to Ship"
             );
 
-            // 2️⃣ Update store order status (recommended)
+            // 2️⃣ Update store order status
             await _repository.UpdateStoreOrderStatusAsync(
                 storeOrderId,
                 "Ready to Ship"
             );
 
-            // 3️⃣ Get shipping to notify courier
+            // 3️⃣ Get shipping details
             var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
             if (shipping == null)
                 return;
 
-            // 4️⃣ Create courier notification
-            var notification = new CourierDBNotifications
+           
+
+            // 5️⃣ Courier notification
+            if (shipping.BranchId.HasValue && shipping.CourierBranch != null)
             {
-                CourierId = shipping.CourierBranch.CourierId,
-                BranchId = shipping.BranchId,
-                Title = "Order Ready to Ship",
-                Message = $"StoreOrder #{storeOrderId} is ready for pickup."
-            };
+                var notification = new CourierDBNotifications
+                {
+                    CourierId = shipping.CourierBranch.CourierId,
+                    BranchId = shipping.BranchId.Value,
+                    Title = "Order Ready to Ship",
+                    Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+                };
 
-            await _repository.AddCourierNotificationAsync(notification);
+                await _repository.AddCourierNotificationAsync(notification);
+            }
 
-            // 5️⃣ Persist everything
+            // 6️⃣ Transporter notification
+            if (shipping.TransporterRegId.HasValue &&
+                shipping.TransporterRegister != null)
+            {
+                var transporterNotification = new TransporterDBNotifications
+                {
+                    TransporterRegId = shipping.TransporterRegId.Value,
+                    Title = "Order Ready to Ship",
+                    Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+                };
+
+                await _repository.AddTransporterNotificationAsync(
+                    transporterNotification
+                );
+            }
+
+
+            //  mark notified for thia package 
+            await _repository.MarkPackageNotifiedByOrderIdAsync(storeOrderId);
+            // 7️⃣ Save all DB changes once
             await _repository.SaveChangesAsync();
+
+            // 8️⃣ Send emails
+            var orderDetails = await _repository.GetBusinessOrderDetailsAsync(storeOrderId);
+            string packageSummary =
+                $"{dto.PackageLength} × {dto.PackageWidth} × {dto.PackageHeight} {dto.DimensionUnit}, " +
+                $"{dto.PackageWeight} {dto.WeightUnit}";
+
+            if (orderDetails != null &&
+                shipping.BranchId.HasValue &&
+                shipping.CourierBranch != null)
+            {
+                await _emailService.SendPackagerdyEmailToCourierAsync(
+                    orderDetails.CourierEmail,
+                    orderDetails.CourierServiceName,
+                    orderDetails, packageSummary
+                );
+            }
+
+            if (orderDetails != null &&
+                shipping.TransporterRegId.HasValue &&
+                shipping.TransporterRegister != null)
+            {
+                await _emailService.SendPackagerdyEmailToTransporterAsync(
+                    orderDetails.TransporterEmail,
+                    orderDetails.TransporterName,
+                    orderDetails,packageSummary
+                );
+            }
         }
+        //public async Task MarkReadyToShipAsync(int storeOrderId)
+        //{
+        //    // 1️⃣ Update shipping status
+        //    await _repository.UpdateShippingStatusAsync(
+        //        storeOrderId,
+        //        "Ready to Ship"
+        //    );
+
+        //    // 2️⃣ Update store order status (recommended)
+        //    await _repository.UpdateStoreOrderStatusAsync(
+        //        storeOrderId,
+        //        "Ready to Ship"
+        //    );
+
+        //    // 3️⃣ Get shipping to notify courier
+        //    var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
+        //    if (shipping == null)
+        //        return;
+
+        //    // 4️⃣ Create courier notification
+        //    var notification = new CourierDBNotifications
+        //    {
+        //        CourierId = shipping.CourierBranch.CourierId,
+        //        BranchId = shipping.BranchId,
+        //        Title = "Order Ready to Ship",
+        //        Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+        //    };
+
+        //    await _repository.AddCourierNotificationAsync(notification);
+
+        //    // 5️⃣ Persist everything
+        //    await _repository.SaveChangesAsync();
+        //}
 
 
         // Get monthly Revenue for summary page
@@ -166,6 +315,19 @@ namespace mytown.Services.Implementations
         public async Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate)
         {
             return await _repository.GetSalesTrendAsync(storeId, fromDate, toDate);
+        }
+
+        //bankdetails
+        public async Task<bool> UpdateBusinessAccountDetailsAsync(
+    int busRegId,
+    UpdateBusinessAccountDetailDto dto)
+        {
+            return await _repository.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+        }
+
+        public async Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId)
+        {
+            return await _repository.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
         }
     }
 

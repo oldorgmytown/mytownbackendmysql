@@ -2,6 +2,7 @@
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.DTOs;
+using MyTown.Models;
 using BusinessNotificationDto = mytown.Models.DTO_s.BusinessNotificationDto;
 
 namespace mytown.Services.Interfaces
@@ -29,9 +30,15 @@ namespace mytown.Services.Interfaces
 
         Task<List<BusinessNotificationDto>> GetNotificationsAsync(
        int busRegId,
-       bool onlyUnread
-   );
+       bool onlyUnread   );
+
         Task MarkeachNotificationAsReadAsync(int notificationId);
+
+        // saving package dimensions
+        Task<ShippingPackageDetailsDto> SavePackageDetailsAsync(ShippingPackageDetailsDto dto);
+        Task<ShippingPackageDetailsDto?> GetPackageDetailsAsync(int storeOrderId);
+
+        Task MarkReadyToShipAsync(ReadyToShipDto dto);
         Task MarkAllAsReadAsync(int busRegId);
         //  Task GetNotificationsAsync(int busRegId, bool onlyUnread);
 
@@ -58,7 +65,7 @@ namespace mytown.Services.Interfaces
 
         //notification to coueir - ready to ship
 
-        Task MarkReadyToShipAsync(int storeOrderId);
+     //   Task MarkReadyToShipAsync(int storeOrderId);
         // get monthly Revenue - for summary page
 
         Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(int storeId, int? year, int? month, string? currency);
@@ -69,6 +76,10 @@ namespace mytown.Services.Interfaces
 
         //sales trend graph
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
+
+        //edit bankdetails
+        Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
+        Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
 
     }
 }

@@ -29,9 +29,9 @@ namespace mytown.Models
         public StoreOrder StoreOrder { get; set; }
 
         // 🔗 Selected courier branch
-        [Required]
+       // [Required]
         [Column("branch_id")]
-        public int BranchId { get; set; }
+        public int? BranchId { get; set; }
 
         [ForeignKey(nameof(BranchId))]
         public CourierBranch CourierBranch { get; set; }
@@ -69,7 +69,10 @@ namespace mytown.Models
 
 
         [Column("transporter_reg_id")]
-        public int? TransporterRegId { get; set; } 
+        public int? TransporterRegId { get; set; }
+
+        [ForeignKey(nameof(TransporterRegId))]
+        public TransporterRegister? TransporterRegister { get; set; }
 
         [Column("transporter_plan_id")]
         public int? TransporterPlanId { get; set; }

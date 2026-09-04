@@ -1,4 +1,5 @@
-﻿using mytown.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using MyTown.Models;
 using System.Threading.Tasks;
@@ -15,7 +16,7 @@ namespace mytown.Services.Interfaces
 
         Task SavePendingVerification(PendingBusinessVerification pending);
 
-      //  Task RemoveVerification(BusinessVerification verification);
+        //  Task RemoveVerification(BusinessVerification verification);
 
         Task DeletePendingVerification(string token);
 
@@ -29,5 +30,20 @@ namespace mytown.Services.Interfaces
 
         Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatId);
 
-    }
+        Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId);
+
+        Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId);
+
+        Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId, int productGroupId);
+
+        // add bank details
+        Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
+        Task<BankVerificationResponseDto> VerifyBankAccountAsync(
+       BankVerificationRequestDto request);
+
+        Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
+        CreateCashfreeBeneficiaryRequest request);
+    
+
+}
 }

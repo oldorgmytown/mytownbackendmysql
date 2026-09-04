@@ -85,18 +85,6 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //[HttpGet("dashboardproducts")]
-        //public async Task<IActionResult> GetProductsByStore(
-        //int busRegId,
-        //[FromQuery] string searchText = null,
-        //[FromQuery] string sortBy = "id",
-        //[FromQuery] string sortDirection = "asc",
-        //[FromQuery] int page = 1,
-        //[FromQuery] int pageSize = 10)
-        //{
-        //  //  var products = await _dashboardRepository.GetProductsWithPurchasedCountAsync(busRegId, searchText, sortBy, sortDirection, page, pageSize);
-        //   // return Ok(products);
-        //}
 
 
         [HttpGet("GetCustomerAnalytics")]
@@ -257,18 +245,49 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        // Save package dimensions
+        [HttpPost("save-package-dimensions")]
+        public async Task<IActionResult> SavePackageDimensions([FromBody] ShippingPackageDetailsDto dto)
+        {
+            var result = await _dasboardservice.SavePackageDetailsAsync(dto);
+            return Ok(result);
+        }
+
+        // Get package details by StoreOrderId
+        [HttpGet("get-package-dimensions")]
+        public async Task<IActionResult> GetPackageDetails(int storeOrderId)
+        {
+            var result = await _dasboardservice.GetPackageDetailsAsync(storeOrderId);
+
+            if (result == null)
+                return NotFound("Package details not found");
+
+            return Ok(result);
+        }
 
         // Notificatio to courier - Ready to ship
 
+        // Controller
         [HttpPost("ready-to-ship_NotificationtoCourier")]
-        public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        public async Task<IActionResult> MarkReadyToShip([FromBody] ReadyToShipDto dto)
         {
-            await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+            await _dasboardservice.MarkReadyToShipAsync(dto);
+
             return Ok(new
             {
                 message = "Order marked as Ready to Ship"
             });
         }
+
+        //[HttpPost("ready-to-ship_NotificationtoCourier")]
+        //public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        //{
+        //    await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+        //    return Ok(new
+        //    {
+        //        message = "Order marked as Ready to Ship"
+        //    });
+        //}
 
         //sales history
 
@@ -279,7 +298,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //sales trend graph
+        //    //sales trend graph
         [HttpGet("sales-trend-graph")]
         public async Task<IActionResult> GetSalesTrend(
     int storeId,
@@ -288,6 +307,49 @@ namespace mytown.Controllers
         {
             var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
             return Ok(result);
+        }
+
+        [HttpPut("update-business-account/{busRegId}")]
+        public async Task<IActionResult> UpdateBusinessAccount(
+    int busRegId,
+    [FromBody] UpdateBusinessAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _dasboardservice.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+
+                if (!updated)
+                {
+                    return NotFound(new
+                    {
+                        message = "Business account details not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Business account details updated successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
+        // get business account details by busRegId
+        [HttpGet("getbusiness-bankaccount/{busRegId}")]
+        public async Task<IActionResult> GetBusinessAccountDetails(int busRegId)
+        {
+            var account = await _dasboardservice.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
+
+            if (account == null)
+                return NotFound(new { message = "Business account details not found." });
+
+            return Ok(account);
         }
     }
 

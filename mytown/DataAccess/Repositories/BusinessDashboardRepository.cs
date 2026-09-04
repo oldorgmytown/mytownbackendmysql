@@ -3,6 +3,8 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
+using static BusinessDashboardRepository;
 
 
 public class BusinessDashboardRepository : IBusinessDashboardRepository
@@ -15,190 +17,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     }
 
 
-    // get sales history
-    //public async Task<List<BusinessDashboardDto>> GetStoreOrdersReport(int storeId)
-    //{
-    //    var query = from od in _context.OrderDetails
-    //                join o in _context.Orders on od.OrderId equals o.OrderId
-    //                join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
-    //                join p in _context.products on od.ProductId equals p.product_id
-    //                join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
-    //                from payment in payJoin.DefaultIfEmpty() // LEFT JOIN
-    //                join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
-    //                from shipping in sdJoin.DefaultIfEmpty() // LEFT JOIN
-    //                where od.StoreId == storeId
-    //                select new BusinessDashboardDto
-    //                {
-    //                    OrderId = o.OrderId,
-    //                    OrderDetailId = od.OrderDetailId,
-    //                    OrderDate = o.OrderDate,
-    //                    CustomerName = s.Username,
-    //                    ProductName = p.product_name,
-    //                    Quantity = od.Quantity,
-    //                    Amount = od.Quantity * od.Price,
-    //                    PaymentStatus = payment != null ? payment.PaymentStatus : "Unpaid",
-    //                    Address = s.Address,
-    //                    Town = s.Town,
-    //                    City = s.City,
-    //                    State = s.State,
-    //                    Country = s.Country,
-    //                    DeliveryType = shipping != null ? shipping.Shipping_type : "Not Shipped",
-    //                    DeliveryStatus = o.OrderStatus
-    //                };
-
-    //    return await query.ToListAsync();
-    //}
-
-
-
-    //public async Task<List<BusinessDashboardDto>> GetStoreOrdersReport(int storeId)
-    //{
-    //    var query = from od in _context.OrderDetails
-    //                join o in _context.Orders on od.OrderId equals o.OrderId
-    //                join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
-    //                join p in _context.products on od.ProductId equals p.ProductId
-    //                join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
-    //                from payment in payJoin.DefaultIfEmpty()
-    //                join sd in _context.ShippingDetails  on od.OrderDetailId equals sd.OrderDetailId into sdJoin
-    //                from shipping in sdJoin.DefaultIfEmpty()
-    //                where od.StoreId == storeId && o.OrderStatus == "Paid"
-    //                select new BusinessDashboardDto
-    //                {
-    //                    OrderId = o.OrderId,
-    //                    OrderDetailId = od.OrderDetailId,
-    //                    OrderDate = o.OrderDate,
-    //                    CustomerName = s.Username,
-    //                    ShopperId = s.ShopperRegId,
-    //                    ProductId = p.ProductId,
-    //                    ProductName = p.ProductName,
-    //                    Quantity = od.Quantity,
-    //                    Amount = od.Quantity * od.Price,
-    //                    PaymentStatus = payment != null ? payment.PaymentStatus : "Unpaid",
-    //                    TransactionId = payment.PaymentId,
-    //                    Address = s.Address,
-    //                    Town = s.Town,
-    //                    City = s.City,
-    //                    State = s.State,
-    //                    Country = s.Country,
-    //                    DeliveryType = shipping != null ? shipping.ShippingType : "Standard",
-    //                    ShippingStatus = shipping != null ? shipping.ShippingStatus : "Not Shipped"
-    //                };
-
-    //    var result = await query.ToListAsync();
-
-    //    // Categorize paid orders based on shipping status and date
-    //    foreach (var order in result)
-    //    {
-    //        order.OrderCategory =
-    //            (order.OrderDate >= DateTime.UtcNow.AddDays(-2) && order.ShippingStatus == "Not Shipped") ? "New" :
-    //            (order.ShippingStatus == "Not Shipped") ? "Pending" :
-    //            (order.ShippingStatus == "In Transit") ? "In Progress" :
-    //            (order.ShippingStatus == "Delivered") ? "Completed" :
-    //            "Other";
-    //    }
-
-    //    return result;
-    //}
-
-    // orders sales history with sort and search
-    //public async Task<List<BusinessDashboardDto>> GetStoreOrdersReportsortsearch(
-    // int storeId,
-    // string? search = null,
-    // string? sortBy = null,
-    // bool descending = false)
-    //{
-    //    var rawQuery = from od in _context.OrderDetails
-    //                   join o in _context.Orders on od.OrderId equals o.OrderId
-    //                   join s in _context.ShopperRegisters on o.ShopperRegId equals s.ShopperRegId
-    //                   join p in _context.products on od.ProductId equals p.ProductId
-    //                   join pay in _context.Payments on o.OrderId equals pay.OrderId into payJoin
-    //                   from payment in payJoin.DefaultIfEmpty()
-    //                   join sd in _context.ShippingDetails on od.OrderDetailId equals sd.OrderDetailId into sdJoin
-    //                   from shipping in sdJoin.DefaultIfEmpty()
-    //                   where od.StoreId == storeId && o.OrderStatus == "Paid"
-    //                   select new BusinessDashboardDto
-    //                   {
-    //                       OrderId = o.OrderId,
-    //                       OrderDetailId = od.OrderDetailId,
-    //                       OrderDate = o.OrderDate,
-    //                       CustomerName = s.Username,
-    //                       ShopperId = s.ShopperRegId,
-    //                       ProductId = p.ProductId,
-    //                       ProductName = p.ProductName,
-    //                       Quantity = od.Quantity,
-    //                       Amount = od.Quantity * od.Price,
-    //                       PaymentStatus = payment != null ? payment.PaymentStatus : "Unpaid",
-    //                       TransactionId = payment.PaymentId,
-    //                       Address = s.Address,
-    //                       Town = s.Town,
-    //                       City = s.City,
-    //                       State = s.State,
-    //                       Country = s.Country,
-    //                       DeliveryType = shipping != null ? shipping.ShippingType : "Standard",
-    //                       ShippingStatus = shipping != null ? shipping.ShippingStatus : "Not Shipped",
-
-    //                   };
-
-    //    // Materialize data first (to memory)
-    //    var result = await rawQuery.ToListAsync();
-
-    //    // In-memory search
-    //    if (!string.IsNullOrWhiteSpace(search))
-    //    {
-    //        search = search.ToLower();
-    //        result = result.Where(q =>
-    //            q.OrderId.ToString().Contains(search) ||
-    //            q.OrderDetailId.ToString().Contains(search) ||
-    //            q.OrderDate.ToString("yyyy-MM-dd").Contains(search) ||
-    //            q.CustomerName.ToLower().Contains(search) ||
-    //            q.ShopperId.ToString().Contains(search) ||
-    //            q.ProductId.ToString().Contains(search) ||
-    //            q.ProductName.ToLower().Contains(search) ||
-    //            q.Quantity.ToString().Contains(search) ||
-    //            q.Amount.ToString().Contains(search) ||
-    //            q.PaymentStatus.ToLower().Contains(search) ||
-    //            (q.TransactionId != null && q.TransactionId.ToString().Contains(search)) ||
-    //            q.Address.ToLower().Contains(search) ||
-    //            q.Town.ToLower().Contains(search) ||
-    //            q.City.ToLower().Contains(search) ||
-    //            q.State.ToLower().Contains(search) ||
-    //            q.Country.ToLower().Contains(search) ||
-    //            q.DeliveryType.ToLower().Contains(search) ||
-    //            q.ShippingStatus.ToLower().Contains(search)
-    //        ).ToList();
-    //    }
-
-    //    // In-memory sort
-    //    // In-memory sort
-    //    result = sortBy?.ToLower() switch
-    //    {
-    //        "orderid" => descending ? result.OrderByDescending(q => q.OrderId).ToList() : result.OrderBy(q => q.OrderId).ToList(),
-    //        "orderdate" => descending ? result.OrderByDescending(q => q.OrderDate).ToList() : result.OrderBy(q => q.OrderDate).ToList(),
-    //        "customername" => descending ? result.OrderByDescending(q => q.CustomerName).ToList() : result.OrderBy(q => q.CustomerName).ToList(),
-    //        "productname" => descending ? result.OrderByDescending(q => q.ProductName).ToList() : result.OrderBy(q => q.ProductName).ToList(),
-    //        "quantity" => descending ? result.OrderByDescending(q => q.Quantity).ToList() : result.OrderBy(q => q.Quantity).ToList(),
-    //        "amount" => descending ? result.OrderByDescending(q => q.Amount).ToList() : result.OrderBy(q => q.Amount).ToList(),
-    //        "transactionid" => descending ? result.OrderByDescending(q => q.TransactionId).ToList() : result.OrderBy(q => q.TransactionId).ToList(),
-    //        "productid" => descending ? result.OrderByDescending(q => q.ProductId).ToList() : result.OrderBy(q => q.ProductId).ToList(),
-    //        "orderdetailid" => descending ? result.OrderByDescending(q => q.OrderDetailId).ToList() : result.OrderBy(q => q.OrderDetailId).ToList(),
-    //        "shopperid" => descending ? result.OrderByDescending(q => q.ShopperId).ToList() : result.OrderBy(q => q.ShopperId).ToList(),
-    //        _ => result
-    //    };
-
-    //    // Categorize orders
-    //    foreach (var order in result)
-    //    {
-    //        order.OrderCategory =
-    //            (order.OrderDate >= DateTime.UtcNow.AddDays(-2) && order.ShippingStatus == "Not Shipped") ? "New" :
-    //            (order.ShippingStatus == "Not Shipped") ? "Pending" :
-    //            (order.ShippingStatus == "In Transit") ? "In Progress" :
-    //            (order.ShippingStatus == "Delivered") ? "Completed" :
-    //            "Other";
-    //    }
-
-    //    return result;
-    //}
-
+   
 
 
 
@@ -408,15 +227,19 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var finalFrequentCustomers = frequentCustomers.ToList();
 
-        //Customers Who Purchased (Names and Phones)
+        //Customers Who Purchased (Names and Phones) — exclude guest orders (no ShopperRegister)
         var customersWhoPurchasedQuery = _context.OrderDetails
             .Where(od => od.StoreId == storeId &&
+                         !od.Order.IsGuestOrder &&
+                         od.Order.ShopperRegId != null &&
                          (od.Order.Payments.Any() || od.Order.ShippingDetails.Any()))
             .Select(od => new
-            {
+            { 
+                od.Order.ShopperRegister.ShopperRegId,
                 od.Order.ShopperRegister.Username,
                 od.Order.ShopperRegister.PhoneNumber,
-                od.Order.ShopperRegister.Town
+                od.Order.ShopperRegister.Town,
+                od.Order.ShopperRegister.City
             })
             .Distinct();
 
@@ -438,9 +261,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var customersWhoPurchased = await customersWhoPurchasedQuery
             .Select(c => new CustomerDto
             {
+                CustomerId = c.ShopperRegId,
                 Name = c.Username,
                 PhoneNumber = c.PhoneNumber,
-                Town = c.Town
+                Town = c.Town,
+                City = c.City
             })
             .ToListAsync();
 
@@ -505,12 +330,14 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate >= today &&
                 x.Order.OrderDate < today.AddDays(1) &&
-                x.Order.OrderStatus == "Paid");
+                x.Order.OrderStatus == "Paid" &&
+                x.Shipping.ShippingStatus == "Pending");
 
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -519,6 +346,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Take(pageSize)
             .Select(x => new BusinessOrderListDto
             {
+                OrderId = x.Order.OrderId,
                 StoreOrderId = x.StoreOrder.StoreOrderId,
                 Status = "New",
                 EstimatedDeliveryDate =
@@ -542,12 +370,14 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Order.OrderDate < today &&
-                x.Order.OrderStatus == "Paid");
+                x.Order.OrderStatus == "Paid" &&
+                x.Shipping.ShippingStatus == "Pending");
 
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -557,6 +387,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "Pending",
                 EstimatedDeliveryDate =
                     x.Shipping != null
@@ -579,12 +410,13 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Where(x =>
                 x.StoreOrder.StoreId == storeId &&
                 x.Shipping != null &&
-                x.Shipping.ShippingStatus == "In Progress");
-
+                (x.Shipping.ShippingStatus == "In Progress" ||
+                x.Shipping.ShippingStatus == "Ready to Ship"));
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+        x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -594,9 +426,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "In Progress",
                 EstimatedDeliveryDate =
-                    x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
+                    x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays),
+                TrackingId = x.Shipping.TrackingId
             })
             .ToListAsync();
     }
@@ -618,7 +452,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>
-                x.StoreOrder.StoreOrderId.ToString().Contains(search));
+                x.StoreOrder.StoreOrderId.ToString().Contains(search) ||
+                x.Order.OrderId.ToString().Contains(search));
         }
 
         return await query
@@ -628,8 +463,10 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(x => new BusinessOrderListDto
             {
                 StoreOrderId = x.StoreOrder.StoreOrderId,
+                OrderId = x.Order.OrderId,
                 Status = "Delivered",
-                DeliveredDate = x.Shipping.DeliveredDate
+                DeliveredDate = x.Shipping.DeliveredDate,
+                TrackingId = x.Shipping.TrackingId
             })
             .ToListAsync();
     }
@@ -639,82 +476,196 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
     public async Task<BusinessOrderDetailsDto> GetBusinessOrderDetailsAsync(int storeOrderId)
     {
-        // 🔹 Get order + shopper + store + shipping info
+        // 🔹 Get order + customer + store + shipping info
         var orderData = await (
             from so in _context.StoreOrders
             join o in _context.Orders on so.OrderId equals o.OrderId
             join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
             join p in _context.Payments on o.OrderId equals p.OrderId
             join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
-            join sh in _context.ShopperRegisters on o.ShopperRegId equals sh.ShopperRegId
             where so.StoreOrderId == storeOrderId
             select new
             {
                 so.StoreOrderId,
+                o.OrderId,
                 o.OrderDate,
                 p.PaymentId,
+
                 o.ShopperRegId,
-                ShopperName = sh.Username,
-                ShopperPhone = sh.PhoneNumber,
+                o.GuestRegId,
+                o.IsGuestOrder,
+
                 so.StoreId,
+
                 StoreName = s.BusinessName,
-                StoreTown = s.Town,
-                o.ShippingType,
+
+                StoreTown =
+                    (s.Address1 ?? "") + ", " +
+                    (s.Town ?? "") + ", " +
+                    (s.BusinessCity ?? "") + ", " +
+                    (s.BusinessState ?? "") + ", " +
+                    (s.BusinessCountry ?? ""),
+
+                sd.ShippingType,
                 sd.DeliveryAddress,
                 sd.EstimatedDays,
-                sd.CourierBranch,
-                sd.TrackingId
+                sd.TrackingId,
+                sd.BranchId,
+                sd.TransporterRegId,
+                sd.ShippingStatus
             }
         ).FirstOrDefaultAsync();
 
         if (orderData == null)
             return null;
 
-        // 🔹 Get products with image (SKU image preferred)
+        // 🔹 Customer Details (Shopper OR Guest)
+        string customerName = "";
+        string customerPhone = "";
+
+        if (orderData.IsGuestOrder)
+        {
+            var guest = await _context.GuestRegisters
+                .Where(g => g.GuestRegId == orderData.GuestRegId)
+                .Select(g => new
+                {
+                    g.Username,
+                    g.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (guest != null)
+            {
+                customerName = guest.Username;
+                customerPhone = guest.PhoneNumber;
+            }
+        }
+        else
+        {
+            var shopper = await _context.ShopperRegisters
+                .Where(s => s.ShopperRegId == orderData.ShopperRegId)
+                .Select(s => new
+                {
+                    s.Username,
+                    s.PhoneNumber
+                })
+                .FirstOrDefaultAsync();
+
+            if (shopper != null)
+            {
+                customerName = shopper.Username;
+                customerPhone = shopper.PhoneNumber;
+            }
+        }
+
+        // 🔹 Courier details
+        string courierServiceName = null;
+        string courierPhone = null;
+        string courierBranchContact = null;
+        string courierEmail = null;
+
+        if (orderData.BranchId.HasValue)
+        {
+            var courierData = await (
+                from cb in _context.CourierBranches
+                join cs in _context.CourierService on cb.CourierId equals cs.CourierId
+                where cb.BranchId == orderData.BranchId.Value
+                select new
+                {
+                    cs.CourierServiceName,
+                    cb.BranchPhoneNumber,
+                    cb.BranchContactPerson,
+                    cb.BranchEmailId
+                }
+            ).FirstOrDefaultAsync();
+
+            if (courierData != null)
+            {
+                courierServiceName = courierData.CourierServiceName;
+                courierPhone = courierData.BranchPhoneNumber;
+                courierBranchContact = courierData.BranchContactPerson;
+                courierEmail = courierData.BranchEmailId;
+            }
+        }
+
+        // 🔹 Transporter details
+        string transporterName = null;
+        string transporterPhone = null;
+        string transporterEmail = null;
+
+        if (orderData.TransporterRegId.HasValue)
+        {
+            var transporterData = await _context.TransporterRegisters
+                .Where(t => t.TransporterRegId == orderData.TransporterRegId.Value)
+                .Select(t => new
+                {
+                    t.TransporterName,
+                    t.PhoneNumber,
+                    t.Email
+                })
+                .FirstOrDefaultAsync();
+
+            if (transporterData != null)
+            {
+                transporterName = transporterData.TransporterName;
+                transporterPhone = transporterData.PhoneNumber;
+                transporterEmail = transporterData.Email;
+            }
+        }
+
+        // 🔹 Products
         var products = await (
             from od in _context.OrderDetails
-            join pr in _context.products on od.ProductId equals pr.ProductId
-            join sku in _context.Sku_ProductVariants on od.SkuId equals sku.SkuId into skuJoin
-            from sku in skuJoin.DefaultIfEmpty()
 
-            join skuImg in _context.ProductImages
+            join pr in _context.ProductsNew
+                on od.ProductId equals pr.ProductId
+
+            join sku in _context.ProductVariantsNew
+                on od.SkuId equals sku.SkuId
+
+            join skuImg in _context.ProductVariantImagesNew
                 .Where(i => i.SortOrder == 1)
                 on sku.SkuId equals skuImg.SkuId into skuImgJoin
+
             from skuImg in skuImgJoin.DefaultIfEmpty()
 
-            join prodImg in _context.ProductImages
-                .Where(i => i.SortOrder == 1 && i.SkuId == null)
-                on pr.ProductId equals prodImg.ProductId into prodImgJoin
-            from prodImg in prodImgJoin.DefaultIfEmpty()
-
             where od.StoreOrderId == storeOrderId
+
             select new BusinessOrderProductDto
             {
-                ProductId = pr.ProductId,
+                ProductId = (int)sku.SkuId,
+
                 ProductName = pr.ProductName,
+
                 Quantity = od.Quantity,
+
                 UnitPrice = od.Price,
+
                 Amount = od.Price * od.Quantity,
-                // Added these
-                Weight = sku != null ? sku.Weight : null,
-                Length = sku != null ? sku.Length : null,
-                Width = sku != null ? sku.Width : null,
-                Height = sku != null ? sku.Height : null,
-                ProductImage = skuImg.FileName ?? prodImg.FileName
+
+                Weight = sku.Weight,
+
+                ProductImage = skuImg != null
+                    ? skuImg.FileName
+                    : null
             }
         ).ToListAsync();
 
         var productAmount = products.Sum(p => p.Amount);
 
-        // 🔹 Combine everything in a single DTO
         return new BusinessOrderDetailsDto
         {
             StoreOrderId = orderData.StoreOrderId,
+            OrderId = orderData.OrderId,
             OrderDate = orderData.OrderDate,
             TransactionId = orderData.PaymentId,
+
             ShopperId = orderData.ShopperRegId,
-            ShopperName = orderData.ShopperName,
-            ShopperPhone = orderData.ShopperPhone,
+            GuestRegId = orderData.GuestRegId,
+            IsGuestOrder = orderData.IsGuestOrder,
+
+            CustomerName = customerName,
+            CustomerPhone = customerPhone,
 
             StoreId = orderData.StoreId,
             StoreName = orderData.StoreName,
@@ -726,74 +677,95 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             ShippingMethod = orderData.ShippingType,
             ShippingAddress = orderData.DeliveryAddress,
             EstimatedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
-         //   CourierService = orderData.CourierBranch,
-            TrackingId = orderData.TrackingId
+            TrackingId = orderData.TrackingId,
+            ShippingStatus = orderData.ShippingStatus,
+
+            CourierServiceName = courierServiceName,
+            CourierBranchPhone = courierPhone,
+            CourierBranchContactname = courierBranchContact,
+            CourierEmail = courierEmail,
+
+            TransporterName = transporterName,
+            TransporterPhone = transporterPhone,
+            TransporterEmail = transporterEmail
         };
     }
-
-
-
     public async Task<List<BusinessProductDashboardDto>> GetProductsForDashboardAsync(
-        int storeId,
-        string? search,
-        int pageNumber,
-        int pageSize)
+       int storeId,
+       string? search,
+       int pageNumber,
+       int pageSize)
     {
-        var query = _context.products
-            .Where(p => p.BusRegId == storeId);
+        var query =
+            from v in _context.ProductVariantsNew
+            join p in _context.ProductsNew
+                on v.ProductId equals p.ProductId
+            join pt in _context.Product_Types
+                on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+            from pt in ptJoin.DefaultIfEmpty()
+            where p.BusRegId == storeId
+            select new { v, p, pt };
 
-        if (!string.IsNullOrEmpty(search))
+        // Search
+        if (!string.IsNullOrWhiteSpace(search))
         {
-            query = query.Where(p =>
-                p.ProductName.Contains(search) ||
-                p.SupplierName.Contains(search));
+            search = search.Trim();
+
+            query = query.Where(x =>
+                x.p.ProductId.ToString().Contains(search) ||
+                x.p.ProductName.Contains(search) ||
+                (x.p.ProductDescription != null &&
+                 x.p.ProductDescription.Contains(search)) ||
+                (x.pt != null &&
+                 x.pt.ProdTypeName.Contains(search)));
         }
 
         return await query
-            .OrderByDescending(p => p.ProductId)
+            .OrderByDescending(x => x.v.SkuId)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new BusinessProductDashboardDto
+            .Select(x => new BusinessProductDashboardDto
             {
-                ProductId = p.ProductId,
-                ProductName = p.ProductName,
+                ProductId = (int)x.p.ProductId,
+                ProductName = x.p.ProductName,
 
-                CategoryName = p.BusinessRegister.BusinessCategory.BusinessCategoryName,
-                ProductType = p.ProductType != null ? p.ProductType.ProdTypeName : null,
+                SkuId = (int)x.v.SkuId,
 
-                Fabric = p.Fabric != null ? p.Fabric.FabricName : null,
-                Design = p.Design != null ? p.Design.DesignName : null,
+                Supplier = null,
 
-                Supplier = p.SupplierName,
-                ProductDescription = p.ProductDescription,
+                CategoryName = null,
 
-                ProductAmount = p.Sku_ProductVariants.Min(v => v.DiscountPrice ?? v.Sku_Cost),
+                ProductType = x.pt != null
+                    ? x.pt.ProdTypeName
+                    : null,
 
-                InStock = p.Sku_ProductVariants.Sum(v => (int)v.Quantity),
+                Fabric = null,
+                Design = null,
 
-                Discount = p.Sku_ProductVariants.Max(v => v.Discount),
+                ProductDescription = x.p.ProductDescription,
 
-                NoOfPurchased = _context.OrderDetails
-                    .Where(od => od.ProductId == p.ProductId)
-                    .Sum(od => od.Quantity),
+                ProductAmount = x.v.DiscountPrice ?? x.v.Price,
 
-                ProductImage =
-                    p.Sku_ProductVariants
-                        .SelectMany(v => v.Images)
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => i.FileName)
-                        .FirstOrDefault()
-                    ??
-                    p.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => i.FileName)
-                        .FirstOrDefault()
+                Discount = x.v.Discount,
+
+                InStock = (int)x.v.StockQuantity,
+
+                NoOfPurchased = _context.Payments
+                    .Where(payment => payment.PaymentStatus == "Paid")
+                    .SelectMany(payment => payment.Order.OrderDetails)
+                    .Where(od => od.SkuId == x.v.SkuId)
+                    .Sum(od => (int?)od.Quantity) ?? 0,
+
+                ProductImage = _context.ProductVariantImagesNew
+                    .Where(i => i.SkuId == x.v.SkuId)
+                    .OrderBy(i => i.SortOrder)
+                    .ThenBy(i => i.ImageId)
+                    .Select(i => i.FileName)
+                    .FirstOrDefault()
             })
             .ToListAsync();
     }
-
-
-
+ 
     private IQueryable<StoreOrder> GetDeliveredPaidOrders(int storeId)
     {
         var query =
@@ -976,17 +948,17 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .Select(v => new Sku_ProductVariantDto
             {
                 SkuId_Productvariant = v.SkuId,
-                Color = v.Color,
-                SizeName = v.Size != null ? v.Size.SizeName : null,
+                //Color = v.Color,
+                //SizeName = v.Size != null ? v.Size.SizeName : null,
 
                 Sku_Cost = v.Sku_Cost,
                 DiscountPrice = v.DiscountPrice,
                 Quantity = v.Quantity,
 
-                Length = v.Length,
-                Width = v.Width,
-                Height = v.Height,
-                Weight = v.Weight,
+                //Length = v.Length,
+                //Width = v.Width,
+                //Height = v.Height,
+                //Weight = v.Weight,
                 Images = v.Images
     .Where(i => i.SortOrder == 1)
     .Select(i => new ProductImageDto
@@ -1093,7 +1065,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 on so.StoreOrderId equals sd.StoreOrderId
             join od in _context.OrderDetails
                 on so.StoreOrderId equals od.StoreOrderId
-            join pr in _context.products
+            join pr in _context.ProductsNew
                 on od.ProductId equals pr.ProductId
             where so.StoreId == storeId
                   && p.PaymentStatus == "Paid"
@@ -1106,7 +1078,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             into g
             select new ProductSalesDto
             {
-                ProductId = g.Key.ProductId,
+                ProductId = (int)g.Key.ProductId,
                 ProductName = g.Key.ProductName,
                 TotalQuantitySold = g.Sum(x => x.od.Quantity),
                 TotalRevenue = g.Sum(x => x.od.Quantity * x.od.Price)
@@ -1125,6 +1097,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     {
         return await _context.ShippingDetails
             .Include(sd => sd.CourierBranch)
+            .Include(sd => sd.TransporterRegister)
             .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
     }
 
@@ -1145,12 +1118,28 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         if (storeOrder != null)
             storeOrder.Storeorder_Status = status;
     }
+    // update notification sent status to courier
+
+    public async Task MarkPackageNotifiedByOrderIdAsync(int storeOrderId)
+    {
+        var package = await _context.ShippingPackageDetails
+            .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+        if (package != null)
+        {
+            package.Notified = true;
+        }
+    }
 
     public async Task AddCourierNotificationAsync(CourierDBNotifications notification)
     {
         await _context.CourierDBNotifications.AddAsync(notification);
     }
 
+    public async Task AddTransporterNotificationAsync(TransporterDBNotifications notification)
+    {
+        await _context.TransporterDBNotifications.AddAsync(notification);
+    }
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
@@ -1163,8 +1152,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var query = from od in _context.OrderDetails
                     join o in _context.Orders on od.OrderId equals o.OrderId
                     join p in _context.Payments on o.OrderId equals p.OrderId
+                    join so in _context.StoreOrders on od.StoreOrderId equals so.StoreOrderId
+                    join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                     where od.StoreId == storeId
                           && p.PaymentStatus == "Paid"
+                          && sd.ShippingStatus == "Delivered"
                     select new
                     {
                         od.Quantity,
@@ -1236,6 +1228,85 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             .ToList();
 
         return result;
+    }
+
+    // store package dimensions and weight details for courier
+    // Repository
+
+    public async Task<ShippingPackageDetails> AddOrUpdateShippingPackageDetailsAsync(ShippingPackageDetails model)
+    {
+        var existing = await _context.ShippingPackageDetails
+            .FirstOrDefaultAsync(x => x.StoreOrderId == model.StoreOrderId);
+
+        if (existing != null)
+        {
+            existing.PackageLength = model.PackageLength;
+            existing.PackageWidth = model.PackageWidth;
+            existing.PackageHeight = model.PackageHeight;
+            existing.PackageWeight = model.PackageWeight;
+            existing.DimensionUnit = model.DimensionUnit;
+            existing.WeightUnit = model.WeightUnit;
+
+            // optional: reset notification
+            existing.Notified = false;
+        }
+        else
+        {
+            await _context.ShippingPackageDetails.AddAsync(model);
+            existing = model;
+        }
+
+        await _context.SaveChangesAsync();
+        return existing;
+    }
+
+    public async Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId)
+        {
+            return await _context.ShippingPackageDetails
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+        }
+
+    public async Task<bool> UpdateBusinessAccountDetailsAsync(
+     int busRegId,
+     UpdateBusinessAccountDetailDto dto)
+    {
+        var account = await _context.BusinessAccountDetails
+            .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
+
+        if (account == null)
+        {
+            account = new BusinessAccountDetail
+            {
+                BusRegId = busRegId,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.BusinessAccountDetails.Add(account);
+        }
+
+        account.AccountHolderName = dto.AccountHolderName;
+        account.BankName = dto.BankName;
+        account.AccountNumber = dto.AccountNumber;
+        account.IFSCCode = dto.IFSCCode;
+        account.UpdatedDate = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId)
+    {
+        return await _context.BusinessAccountDetails
+            .Where(x => x.BusRegId == busRegId)
+            .Select(x => new UpdateBusinessAccountDetailDto
+            {
+                AccountHolderName = x.AccountHolderName,
+                BankName = x.BankName,
+                AccountNumber = x.AccountNumber,
+                IFSCCode = x.IFSCCode
+            })
+            .FirstOrDefaultAsync();
     }
 }
 
