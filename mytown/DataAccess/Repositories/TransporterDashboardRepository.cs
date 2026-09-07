@@ -1,18 +1,24 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using mytown.Services.Interfaces;
 
 namespace mytown.DataAccess.Repositories
 {
     public class TransporterDashboardRepository : ITransporterDashboardRepository
     {
         private readonly AppDbContext _context;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IEmailService _emailService;
 
-        public TransporterDashboardRepository(AppDbContext context)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService)
         {
             _context = context;
+            _orderRepository = orderRepo;
+            _emailService = emailService;
         }
 
         // -------------------------------------------------------------------------
@@ -26,20 +32,58 @@ namespace mytown.DataAccess.Repositories
             if (transporter == null)
                 throw new Exception("Transporter not found.");
 
-            var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
+            var activeStatuses = new List<string>
+    {
+        "Assigned",
+        "ReachedPickup",
+        "PickedUp",
+        "InTransit"
+    };
 
-            var totalDeliveries = await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered")
+            // ==========================
+            // SHOPPER DELIVERIES
+            // ==========================
+
+            var shopperDeliveredCount = await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && d.DeliveryStatus == "Delivered")
                 .CountAsync();
 
-            var activeDeliveries = await _context.TransporterDeliveryRequests
+            var shopperActiveCount = await _context.TransporterDeliveryRequests
                 .Where(d => d.TransporterRegId == transporterRegId
                          && activeStatuses.Contains(d.DeliveryStatus))
                 .CountAsync();
 
-            var totalEarned = await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId && d.DeliveryStatus == "Delivered")
-                .SumAsync(d => d.DeliveryFee);
+            var shopperEarned = await _context.TransporterDeliveryRequests
+                .Where(d => d.TransporterRegId == transporterRegId
+                         && d.DeliveryStatus == "Delivered")
+                .SumAsync(d => (decimal?)d.DeliveryFee) ?? 0;
+
+            // ==========================
+            // SENDER DELIVERIES
+            // ==========================
+
+            var senderDeliveredCount = await _context.SenderOrders
+                .Where(s => s.TransporterRegId == transporterRegId
+                         && s.DeliveryStatus == "Delivered")
+                .CountAsync();
+
+            var senderActiveCount = await _context.SenderOrders
+                .Where(s => s.TransporterRegId == transporterRegId
+                         && activeStatuses.Contains(s.DeliveryStatus))
+                .CountAsync();
+
+            var senderEarned = senderDeliveredCount * 50;
+
+            // ==========================
+            // TOTALS
+            // ==========================
+
+            var totalDeliveries = shopperDeliveredCount + senderDeliveredCount;
+
+            var activeDeliveries = shopperActiveCount + senderActiveCount;
+
+            var totalEarned = shopperEarned + senderEarned;
 
             var kyc = await _context.TransporterKYCs
                 .Where(k => k.TransporterRegId == transporterRegId)
@@ -59,12 +103,11 @@ namespace mytown.DataAccess.Repositories
                 TotalDeliveries = totalDeliveries,
                 ActiveDeliveries = activeDeliveries,
                 TotalEarned = totalEarned,
-                KycStatus = kyc?.KycStatus ?? "NotSubmitted",   // ✅ KycStatus not Status
+                KycStatus = kyc?.KycStatus ?? "NotSubmitted",
                 BankVerified = bank?.IsVerified ?? false,
                 HasActivePlan = hasActivePlan
             };
         }
-
         // -------------------------------------------------------------------------
         // TRAVEL PLANS
         // -------------------------------------------------------------------------
@@ -95,9 +138,25 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         TransporterRegId    = p.TransporterRegId,
         IsActive            = effectivelyActive,
         PlanStatus          = effectivelyActive ? "Available" : "Inactive",
-        StartLocation       = p.StartLocation,
-        Destination         = p.Destination,
-        PreferredRoute      = p.PreferredRoute,
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        StartTown = p.StartTown,
+        StartCity = p.StartCity,
+        StartState = p.StartState,
+        StartCountry = p.StartCountry,
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        DestinationTown = p.DestinationTown,
+        DestinationCity = p.DestinationCity,
+        DestinationState = p.DestinationState,
+        DestinationCountry = p.DestinationCountry,
+
+        PreferredRoute = p.PreferredRoute,
         DistanceKm          = p.DistanceKm,
         StartDate           = p.StartDate,
         ArrivalDate         = p.ArrivalDate,
@@ -145,8 +204,23 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
     {
         TransporterRegId    = dto.TransporterRegId,
         IsActive            = true,
-        StartLocation       = dto.StartLocation,
-        Destination         = dto.Destination,
+        // =========================================================
+        // START LOCATION
+        // =========================================================
+
+        StartTown = dto.StartTown,
+        StartCity = dto.StartCity,
+        StartState = dto.StartState,
+        StartCountry = dto.StartCountry,
+
+        // =========================================================
+        // DESTINATION LOCATION
+        // =========================================================
+
+        DestinationTown = dto.DestinationTown,
+        DestinationCity = dto.DestinationCity,
+        DestinationState = dto.DestinationState,
+        DestinationCountry = dto.DestinationCountry,
         PreferredRoute      = dto.PreferredRoute,
         DistanceKm          = dto.DistanceKm,
         StartDate           = dto.StartDate,
@@ -190,33 +264,79 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         // SEARCH AVAILABLE TRANSPORTERS (for shoppers)
         // -------------------------------------------------------------------------
         public async Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
+       string startTown,
+       string startCity,
+       string startState,
+       string startCountry,
+       string destinationTown,
+       string destinationCity,
+       string destinationState,
+       string destinationCountry)
         {
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
+
             return await _context.TransporterTravelPlans
+
+                .Include(p => p.TransporterRegister)
+
                 .Where(p =>
+
+                    // Active plans only
                     p.IsActive &&
-                    p.ArrivalDate.Date >= DateTime.UtcNow.Date &&
-                    p.StartLocation.Contains(fromLocation) &&
-                    p.Destination.Contains(toLocation) &&
-                    p.StartDate.Date <= travelDate.Date &&
-                    p.ArrivalDate.Date >= travelDate.Date)
+
+                    // Only future transporter plans
+                    p.StartDate > bookingDateTime &&
+
+                    // Exact pickup location match
+                    p.StartTown.ToLower() == startTown.ToLower() &&
+                    p.StartCity.ToLower() == startCity.ToLower() &&
+                    p.StartState.ToLower() == startState.ToLower() &&
+                    p.StartCountry.ToLower() == startCountry.ToLower() &&
+
+                    // Exact destination match
+                    p.DestinationTown.ToLower() == destinationTown.ToLower() &&
+                    p.DestinationCity.ToLower() == destinationCity.ToLower() &&
+                    p.DestinationState.ToLower() == destinationState.ToLower() &&
+                    p.DestinationCountry.ToLower() == destinationCountry.ToLower()
+                )
+
+                // Oldest created matching plan gets priority
+                .OrderBy(p => p.CreatedAt)
+
                 .Select(p => new AvailableTransporterDto
                 {
                     PlanId = p.PlanId,
                     TransporterRegId = p.TransporterRegId,
                     TransporterName = p.TransporterRegister.TransporterName,
+
                     VehicleType = p.VehicleType,
                     VehicleName = p.VehicleName,
-                    StartLocation = p.StartLocation,
-                    Destination = p.Destination,
+
+                    StartTown = p.StartTown,
+                    StartCity = p.StartCity,
+                    StartState = p.StartState,
+                    StartCountry = p.StartCountry,
+
+                    DestinationTown = p.DestinationTown,
+                    DestinationCity = p.DestinationCity,
+                    DestinationState = p.DestinationState,
+                    DestinationCountry = p.DestinationCountry,
+
                     StartDate = p.StartDate,
                     ArrivalDate = p.ArrivalDate,
+
                     MaxWeightKg = p.MaxWeightKg,
                     NumberOfPackages = p.NumberOfPackages,
+
                     AcceptsFragile = p.AcceptsFragile,
                     AcceptsPerishable = p.AcceptsPerishable,
+
                     PreferredContact = p.PreferredContact
                 })
+
                 .ToListAsync();
         }
 
@@ -235,7 +355,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 .AnyAsync(d =>
                     d.PlanId == dto.PlanId &&
                     d.ShopperRegId == dto.ShopperRegId &&
-                    d.OrderId == dto.OrderId);
+                    d.OrderId == dto.OrderId &&
+                    d.StoreOrderId == dto.StoreOrderId);
 
             if (existing)
                 throw new Exception("A delivery request already exists for this order and plan.");
@@ -247,7 +368,10 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 PlanId = dto.PlanId,
                 TransporterRegId = plan.TransporterRegId,   // auto-assign from plan
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.GuestRegId.HasValue,
                 OrderId = dto.OrderId,
+                StoreOrderId = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
                 DropoffLocation = dto.DropoffLocation,
                 PackageWeightKg = dto.PackageWeightKg,
@@ -283,27 +407,49 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         {
             var activeStatuses = new List<string> { "Assigned", "ReachedPickup", "PickedUp", "InTransit" };
 
-            return await _context.TransporterDeliveryRequests
-                .Where(d => d.TransporterRegId == transporterRegId
-                         && activeStatuses.Contains(d.DeliveryStatus))
-                .OrderByDescending(d => d.CreatedAt)
-                .Select(d => new ActiveDeliveryDto
+            var result = await (
+                from d in _context.TransporterDeliveryRequests
+                join p in _context.ShippingPackageDetails
+                    on d.StoreOrderId equals p.StoreOrderId into packageGroup
+                from p in packageGroup.DefaultIfEmpty()
+
+                where d.TransporterRegId == transporterRegId
+                   && activeStatuses.Contains(d.DeliveryStatus)
+
+                orderby d.CreatedAt descending
+
+                select new ActiveDeliveryDto
                 {
                     DeliveryReqId = d.DeliveryReqId,
                     PlanId = d.PlanId,
+                    StoreOrderId     = d.StoreOrderId,   // ← ADD THIS
+                    OrderId          = d.OrderId,
                     DeliveryCode = d.DeliveryCode,
                     CustomerName = d.ShopperRegister.Username,
                     PickupLocation = d.PickupLocation,
                     DropoffLocation = d.DropoffLocation,
                     NumberOfPackages = d.NumberOfPackages,
                     PackageWeightKg = d.PackageWeightKg,
+
+                    // ✅ From ShippingPackageDetails
+                    PackageLengthCm = p != null ? p.PackageLength : null,
+                    PackageWidthCm  = p != null ? p.PackageWidth  : null,
+                    PackageHeightCm = p != null ? p.PackageHeight : null,
+
                     DeliveryFee = d.DeliveryFee,
                     PackageTags = d.PackageTags,
-                    DeliveryStatus = d.DeliveryStatus,
+                    //DeliveryStatus = d.DeliveryStatus,
+                    DeliveryStatus =
+                    d.DeliveryStatus != "Delivered" &&
+                    d.TravelPlan.ArrivalDate.Date < DateTime.UtcNow.Date
+                        ? "Incomplete"
+                        : d.DeliveryStatus,
                     AcceptedAt = d.AssignedAt,
                     EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
-                })
-                .ToListAsync();
+                }
+            ).ToListAsync();
+
+            return result;
         }
 
         // -------------------------------------------------------------------------
@@ -347,17 +493,95 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
             }
 
+            // ── SYNC ShippingDetails so shopper sees updated status ──
+            if (delivery.StoreOrderId.HasValue)
+            {
+                var shipping = await _context.ShippingDetails
+                    .FirstOrDefaultAsync(s => s.StoreOrderId == delivery.StoreOrderId.Value);
+
+                if (shipping != null)
+                {
+
+                    if (dto.NewStatus == "PickedUp" &&
+           shipping.ShippingStatus != "Ready to Ship")
+                    {
+                        return false;
+                    }
+
+                    shipping.ShippingStatus = dto.NewStatus switch
+                    {
+                        "ReachedPickup" => "ReachedPickup",
+                        "PickedUp" => "PickedUp",
+                        "InTransit" => "InTransit",
+                        "Delivered" => "Delivered",
+                        _ => shipping.ShippingStatus
+                    };
+
+                    // Generate tracking ID when transporter picks up the parcel
+                    if (dto.NewStatus == "PickedUp" &&
+                        string.IsNullOrEmpty(shipping.TrackingId))
+                    {
+                        shipping.TrackingId = GenerateTrackingId(shipping.StoreOrderId);
+                    }
+
+                    // Mark delivery completion date
+                    if (dto.NewStatus == "Delivered")
+                    {
+                        shipping.DeliveredDate = DateTime.UtcNow;
+                    }
+                }
+            }
+
+            // ── NOTIFY SHOPPER ONLY FOR REGISTERED SHOPPERS , Not for guest ──
+            if (!delivery.IsGuestOrder && delivery.ShopperRegId.HasValue)
+            {
+                _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+                {
+                    ShopperRegId = delivery.ShopperRegId.Value,
+                    Title = "Delivery Update",
+                    Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            // ── NOTIFY TRANSPORTER ──
             _context.TransporterDBNotifications.Add(new TransporterDBNotifications
             {
                 TransporterRegId = delivery.TransporterRegId,
                 Title = "Delivery Status Updated",
                 Message = $"Delivery {delivery.DeliveryCode} status changed to {dto.NewStatus}.",
                 IsRead = false,
-                CreatedDate = DateTime.UtcNow          // ✅ CreatedDate not CreatedAt
+                CreatedDate = DateTime.UtcNow
             });
 
             await _context.SaveChangesAsync();
+
+            // send tracking id email to guests only
+            if (dto.NewStatus == "PickedUp" &&
+              delivery.OrderId.HasValue)
+            {
+                var orderConfirmation =
+                    await _orderRepository.GetOrderConfirmationAsync(delivery.OrderId.Value);
+
+                if (orderConfirmation != null &&
+                    orderConfirmation.IsGuestOrder &&
+                    !string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+                {
+                    await _emailService.SendGuestNotificationforTracking(
+                        orderConfirmation.ShopperEmail,
+                        orderConfirmation.ShopperName,
+                        orderConfirmation
+                    );
+                }
+            }
             return true;
+        }
+
+        //Generate tracking id based on storeorderid
+        private string GenerateTrackingId(int storeOrderId)
+        {
+            return $"TRK-{storeOrderId}-{DateTime.UtcNow:yyyyMMddHHmm}";
         }
 
         // -------------------------------------------------------------------------
@@ -373,6 +597,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 {
                     DeliveryReqId = d.DeliveryReqId,
                     PlanId = d.PlanId,
+                    StoreOrderId     = d.StoreOrderId,   // ← ADD THIS
+                    OrderId          = d.OrderId,        // ← ADD THIS
                     DeliveryCode = d.DeliveryCode,
                     CustomerName = d.ShopperRegister.Username,
                     PickupLocation = d.PickupLocation,
@@ -598,6 +824,140 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 notification.IsRead = true;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // mark delivered status
+        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            var shipping = await _context.ShippingDetails
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            if (shipping == null)
+                throw new Exception("Shipping record not found");
+
+            // No file upload
+
+            // Update status
+            shipping.ShippingStatus = "Delivered";
+            shipping.DeliveredDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return "Delivery marked as completed";
+        }
+
+        // sender orders Repository
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _context.SenderOrders
+                .Where(x => x.TransporterRegId == transporterRegId)
+                .OrderByDescending(x => x.CreatedAt)
+                .ToListAsync();
+        }
+
+        //update sender orders status to delivered
+        // Repository Interface
+
+        // Repository
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+     int senderOrderId,
+     int transporterRegId,
+     string deliveryStatus)
+        {
+            var order = await _context.SenderOrders
+                .FirstOrDefaultAsync(x =>
+                    x.SenderOrderId == senderOrderId &&
+                    x.TransporterRegId == transporterRegId);
+
+            if (order == null)
+                return false;
+
+            // Prevent duplicate update
+            if (order.DeliveryStatus == deliveryStatus)
+                throw new Exception("Status already updated");
+
+            // Allow only after pickup date & time
+            var pickupTime = DateTime.Parse(order.PickupTime).TimeOfDay;
+
+            var pickupDateTime = order.PickupDate.Date.Add(pickupTime);
+
+            var currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.UtcNow,
+                TimeZoneInfo.FindSystemTimeZoneById("India Standard Time"));
+
+            if (currentDateTime < pickupDateTime)
+            {
+                throw new Exception(
+                    $"You can update delivery status only after pickup time ({pickupDateTime:dd-MMM-yyyy hh:mm tt})");
+            }
+
+            order.DeliveryStatus = deliveryStatus;
+
+            // generating tracking id when sttaus is picked up and tracking id is null or empty
+
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase)
+                && string.IsNullOrEmpty(order.TrackingId))
+            {
+                order.TrackingId = GenerateSenderTrackingId(order.SenderOrderId);
+            }
+
+            
+
+            // Sender Notification
+            _context.SenderDBNotifications.Add(
+                new SenderDBNotifications
+                {
+                    SenderRegId = order.SenderRegId,
+
+                    Title = "Shipment Status Updated",
+
+                    Message =
+                        $"Your shipment #{order.SenderOrderId} is now {deliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate = DateTime.UtcNow
+                });
+
+            // Transporter Notification
+            _context.TransporterDBNotifications.Add(
+                new TransporterDBNotifications
+                {
+                    TransporterRegId = transporterRegId,
+
+                    Title = "Shipment Status Updated",
+
+                    Message =
+                        $"Shipment #{order.SenderOrderId} status updated to {deliveryStatus}.",
+
+                    IsRead = false,
+
+                    CreatedDate = DateTime.UtcNow
+                });
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        private string GenerateSenderTrackingId(int senderOrderId)
+        {
+            return $"MYTOWN-SND-{senderOrderId}";
+        }
+        public async Task AddSenderNotificationAsync(
+   SenderDBNotifications notification)
+        {
+            await _context
+                .SenderDBNotifications
+                .AddAsync(notification);
+        }
+
+        public async Task AddTransporterNotificationAsync(
+    TransporterDBNotifications notification)
+        {
+            await _context
+                .TransporterDBNotifications
+                .AddAsync(notification);
         }
     }
 }

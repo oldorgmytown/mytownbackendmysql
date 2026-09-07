@@ -12,6 +12,7 @@ namespace mytown.DataAccess.Repositories
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+
         public CourierDashboardRepository(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
@@ -19,29 +20,27 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<List<CourierOrderDto>> GetOrdersAsync(
-      int courierId,
-      string shippingStatus,
-      string? search,
-      int pageNumber,
-      int pageSize)
+            int courierId,
+            string shippingStatus,
+            string? search,
+            int pageNumber,
+            int pageSize)
         {
             var query = _context.ShippingDetails
                 .Where(sd => sd.CourierBranch.CourierId == courierId);
 
-            // Status filter
             if (shippingStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
                 shippingStatus.Equals("NewOrders", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(sd =>
                     sd.ShippingStatus == "Pending" ||
-                    sd.ShippingStatus == "ReadyToShip");
+                    sd.ShippingStatus == "Ready to Ship");
             }
             else
             {
                 query = query.Where(sd => sd.ShippingStatus == shippingStatus);
             }
 
-            // 🔎 Search
             if (!string.IsNullOrWhiteSpace(search))
             {
                 query = query.Where(sd =>
@@ -49,7 +48,8 @@ namespace mytown.DataAccess.Repositories
                     sd.StoreOrder.Store.Town.Contains(search) ||
                     sd.StoreOrder.Store.BusMobileNo.Contains(search) ||
                     sd.TrackingId.Contains(search) ||
-                    sd.StoreOrderId.ToString().Contains(search)
+                    sd.StoreOrderId.ToString().Contains(search) ||
+                    sd.OrderId.ToString().Contains(search)
                 );
             }
 
@@ -60,57 +60,55 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    BranchId = sd.BranchId,
-
-                    Orderdate = DateOnly.FromDateTime(
-                        sd.StoreOrder.Order.OrderDate
-                    ),
-
-                    EstimatedDeliveryDate =
-                        sd.StoreOrder.Order.OrderDate.AddDays(sd.EstimatedDays),
-
+                    OrderId = sd.OrderId,
+                    BranchId = sd.BranchId ?? 0,
+                    Orderdate = DateOnly.FromDateTime(sd.StoreOrder.Order.OrderDate),
+                    EstimatedDeliveryDate = sd.StoreOrder.Order.OrderDate.AddDays(sd.EstimatedDays),
                     StoreName = sd.StoreOrder.Store.BusinessName,
                     StoreTown = sd.StoreOrder.Store.Town,
                     StoreContact = sd.StoreOrder.Store.BusMobileNo,
-
                     TrackingId = sd.TrackingId,
                     ShippingStatus = sd.ShippingStatus,
                     DeliveredDate = sd.DeliveredDate
                 })
                 .ToListAsync();
         }
-        //branch orders
+
         public async Task<List<CourierOrderDto>> GetOrdersByBranchAsync(
-     int branchId,
-     string shippingStatus,
-     string? search,
-     int pageNumber = 1,
-     int pageSize = 10)
+            int branchId,
+            string shippingStatus,
+            string? search,
+            int pageNumber = 1,
+            int pageSize = 10)
         {
             var query = _context.ShippingDetails
                 .Where(sd => sd.BranchId == branchId);
+            query = query.Where(sd =>
+                sd.StoreOrder.Order.OrderStatus == "Paid" ||
+                _context.Payments.Any(p =>
+                    p.OrderId == sd.OrderId &&
+                    p.PaymentStatus == "Paid"));
 
-            // Status filter
             if (shippingStatus.Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
                 shippingStatus.Equals("NewOrders", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(sd =>
                     sd.ShippingStatus == "Pending" ||
-                    sd.ShippingStatus == "ReadyToShip");
+                    sd.ShippingStatus == "Ready to Ship");
             }
             else
             {
                 query = query.Where(sd => sd.ShippingStatus == shippingStatus);
             }
 
-            // 🔍 Search
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(sd =>
                     sd.StoreOrder.Store.BusinessName.Contains(search) ||
                     sd.StoreOrder.Store.Town.Contains(search) ||
                     sd.TrackingId.Contains(search) ||
-                    sd.StoreOrderId.ToString().Contains(search)
+                    sd.StoreOrderId.ToString().Contains(search) ||
+                    sd.OrderId.ToString().Contains(search)
                 );
             }
 
@@ -121,19 +119,13 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierOrderDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    BranchId = sd.BranchId,
-
-                    Orderdate = DateOnly.FromDateTime(
-                        sd.StoreOrder.Order.OrderDate
-                    ),
-
-                    EstimatedDeliveryDate =
-                        sd.StoreOrder.Order.OrderDate.AddDays(sd.EstimatedDays),
-
+                    OrderId = sd.OrderId,
+                    BranchId = sd.BranchId ?? 0,
+                    Orderdate = DateOnly.FromDateTime(sd.StoreOrder.Order.OrderDate),
+                    EstimatedDeliveryDate = sd.StoreOrder.Order.OrderDate.AddDays(sd.EstimatedDays),
                     StoreName = sd.StoreOrder.Store.BusinessName,
                     StoreTown = sd.StoreOrder.Store.Town,
                     StoreContact = sd.StoreOrder.Store.BusMobileNo,
-
                     TrackingId = sd.TrackingId,
                     ShippingStatus = sd.ShippingStatus,
                     DeliveredDate = sd.DeliveredDate
@@ -141,45 +133,26 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-        //public async Task UpdateTrackingAndStatusAsync(
-        //    int storeOrderId,
-        //    string trackingId,
-        //    string newStatus)
-        //{
-        //    var shipment = await _context.ShippingDetails
-        //        .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
-
-        //    if (shipment == null)
-        //        throw new Exception("Shipment not found");
-
-        //    shipment.TrackingId = trackingId;
-        //    shipment.ShippingStatus = newStatus;
-
-        //    //if (newStatus == "Complete")
-        //    //{
-        //    //    shipment.DeliveredDate = DateTime.UtcNow;
-        //    //}
-
-        //    await _context.SaveChangesAsync();
-        //}
-
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
         }
 
-
         public async Task<ShippingDetails?> GetByStoreOrderIdAsync(int storeOrderId)
         {
             return await _context.ShippingDetails
-                .Include(s => s.CourierBranch) // for courier
+                .Include(s => s.CourierBranch)
                 .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
         }
-        public async Task<CourierOrderDetailDto> GetCourierOrderDetailAsync(int storeOrderId)
+
+        // Return type is nullable because storeOrder may not be found
+        public async Task<CourierOrderDetailDto?> GetCourierOrderDetailAsync(int storeOrderId)
         {
             var storeOrder = await _context.StoreOrders
                 .Include(so => so.Order)
                     .ThenInclude(o => o.ShopperRegister)
+                .Include(so => so.Order)
+                    .ThenInclude(o => o.GuestRegister)
                 .Include(so => so.Store)
                 .Include(so => so.OrderDetails)
                     .ThenInclude(od => od.Product)
@@ -196,55 +169,93 @@ namespace mytown.DataAccess.Repositories
                     .ThenInclude(cb => cb.CourierService)
                 .FirstOrDefaultAsync(sd => sd.StoreOrderId == storeOrderId);
 
+            var package = await _context.ShippingPackageDetails
+                .FirstOrDefaultAsync(p => p.StoreOrderId == storeOrderId);
+
             int estimateDays = shipping?.EstimatedDays ?? 0;
+            DateTime estimatedDeliveryDate = storeOrder.Order.OrderDate.AddDays(estimateDays);
 
-            DateTime estimatedDeliveryDate =
-                storeOrder.Order.OrderDate.AddDays(estimateDays);
-
-            var productTotal = storeOrder.OrderDetails.Sum(od =>
-                od.Price * od.Quantity);
-
+            var productTotal = storeOrder.OrderDetails.Sum(od => od.Price * od.Quantity);
             var shippingCost = shipping?.Cost ?? 0;
+
+            string customerName;
+            string customerPhone;
+            int? shopperId = null;
+            int? guestRegId = null;
+
+            if (storeOrder.Order.IsGuestOrder)
+            {
+                guestRegId = storeOrder.Order.GuestRegId;
+                customerName = storeOrder.Order.GuestRegister?.Username ?? "";
+                customerPhone = storeOrder.Order.GuestRegister?.PhoneNumber ?? "";
+            }
+            else
+            {
+                shopperId = storeOrder.Order.ShopperRegId;
+                customerName = storeOrder.Order.ShopperRegister?.Username ?? "";
+                customerPhone = storeOrder.Order.ShopperRegister?.PhoneNumber ?? "";
+            }
 
             return new CourierOrderDetailDto
             {
                 StoreOrderId = storeOrder.StoreOrderId,
+                OrderId = storeOrder.OrderId,
                 OrderDate = storeOrder.Order.OrderDate,
 
-                ShopperId = storeOrder.Order.ShopperRegId,
-                ShopperName = storeOrder.Order.ShopperRegister.Username,
-                ShopperPhone = storeOrder.Order.ShopperRegister.PhoneNumber,
+                ShopperId = shopperId,
+                GuestRegId = guestRegId,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
+
+                CustomerName = customerName,
+                CustomerPhone = customerPhone,
 
                 StoreId = storeOrder.StoreId,
                 StoreName = storeOrder.Store.BusinessName,
-                StoreTown = storeOrder.Store.Town,
 
-                ShippingMethod = shipping?.ShippingType,
+                StoreTown =
+                    (storeOrder.Store.Address1 ?? "") + ", " +
+                    (storeOrder.Store.Town ?? "") + ", " +
+                    (storeOrder.Store.BusinessCity ?? "") + ", " +
+                    (storeOrder.Store.BusinessState ?? "") + ", " +
+                    (storeOrder.Store.BusinessCountry ?? ""),
+
+                // shipping may be null — fall back to empty string for required string properties
+                ShippingMethod = shipping?.ShippingType ?? "",
                 ShippingCost = shippingCost,
-                ShippingAddress = shipping?.DeliveryAddress,
+                ShippingAddress = shipping?.DeliveryAddress ?? "",
+                ShippingStatus = shipping?.ShippingStatus ?? "",
 
                 EstimatedDeliveryDate = estimatedDeliveryDate,
 
-                CourierServiceName = shipping?.CourierBranch?.CourierService?.CourierServiceName,
-                TrackingId = shipping?.TrackingId,
+                CourierServiceName = shipping?.CourierBranch?.CourierService?.CourierServiceName ?? "",
+                TrackingId = shipping?.TrackingId ?? "",
+
+                PackageLength = package?.PackageLength,
+                PackageWidth = package?.PackageWidth,
+                PackageHeight = package?.PackageHeight,
+                PackageWeight = package?.PackageWeight,
+
+                DimensionUnit = package?.DimensionUnit ?? "",
+                WeightUnit = package?.WeightUnit ?? "",
 
                 Products = storeOrder.OrderDetails.Select(od => new CourierOrderProductDto
                 {
                     ProductId = od.ProductId,
                     ProductName = od.Product.ProductName,
-                    VariantId = od.SkuId,
+                    SkuId = od.SkuId,
                     VariantCost = od.Price,
                     Quantity = od.Quantity,
 
+                    // Images is guarded by Include; FirstOrDefault() returns null → fall back to ""
                     VariantImage = od.Variant.Images
                         .OrderBy(i => i.SortOrder)
                         .Select(i => i.FileName)
-                        .FirstOrDefault(),
+                        .FirstOrDefault() ?? "",
 
-                    Weight = od.Variant.Weight,
-                    Length = od.Variant.Length,
-                    Width = od.Variant.Width,
-                    Height = od.Variant.Height
+                    //Weight = od.Variant.Weight,
+                    //Length = od.Variant.Length,
+                    //Width = od.Variant.Width,
+                    //Height = od.Variant.Height
                 }).ToList(),
 
                 TotalProductAmount = productTotal,
@@ -253,7 +264,8 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-        public async Task<CourierService> GetCourierWithBranchesAsync(int courierId)
+        // Return type is nullable because FirstOrDefaultAsync can return null
+        public async Task<CourierService?> GetCourierWithBranchesAsync(int courierId)
         {
             return await _context.CourierService
                 .Include(c => c.CourierBranches)
@@ -272,18 +284,17 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<int> GetTotalCompletedDeliveriesCountAsync(
-     int courierId,
-     int? month,
-     int? year,
-     DateTime? fromDate,
-     DateTime? toDate)
+            int courierId,
+            int? month,
+            int? year,
+            DateTime? fromDate,
+            DateTime? toDate)
         {
             var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.CourierBranch.CourierId == courierId &&
                     sd.ShippingStatus == "Delivered");
 
-            // 🔹 Priority 1: Custom date range
             if (fromDate.HasValue && toDate.HasValue)
             {
                 query = query.Where(sd =>
@@ -291,7 +302,6 @@ namespace mytown.DataAccess.Repositories
                     sd.DeliveredDate.Value.Date >= fromDate.Value.Date &&
                     sd.DeliveredDate.Value.Date <= toDate.Value.Date);
             }
-            // 🔹 Priority 2: Month filter
             else if (month.HasValue && year.HasValue)
             {
                 query = query.Where(sd =>
@@ -304,11 +314,11 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<int> GetPendingTasksCountAsync(
-      int courierId,
-      int? month,
-      int? year,
-      DateTime? fromDate,
-      DateTime? toDate)
+            int courierId,
+            int? month,
+            int? year,
+            DateTime? fromDate,
+            DateTime? toDate)
         {
             var query = _context.ShippingDetails
                 .Where(sd =>
@@ -316,14 +326,12 @@ namespace mytown.DataAccess.Repositories
                     (sd.ShippingStatus == "Ready to ship" ||
                      sd.ShippingStatus == "Pending"));
 
-            // 🔹 Custom date range (using OrderDate)
             if (fromDate.HasValue && toDate.HasValue)
             {
                 query = query.Where(sd =>
                     sd.Order.OrderDate.Date >= fromDate.Value.Date &&
                     sd.Order.OrderDate.Date <= toDate.Value.Date);
             }
-            // 🔹 Month filter
             else if (month.HasValue && year.HasValue)
             {
                 query = query.Where(sd =>
@@ -335,8 +343,8 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<List<CourierCompletedDeliveryDto>> GetCompletedDeliveriesAsync(
-    int courierId,
-    DateTime? date)
+            int courierId,
+            DateTime? date)
         {
             var query = _context.ShippingDetails
                 .Include(sd => sd.CourierBranch)
@@ -346,13 +354,10 @@ namespace mytown.DataAccess.Repositories
                     sd.DeliveredDate.HasValue
                 );
 
-            // 🔹 Filter by date ONLY if provided (Today’s Deliveries)
             if (date.HasValue)
             {
                 var targetDate = date.Value.Date;
-
-                query = query.Where(sd =>
-                    sd.DeliveredDate.Value.Date == targetDate);
+                query = query.Where(sd => sd.DeliveredDate!.Value.Date == targetDate);
             }
 
             return await query
@@ -360,14 +365,13 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierCompletedDeliveryDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    DeliveredDate = sd.DeliveredDate.Value,
+                    // DeliveredDate.HasValue is guaranteed by the Where above
+                    DeliveredDate = sd.DeliveredDate!.Value,
                     TrackingId = sd.TrackingId
                 })
                 .ToListAsync();
         }
 
-
-        //  Get all unread notifications for courier
         public async Task<List<CourierDBNotifications>> GetUnreadNotificationsAsync(int courierId)
         {
             return await _context.CourierDBNotifications
@@ -376,7 +380,6 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-        //  Mark all notifications as read (when dashboard opened)
         public async Task MarkNotificationsAsReadAsync(int courierId)
         {
             var unreadNotifications = await _context.CourierDBNotifications
@@ -404,10 +407,8 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-
-        // here are apis for branches 
-
-        public async Task<CourierBranchDto> GetBranchAsync(int branchId)
+        // Return type is nullable — caller must handle null (branch not found)
+        public async Task<CourierBranchDto?> GetBranchAsync(int branchId)
         {
             return await _context.CourierBranches
                 .Where(b => b.BranchId == branchId)
@@ -421,7 +422,6 @@ namespace mytown.DataAccess.Repositories
                     BranchAddress = b.BranchAddress,
                     BranchPhoneNumber = b.BranchPhoneNumber,
                     BranchEmail = b.BranchEmailId,
-
                     Services = b.Services.Select(s => new CourierBranchServiceDto
                     {
                         BranchServiceId = s.BranchServiceId,
@@ -448,18 +448,17 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<int> GetTotalCompletedDeliveriesCountByBranchAsync(
-     int branchId,
-     int? month,
-     int? year,
-     DateTime? fromDate,
-     DateTime? toDate)
+            int branchId,
+            int? month,
+            int? year,
+            DateTime? fromDate,
+            DateTime? toDate)
         {
             var query = _context.ShippingDetails
                 .Where(sd =>
                     sd.BranchId == branchId &&
                     sd.ShippingStatus == "Delivered");
 
-            // Custom date range (priority)
             if (fromDate.HasValue && toDate.HasValue)
             {
                 query = query.Where(sd =>
@@ -467,7 +466,6 @@ namespace mytown.DataAccess.Repositories
                     sd.DeliveredDate.Value.Date >= fromDate.Value.Date &&
                     sd.DeliveredDate.Value.Date <= toDate.Value.Date);
             }
-            // Month filter
             else if (month.HasValue && year.HasValue)
             {
                 query = query.Where(sd =>
@@ -480,11 +478,11 @@ namespace mytown.DataAccess.Repositories
         }
 
         public async Task<int> GetPendingTasksCountByBranchAsync(
-    int branchId,
-    int? month,
-    int? year,
-    DateTime? fromDate,
-    DateTime? toDate)
+            int branchId,
+            int? month,
+            int? year,
+            DateTime? fromDate,
+            DateTime? toDate)
         {
             var query = _context.ShippingDetails
                 .Where(sd =>
@@ -492,14 +490,12 @@ namespace mytown.DataAccess.Repositories
                     (sd.ShippingStatus == "Pending" ||
                      sd.ShippingStatus == "Ready to ship"));
 
-            // 🔹 Custom date range (based on OrderDate)
             if (fromDate.HasValue && toDate.HasValue)
             {
                 query = query.Where(sd =>
                     sd.Order.OrderDate.Date >= fromDate.Value.Date &&
                     sd.Order.OrderDate.Date <= toDate.Value.Date);
             }
-            // 🔹 Month filter
             else if (month.HasValue && year.HasValue)
             {
                 query = query.Where(sd =>
@@ -523,9 +519,7 @@ namespace mytown.DataAccess.Repositories
             if (date.HasValue)
             {
                 var targetDate = date.Value.Date;
-
-                query = query.Where(sd =>
-                    sd.DeliveredDate.Value.Date == targetDate);
+                query = query.Where(sd => sd.DeliveredDate!.Value.Date == targetDate);
             }
 
             return await query
@@ -533,7 +527,8 @@ namespace mytown.DataAccess.Repositories
                 .Select(sd => new CourierCompletedDeliveryDto
                 {
                     StoreOrderId = sd.StoreOrderId,
-                    DeliveredDate = sd.DeliveredDate.Value,
+                    // HasValue guaranteed by the Where above
+                    DeliveredDate = sd.DeliveredDate!.Value,
                     TrackingId = sd.TrackingId
                 })
                 .ToListAsync();
@@ -567,13 +562,9 @@ namespace mytown.DataAccess.Repositories
             if (shipping == null)
                 throw new Exception("Shipping record not found");
 
-            // Upload to Azure Blob
             string fileName = await UploadToBlobAsync(file, "deliveryproof");
 
-            // Save filename in DB
             shipping.DeliveryProofFileName = fileName;
-
-            // Optional but recommended
             shipping.ShippingStatus = "Delivered";
             shipping.DeliveredDate = DateTime.UtcNow;
 
@@ -584,8 +575,8 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
         {
-            var containerName = _configuration["AzureBlobStorage:ContainerName"];
-            var connectionString = _configuration["AzureBlobStorage:ConnectionString"];
+            var containerName = _configuration["AzureBlobStorage:ContainerName"] ?? "";
+            var connectionString = _configuration["AzureBlobStorage:ConnectionString"] ?? "";
 
             var blobServiceClient = new BlobServiceClient(connectionString);
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
@@ -605,10 +596,8 @@ namespace mytown.DataAccess.Repositories
                 await blobClient.UploadAsync(stream, overwrite: true);
             }
 
-            return newFileName; // return file name (store in DB)
+            return newFileName;
         }
-
-        // update profile status as Active when courier starts taking orders
 
         public async Task<CourierService?> GetCourierByIdAsync(int courierId)
         {
@@ -622,6 +611,48 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-       
+        public async Task<bool> UpdateCourierAccountDetailsAsync(
+    int courierId,
+    UpdateCourierAccountDetailDto dto)
+        {
+            var account = await _context.CourierAccountDetails
+                .FirstOrDefaultAsync(x => x.CourierId == courierId);
+
+            if (account == null)
+            {
+                account = new CourierAccountDetail
+                {
+                    CourierId = courierId,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.CourierAccountDetails.Add(account);
+            }
+
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.IsTermsAccepted = dto.IsTermsAccepted;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId)
+        {
+            return await _context.CourierAccountDetails
+                .Where(x => x.CourierId == courierId)
+                .Select(x => new UpdateCourierAccountDetailDto
+                {
+                    AccountHolderName = x.AccountHolderName,
+                    BankName = x.BankName,
+                    AccountNumber = x.AccountNumber,
+                    IFSCCode = x.IFSCCode,
+                    IsTermsAccepted = x.IsTermsAccepted
+                })
+                .FirstOrDefaultAsync();
+        }
     }
 }

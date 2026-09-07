@@ -11,7 +11,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using static mytown.Models.busprofilepreview;
-using static Org.BouncyCastle.Math.EC.ECCurve;
+//using static Org.BouncyCastle.Math.EC.ECCurve;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using mytown.DataAccess.Interfaces;
 
@@ -511,6 +511,7 @@ namespace mytown.DataAccess.Repositories
                     _context.UserSessions.Add(newSession);
                     await _context.SaveChangesAsync();
 
+                    // BUSINESS PROFILE
                     var businessProfile = await _context.BusinessProfiles
                         .Where(bp => bp.BusRegId == businessUser.BusRegId)
                         .Select(bp => new
@@ -528,6 +529,28 @@ namespace mytown.DataAccess.Repositories
                         })
                         .FirstOrDefaultAsync();
 
+                    // SERVICE PROFILE
+                    var serviceProfile = await _context.ServiceProfiles
+                        .Where(sp => sp.BusRegId == businessUser.BusRegId)
+                        .Select(sp => new
+                        {
+                            sp.ServiceProfileId,
+                            sp.BusRegId,
+                            sp.BusServId,
+                            sp.YearsOfExperience,
+                            sp.GovtIdDocument,
+                            sp.ProfessionalLicense,
+                            sp.ServiceAvailableLocations,
+                            sp.WorkingDays,
+                            sp.WorkingStartTime,
+                            sp.WorkingEndTime,
+                            sp.ServiceLogo,
+                            sp.ServiceBanner,
+                            sp.Status,
+                            sp.CreatedDate
+                        })
+                        .FirstOrDefaultAsync();
+
                     var token = _tokenService.GenerateToken(
                         businessUser.BusRegId,
                         businessUser.BusEmail,
@@ -540,6 +563,7 @@ namespace mytown.DataAccess.Repositories
                         userType = "Business",
                         token,
                         sessionId = newSession.SessionGuid,
+
                         user = new BusinessRegisterDto
                         {
                             BusRegId = businessUser.BusRegId,
@@ -560,14 +584,19 @@ namespace mytown.DataAccess.Repositories
                             postalCode = businessUser.PostalCode,
                             isEmailVerified = businessUser.IsEmailVerified,
                             BusinessRegDate = businessUser.BusinessRegDate,
+
+                            // BUSINESS PROFILE STATUS
                             ProfileStatus = businessProfile?.ProfileStatus ?? "Incomplete"
                         },
-                        businessProfile
+
+                        // RETURN BOTH
+                        businessProfile,
+                        serviceProfile
                     };
                 }
+
                 return null;
             }
-
             // ---------------- SHOPPER LOGIN ----------------
             if (role == "Shopper")
             {
@@ -861,9 +890,103 @@ namespace mytown.DataAccess.Repositories
                             State = transporter.State,
                             Country = transporter.Country,
                             PostalCode = transporter.PostalCode,
-                            Status = transporter.Status,
+                            Status = string.IsNullOrWhiteSpace(transporter.Status) ? "Pending" : transporter.Status,
+                           // Status = transporter.Status,
                            // IsEmailVerified = transporter.IsEmailVerified.ToString(), // ⚠️ since your DTO has string
                             TransporterRegDate = transporter.TransporeterRegDate
+                        }
+                    };
+                }
+
+                return null;
+            }
+
+            // ---------------- SENDER LOGIN ----------------
+            if (role == "Sender")
+            {
+                password = password?.Trim();
+
+                var sender = await _context.SenderRegisters
+                    .FirstOrDefaultAsync(s =>
+                        s.Email.ToLower().Trim() ==
+                        email.ToLower().Trim());
+
+                if (sender != null &&
+                    BCrypt.Net.BCrypt.Verify(password, sender.Password))
+                {
+                    // ❗ Email verification check
+                    if (!sender.IsEmailVerified)
+                    {
+                        return new
+                        {
+                            error = "Please verify your email before logging in."
+                        };
+                    }
+
+                    // ❗ Optional: status check (if you have Status column)
+                    if (sender.Status == "Blocked")
+                    {
+                        return new
+                        {
+                            error = "Your account is blocked. Contact support."
+                        };
+                    }
+
+                    // ---------------- SESSION HANDLING ----------------
+                    var oldSession = await _context.UserSessions
+                        .Where(s => s.UserId == sender.SenderRegId
+                                 && s.UserType == "Sender"
+                                 && s.IsActive)
+                        .FirstOrDefaultAsync();
+
+                    if (oldSession != null)
+                    {
+                        oldSession.IsActive = false;
+                        _context.UserSessions.Update(oldSession);
+                    }
+
+                    var newSession = new UserSession
+                    {
+                        UserId = sender.SenderRegId,
+                        UserType = "Sender",
+                        SessionGuid = Guid.NewGuid().ToString(),
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+
+                    _context.UserSessions.Add(newSession);
+                    await _context.SaveChangesAsync();
+
+                    // ---------------- TOKEN ----------------
+                    var token = _tokenService.GenerateToken(
+                        sender.SenderRegId,
+                        sender.Email,
+                        "Sender",
+                        newSession.SessionGuid
+                    );
+
+                    // ---------------- RESPONSE ----------------
+                    return new
+                    {
+                        userType = "Sender",
+                        token,
+                        sessionId = newSession.SessionGuid,
+
+                        sender = new SenderRegisterDto
+                        {
+                            SenderId = sender.SenderRegId,
+                            SenderName = sender.SenderName,
+                            Email = sender.Email,
+                            PhoneNumber = sender.PhoneNumber,
+                            Address = sender.Address,
+                            Town = sender.Town,
+                            City = sender.City,
+                            State = sender.State,
+                            Country = sender.Country,
+                            PostalCode = sender.PostalCode,
+                            Status = sender.Status,
+                            IsEmailVerified = sender.IsEmailVerified,
+                            SenderRegDate = sender.SenderRegDate
                         }
                     };
                 }

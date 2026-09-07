@@ -1,4 +1,5 @@
 ﻿using mytown.DataAccess.Interfaces;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -65,5 +66,41 @@ namespace mytown.Services
         {
             return await _searchRepository.GetBusinessCategoriesByProductAsync(productName);
         }
+
+        // get both business profiles and service profiles
+        public async Task<BusinessAndServiceSearchResultsDto>
+    GetBusinessAndServiceSearchResults(
+        string? searchTerm,
+        string? town,
+        string? city,
+        string? state,
+        string? country)
+        {
+            return await _searchRepository.GetBusinessAndServiceSearchResults(
+                searchTerm,
+                town,
+                city,
+                state,
+                country);
+        }
+
+        // Track order by tracking ID
+        public async Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId)
+        {
+            return await _searchRepository.TrackOrderByTrackingIdAsync(trackingId);
+        }
+
+        //  Get popular cities
+        public async Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync()
+        {
+            return await _searchRepository.GetPopularCitiesAsync();
+        }
+
+        public async Task<SenderOrderTrackingDto?> GetSenderOrderTrackingAsync(string trackingId)
+        {
+            return await _searchRepository
+                .GetSenderOrderTrackingAsync(trackingId);
+        }
+
     }
 }

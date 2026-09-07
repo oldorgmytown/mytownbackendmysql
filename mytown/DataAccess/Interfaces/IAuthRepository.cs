@@ -7,7 +7,7 @@ namespace mytown.DataAccess.Interfaces
         string CreatePasswordResetToken(string email);
         Task SendResetEmail(string email);
         bool ResetPassword(string email, string newPassword);
-        bool EmailExists(string email);
+        bool EmailExists(string email, string role);
 
         PasswordResetRequest GetResetRequestByToken(string token);
 

@@ -1,5 +1,7 @@
-﻿using mytown.DataAccess;
+﻿using Microsoft.AspNetCore.Mvc;
+using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -29,7 +31,7 @@ namespace mytown.Services
         public async Task<PendingBusinessVerification?> FindPendingVerificationByEmail(string email)
         {
             var verification = await _repo.FindPendingVerificationByEmail(email);
-            return verification; 
+            return verification;
         }
 
 
@@ -74,6 +76,28 @@ namespace mytown.Services
         public Task<IEnumerable<ProductSubCategory>> BusinessSubCategoriesforStores(int buscatid)
         {
             return _repo.BusinessSubCategoriesforStores(buscatid);
+        }
+
+        public async Task<IEnumerable<ProductGroupResponseDto>> GetProductGroupsBySubCategoryId(int prodSubcatId)
+        {
+            return await _repo.GetProductGroupsBySubCategoryId(prodSubcatId);
+        }
+
+        public async Task<IEnumerable<ProductType>> GetProductTypesByGroupAndSubCategory(int prodSubcatId, int prodGroupId)
+        {
+            return await _repo.GetProductTypesByGroupAndSubCategory(prodSubcatId, prodGroupId);            
+        }
+
+        public async Task<IEnumerable<ProductAttributeDto>> GetAttributesBySubCategoryId(int prodSubcatId, int busCatId, int productGroupId)
+        {
+            return await _repo.GetAttributesBySubCategoryId(prodSubcatId, busCatId, productGroupId);
+        }
+
+       
+        //add bank account details
+        public async Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail)
+        {
+            await _repo.SaveBusinessAccountDetails(businessAccountDetail);
         }
     }
 }

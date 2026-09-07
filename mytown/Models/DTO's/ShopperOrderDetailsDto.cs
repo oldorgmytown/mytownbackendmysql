@@ -3,10 +3,11 @@
     public class ShopperOrderDetailsDto
     {
         public int StoreOrderId { get; set; }
+        public int OrderId { get; set; }
         public int TransactionId { get; set; }
         public DateTime OrderDate { get; set; }
 
-        public int ShopperId { get; set; }
+        public int? ShopperId { get; set; }
 
         public int StoreId { get; set; }
         public string StoreName { get; set; }
@@ -20,9 +21,14 @@
 
         public string ShippingMethod { get; set; }
         public string ShippingAddress { get; set; }
+        public string ShippingStatus { get; set; }
 
         public DateTime ExpectedDeliveryDate { get; set; }
         public string CourierService { get; set; }
         public string TrackingId { get; set; }
+
+        public string? TransporterName { get; set; }
+        public string? TransporterPhone { get; set; }
+        public string? TransporterEmail { get; set; }
     }
 }

@@ -13,8 +13,8 @@ namespace mytown.Services.Implementations
             _authRepo = authRepo;
         }
 
-        public bool EmailExists(string email)
-            => _authRepo.EmailExists(email);
+        public bool EmailExists(string email, string role)
+            => _authRepo.EmailExists(email,role);
 
         public void SendResetEmail(string email)
             => _authRepo.SendResetEmail(email);

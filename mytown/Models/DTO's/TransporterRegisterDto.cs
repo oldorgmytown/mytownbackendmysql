@@ -13,7 +13,7 @@
         public string Country { get; set; }
         public string PostalCode { get; set; }
         public string PhoneNumber { get; set; }
-         public string Status { get; set; }
+        public string? Status { get; set; }
          public bool IsEmailVerified { get; set; }
          public DateTime TransporterRegDate { get; set; }
     }

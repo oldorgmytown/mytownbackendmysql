@@ -6,7 +6,11 @@
         public DateTime OrderDate { get; set; }
         public decimal TotalAmount { get; set; }
 
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+        // NEW
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
+
         public string ShopperName { get; set; } = string.Empty;
         public string ShopperEmail { get; set; } = string.Empty;
         public string ShopperPhone { get; set; } = string.Empty;
@@ -29,6 +33,9 @@
 
         public string StoreName { get; set; } = string.Empty;
         public string BusinessEmail { get; set; } = string.Empty;
+        public string BusinessPhone { get; set; } = string.Empty;
+
+        public string StoreAddress { get; set; } = string.Empty;
 
         //courier email
         public string CourierName { get; set; } = string.Empty;
@@ -42,6 +49,7 @@
         public string TransporterEmail { get; set; } = string.Empty;
         public string ShippingType { get; set; } = string.Empty;
         public decimal ShippingAmount { get; set; }
+        public string TrackingId { get; set; } = string.Empty;
 
         public int EstimatedDays { get; set; }
         public DateTime EstimatedDeliveryDate { get; set; }
@@ -63,6 +71,8 @@
     public class OrderItemDto
     {
         public string ProductName { get; set; } = string.Empty;
+
+        public string Productdesc {  get; set; } = string.Empty;
         public int Quantity { get; set; }
         public decimal FinalPrice { get; set; }
         public decimal OriginalPrice { get; set; }

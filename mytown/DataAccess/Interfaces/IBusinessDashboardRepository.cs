@@ -1,5 +1,6 @@
 ﻿using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -99,12 +100,17 @@ namespace mytown.DataAccess.Interfaces
         Task<List<ProductSalesDto>> GetTopProductsAsync(int storeId, int topCount);
 
 
+        // packacge details saving
+        Task<ShippingPackageDetails> AddOrUpdateShippingPackageDetailsAsync(ShippingPackageDetails model);
+        Task<ShippingPackageDetails?> GetShippingPackageDetailsByStoreOrderIdAsync(int storeOrderId);
         //Notofication to courier -  Ready to ship 
 
+        Task MarkPackageNotifiedByOrderIdAsync(int storeOrderId);
         Task<ShippingDetails?> GetShippingByStoreOrderIdAsync(int storeOrderId);
         Task UpdateShippingStatusAsync(int storeOrderId, string status);
         Task UpdateStoreOrderStatusAsync(int storeOrderId, string status);
         Task AddCourierNotificationAsync(CourierDBNotifications notification);
+        Task AddTransporterNotificationAsync(TransporterDBNotifications notification);
         Task SaveChangesAsync();
 
         //sales history
@@ -114,5 +120,12 @@ namespace mytown.DataAccess.Interfaces
         //sales trend graph
 
         Task<List<SalesTrendDto>> GetSalesTrendAsync(int storeId, DateTime? fromDate, DateTime? toDate);
+
+        // store package details
+        //Task AddShippingPackageDetailsAsync(ShippingPackageDetails packageDetails);
+
+        //bankdetails
+        Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
+        Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
     }
 }

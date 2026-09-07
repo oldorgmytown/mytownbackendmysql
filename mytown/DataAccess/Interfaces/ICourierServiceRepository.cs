@@ -33,14 +33,27 @@ public interface ICourierServiceRepository
         decimal productWeightKg);
 
     Task<ShopperRegister?> GetShopperByIdAsync(int shopperId);
+    Task<ShopperAlternateAddress?> GetAlternateAddressByShopperIdAsync(int shopperId);
     Task<Dictionary<int, BusinessRegister>> GetStoresByIdsAsync(List<int> storeIds);
     Task<Dictionary<int, decimal>> GetStoreWeightsAsync(int shopperId, List<int> storeIds);
 
+    Task<GuestDetailsDto> GetGuestDetailsByIdAsync(int guestRegId);
     // ✅ NEW — Find a matching transporter for P2P
     // Matches transporter who is going FROM storeCity TO shopperCity
     // on or after today's date and still has capacity
     Task<BestcourierinfoDto?> FindMatchingTransporterAsync(
-        string storeCity,
-        string shopperCity,
-        decimal packageWeightKg);
+      string storeTown,
+      string storeCity,
+      string storeState,
+      string storeCountry,
+
+      string shopperTown,
+      string shopperCity,
+      string shopperState,
+      string shopperCountry,
+
+      decimal packageWeightKg);
+
+    //add courier bank details
+    Task SaveCourierAccountDetails(CourierAccountDetail accountDetail);
 }
