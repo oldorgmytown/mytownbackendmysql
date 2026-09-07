@@ -166,27 +166,27 @@ namespace mytown.DataAccess.Implementations
                 throw new Exception("Pickup date and time cannot be in the past.");
 
             // Common matching query
-            var matchingQuery = _context.TransporterTravelPlans
-                .Include(x => x.TransporterRegister)
-                .Where(x =>
-                    x.IsActive &&
-                    x.PlanStatus == "Available" &&
-                     x.StartDate >= pickupDateTime &&
+var matchingQuery = _context.TransporterTravelPlans
+    .Include(x => x.TransporterRegister)
+    .Where(x =>
+        x.IsActive &&
+        x.PlanStatus == "Available" &&
+        x.StartDate <= pickupDateTime &&
+        x.ArrivalDate >= pickupDateTime &&
 
-                    x.StartTown.ToLower() == order.PickupTown.ToLower() &&
-                    x.StartCity.ToLower() == order.PickupCity.ToLower() &&
-                    x.StartState.ToLower() == order.PickupState.ToLower() &&
-                    x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
+        x.StartTown.ToLower() == order.PickupTown.ToLower() &&
+        x.StartCity.ToLower() == order.PickupCity.ToLower() &&
+        x.StartState.ToLower() == order.PickupState.ToLower() &&
+        x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
 
-                    x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
-                    x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
-                    x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
-                    x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
+        x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
+        x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
+        x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
+        x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
 
-                    (!order.IsFragile || x.AcceptsFragile) &&
-                    (!order.IsPerishable || x.AcceptsPerishable)
-                );
-
+        (!order.IsFragile || x.AcceptsFragile) &&
+        (!order.IsPerishable || x.AcceptsPerishable)
+    );
             // First priority -> weight matching
             var exactWeightMatch = await matchingQuery
                 .Where(x => x.MaxWeightKg >= order.PackageWeight)
