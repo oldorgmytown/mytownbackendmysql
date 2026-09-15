@@ -610,79 +610,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        //    public async Task<List<BestcourierinfoDto>> GetBestCourierOptions(
-        //string storeCity,
-        //string storeState,
-        //string storeCountry,
-        //string shopperCity,
-        //decimal productWeightKg)
-        //    {
-        //        try
-        //        {
-        //            var data = await (
-        //                from branch in _context.CourierBranches
-        //                join service in _context.CourierBranchServices
-        //                    on branch.BranchId equals service.BranchId
-        //                where branch.City.ToLower() == storeCity.ToLower()
-        //                   && branch.State.ToLower() == storeState.ToLower()
-        //                   && branch.Country.ToLower() == storeCountry.ToLower()
-        //                   && !string.IsNullOrEmpty(service.Destinations)
-        //                select new
-        //                {
-        //                    branch.BranchId,
-        //                    service.Destinations,
-        //                    service.ShippingMode,
-        //                    service.Charges,
-        //                    service.WeightRange,
-        //                    service.EstimateDays
-        //                }
-        //            )
-        //            .AsNoTracking()
-        //            .ToListAsync();
-
-        //            var matchingCouriers = data
-        //                .Where(x =>
-        //                    x.Destinations
-        //                        .Split(',', StringSplitOptions.RemoveEmptyEntries)
-        //                        .Select(d => d.Trim().ToLower())
-        //                        .Contains(shopperCity.ToLower())
-        //                );
-
-        //            var bestCourierOptions = matchingCouriers
-        //                .Select(x =>
-        //                {
-        //                    var maxWeight = ExtractMaxWeight(x.WeightRange);
-        //                    var maxDays = x.EstimateDays ?? GetMaxDeliveryDays(x.ShippingMode);
-
-        //                    return new
-        //                    {
-        //                        Dto = new BestcourierinfoDto
-        //                        {
-        //                            BranchId = x.BranchId,
-        //                            ShippingMode = x.ShippingMode,
-        //                            Cost = x.Charges,
-        //                            MaxDeliveryDays = maxDays,
-        //                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
-        //                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
-        //                        },
-        //                        MaxWeight = maxWeight
-        //                    };
-        //                })
-        //                .Where(x => x.MaxWeight >= productWeightKg)
-
-        //                // ✅ one best option per ShippingMode
-        //                .GroupBy(x => x.Dto.ShippingMode.ToLower())
-        //                .Select(g => g.OrderBy(x => x.Dto.Cost).First().Dto)
-        //                .ToList();
-
-        //            return bestCourierOptions;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Console.WriteLine($"Exception in GetBestCourierOptions: {ex.Message}");
-        //            return new List<BestcourierinfoDto>();
-        //        }
-        //    }
+     
 
 
 
@@ -915,43 +843,167 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        //    public async Task<CourierService> AddCourierAsync(CourierService courier)
-        //{
-        //    _context.CourierService.Add(courier);
-        //    await _context.SaveChangesAsync();
-        //    return courier;
-        //}
 
-        //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
-        //{
-        //    var result = await (from shipping in _context.ShippingDetails
-        //                        join orderDetail in _context.OrderDetails on shipping.OrderDetailId equals orderDetail.OrderDetailId
-        //                        join product in _context.products on orderDetail.ProductId equals product.ProductId
-        //                        join order in _context.Orders on orderDetail.OrderId equals order.OrderId
-        //                        join shopper in _context.ShopperRegisters on order.ShopperRegId equals shopper.ShopperRegId
-        //                        join store in _context.BusinessRegisters on orderDetail.StoreId equals store.BusRegId
-        //                        join branch in _context.CourierBranches on shipping.BranchId equals branch.BranchId
-        //                        where branch.CourierId == courierId
-        //                        select new AssignedOrderDto
-        //                        {
-        //                            ShippingDetailId = shipping.ShippingDetailId,
-        //                            OrderId = order.OrderId,
-        //                            CustomerName = shopper.Username,
-        //                            CustomerPhoneNumber = shopper.PhoneNumber,
-        //                            ShippingAddress = $"{shopper.Address}, {shopper.City}, {shopper.State}, {shopper.Country} - {shopper.PostalCode}",
-        //                            StoreName = store.BusinessName,
-        //                            ProductName = product.ProductName,
-        //                           // ProductWeight = product.product_weight??0,
-        //                            Quantity = orderDetail.Quantity,
-        //                            ShippingType = shipping.ShippingType,
-        //                            ShippingStatus = shipping.ShippingStatus,
-        //                            Cost = shipping.Cost,
-        //                            TrackingId = shipping.TrackingId,
-        //                            EstimatedDeliveryDate = order.OrderDate.AddDays(shipping.EstimatedDays)
-        //                        }).ToListAsync();
+    
 
-        //    return result;
-        //}
+        public async Task<BestcourierinfoDto?> FindMatchingTransporterByLocationAsync(
+            string storeTown,
+            string storeCity,
+            string storeState,
+            string storeCountry,
 
+            string shopperTown,
+            string shopperCity,
+            string shopperState,
+            string shopperCountry)
+        {
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
+
+            var matchingPlan = await (
+                from plan in _context.TransporterTravelPlans
+
+                join transporter in _context.TransporterRegisters
+                    on plan.TransporterRegId equals transporter.TransporterRegId
+
+                where
+                    plan.IsActive
+                    && plan.PlanStatus == "Available"
+                    && plan.StartDate > bookingDateTime
+
+                    // Exact pickup/destination location match — no weight check
+                    && EF.Functions.Like(plan.StartTown, storeTown)
+                    && EF.Functions.Like(plan.StartCity, storeCity)
+                    && EF.Functions.Like(plan.StartState, storeState)
+                    && EF.Functions.Like(plan.StartCountry, storeCountry)
+
+                    && EF.Functions.Like(plan.DestinationTown, shopperTown)
+                    && EF.Functions.Like(plan.DestinationCity, shopperCity)
+                    && EF.Functions.Like(plan.DestinationState, shopperState)
+                    && EF.Functions.Like(plan.DestinationCountry, shopperCountry)
+
+                orderby plan.CreatedAt ascending
+
+                select new
+                {
+                    plan.PlanId,
+                    plan.TransporterRegId,
+                    transporter.TransporterName,
+                    plan.VehicleType,
+                    plan.StartDate,
+                    plan.ArrivalDate
+                }
+            )
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+
+            if (matchingPlan == null)
+                return null;
+
+            int estimatedDays =
+                Math.Max(1, (matchingPlan.ArrivalDate.Date - matchingPlan.StartDate.Date).Days);
+
+            string deliveryRange =
+                estimatedDays <= 1
+                ? "Same day / Next day"
+                : $"{estimatedDays} days";
+
+            string estimatedDeliveryDate =
+                matchingPlan.ArrivalDate
+                .ToString("MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+            return new BestcourierinfoDto
+            {
+                BranchId = 0,
+                ShippingMode = "P2P",
+                Cost = 0,
+                MaxDeliveryDays = estimatedDays,
+                DeliveryDaysRange = deliveryRange,
+                EstimatedDeliveryDate = estimatedDeliveryDate,
+                TransporterRegId = matchingPlan.TransporterRegId,
+                TransporterPlanId = matchingPlan.PlanId,
+                TransporterName = matchingPlan.TransporterName,
+                VehicleType = matchingPlan.VehicleType
+            };
+        }
+
+
+
+        public async Task<List<BestcourierinfoDto>> GetCourierPricingByLocation(
+            string storeTown,
+            string storeCity,
+            string storeState,
+            string storeCountry,
+            string shopperState)
+        {
+            try
+            {
+                var data = await (
+                    from branch in _context.CourierBranches
+                    join service in _context.CourierBranchServices
+                        on branch.BranchId equals service.BranchId
+                    where !string.IsNullOrEmpty(service.Destinations)
+                    select new
+                    {
+                        branch.BranchId,
+                        service.Destinations,
+                        service.ShippingMode,
+                        service.Charges,
+                        service.EstimateDays
+                    }
+                )
+                .AsNoTracking()
+                .ToListAsync();
+
+                // Match shopper's destination STATE only — no weight filtering.
+                // storeTown/storeCity/storeCountry are accepted for signature
+                // consistency and future filtering; not used in state matching today.
+                var matchingCouriers = data
+                    .Where(x =>
+                        x.Destinations
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(d => d.Trim())
+                            .Any(d =>
+                                string.Equals(
+                                    d,
+                                    shopperState?.Trim(),
+                                    StringComparison.OrdinalIgnoreCase
+                                )
+                            )
+                    );
+
+                var pricingOptions = matchingCouriers
+                    .Select(x =>
+                    {
+                        var maxDays = x.EstimateDays ?? GetMaxDeliveryDays(x.ShippingMode);
+
+                        return new BestcourierinfoDto
+                        {
+                            BranchId = x.BranchId,
+                            ShippingMode = x.ShippingMode,
+                            Cost = x.Charges,
+                            MaxDeliveryDays = maxDays,
+                            DeliveryDaysRange = GetDeliveryRangeText(maxDays),
+                            EstimatedDeliveryDate = GetEstimatedDeliveryDate(maxDays)
+                        };
+                    })
+
+                    // One cheapest option per shipping mode
+                    .GroupBy(x => x.ShippingMode.ToLower())
+                    .Select(g => g.OrderBy(x => x.Cost).First())
+                    .ToList();
+
+                return pricingOptions;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetCourierPricingByLocation: {ex.Message}");
+                return new List<BestcourierinfoDto>();
+            }
+        }
+
+     
     }
 }

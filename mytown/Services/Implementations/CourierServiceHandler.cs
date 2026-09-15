@@ -370,5 +370,64 @@ namespace mytown.Services.Implementations
 
             return results;
         }
+
+        public async Task<LocationCourierPricingResponseDto> GetCourierPricingAsync(
+          LocationCourierPricingRequestDto request)
+        {
+            var response = new LocationCourierPricingResponseDto();
+
+            // 1. Resolve the store's address from BusRegId
+            var storesDict = await _repo.GetStoresByIdsAsync(
+                new List<int> { request.BusRegId });
+
+            if (!storesDict.TryGetValue(request.BusRegId, out var store))
+            {
+                return response;
+            }
+
+            // NOTE: adjust these property names to match your actual
+            // BusinessRegister model (e.g. BusTown, BusCity, BusState, BusCountry)
+            string storeTown = store.Town;
+            string storeCity = store.BusinessCity;
+            string storeState = store.BusinessState;
+            string storeCountry = store.BusinessCountry;
+
+            // 2. Run both lookups concurrently — independent of each other
+            var courierTask = _repo.GetCourierPricingByLocation(
+                storeTown,
+                storeCity,
+                storeState,
+                storeCountry,
+                request.ShopperState);
+
+            var transporterTask = _repo.FindMatchingTransporterByLocationAsync(
+                storeTown,
+                storeCity,
+                storeState,
+                storeCountry,
+                request.ShopperTown,
+                request.ShopperCity,
+                request.ShopperState,
+                request.ShopperCountry);
+
+            try
+            {
+                await Task.WhenAll(courierTask, transporterTask);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetCourierPricingAsync: {ex.Message}");
+            }
+
+            response.CourierOptions = courierTask.IsCompletedSuccessfully
+                ? courierTask.Result
+                : new List<BestcourierinfoDto>();
+
+            response.TransporterOption = transporterTask.IsCompletedSuccessfully
+                ? transporterTask.Result
+                : null;
+
+            return response;
+        }
     }
 }
