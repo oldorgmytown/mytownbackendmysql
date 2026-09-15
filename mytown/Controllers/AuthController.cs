@@ -61,8 +61,8 @@ namespace mytown.Controllers
                 return BadRequest(new { error = "Invalid or expired token." });
             //new
 
-            dynamic record = request;
-            return Ok(new { message = "Valid token", email = record.Email, Role = record.role  });
+          //  dynamic record = request;
+            return Ok(new { message = "Valid token", email = request.Email, role = request.Role  });
 
         }
 
