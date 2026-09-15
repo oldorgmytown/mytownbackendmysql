@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using mytown.DataAccess.Interfaces;
 using mytown.Services.Interfaces;
+using mytown.Models;
 using System.Threading.Tasks;
 
 namespace mytown.Services.Implementations
@@ -20,7 +21,7 @@ namespace mytown.Services.Implementations
         public void SendResetEmail(string email,string role)
             => _authRepo.SendResetEmail(email,role);
 
-        public object GetResetRequestByToken(string token)
+        public PasswordResetRequest GetResetRequestByToken(string token)
             => _authRepo.GetResetRequestByToken(token);
 
         public bool ResetPassword(string email, string newPassword, String role)
