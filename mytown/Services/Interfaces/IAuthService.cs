@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using mytown.Models;
 
 namespace mytown.Services.Interfaces
 {
@@ -6,7 +7,7 @@ namespace mytown.Services.Interfaces
     {
         bool EmailExists(string email, string role);
         void SendResetEmail(string email, string role);
-        object GetResetRequestByToken(string token);
+        PasswordResetRequest GetResetRequestByToken(string token);
         bool ResetPassword(string email, string newPassword, string role);
         Task<bool> LogoutAsync(int userId, string sessionId, string userType);
         Task<bool> RevokeSessionAsync(string sessionId);
