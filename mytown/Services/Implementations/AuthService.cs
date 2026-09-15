@@ -21,6 +21,7 @@ namespace mytown.Services.Implementations
         public void SendResetEmail(string email,string role)
             => _authRepo.SendResetEmail(email,role);
 
+        //push
         public PasswordResetRequest GetResetRequestByToken(string token)
             => _authRepo.GetResetRequestByToken(token);
 
