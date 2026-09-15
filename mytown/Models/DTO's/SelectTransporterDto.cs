@@ -7,5 +7,6 @@
         public int TransporterRegId { get; set; }
 
         public int TransporterPlanId { get; set; }
+        public decimal TransporterCharges { get; set; }
     }
 }

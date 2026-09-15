@@ -183,6 +183,7 @@ namespace mytown.DataAccess.Repositories
 
             return true;
         }
+        
 
         private string HashPassword(string password)
         {

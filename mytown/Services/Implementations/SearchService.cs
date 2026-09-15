@@ -102,5 +102,17 @@ namespace mytown.Services
                 .GetSenderOrderTrackingAsync(trackingId);
         }
 
+        //get stores and services by location and product term
+        public async Task<BusinessAndServiceSearchResultsDto>
+            GetBusinessAndServiceProfilesBylocationandproductterm(
+                string? searchTerm,
+                string? locationQuery)
+        {
+            return await _searchRepository
+                .GetBusinessAndServiceProfilesBylocationandproductterm(
+                    searchTerm,
+                    locationQuery);
+        }
+
     }
 }

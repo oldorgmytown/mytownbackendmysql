@@ -23,6 +23,7 @@
         public DateTime ArrivalDate { get; set; }
 
         public string PreferredContact { get; set; }
+         public decimal transporterCharge { get; set; }
         public string Message { get; set; } = string.Empty;
     }
 }

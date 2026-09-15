@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
+using mytown.Services;
 using mytown.Services.Interfaces;
 using Stripe;
 
@@ -204,7 +205,20 @@ public async Task<IActionResult> GetSenderOrderTracking(string trackingId)
     }
 }
 
+        //get stores and services by location and product term
+        [HttpGet("get-stores-services-by-location-product")]
+        public async Task<IActionResult>
+            GetBusinessAndServiceProfilesBylocationandproductterm(
+                [FromQuery] string? searchTerm,
+                [FromQuery] string? locationQuery)
+        {
+            var result = await _searchService
+                .GetBusinessAndServiceProfilesBylocationandproductterm(
+                    searchTerm,
+                    locationQuery);
 
+            return Ok(result);
+        }
 
     }
 }

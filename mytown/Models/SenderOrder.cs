@@ -110,6 +110,8 @@ namespace mytown.Models
 
         [Column("transporter_plan_id")]
         public int? TransporterPlanId { get; set; }
+        [Column("transporter_charges")]
+        public decimal? TransporterCharges { get; set; }
 
         [Column("delivery_status")]
         public string DeliveryStatus { get; set; } = "Pending";

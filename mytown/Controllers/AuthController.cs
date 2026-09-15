@@ -44,7 +44,7 @@ namespace mytown.Controllers
             if (!_authService.EmailExists(email, role))
                 return NotFound("Email not found for the selected role.");
 
-            _authService.SendResetEmail(email);
+            _authService.SendResetEmail(email,role);
 
             return Ok("Reset link sent.");
         }
@@ -59,9 +59,10 @@ namespace mytown.Controllers
 
             if (request == null)
                 return BadRequest(new { error = "Invalid or expired token." });
+            //new
 
-            dynamic record = request;
-            return Ok(new { message = "Valid token", email = record.Email });
+          //  dynamic record = request;
+            return Ok(new { message = "Valid token", email = request.Email, role = request.Role  });
 
         }
 

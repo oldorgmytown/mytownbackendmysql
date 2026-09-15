@@ -1078,5 +1078,271 @@ namespace mytown.DataAccess.Repositories
 }
 
 
+        //get stores and services by location and product term 
+        public async Task<BusinessAndServiceSearchResultsDto>
+    GetBusinessAndServiceProfilesBylocationandproductterm(
+        string? searchTerm,
+        string? locationQuery)
+        {
+            IQueryable<int> businessIds =
+                Enumerable.Empty<int>().AsQueryable();
+
+            IQueryable<int> serviceBusinessIds =
+                Enumerable.Empty<int>().AsQueryable();
+
+            // =========================================================
+            // BUSINESS SEARCH
+            // =========================================================
+
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                searchTerm = searchTerm.Trim();
+
+                // Business name
+                var storeNameIds = _context.BusinessRegisters
+                    .Where(b =>
+                        b.BusinessName != null &&
+                        EF.Functions.Like(
+                            b.BusinessName,
+                            $"%{searchTerm}%"))
+                    .Select(b => b.BusRegId);
+
+                // Category
+                var categoryIds = _context.BusinessCategories
+                    .Where(c =>
+                        c.BusinessCategoryName != null &&
+                        EF.Functions.Like(
+                            c.BusinessCategoryName,
+                            $"%{searchTerm}%"))
+                    .Select(c => c.BusCatId);
+
+                var categoryBusinessIds = _context.ProductsNew
+                    .Where(p =>
+                        p.BusCatId.HasValue &&
+                        categoryIds.Contains((int)p.BusCatId.Value))
+                    .Select(p => p.BusRegId);
+
+                // Subcategory
+                var subcategoryIds = _context.product_sub_categories
+                    .Where(sc =>
+                        sc.ProdSubcatName != null &&
+                        EF.Functions.Like(
+                            sc.ProdSubcatName,
+                            $"%{searchTerm}%"))
+                    .Select(sc => sc.ProdSubcatId);
+
+                var subcategoryBusinessIds = _context.ProductsNew
+                    .Where(p =>
+                        p.ProdSubcatId.HasValue &&
+                        subcategoryIds.Contains((int)p.ProdSubcatId.Value))
+                    .Select(p => p.BusRegId);
+
+                // Product name / description
+                var productFieldBusinessIds = _context.ProductsNew
+                    .Where(p =>
+                        (p.ProductName != null &&
+                         EF.Functions.Like(
+                             p.ProductName,
+                             $"%{searchTerm}%"))
+                        ||
+                        (p.ProductDescription != null &&
+                         EF.Functions.Like(
+                             p.ProductDescription,
+                             $"%{searchTerm}%")))
+                    .Select(p => p.BusRegId);
+
+                // Brand
+                var variantBusinessIds = _context.ProductVariantsNew
+                    .Where(v =>
+                        v.Brand != null &&
+                        EF.Functions.Like(
+                            v.Brand,
+                            $"%{searchTerm}%"))
+                    .Select(v => v.Product.BusRegId);
+
+                // Attribute value
+                var attributeBusinessIds =
+                    _context.ProductVariantAttributesNew
+                        .Where(a =>
+                            a.AttributeValue != null &&
+                            EF.Functions.Like(
+                                a.AttributeValue,
+                                $"%{searchTerm}%"))
+                        .Select(a => a.Variant.Product.BusRegId);
+
+                businessIds = storeNameIds
+                    .Union(categoryBusinessIds)
+                    .Union(subcategoryBusinessIds)
+                    .Union(productFieldBusinessIds)
+                    .Union(variantBusinessIds)
+                    .Union(attributeBusinessIds)
+                    .Distinct();
+
+
+                // =====================================================
+                // SERVICE SEARCH
+                // =====================================================
+
+                // Service business name
+                var serviceBusinessNameIds = _context.BusinessRegisters
+                    .Where(b =>
+                        b.BusinessName != null &&
+                        EF.Functions.Like(
+                            b.BusinessName,
+                            $"%{searchTerm}%"))
+                    .Select(b => b.BusRegId);
+
+                // Service category
+                var serviceCategoryIds = _context.BusinessServices
+                    .Where(bs =>
+                        bs.BusinessServiceName != null &&
+                        EF.Functions.Like(
+                            bs.BusinessServiceName,
+                            $"%{searchTerm}%"))
+                    .Select(bs => bs.BusServId);
+
+                var serviceCategoryBusinessIds = _context.Service
+                    .Where(s =>
+                        serviceCategoryIds.Contains(s.BusServId))
+                    .Select(s => s.BusRegId);
+
+                // Service subcategory
+                var serviceSubcategoryIds = _context.ServiceSubCategory
+                    .Where(ss =>
+                        ss.ServiceTypeName != null &&
+                        EF.Functions.Like(
+                            ss.ServiceTypeName,
+                            $"%{searchTerm}%"))
+                    .Select(ss => ss.ServSubcatId);
+
+                var serviceSubcategoryBusinessIds = _context.Service
+                    .Where(s =>
+                        serviceSubcategoryIds.Contains(s.ServSubcatId))
+                    .Select(s => s.BusRegId);
+
+                // Service available locations
+                var serviceLocationBusinessIds =
+                    _context.ServiceProfiles
+                        .Where(sp =>
+                            sp.ServiceAvailableLocations != null &&
+                            EF.Functions.Like(
+                                sp.ServiceAvailableLocations,
+                                $"%{searchTerm}%"))
+                        .Select(sp => sp.BusRegId);
+
+                serviceBusinessIds = serviceBusinessNameIds
+                    .Union(serviceCategoryBusinessIds)
+                    .Union(serviceSubcategoryBusinessIds)
+                    .Union(serviceLocationBusinessIds)
+                    .Distinct();
+            }
+
+
+            // =========================================================
+            // LOCATION SEARCH
+            // =========================================================
+
+            if (!string.IsNullOrWhiteSpace(locationQuery))
+            {
+                locationQuery = locationQuery.Trim();
+
+                var locationBusinessIds = _context.BusinessRegisters
+                    .Where(b =>
+                        (b.Town != null &&
+                         EF.Functions.Like(
+                             b.Town,
+                             $"%{locationQuery}%"))
+
+                        ||
+
+                        (b.BusinessCity != null &&
+                         EF.Functions.Like(
+                             b.BusinessCity,
+                             $"%{locationQuery}%"))
+
+                        ||
+
+                        (b.BusinessState != null &&
+                         EF.Functions.Like(
+                             b.BusinessState,
+                             $"%{locationQuery}%"))
+
+                        ||
+
+                        (b.BusinessCountry != null &&
+                         EF.Functions.Like(
+                             b.BusinessCountry,
+                             $"%{locationQuery}%"))
+
+                        ||
+
+                        (b.Address1 != null &&
+                         EF.Functions.Like(
+                             b.Address1,
+                             $"%{locationQuery}%"))
+
+                        ||
+
+                        (b.Address2 != null &&
+                         EF.Functions.Like(
+                             b.Address2,
+                             $"%{locationQuery}%"))
+                    )
+                    .Select(b => b.BusRegId);
+
+
+                // If there is no search term,
+                // location alone determines both results.
+                if (string.IsNullOrWhiteSpace(searchTerm))
+                {
+                    businessIds = locationBusinessIds;
+                    serviceBusinessIds = locationBusinessIds;
+                }
+                else
+                {
+                    // Search term + location
+                    businessIds =
+                        businessIds.Intersect(locationBusinessIds);
+
+                    serviceBusinessIds =
+                        serviceBusinessIds.Intersect(locationBusinessIds);
+                }
+            }
+
+
+            // =========================================================
+            // GET BUSINESS PROFILES
+            // =========================================================
+
+            var businessProfiles = await _context.BusinessProfiles
+                .Where(bp =>
+                    businessIds.Contains(bp.BusRegId) &&
+                    bp.ProfileStatus != null &&
+                    bp.ProfileStatus.ToLower() == "approved")
+                .ToListAsync();
+
+
+            // =========================================================
+            // GET SERVICE PROFILES
+            // NO APPROVAL FILTER
+            // =========================================================
+
+            var serviceProfiles = await _context.ServiceProfiles
+                .Where(sp =>
+                    serviceBusinessIds.Contains(sp.BusRegId))
+                .ToListAsync();
+
+
+            // =========================================================
+            // RETURN
+            // =========================================================
+
+            return new BusinessAndServiceSearchResultsDto
+            {
+                BusinessProfiles = businessProfiles,
+                ServiceProfiles = serviceProfiles
+            };
+        }
+
     }
 }

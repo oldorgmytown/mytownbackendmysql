@@ -12,10 +12,12 @@ namespace mytown.DataAccess.Implementations
     public class SenderRepository : ISenderRepository
     {
         private readonly AppDbContext _context;
+        private readonly ICourierServiceRepository _courierService;
 
-        public SenderRepository(AppDbContext context)
+        public SenderRepository(AppDbContext context, ICourierServiceRepository courierService)
         {
             _context = context;
+            _courierService = courierService;
         }
 
         // ---------------- EMAIL CHECK ----------------
@@ -165,8 +167,34 @@ namespace mytown.DataAccess.Implementations
             if (pickupDateTime < bookingDateTime)
                 throw new Exception("Pickup date and time cannot be in the past.");
 
+            // =========================================================
+            // GET COURIER PRICE
+            // =========================================================
+
+            var courierOptions = await _courierService.GetBestCourierOptions(
+                order.PickupCity,
+                order.PickupState,
+                order.PickupCountry,
+                order.ReceiverState,
+                order.PackageWeight ?? 0m
+            );
+
+            // Get cheapest courier option
+            var courierOption = courierOptions
+                .OrderBy(x => x.Cost)
+                .FirstOrDefault();
+
+            decimal transporterCharges = 0;
+
+            if (courierOption != null)
+            {
+                transporterCharges = Math.Round(
+                    courierOption.Cost / 2m,
+                    2);
+            }
+
             // Common matching query
-var matchingQuery = _context.TransporterTravelPlans
+            var matchingQuery = _context.TransporterTravelPlans
     .Include(x => x.TransporterRegister)
     .Where(x =>
         x.IsActive &&
@@ -204,6 +232,7 @@ var matchingQuery = _context.TransporterTravelPlans
                     StartDate = x.StartDate,
                     ArrivalDate = x.ArrivalDate,
                     PreferredContact = x.PreferredContact,
+                    transporterCharge = transporterCharges,
                     Message = "Matching transporter found"
                 })
                 .FirstOrDefaultAsync();
@@ -228,6 +257,7 @@ var matchingQuery = _context.TransporterTravelPlans
                  StartDate = x.StartDate,
                  ArrivalDate = x.ArrivalDate,
                  PreferredContact = x.PreferredContact,
+                 transporterCharge = transporterCharges,
                  Message = "Package weight exceeds transporter maximum weight limit"
              })
              .FirstOrDefaultAsync();
@@ -254,7 +284,7 @@ var matchingQuery = _context.TransporterTravelPlans
             var plan = await _context.TransporterTravelPlans
                 .FirstOrDefaultAsync(x => x.PlanId == dto.TransporterPlanId);
 
-            decimal transportCharge = 50;
+            decimal transportCharge = order.TransporterCharges ??  0m;
             decimal gstAmount = transportCharge * 0.18m;
             decimal totalAmount = transportCharge + gstAmount;
 
@@ -322,6 +352,7 @@ var matchingQuery = _context.TransporterTravelPlans
 
             order.OrderStatus =
                 "TransporterSelected";
+            order.TransporterCharges = dto.TransporterCharges;
 
             await _context.SaveChangesAsync();
 
@@ -410,7 +441,7 @@ var plan =
                 TransporterPhone = transporter.PhoneNumber,
                 VehicleType = plan.VehicleType,
 
-                TransportationCharge = 50,
+                TransportationCharge = order.TransporterCharges ?? 0m,
                 PaymentMethod = "Online Payment",
 
                 SenderName = sender.SenderName,

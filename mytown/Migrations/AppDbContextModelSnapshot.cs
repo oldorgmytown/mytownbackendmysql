@@ -1531,6 +1531,11 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("expiry");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("role");
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("longtext")
@@ -2660,6 +2665,10 @@ namespace mytown.Migrations
                     b.Property<string>("TrackingId")
                         .HasColumnType("longtext")
                         .HasColumnName("tracking_id");
+
+                    b.Property<decimal?>("TransporterCharges")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("transporter_charges");
 
                     b.Property<int?>("TransporterPlanId")
                         .HasColumnType("int")

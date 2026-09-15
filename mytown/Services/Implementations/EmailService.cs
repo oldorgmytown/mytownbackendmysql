@@ -155,8 +155,9 @@ public class EmailService : IEmailService
         <h2 style='color: #004481; margin-bottom: 10px;'>Verify your email address</h2>
 
         <p style='color: #333; font-size: 14px;'>
-            Please confirm that you want to use this as your MyTown account email address. 
-            Once it's done, you will be able to access your account.
+           We received a request to reset your MyTown account password.
+            Click the button below to create a new password.
+            If you did not request a password reset, you can safely ignore this email.
         </p>
 
         <!-- Verification Button -->

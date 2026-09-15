@@ -24,5 +24,11 @@ namespace mytown.Services.Interfaces
         Task<TrackingResultDto> TrackOrderByTrackingIdAsync(string trackingId);
         Task<IEnumerable<PopularCityDto>> GetPopularCitiesAsync();
         Task<SenderOrderTrackingDto?> GetSenderOrderTrackingAsync(string trackingId);
+
+        //get stores and services by location and product term
+        Task<BusinessAndServiceSearchResultsDto>
+            GetBusinessAndServiceProfilesBylocationandproductterm(
+                string? searchTerm,
+                string? locationQuery);
     }
 }
