@@ -4,9 +4,9 @@ namespace mytown.DataAccess.Interfaces
 {
     public interface IAuthRepository
     {
-        string CreatePasswordResetToken(string email);
+        string CreatePasswordResetToken(string email,string role);
         Task SendResetEmail(string email);
-        bool ResetPassword(string email, string newPassword);
+        bool ResetPassword(string email, string newPassword, string role);
         bool EmailExists(string email, string role);
 
         PasswordResetRequest GetResetRequestByToken(string token);

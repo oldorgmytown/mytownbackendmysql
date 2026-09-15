@@ -66,7 +66,7 @@ namespace mytown.Controllers
         }
 
         [HttpPost("reset-password")]
-        public IActionResult ResetPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string confirmPassword)
+        public IActionResult ResetPassword([FromForm] string email, [FromForm] string newPassword, [FromForm] string confirmPassword, string role)
         {
             if (string.IsNullOrWhiteSpace(email))
                 return BadRequest("Email is required.");
@@ -77,7 +77,7 @@ namespace mytown.Controllers
             if (newPassword != confirmPassword)
                 return BadRequest("Passwords do not match.");
 
-            var result = _authService.ResetPassword(email, newPassword);
+            var result = _authService.ResetPassword(email, newPassword, role);
 
             if (!result)
                 return BadRequest("Invalid or expired token.");

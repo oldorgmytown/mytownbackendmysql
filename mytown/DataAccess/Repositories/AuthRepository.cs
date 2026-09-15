@@ -51,7 +51,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public string CreatePasswordResetToken(string email)
+        public string CreatePasswordResetToken(string email, string role)
         {
             var token = Guid.NewGuid().ToString();
             var expiry = DateTime.UtcNow.AddHours(1);
@@ -60,7 +60,9 @@ namespace mytown.DataAccess.Repositories
             {
                 Email = email,
                 Token = token,
-                Expiry = expiry
+                Expiry = expiry,
+                Role = role
+
             };
 
             _context.PasswordResetRequests.Add(request);
@@ -69,12 +71,12 @@ namespace mytown.DataAccess.Repositories
             return token;
         }
 
-        public async Task SendResetEmail(string email)
+        public async Task SendResetEmail(string email, string role)
         {
             //if (!EmailExists(email))
             //    throw new Exception("Email not found.");
 
-            var token = CreatePasswordResetToken(email);
+            var token = CreatePasswordResetToken(email,role);
             string frontendBaseUrl = _configuration["FrontendBaseUrl"];
             var resetLink = $"{frontendBaseUrl}?reset-password&token={token}";
             // var resetLink = $"{frontendBaseUrl}?reset=1&email={email}&token={token}";
@@ -92,36 +94,91 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        public bool ResetPassword(string email, string newPassword)
+        public bool ResetPassword(string email, string newPassword, string role)
         {
-            //var request = _context.PasswordResetRequests
-            //    .FirstOrDefault(r => r.Token == token && r.Expiry > DateTime.UtcNow);
-
-            //if (request == null) return false;
-
-            var shopper = _context.ShopperRegisters.FirstOrDefault(s => s.Email == email);
-            var business = _context.BusinessRegisters.FirstOrDefault(b => b.BusEmail == email);
-            var courier = _context.CourierService.FirstOrDefault(b => b.CourierEmail == email);
-
-
-            if (shopper != null)
-            {
-                shopper.Password = HashPassword(newPassword); // Replace with your hashing
-            }
-            else if (business != null)
-            {
-                business.Password = HashPassword(newPassword);
-            }
-            else if (courier != null)
-            {
-                courier.Password = HashPassword(newPassword);
-            }
-            else
+            if (string.IsNullOrWhiteSpace(email) ||
+                string.IsNullOrWhiteSpace(newPassword) ||
+                string.IsNullOrWhiteSpace(role))
             {
                 return false;
             }
 
-            //  _context.PasswordResetRequests.Remove(email);
+            email = email.Trim().ToLower();
+            role = role.Trim().ToLower();
+
+            var hashedPassword = HashPassword(newPassword);
+
+            switch (role)
+            {
+                case "shopper":
+                    {
+                        var shopper = _context.ShopperRegisters
+                            .FirstOrDefault(u =>
+                                u.Email.ToLower() == email);
+
+                        if (shopper == null)
+                            return false;
+
+                        shopper.Password = hashedPassword;
+                        break;
+                    }
+
+                case "business":
+                    {
+                        var business = _context.BusinessRegisters
+                            .FirstOrDefault(u =>
+                                u.BusEmail.ToLower() == email);
+
+                        if (business == null)
+                            return false;
+
+                        business.Password = hashedPassword;
+                        break;
+                    }
+
+                case "courier":
+                    {
+                        var courier = _context.CourierService
+                            .FirstOrDefault(u =>
+                                u.CourierEmail.ToLower() == email);
+
+                        if (courier == null)
+                            return false;
+
+                        courier.Password = hashedPassword;
+                        break;
+                    }
+
+                case "transporter":
+                    {
+                        var transporter = _context.TransporterRegisters
+                            .FirstOrDefault(u =>
+                                u.Email.ToLower() == email);
+
+                        if (transporter == null)
+                            return false;
+
+                        transporter.Password = hashedPassword;
+                        break;
+                    }
+
+                case "sender":
+                    {
+                        var sender = _context.SenderRegisters
+                            .FirstOrDefault(u =>
+                                u.Email.ToLower() == email);
+
+                        if (sender == null)
+                            return false;
+
+                        sender.Password = hashedPassword;
+                        break;
+                    }
+
+                default:
+                    return false;
+            }
+
             _context.SaveChanges();
 
             return true;
