@@ -172,10 +172,11 @@ namespace mytown.Services
 
             var json = JsonSerializer.Serialize(payload);
 
+            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
+
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
-                "https://sandbox.cashfree.com/payout/beneficiary");
-
+                $"{baseUrl}/beneficiary");
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add("x-api-version", "2024-01-01");
