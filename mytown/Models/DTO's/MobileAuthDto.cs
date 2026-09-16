@@ -1,3 +1,4 @@
+// mytown/Models/DTO's/MobileAuthDto.cs
 namespace mytown.Models.DTO_s
 {
     public class MobileSignupDto
@@ -15,6 +16,12 @@ namespace mytown.Models.DTO_s
         public string? Country { get; set; }
         public string? PostalCode { get; set; }
         public string? BusinessType { get; set; }
+
+        // Bank Account Details (business / transporter / courier only)
+        public string? AccountHolderName { get; set; }
+        public string? BankName { get; set; }
+        public string? AccountNumber { get; set; }
+        public string? IFSCCode { get; set; }
     }
 
     public class MobileSendOtpDto
