@@ -129,8 +129,7 @@ namespace mytown.Controllers
 
                 await _businessService.RegisterBusiness(newBusiness);
 
-                //add bank account details to that table
-
+                // add bank account details to that table
                 var bankDetails = new BusinessAccountDetail
                 {
                     BusRegId = newBusiness.BusRegId,
@@ -142,6 +141,37 @@ namespace mytown.Controllers
                 };
 
                 await _businessService.SaveBusinessAccountDetails(bankDetails);
+
+                // --- Cashfree beneficiary creation (non-blocking) ---
+                bool beneficiaryCreated = false;
+                try
+                {
+                    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequest
+                    {
+                        BeneficiaryId = $"BEN_{newBusiness.BusRegId}",
+                        BeneficiaryName = bankDetails.AccountHolderName,
+                        BankAccountNumber = bankDetails.AccountNumber,
+                        BankIfsc = bankDetails.IFSCCode
+                    };
+
+                    var cfResponse = await _businessService.CreateBeneficiaryAsync(beneficiaryRequest);
+
+                    bankDetails.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                    bankDetails.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                    bankDetails.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+
+                    await _businessService.SaveBusinessAccountDetails(bankDetails);
+
+                    beneficiaryCreated = true;
+                }
+                catch (Exception cfEx)
+                {
+                    _logger.LogError(cfEx,
+                        "Cashfree beneficiary creation failed for BusRegId {BusRegId}. Will retry at payout time.",
+                        newBusiness.BusRegId);
+                    // swallow — registration must still succeed
+                }
+                // --- end beneficiary block ---
 
                 var newProfile = new BusinessProfile
                 {
@@ -164,9 +194,12 @@ namespace mytown.Controllers
 
                 return Ok(new
                 {
-                    message = "Your email is verified and your business account is created!",
+                    message = beneficiaryCreated
+                        ? "Your email is verified, your business account is created, and your payout account is set up!"
+                        : "Your email is verified and your business account is created! Payout setup is still in progress and will complete shortly.",
                     busRegId = newBusiness.BusRegId,
-                    token = jwtToken
+                    token = jwtToken,
+                    payoutReady = beneficiaryCreated
                 });
             }
             catch (Exception ex)

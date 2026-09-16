@@ -18,12 +18,14 @@ namespace mytown.Services
         private readonly IBusinessRepository _repo;
         private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<BusinessService> _logger;
 
-        public BusinessService(IBusinessRepository repo, HttpClient httpClient, IConfiguration configuration)
+        public BusinessService(IBusinessRepository repo, HttpClient httpClient, IConfiguration configuration, ILogger<BusinessService> logger)
         {
             _repo = repo;
             _httpClient = httpClient;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public Task<bool> IsEmailTaken(string email)
@@ -140,10 +142,16 @@ namespace mytown.Services
         }
 
         public async Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
-      CreateCashfreeBeneficiaryRequest request)
+          CreateCashfreeBeneficiaryRequest request)
         {
             var clientId = _configuration["CashfreePayout:ClientId"];
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
+
+            // default the beneficiary ID if the caller didn't supply one
+            if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
+            {
+                request.BeneficiaryId = $"BEN_{request.BusRegId}";
+            }
 
             var payload = new
             {
@@ -184,9 +192,29 @@ namespace mytown.Services
                     $"Creating beneficiary failed. Status: {response.StatusCode}, Response: {responseContent}");
             }
 
-            return JsonSerializer.Deserialize<CashfreeBeneficiaryResponse>(
+            var cfResponse = JsonSerializer.Deserialize<CashfreeBeneficiaryResponse>(
                 responseContent,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            // --- save to DB, the missing piece ---
+            var accountDetail = await _repo.GetAccountDetailByBusRegId(request.BusRegId);
+            if (accountDetail != null)
+            {
+                accountDetail.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                accountDetail.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                accountDetail.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+
+                await _repo.UpdateBusinessAccountDetails(accountDetail);
+            }
+            else
+            {
+                _logger.LogWarning(
+                    "Beneficiary created on Cashfree but no BusinessAccountDetail found for BusRegId {BusRegId}",
+                    request.BusRegId);
+            }
+            // --- end save ---
+
+            return cfResponse;
         }
     }
 }
