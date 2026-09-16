@@ -279,7 +279,7 @@ namespace mytown.DataAccess.Repositories
                 return new BankVerificationResponseDto
                 {
                     Success = false,
-                    Message = responseContent
+                    Message = $"Cashfree Error ({(int)response.StatusCode}): {responseContent}"
                 };
             }
 

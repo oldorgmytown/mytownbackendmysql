@@ -7,6 +7,7 @@ using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using MyTown.Models;
 using Stripe;
+using System.Net;
 using System.Text;
 using System.Text.Json;
 
@@ -139,22 +140,20 @@ namespace mytown.Services
         }
 
         public async Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
-    CreateCashfreeBeneficiaryRequest request)
+      CreateCashfreeBeneficiaryRequest request)
         {
-            var clientId = _configuration["Cashfree:PayoutClientId"];
-            var clientSecret = _configuration["Cashfree:PayoutClientSecret"];
+            var clientId = _configuration["CashfreePayout:ClientId"];
+            var clientSecret = _configuration["CashfreePayout:ClientSecret"];
 
             var payload = new
             {
                 beneficiary_id = request.BeneficiaryId,
                 beneficiary_name = request.BeneficiaryName,
-
                 beneficiary_instrument_details = new
                 {
                     bank_account_number = request.BankAccountNumber,
                     bank_ifsc = request.BankIfsc
                 },
-
                 beneficiary_contact_details = new
                 {
                     beneficiary_email = request.BeneficiaryEmail,
@@ -171,31 +170,23 @@ namespace mytown.Services
 
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
+            httpRequest.Headers.Add("x-api-version", "2024-01-01");
+            httpRequest.Headers.Add("x-request-id", Guid.NewGuid().ToString());
 
-            httpRequest.Content = new StringContent(
-                json,
-                Encoding.UTF8,
-                "application/json");
+            httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(httpRequest);
-
-            var responseContent =
-                await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception(
-                    $"Cashfree beneficiary creation failed. " +
-                    $"Status: {response.StatusCode}, " +
-                    $"Response: {responseContent}");
+                    $"Creating beneficiary failed. Status: {response.StatusCode}, Response: {responseContent}");
             }
 
             return JsonSerializer.Deserialize<CashfreeBeneficiaryResponse>(
                 responseContent,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
     }
 }

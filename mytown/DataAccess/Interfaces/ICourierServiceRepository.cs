@@ -56,4 +56,23 @@ public interface ICourierServiceRepository
 
     //add courier bank details
     Task SaveCourierAccountDetails(CourierAccountDetail accountDetail);
+
+
+    Task<List<BestcourierinfoDto>> GetCourierPricingByLocation(
+        string storeTown,
+        string storeCity,
+        string storeState,
+        string storeCountry,
+        string shopperState);
+
+    Task<BestcourierinfoDto?> FindMatchingTransporterByLocationAsync(
+        string storeTown,
+        string storeCity,
+        string storeState,
+        string storeCountry,
+        string shopperTown,
+        string shopperCity,
+        string shopperState,
+        string shopperCountry);
+
 }
