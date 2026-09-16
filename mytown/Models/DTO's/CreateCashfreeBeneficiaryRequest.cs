@@ -2,7 +2,8 @@
 {
     public class CreateCashfreeBeneficiaryRequest
     {
-        public string BeneficiaryId { get; set; }
+        public int BusRegId { get; set; }
+        public string? BeneficiaryId { get; set; }
         public string BeneficiaryName { get; set; }
         public string BankAccountNumber { get; set; }
         public string BankIfsc { get; set; }
