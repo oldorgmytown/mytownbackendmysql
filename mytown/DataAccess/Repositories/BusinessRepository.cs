@@ -274,14 +274,14 @@ namespace mytown.DataAccess.Repositories
        //     var responseContent =
        //         await response.Content.ReadAsStringAsync();
 
-       //     if (!response.IsSuccessStatusCode)
-       //     {
-       //         return new BankVerificationResponseDto
-       //         {
-       //             Success = false,
-       //             Message = responseContent
-       //         };
-       //     }
+            if (!response.IsSuccessStatusCode)
+            {
+                return new BankVerificationResponseDto
+                {
+                    Success = false,
+                    Message = $"Cashfree Error ({(int)response.StatusCode}): {responseContent}"
+                };
+            }
 
        //     using var document =
        //         JsonDocument.Parse(responseContent);
@@ -307,14 +307,28 @@ namespace mytown.DataAccess.Repositories
        //             bankProperty.GetString();
        //     }
 
-       //     return new BankVerificationResponseDto
-       //     {
-       //         Success = true,
-       //         AccountHolderName = accountHolderName,
-       //         BankName = bankName,
-       //         Message = "Bank account verified successfully."
-       //     };
-       // }
+            return new BankVerificationResponseDto
+            {
+                Success = true,
+                AccountHolderName = accountHolderName,
+                BankName = bankName,
+                Message = "Bank account verified successfully."
+            };
+        }
+
+        //for adding account details as benificary 
+        public async Task<BusinessAccountDetail?> GetAccountDetailByBusRegId(int busRegId)
+        {
+            return await _context.BusinessAccountDetails
+                .FirstOrDefaultAsync(b => b.BusRegId == busRegId);
+        }
+
+        public async Task UpdateBusinessAccountDetails(BusinessAccountDetail accountDetail)
+        {
+            accountDetail.UpdatedDate = DateTime.UtcNow;
+            _context.BusinessAccountDetails.Update(accountDetail);
+            await _context.SaveChangesAsync();
+        }
     }
 
 }

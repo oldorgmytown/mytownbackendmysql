@@ -41,5 +41,13 @@ namespace mytown.DataAccess
 
         //add bank account details
         Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
+
+        Task<BankVerificationResponseDto> VerifyBankAccountAsync(
+      BankVerificationRequestDto request);
+
+        //for adding account details as benificary
+        Task<BusinessAccountDetail?> GetAccountDetailByBusRegId(int busRegId);
+        Task UpdateBusinessAccountDetails(BusinessAccountDetail accountDetail);
+
     }
 }

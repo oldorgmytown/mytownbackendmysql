@@ -1,3 +1,4 @@
+// mytown/DataAccess/Repositories/MobileAuthRepository.cs
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
@@ -42,6 +43,12 @@ namespace mytown.DataAccess.Repositories
             public string? BusinessType { get; set; }
             public int? BusCatId { get; set; }
             public int? BusServId { get; set; }
+
+            // Bank Account Details
+            public string? AccountHolderName { get; set; }
+            public string? BankName { get; set; }
+            public string? AccountNumber { get; set; }
+            public string? IFSCCode { get; set; }
         }
 
         public async Task<(bool success, string message)> SignupAsync(MobileSignupDto dto)
@@ -53,14 +60,10 @@ namespace mytown.DataAccess.Repositories
 
             if (emailExists)
                 return (false, "Email already registered.");
-            //bool emailExists = await EmailExistsAsync(dto.Email);
-            //if (emailExists)
-            //    return (false, "Email already registered.");
 
             string hashedPassword = BCrypt.Net.BCrypt.HashPassword(dto.Password);
             string otp = GenerateOtp();
             DateTime expiry = DateTime.UtcNow.AddMinutes(5);
-          //  string role = dto.Role.ToLower();
 
             var payload = new PendingSignupPayload
             {
@@ -76,7 +79,11 @@ namespace mytown.DataAccess.Repositories
                 Country = dto.Country,
                 PostalCode = dto.PostalCode,
                 BusinessName = dto.BusinessName,
-                BusinessType = dto.BusinessType
+                BusinessType = dto.BusinessType,
+                AccountHolderName = dto.AccountHolderName,
+                BankName = dto.BankName,
+                AccountNumber = dto.AccountNumber,
+                IFSCCode = dto.IFSCCode
             };
 
             if (role == "business")
@@ -312,7 +319,7 @@ namespace mytown.DataAccess.Repositories
                             BusCatId = payload.BusCatId ?? 1
                         };
                         _context.BusinessRegisters.Add(business);
-                        // Save now so EF populates business.BusRegId for the profile FK below
+                        // Save now so EF populates business.BusRegId for the profile/account FK below
                         await _context.SaveChangesAsync();
 
                         var businessProfile = new BusinessProfile
@@ -323,6 +330,21 @@ namespace mytown.DataAccess.Repositories
                             BusinessLocation = $"{business.Town}, {business.BusinessCity}, {business.BusinessState}, {business.BusinessCountry}"
                         };
                         _context.BusinessProfiles.Add(businessProfile);
+
+                        // Save bank account details (only if provided at signup)
+                        if (!string.IsNullOrWhiteSpace(payload.AccountNumber))
+                        {
+                            var bankDetails = new BusinessAccountDetail
+                            {
+                                BusRegId = business.BusRegId,
+                                AccountHolderName = payload.AccountHolderName,
+                                BankName = payload.BankName,
+                                AccountNumber = payload.AccountNumber,
+                                IFSCCode = payload.IFSCCode,
+                                CreatedDate = DateTime.UtcNow
+                            };
+                            _context.Set<BusinessAccountDetail>().Add(bankDetails);
+                        }
 
                         _context.PendingBusinessVerifications.Remove(bv);
                         await _context.SaveChangesAsync();
@@ -385,6 +407,24 @@ namespace mytown.DataAccess.Repositories
                             IsEmailVerified = true
                         };
                         _context.TransporterRegisters.Add(transporter);
+                        // Save now so EF populates transporter.TransporterRegId for the account FK below
+                        await _context.SaveChangesAsync();
+
+                        // Save bank account details (only if provided at signup)
+                        if (!string.IsNullOrWhiteSpace(payload.AccountNumber))
+                        {
+                            var accountDetails = new TransporterAccountDetail
+                            {
+                                TransporterRegId = transporter.TransporterRegId,
+                                AccountHolderName = payload.AccountHolderName,
+                                BankName = payload.BankName,
+                                AccountNumber = payload.AccountNumber,
+                                IFSCCode = payload.IFSCCode,
+                                IsTermsAccepted = true,
+                                CreatedDate = DateTime.UtcNow
+                            };
+                            _context.Set<TransporterAccountDetail>().Add(accountDetails);
+                        }
 
                         _context.PendingTransporterVerifications.Remove(tv);
                         await _context.SaveChangesAsync();
@@ -418,6 +458,23 @@ namespace mytown.DataAccess.Repositories
                             IsEmailVerified = true
                         };
                         _context.CourierService.Add(courier);
+                        // Save now so EF populates courier.CourierId for the account FK below
+                        await _context.SaveChangesAsync();
+
+                        // Save bank account details (only if provided at signup)
+                        if (!string.IsNullOrWhiteSpace(payload.AccountNumber))
+                        {
+                            var bank = new CourierAccountDetail
+                            {
+                                CourierId = courier.CourierId,
+                                AccountHolderName = payload.AccountHolderName,
+                                BankName = payload.BankName,
+                                AccountNumber = payload.AccountNumber,
+                                IFSCCode = payload.IFSCCode,
+                                CreatedDate = DateTime.UtcNow
+                            };
+                            _context.Set<CourierAccountDetail>().Add(bank);
+                        }
 
                         _context.PendingCourierVerifications.Remove(cv);
                         await _context.SaveChangesAsync();

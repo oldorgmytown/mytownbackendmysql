@@ -10,6 +10,7 @@ using mytown.Services;
 using mytown.Services.Interfaces;
 using System.Text.Json;
 
+
 namespace mytown.Controllers
 {
 
@@ -239,7 +240,19 @@ namespace mytown.Controllers
 
         //    return Ok(orders);
         //}
+        [HttpPost("getcourier-pricing-bylocation")]
+        public async Task<ActionResult<LocationCourierPricingResponseDto>> GetCourierPricing(
+           [FromBody] LocationCourierPricingRequestDto request)
+        {
+            if (request == null || request.BusRegId <= 0)
+            {
+                return BadRequest("BusRegId is required.");
+            }
 
+            var result = await _courierService.GetCourierPricingAsync(request);
+
+            return Ok(result);
+        }
 
     }
 }

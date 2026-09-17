@@ -22,6 +22,7 @@ namespace mytown.Controllers
         private readonly ILogger<CourierController> _logger;
         private readonly IBusinessRepository _businessRepo;
         private readonly IShopperRepository _shopperRepo;
+        private readonly IStorePayoutService _storePayoutService;
 
         public CourierDashboardController(
             ICourierDashboardService courierService,
@@ -29,7 +30,8 @@ namespace mytown.Controllers
             IShopperRepository shopperRepo,
             IEmailService emailService,
             IConfiguration configuration,
-            ILogger<CourierController> logger)
+            ILogger<CourierController> logger,
+            IStorePayoutService storePayoutService)
         {
             _courierService = courierService;
             _businessRepo = businessRepo;
@@ -37,6 +39,7 @@ namespace mytown.Controllers
             _emailService = emailService;
             _configuration = configuration;
             _logger = logger;
+            _storePayoutService = storePayoutService;
         }
 
         [HttpGet("Courierhead-orders")]
@@ -103,6 +106,7 @@ namespace mytown.Controllers
                 await _courierService.AssignTrackingAsync(
                     storeOrderId,
                     dto.TrackingId);
+                await _storePayoutService.CreatePayoutAsync(storeOrderId);
 
                 return Ok("Tracking ID assigned and order moved to In Progress");
             }

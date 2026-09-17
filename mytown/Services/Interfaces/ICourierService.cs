@@ -38,10 +38,12 @@ namespace mytown.Services.Interfaces
 
         Task<bool> IsCourierEmailTakenAsync(string email);
 
-       
 
-
+        Task<LocationCourierPricingResponseDto> GetCourierPricingAsync(
+       LocationCourierPricingRequestDto request);
     }
+
 }
+
 
 
