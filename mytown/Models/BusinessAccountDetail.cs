@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using mytown.Enums;
 
-//push
+//push again
 namespace MyTown.Models
 {
     [Table("business_account_details")]
