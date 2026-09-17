@@ -1,4 +1,5 @@
-﻿namespace mytown.Enums
+﻿//push
+namespace mytown.Enums
 {
     public static class StorePayoutStatus
     {

@@ -1,5 +1,6 @@
 ﻿namespace mytown.DTOs
 {
+    //push
     public class StorePayoutDetailsDto
     {
         public int StoreOrderId { get; set; }

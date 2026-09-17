@@ -2,6 +2,7 @@
 using mytown.Models;
 using mytown.Models.DTO_s;
 
+//push
 public interface IStorePayoutRepository
 {
     Task<StorePayoutDetailsDto?> GetStorePayoutDetailsAsync(
