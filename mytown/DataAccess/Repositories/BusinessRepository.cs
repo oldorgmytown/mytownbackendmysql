@@ -265,9 +265,9 @@ namespace mytown.DataAccess.Repositories
 
             var json = JsonSerializer.Serialize(payload);
 
-            using var httpRequest = new HttpRequestMessage(
-                HttpMethod.Post,
-                url);
+            //using var httpRequest = new HttpRequestMessage(
+            //    HttpMethod.Post,
+            //    url);
 
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
