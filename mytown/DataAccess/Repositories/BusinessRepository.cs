@@ -240,11 +240,13 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-       // public async Task<BankVerificationResponseDto> VerifyBankAccountAsync(
-       //BankVerificationRequestDto request)
-       // {
-       //     var clientId = _configuration["CashfreeVerification:ClientId"];
-       //     var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
+
+        // move to prod
+        public async Task<BankVerificationResponseDto> VerifyBankAccountAsync(
+       BankVerificationRequestDto request)
+        {
+            var clientId = _configuration["CashfreeVerification:ClientId"];
+            var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
 
        //     var url =
        //         "https://sandbox.cashfree.com/verification/bank-account/sync";
