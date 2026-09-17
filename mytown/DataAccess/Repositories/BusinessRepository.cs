@@ -241,7 +241,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        // move to prod
+        // move to prod again
         public async Task<BankVerificationResponseDto> VerifyBankAccountAsync(
        BankVerificationRequestDto request)
         {

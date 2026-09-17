@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 //push
 namespace mytown.Models
 {
-    [Table("courier_account_details")]
-    public class CourierAccountDetail
+    [Table("transporter_account_details")]
+    public class TransporterAccountDetail
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -12,8 +14,8 @@ namespace mytown.Models
         public int AccountDetailId { get; set; }
 
         [Required]
-        [Column("courier_id")]
-        public int CourierId { get; set; }
+        [Column("transporter_reg_id")]
+        public int TransporterRegId { get; set; }
 
         [Required]
         [StringLength(150)]
@@ -38,10 +40,25 @@ namespace mytown.Models
         [Column("is_terms_accepted")]
         public bool IsTermsAccepted { get; set; }
 
+        // Cashfree Beneficiary
+        [StringLength(100)]
+        [Column("cashfree_beneficiary_id")]
+        public string? CashfreeBeneficiaryId { get; set; }
+
+        [StringLength(30)]
+        [Column("cashfree_beneficiary_status")]
+        public string? CashfreeBeneficiaryStatus { get; set; }
+
+        [Column("cashfree_beneficiary_created_date")]
+        public DateTime? CashfreeBeneficiaryCreatedDate { get; set; }
+
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
-        [ForeignKey(nameof(CourierId))]
-        public virtual CourierService CourierService { get; set; } = null!;
+        [Column("updated_date")]
+        public DateTime? UpdatedDate { get; set; }
+
+        [ForeignKey(nameof(TransporterRegId))]
+        public virtual TransporterRegister TransporterRegister { get; set; } = null!;
     }
 }
