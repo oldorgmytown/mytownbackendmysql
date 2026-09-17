@@ -411,5 +411,54 @@ using (var stream = file.OpenReadStream())
 
             return Ok(new { FileName = newFileName, Url = blobClient.Uri.AbsoluteUri });
         }
+
+        [HttpPost("verifyBankAccount")]
+        public async Task<IActionResult> VerifyBankAccount(
+      [FromBody] BankVerificationRequestDto request)
+        {
+            var result =
+                await _businessService
+                    .VerifyBankAccountAsync(request);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+
+        [HttpPost("create-beneficiary")]
+        public async Task<IActionResult> CreateBeneficiary(
+    [FromBody] CreateCashfreeBeneficiaryRequest request)
+        {
+            try
+            {
+                var result =
+                    await _businessService
+                        .CreateBeneficiaryAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    beneficiaryId = result.BeneficiaryId,
+                    beneficiaryName = result.BeneficiaryName,
+                    status = result.BeneficiaryStatus
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error creating Cashfree beneficiary");
+
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
     }
 }
