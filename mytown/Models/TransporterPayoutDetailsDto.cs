@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models.DTO_s
 {
+    //push
     public class TransporterPayoutDetailsDto
     {
         public int StoreOrderId { get; set; }

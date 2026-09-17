@@ -1,6 +1,7 @@
 ﻿using mytown.Models;
 using mytown.Models.DTO_s;
 
+//push
 public interface ICourierPayoutRepository
 {
     Task<CourierPayoutDetailsDto?> GetCourierPayoutDetailsAsync(int storeOrderId);

@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models
 {
+    //push
     public class CourierPayoutDetailsDto
     {
         public int StoreOrderId { get; set; }
