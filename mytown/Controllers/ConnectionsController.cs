@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using mytown.Controllers.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
@@ -14,12 +16,15 @@ namespace mytown.Controllers
     {
         private readonly IConnectionsService _service;
         private readonly ILogger<ConnectionsController> _logger;
+        private readonly mytown.Models.mytown.DataAccess.AppDbContext _context;
 
         public ConnectionsController(IConnectionsService service,
-                             ILogger<ConnectionsController> logger)
+                             ILogger<ConnectionsController> logger,
+                             mytown.Models.mytown.DataAccess.AppDbContext context)
         {
             _service = service;
             _logger = logger;
+            _context = context;
         }
 
         //------------ Shopper Experinece/ Reviews-----------------------
@@ -230,6 +235,24 @@ CreateExperience(
                     500,
                     "An error occurred while adding comment.");
             }
+        }
+
+                [HttpGet("chat-history")]
+        public async Task<IActionResult> GetChatHistory(
+            int userAId, UserType userAType,
+            int userBId, UserType userBType)
+        {
+            var messages = await _context.ChatMessages
+                .Where(m =>
+                    (m.SenderUserId == userAId && m.SenderType == userAType &&
+                     m.ReceiverUserId == userBId && m.ReceiverType == userBType)
+                    ||
+                    (m.SenderUserId == userBId && m.SenderType == userBType &&
+                     m.ReceiverUserId == userAId && m.ReceiverType == userAType))
+                .OrderBy(m => m.SentTime)
+                .ToListAsync();
+
+            return Ok(messages);
         }
 
         [HttpGet("getcomments")]
