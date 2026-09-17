@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models.DTO_s
 {
+    //movetoprod
     public class BankVerificationResponseDto
     {
         public bool Success { get; set; }

@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models.DTO_s
 {
+    //push toprod
     public class BankVerificationRequestDto
     {
         public string AccountNumber { get; set; } = string.Empty;
