@@ -41,6 +41,17 @@ namespace mytown.Models
         [Column("created_date")]
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
+        [StringLength(50)]
+        [Column("cashfree_beneficiary_id")]
+        public string? CashfreeBeneficiaryId { get; set; }
+
+        [StringLength(20)]
+        [Column("cashfree_beneficiary_status")]
+        public string? CashfreeBeneficiaryStatus { get; set; }
+
+        [Column("cashfree_beneficiary_created_date")]
+        public DateTime? CashfreeBeneficiaryCreatedDate { get; set; }
+
         [ForeignKey(nameof(CourierId))]
         public virtual CourierService CourierService { get; set; } = null!;
     }

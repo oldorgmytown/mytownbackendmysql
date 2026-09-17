@@ -248,33 +248,33 @@ namespace mytown.DataAccess.Repositories
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
 
-       //     var url =
-       //         "https://sandbox.cashfree.com/verification/bank-account/sync";
+            var url =
+                "https://sandbox.cashfree.com/verification/bank-account/sync";
 
-       //     var payload = new
-       //     {
-       //         bank_account = request.AccountNumber,
-       //         ifsc = request.Ifsc
-       //     };
+            var payload = new
+            {
+                bank_account = request.AccountNumber,
+                ifsc = request.Ifsc
+            };
 
-       //     var json = JsonSerializer.Serialize(payload);
+            var json = JsonSerializer.Serialize(payload);
 
-       //     using var httpRequest = new HttpRequestMessage(
-       //         HttpMethod.Post,
-       //         url);
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                url);
 
-       //     httpRequest.Headers.Add("x-client-id", clientId);
-       //     httpRequest.Headers.Add("x-client-secret", clientSecret);
+            httpRequest.Headers.Add("x-client-id", clientId);
+            httpRequest.Headers.Add("x-client-secret", clientSecret);
 
-       //     httpRequest.Content = new StringContent(
-       //         json,
-       //         Encoding.UTF8,
-       //         "application/json");
+            httpRequest.Content = new StringContent(
+                json,
+                Encoding.UTF8,
+                "application/json");
 
-       //     var response = await _httpClient.SendAsync(httpRequest);
+            var response = await _httpClient.SendAsync(httpRequest);
 
-       //     var responseContent =
-       //         await response.Content.ReadAsStringAsync();
+            var responseContent =
+                await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
@@ -285,29 +285,29 @@ namespace mytown.DataAccess.Repositories
                 };
             }
 
-       //     using var document =
-       //         JsonDocument.Parse(responseContent);
+            using var document =
+                JsonDocument.Parse(responseContent);
 
-       //     var root = document.RootElement;
+            var root = document.RootElement;
 
-       //     string? accountHolderName = null;
-       //     string? bankName = null;
+            string? accountHolderName = null;
+            string? bankName = null;
 
-       //     if (root.TryGetProperty(
-       //             "name_at_bank",
-       //             out var nameProperty))
-       //     {
-       //         accountHolderName =
-       //             nameProperty.GetString();
-       //     }
+            if (root.TryGetProperty(
+                    "name_at_bank",
+                    out var nameProperty))
+            {
+                accountHolderName =
+                    nameProperty.GetString();
+            }
 
-       //     if (root.TryGetProperty(
-       //             "bank_name",
-       //             out var bankProperty))
-       //     {
-       //         bankName =
-       //             bankProperty.GetString();
-       //     }
+            if (root.TryGetProperty(
+                    "bank_name",
+                    out var bankProperty))
+            {
+                bankName =
+                    bankProperty.GetString();
+            }
 
             return new BankVerificationResponseDto
             {
