@@ -248,8 +248,14 @@ namespace mytown.DataAccess.Repositories
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
 
-            var url =
-                "https://sandbox.cashfree.com/verification/bank-account/sync";
+            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
+
+            using var httpRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                $"{baseUrl}/verification/bank-account/sync");
+
+            //var url =
+            //    "https://sandbox.cashfree.com/verification/bank-account/sync";
 
             var payload = new
             {
