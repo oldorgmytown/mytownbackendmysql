@@ -123,6 +123,7 @@ namespace mytown.Models
             public DbSet<ProductVariantAttributeNew> ProductVariantAttributesNew { get; set; }
             public DbSet<ProductVariantImageNew> ProductVariantImagesNew { get; set; }
 
+            //push
             public DbSet<StorePayout> StorePayouts { get; set; }
             public DbSet<CourierPayout> CourierPayouts { get; set; }
             public DbSet<TransporterAccountDetail> TransporterAccountDetails { get; set; }
