@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models.DTO_s
 {
+    //push
     public class UpdateCourierAccountDetailDto
     {
         public string AccountHolderName { get; set; }

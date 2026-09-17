@@ -2,6 +2,7 @@
 {
     public class TriggerPayoutResponseDto
     {
+        //push
         public bool Success { get; set; }
 
         public string? TransferId { get; set; }

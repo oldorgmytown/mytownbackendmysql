@@ -1,7 +1,7 @@
 ﻿namespace mytown.Models.DTO_s
 {
     public class TriggerPayoutRequestDto
-    {
+    {//push
         public string BeneficiaryId { get; set; } = string.Empty;
         public decimal Amount { get; set; }
         public string TransferId { get; set; } = string.Empty;
