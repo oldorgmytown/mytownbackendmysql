@@ -248,7 +248,7 @@ namespace mytown.DataAccess.Repositories
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
 
-            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
+            var baseUrl = _configuration["Cashfree:BaseUrl"];
 
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
