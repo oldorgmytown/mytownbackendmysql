@@ -240,6 +240,8 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
+
+        // move to prod
         public async Task<BankVerificationResponseDto> VerifyBankAccountAsync(
        BankVerificationRequestDto request)
         {
