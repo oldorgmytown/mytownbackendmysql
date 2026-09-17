@@ -39,6 +39,8 @@ namespace mytown.Services.Interfaces
 
         // add bank details
         Task SaveBusinessAccountDetails(BusinessAccountDetail businessAccountDetail);
+        Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
+          CreateCashfreeBeneficiaryRequest request);
 
     }
 }
