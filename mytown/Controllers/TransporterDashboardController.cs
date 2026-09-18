@@ -345,5 +345,48 @@ namespace mytown.Controllers
                 });
             }
         }
+
+        [HttpPut("update-transporter-account/{transRegId}")]
+        public async Task<IActionResult> UpdateTransporterAccount(
+    int transRegId,
+    [FromBody] UpdateTransporterAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _service.UpdateTransporterAccountDetailsAsync(transRegId, dto);
+
+                if (!updated)
+                {
+                    return NotFound(new
+                    {
+                        message = "Transporter account details not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Transporter account details updated successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
+        // get transporter account details by transRegId
+        [HttpGet("gettransporter-bankaccount/{transRegId}")]
+        public async Task<IActionResult> GetTransporterAccountDetails(int transRegId)
+        {
+            var account = await _service.GetTransporterAccountDetailsByTransRegIdAsync(transRegId);
+
+            if (account == null)
+                return NotFound(new { message = "Transporter account details not found." });
+
+            return Ok(account);
+        }
     }
 }

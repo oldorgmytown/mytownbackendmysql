@@ -93,5 +93,19 @@ namespace mytown.DataAccess.Repositories
             await _context.TransporterAccountDetails.AddAsync(accountDetails);
             await _context.SaveChangesAsync();
         }
+
+        //creating benificary
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId)
+        {
+            return await _context.TransporterAccountDetails
+                .FirstOrDefaultAsync(t => t.TransporterRegId == transRegId);
+        }
+
+        public async Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail)
+        {
+            accountDetail.UpdatedDate = DateTime.UtcNow;
+            _context.TransporterAccountDetails.Update(accountDetail);
+            await _context.SaveChangesAsync();
+        }
     }
 }

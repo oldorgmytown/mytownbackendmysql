@@ -150,7 +150,7 @@ namespace mytown.Services
             // default the beneficiary ID if the caller didn't supply one
             if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
             {
-                request.BeneficiaryId = $"BEN_{request.BusRegId}";
+                request.BeneficiaryId = $"BUS_{request.BusRegId}";
             }
 
             var payload = new

@@ -14,5 +14,7 @@ namespace mytown.DataAccess.Interfaces
 
         Task<PendingTransporterVerification> FindPendingVerificationByEmail(string email);
         Task AddTransporterAccountDetails(TransporterAccountDetail accountDetails);
+        Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId);
+        Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail);
     }
 }

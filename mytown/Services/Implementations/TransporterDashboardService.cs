@@ -167,5 +167,42 @@ SearchAvailableTransportersAsync(
                 transporterRegId,
                 deliveryStatus);
         }
+
+        public async Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto)
+        {
+            var account = await _repo.GetTransporterAccountDetailByRegId(transRegId);
+
+            if (account == null)
+            {
+                // No existing record — create a new one
+                account = new TransporterAccountDetail
+                {
+                    TransporterRegId = transRegId,
+                    AccountHolderName = dto.AccountHolderName,
+                    BankName = dto.BankName,
+                    AccountNumber = dto.AccountNumber,
+                    IFSCCode = dto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddTransporterAccountDetails(account);
+                return true;
+            }
+
+            // Existing record — update it
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _repo.UpdateTransporterAccountDetails(account);
+            return true;
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId)
+        {
+            return await _repo.GetTransporterAccountDetailByRegId(transRegId);
+        }
     }
 }
