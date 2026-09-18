@@ -10,6 +10,7 @@ using mytown.Services;
 using mytown.Services.Interfaces;
 using System.Text.Json;
 
+
 namespace mytown.Controllers
 {
 
@@ -192,13 +193,29 @@ namespace mytown.Controllers
 
         // [Authorize]
         [HttpPost("GetBestCourier")]
-        public async Task<IActionResult> GetBestCourier([FromBody] StoreCourierRequestDto request)
+        public async Task<IActionResult> GetBestCourier(
+     [FromBody] StoreCourierRequestDto request)
         {
-            if (request.StoreIds == null || !request.StoreIds.Any())
-                return BadRequest("StoreIds are required.");
+            // Must have either ShopperId or GuestCustomerId
+            if (!request.ShopperId.HasValue && !request.GuestCustomerId.HasValue)
+                return BadRequest("ShopperId or GuestCustomerId is required.");
+
+            // Shopper validation
+            if (request.ShopperId.HasValue)
+            {
+                if (!request.StoreIds.Any())
+                    return BadRequest("StoreIds are required.");
+            }
+
+            // Guest validation
+            if (request.GuestCustomerId.HasValue)
+            {
+                if (request.StoreWeights == null || !request.StoreWeights.Any())
+                    return BadRequest("StoreWeights are required for guest checkout.");
+            }
 
             var result = await _courierService
-                .GetBestCourierOptionsByStoresAsync(request.ShopperId, request.StoreIds);
+                .GetBestCourierOptionsByStoresAsync(request);
 
             if (!result.Any())
                 return NotFound("No courier options found.");
@@ -219,7 +236,40 @@ namespace mytown.Controllers
 
         //    return Ok(orders);
         //}
+        [HttpPost("getcourier-pricing-bylocation")]
+        public async Task<ActionResult<LocationCourierPricingResponseDto>> GetCourierPricing(
+           [FromBody] LocationCourierPricingRequestDto request)
+        {
+            if (request == null || request.BusRegId <= 0)
+            {
+                return BadRequest("BusRegId is required.");
+            }
 
-       
+            var result = await _courierService.GetCourierPricingAsync(request);
+
+            return Ok(result);
+        }
+
+        [HttpPost("create-beneficiary")]
+        public async Task<IActionResult> CreateBeneficiary([FromBody] CreateCashfreeBeneficiaryRequestCourier request)
+        {
+            try
+            {
+                var result = await _courierService.CreateBeneficiaryAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    beneficiaryId = result.BeneficiaryId,
+                    beneficiaryName = result.BeneficiaryName,
+                    status = result.BeneficiaryStatus
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating Cashfree beneficiary for courier");
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
