@@ -50,10 +50,10 @@ namespace mytown.Hubs
             if (sender.UserId == receiverId && sender.UserType == receiverType)
                 return false;
 
+            // Don't bail out here anymore — save the message regardless of
+            // whether the receiver is currently online. Only affects whether
+            // we push it live via SignalR right now.
             var receiverConnectionId = _connectionManager.GetConnection(receiverId, receiverType);
-
-            if (string.IsNullOrEmpty(receiverConnectionId))
-                return false;
 
             string senderName;
             string? senderPhoto = null;
@@ -75,18 +75,39 @@ namespace mytown.Hubs
                 senderName = "Store";
             }
 
+            var sentTime = DateTime.UtcNow;
+            var trimmedMessage = message.Trim();
+
+            // Persist to DB so history survives disconnects/reloads and expires after 10 days
+            _context.ChatMessages.Add(new mytown.Models.ChatMessage
+            {
+                SenderUserId = sender.UserId,
+                SenderType = sender.UserType,
+                ReceiverUserId = receiverId,
+                ReceiverType = receiverType,
+                Message = trimmedMessage,
+                SentTime = sentTime
+            });
+            await _context.SaveChangesAsync();
+
             var chatMessage = new ChatMessageDto
             {
                 SenderUserId = sender.UserId,
                 SenderType = sender.UserType,
                 SenderName = senderName,
                 SenderPhoto = senderPhoto,
-                Message = message.Trim(),
-                SentTime = DateTime.UtcNow
+                Message = trimmedMessage,
+                SentTime = sentTime
             };
 
-            await Clients.Client(receiverConnectionId)
-                .SendAsync("ReceiveMessage", chatMessage);
+            // Only push live if the receiver happens to be connected right now.
+            // If not, the message is already saved — they'll see it via chat-history
+            // next time they open the chat.
+            if (!string.IsNullOrEmpty(receiverConnectionId))
+            {
+                await Clients.Client(receiverConnectionId)
+                    .SendAsync("ReceiveMessage", chatMessage);
+            }
 
             return true;
         }

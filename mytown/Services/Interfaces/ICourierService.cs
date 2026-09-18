@@ -8,20 +8,20 @@ namespace mytown.Services.Interfaces
 {
     public interface ICourierServiceHandler
     {
-       
+
         Task<CourierService?> RegisterCourierAsync(CourierServiceDto courierDto, bool sendVerification = true);
 
-      
+
         Task<CourierService?> VerifyCourierEmailAsync(string token);
 
         Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email);
 
         Task RemoveVerification(PendingCourierVerification verification);
-        
+
         Task SavePendingVerification(PendingCourierVerification pending);
         Task<List<CourierBranchCsvRowDto>> ParseAndValidateCsvAsync(IFormFile file);
 
-       
+
         Task<string> SaveCourierBranchesAsync(List<CourierBranchCsvRowDto> rows);
 
 
@@ -41,7 +41,11 @@ namespace mytown.Services.Interfaces
 
         Task<LocationCourierPricingResponseDto> GetCourierPricingAsync(
        LocationCourierPricingRequestDto request);
+
+        Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(CreateCashfreeBeneficiaryRequestCourier request);
+
     }
+        
 
 }
 

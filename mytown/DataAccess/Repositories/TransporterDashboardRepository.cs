@@ -969,5 +969,24 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 .TransporterDBNotifications
                 .AddAsync(notification);
         }
+
+        public async Task AddTransporterAccountDetails(TransporterAccountDetail accountDetail)
+        {
+            await _context.TransporterAccountDetails.AddAsync(accountDetail);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId)
+        {
+            return await _context.TransporterAccountDetails
+                .FirstOrDefaultAsync(t => t.TransporterRegId == transRegId);
+        }
+
+        public async Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail)
+        {
+            accountDetail.UpdatedDate = DateTime.UtcNow;
+            _context.TransporterAccountDetails.Update(accountDetail);
+            await _context.SaveChangesAsync();
+        }
     }
 }

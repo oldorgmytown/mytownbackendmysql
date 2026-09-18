@@ -131,6 +131,7 @@ public class Startup
        
 
         services.AddSingleton<ConnectionManager>();
+        services.AddHostedService<mytown.Services.Implementations.ChatCleanupBackgroundService>();
 
         services.Configure<CashfreePayoutOptions>(
     Configuration.GetSection("CashfreePayout"));
@@ -210,7 +211,8 @@ public class Startup
                     return false;
                 })
                 .AllowAnyMethod()
-                .AllowAnyHeader();
+                .AllowAnyHeader()
+                .AllowCredentials();
             });
         });
     }
@@ -286,7 +288,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-          //  endpoints.MapHub<ChatHub>("/chatHub");
+            endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);
