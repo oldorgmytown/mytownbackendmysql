@@ -15,9 +15,9 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
+
         public async Task<AddToCart> AddToCart(AddToCart cartItem)
         {
-            // Safety: if frontend sends 0 or negative
             if (cartItem.ProdQty <= 0)
                 cartItem.ProdQty = 1;
 
@@ -26,106 +26,35 @@ namespace mytown.DataAccess.Repositories
                     c.ProductId == cartItem.ProductId &&
                     c.SkuId == cartItem.SkuId &&
                     c.BusRegId == cartItem.BusRegId &&
-                    c.ShopperRegId == cartItem.ShopperRegId && 
+                    c.ShopperRegId == cartItem.ShopperRegId &&
                     c.BuscatId == cartItem.BuscatId &&
                     c.ProdSubcatId == cartItem.ProdSubcatId &&
                     c.orderstatus == "cart");
 
             if (existingCartItem != null)
             {
-                //  Add the quantity sent from frontend
                 existingCartItem.ProdQty += cartItem.ProdQty;
-
-                await _context.SaveChangesAsync();
-                return existingCartItem;
             }
             else
             {
-                //  Keep frontend quantity
                 _context.addtocart.Add(cartItem);
-                await _context.SaveChangesAsync();
-                return cartItem;
             }
+
+            //  Remove from wishlist (ALL matching items)
+            var wishlistItems = _context.Wishlist
+                .Where(w =>
+                    w.ProductId == cartItem.ProductId &&
+                    w.SkuId == cartItem.SkuId &&
+                    w.ShopperRegId == cartItem.ShopperRegId);
+
+            _context.Wishlist.RemoveRange(wishlistItems);
+
+            //  Save once
+            await _context.SaveChangesAsync();
+
+            return existingCartItem ?? cartItem;
         }
 
-
-
-
-
-        // Get all cart items for a specific user
-        //public async Task<IEnumerable<CartItemDto>> GetCartItems(int shopperRegId)
-        //{
-        //    var cartItems = await (
-        //        from cart in _context.addtocart
-
-        //        join product in _context.products
-        //            on cart.ProductId equals product.ProductId
-
-        //        // 🔹 Store Profile (for logo)
-        //        join storeProfile in _context.BusinessProfiles
-        //            on product.BusRegId equals storeProfile.BusRegId
-
-        //        // 🔹 SKU
-        //        join sku in _context.Sku_ProductVariants
-        //            on cart.SkuId equals sku.SkuId into skuGroup
-        //        from skuVariant in skuGroup.DefaultIfEmpty()
-
-        //            // 🔹 Size
-        //        join size in _context.ProductSizes
-        //            on skuVariant.SizeId equals size.SizeId into sizeGroup
-        //        from sizeDetail in sizeGroup.DefaultIfEmpty()
-
-        //            // 🔹 SKU Image (SortOrder = 1)
-        //        join skuImg in _context.ProductImages
-        //            .Where(i => i.SortOrder == 1)
-        //            on skuVariant.SkuId equals skuImg.SkuId into skuImgGroup
-        //        from skuImage in skuImgGroup.DefaultIfEmpty()
-
-        //            // 🔹 Product Image fallback
-        //        join prodImg in _context.ProductImages
-        //            .Where(i => i.SortOrder == 1 && i.SkuId == null)
-        //            on product.ProductId equals prodImg.ProductId into prodImgGroup
-        //        from productImage in prodImgGroup.DefaultIfEmpty()
-
-        //        where cart.ShopperRegId == shopperRegId
-        //              && cart.orderstatus == "cart"
-
-        //        select new CartItemDto
-        //        {
-        //            CartId = cart.CartId,
-        //            ShopperRegId = cart.ShopperRegId,
-        //            prod_qty = cart.ProdQty,
-        //            orderstatus = cart.orderstatus,
-
-        //            product_id = product.ProductId,
-        //            product_name = product.ProductName,
-        //            product_subject = product.ProductSubject,
-        //            product_description = product.ProductDescription,
-
-        //            // ✅ Image priority: SKU → Product
-        //            product_image = skuImage.FileName ?? productImage.FileName,
-
-        //            // ✅ Price from SKU
-        //            product_cost = skuVariant.Sku_Cost,
-
-        //            StoreId = storeProfile.BusRegId,
-        //            StoreName = storeProfile.BusinessName,
-        //            StoreLocation = storeProfile.BusinessLocation,
-
-        //            // ✅ NEW: Store logo
-        //            StoreLogo = storeProfile.LogoPath,
-
-        //            Color = skuVariant.Color,
-        //            SizeId = skuVariant.SizeId ?? 0,
-        //            SizeName = sizeDetail.SizeName,
-        //            Sku_Cost = skuVariant.Sku_Cost,
-        //            Discount = skuVariant.Discount,
-        //            DiscountPrice = skuVariant.DiscountPrice
-        //        }
-        //    ).ToListAsync();
-
-        //    return cartItems;
-        //}
 
 
 
@@ -135,23 +64,14 @@ namespace mytown.DataAccess.Repositories
         {
             var cartItems = await (
                 from cart in _context.addtocart
-
-                join product in _context.products
+                join product in _context.ProductsNew
                     on cart.ProductId equals product.ProductId
-
+                join variant in _context.ProductVariantsNew
+                    on cart.SkuId equals variant.SkuId
                 join storeProfile in _context.BusinessProfiles
-                    on product.BusRegId equals storeProfile.BusRegId
-
-                join sku in _context.Sku_ProductVariants
-                    on cart.SkuId equals sku.SkuId
-
-                join size in _context.ProductSizes
-                    on sku.SizeId equals size.SizeId into sizeGroup
-                from sizeDetail in sizeGroup.DefaultIfEmpty()
-
+                    on cart.BusRegId equals storeProfile.BusRegId
                 where cart.ShopperRegId == shopperRegId
                       && cart.orderstatus == "cart"
-
                 select new CartItemDto
                 {
                     CartId = cart.CartId,
@@ -161,34 +81,32 @@ namespace mytown.DataAccess.Repositories
 
                     product_id = product.ProductId,
                     product_name = product.ProductName,
-                    product_subject = product.ProductSubject,
+                    product_subject = null,
                     product_description = product.ProductDescription,
 
-                    product_image =
-                        _context.ProductImages
-                            .Where(i =>
-                                i.SkuId == sku.SkuId &&
-                                i.SortOrder == 1)
-                            .Select(i => i.FileName)
-                            .FirstOrDefault(),
+                    product_image = _context.ProductVariantImagesNew
+                        .Where(i =>
+                            i.SkuId == variant.SkuId &&
+                            i.SortOrder == 1)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault(),
 
-                    // SKU-specific data
-                    Sku_Id = sku.SkuId,
-                    product_cost = sku.Sku_Cost,
-                    Color = sku.Color,
-                    SizeId = sku.SizeId ?? 0,
-                    SizeName = sizeDetail.SizeName,
-                    Discount = sku.Discount,
-                    DiscountPrice = sku.DiscountPrice,
+                    Sku_Id = variant.SkuId,
+                    product_cost = variant.Price,
+                    Weight = variant.Weight,
+                    MeasurementUnit = variant.MeasurementUnit,
+                    Brand = variant.Brand,
+                    Discount = variant.Discount,
+                    DiscountPrice = variant.DiscountPrice,
 
                     StoreId = storeProfile.BusRegId,
                     StoreName = storeProfile.BusinessName,
                     StoreLocation = storeProfile.BusinessLocation,
                     StoreLogo = storeProfile.LogoPath,
-                    // 🔹 NEW
+
                     IsProductAvailable =
-                        product.ProductStatus == "Approved"
-                        && product.IsActive == true
+                        product.ProductStatus == "ACTIVE"
+                        && product.IsActive
                         && storeProfile.ProfileStatus == "approved"
                 }
             ).ToListAsync();
@@ -258,18 +176,16 @@ namespace mytown.DataAccess.Repositories
         //Add to wishlist directly from prodcut detail page
         public async Task<bool> AddOrMoveToWishlistdirectlyAsync(int shopperId, int productId, int skuId)
         {
-            // 1️⃣ Validate Product
-            var product = await _context.products
+            var product = await _context.ProductsNew
                 .FirstOrDefaultAsync(p =>
                     p.ProductId == productId &&
-                    p.ProductStatus == "Approved" &&
-                    p.IsActive == true);
+                    p.ProductStatus == "ACTIVE" &&
+                    p.IsActive);
 
             if (product == null)
                 throw new Exception("Product not available");
 
-            // 2️⃣ Validate SKU
-            var sku = await _context.Sku_ProductVariants
+            var sku = await _context.ProductVariantsNew
                 .FirstOrDefaultAsync(s =>
                     s.SkuId == skuId &&
                     s.ProductId == productId);
@@ -277,34 +193,28 @@ namespace mytown.DataAccess.Repositories
             if (sku == null)
                 throw new Exception("SKU not found");
 
-            // 3️⃣ Check if already in wishlist
             var exists = await _context.Wishlist
                 .AnyAsync(w =>
                     w.ShopperRegId == shopperId &&
                     w.ProductId == productId &&
                     w.SkuId == skuId);
 
-            if (!exists)
-            {
-                var newWishlistItem = new Wishlist
-                {
-                    ShopperRegId = shopperId,
-                    ProductId = productId,
-                    SkuId = skuId,
-                    BusRegId = product.BusRegId,
-                    BuscatId = product.BuscatId,
-                    ProdSubcatId = product.ProdSubcatId,
-                    CreatedAt = DateTime.UtcNow
-                };
+            if (exists)
+                return false;
 
-                _context.Wishlist.Add(newWishlistItem);
-            }
-            else
+            var newWishlistItem = new Wishlist
             {
-                return false; // ietm already on wishlist
-            }
+                ShopperRegId = shopperId,
+                ProductId = productId,
+                SkuId = skuId,
+                BusRegId = product.BusRegId,
+                BuscatId = (int)product.BusCatId,
+                ProdSubcatId = (int)product.ProdSubcatId,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            // 4️⃣ Remove from cart if exists
+            _context.Wishlist.Add(newWishlistItem);
+
             var cartItem = await _context.addtocart
                 .FirstOrDefaultAsync(c =>
                     c.ShopperRegId == shopperId &&
@@ -312,15 +222,12 @@ namespace mytown.DataAccess.Repositories
                     c.SkuId == skuId);
 
             if (cartItem != null)
-            {
                 _context.addtocart.Remove(cartItem);
-            }
 
             await _context.SaveChangesAsync();
 
-            return true; // true if added, false if already existed
+            return true;
         }
-
 
 
         public async Task<bool> MoveBackToCart(int cartId)
@@ -362,7 +269,7 @@ namespace mytown.DataAccess.Repositories
         {
             // Get cart items for this shopper where the order status is still "In Cart"
             var cartItems = await _context.addtocart
-                .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "In Cart")
+                .Where(c => c.ShopperRegId == shopperRegId && c.orderstatus == "cart")
                 .ToListAsync();
 
             if (!cartItems.Any()) return false; // No cart items to update
@@ -427,16 +334,16 @@ namespace mytown.DataAccess.Repositories
                 {
                     SkuId_Productvariant = v.SkuId,
                     ProductId = v.ProductId,
-                    Color = v.Color,
-                    SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
+                    //Color = v.Color,
+                    //SizeId = v.SizeId,
+                    //SizeName = v.Size != null ? v.Size.SizeName : null,
                     Sku_Cost = v.Sku_Cost,
                     DiscountPrice = v.DiscountPrice,
                     Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
-                    Weight = v.Weight,
+                    //Length = v.Length,
+                    //Width = v.Width,
+                    //Height = v.Height,
+                    //Weight = v.Weight,
                     Discount = v.Discount,
                     Images = v.Images
                         .OrderBy(i => i.SortOrder)

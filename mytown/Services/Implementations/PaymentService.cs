@@ -6,17 +6,27 @@ using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Stripe;
 using Stripe.Climate;
+using Razorpay.Api;
+using System.Security.Cryptography;
+using System.Text;
+
 
 namespace mytown.Services.Implementations
 {
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepo;
+        private readonly string _razorpayKeyId;
+        private readonly string _razorpayKeySecret;
 
         public PaymentService(IPaymentRepository paymentRepo, IConfiguration configuration)
         {
             _paymentRepo = paymentRepo;
             StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+
+            _razorpayKeyId = configuration["Razorpay:KeyId"];
+            _razorpayKeySecret = configuration["Razorpay:KeySecret"];
+
         }
 
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId)
@@ -44,7 +54,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = subTotal * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
@@ -83,11 +93,11 @@ namespace mytown.Services.Implementations
                 throw new Exception("Order not found");
 
             // verify stripe payment first (important)
-            //var service = new PaymentIntentService();
-            //var intent = await service.GetAsync(stripePaymentIntentId);
+            var service = new PaymentIntentService();
+            var intent = await service.GetAsync(stripePaymentIntentId);
 
-            //if (intent.Status != "succeeded")
-            //    throw new Exception("Payment not completed");
+            if (intent.Status != "succeeded")
+                throw new Exception("Payment not completed");
 
             // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 
@@ -103,7 +113,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = subTotal * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
@@ -117,18 +127,114 @@ namespace mytown.Services.Implementations
 
             order.OrderStatus = "Paid";
 
+            //  Update cart status after successful payment
+            await _paymentRepo.UpdateCartStatusAsync(orderId);
+
             return payment;
         }
 
+        //--------Razor Pay Payments--------------------//
+
+     
+
+    public async Task<RazorpayOrderResponseDto> CreateRazorpayOrderAsync(int orderId)
+    {
+        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+        if (order == null)
+            throw new Exception("Order not found");
+
+        if (order.OrderStatus == "Paid")
+            throw new Exception("Order already paid");
+
+        decimal orderAmount = order.TotalAmount;
+        decimal shippingTotal = order.ShippingDetails != null
+            ? order.ShippingDetails.Sum(s => s.Cost)
+            : 0;
+        decimal subTotal = orderAmount + shippingTotal;
+        decimal gstAmount = orderAmount * 0;// now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
+
+        // Razorpay also expects amount in paise
+        int amountInPaise = (int)(finalAmount * 100);
+
+        RazorpayClient client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+
+        Dictionary<string, object> options = new Dictionary<string, object>
+    {
+        { "amount", amountInPaise },
+        { "currency", "INR" },
+        { "receipt", $"order_rcpt_{orderId}" },
+        { "payment_capture", 1 } // auto-capture
+    };
+
+            Razorpay.Api.Order razorpayOrder = client.Order.Create(options);
+
+        return new RazorpayOrderResponseDto
+        {
+            RazorpayOrderId = razorpayOrder["id"].ToString(),
+            Amount = amountInPaise,
+            Currency = "INR",
+            KeyId = _razorpayKeyId  // frontend needs this to open checkout
+        };
+    }
+
+ 
+public async Task<Payments> AddRazorpayPaymentAsync(
+    int orderId,
+    string razorpayOrderId,
+    string razorpayPaymentId,
+    string razorpaySignature)
+    {
+        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+        if (order == null)
+            throw new Exception("Order not found");
+
+        // Check for replay/double processing
+        var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(razorpayPaymentId);
+        if (existingPayment != null)
+            throw new Exception("Payment has already been processed.");
+
+        // Verify signature: HMAC-SHA256 of "order_id|payment_id" using your Key Secret
+        string payload = $"{razorpayOrderId}|{razorpayPaymentId}";
+        string generatedSignature;
+
+        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
+        {
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
+        }
+
+        if (generatedSignature != razorpaySignature)
+            throw new Exception("Payment signature verification failed.");
+
+        decimal orderAmount = order.TotalAmount;
+        decimal shippingTotal = order.ShippingDetails != null
+            ? order.ShippingDetails.Sum(s => s.Cost)
+            : 0;
+        decimal subTotal = orderAmount + shippingTotal;
+        decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
+
+        var payment = await _paymentRepo.AddPaymentAsync(
+            orderId,
+            finalAmount,
+            "UPI", // or pass actual method from Razorpay response
+            razorpayPaymentId
+        );
+
+        order.OrderStatus = "Paid";
+        await _paymentRepo.UpdateCartStatusAsync(orderId);
+
+        return payment;
+    }
 
 
+    //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
+    //{
+    //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
+    //}
 
-        //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
-        //{
-        //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
-        //}
-
-        public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
+    public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
             return _paymentRepo.GetStoreDetailsByOrderId(orderId);
         }
@@ -174,7 +280,9 @@ public async Task ProcessPostPaymentAsync(int orderId)
             {
                 PlanId = shipping.TransporterPlanId ?? 0,
                 TransporterRegId = transporterRegId,
-                ShopperRegId     = storeOrder.Order.ShopperRegId,
+                ShopperRegId = storeOrder.Order.ShopperRegId,
+                GuestRegId = storeOrder.Order.GuestRegId,
+                IsGuestOrder = storeOrder.Order.IsGuestOrder,
                 OrderId          = orderId,
                 StoreOrderId     = shipping.StoreOrderId,
                 PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
@@ -196,15 +304,19 @@ public async Task ProcessPostPaymentAsync(int orderId)
         }
         else
         {
-            var courierId = await _paymentRepo.GetCourierIdByBranchIdAsync(shipping.BranchId);
+                    if (shipping.BranchId.HasValue)
+                    {
+                        var courierId = await _paymentRepo
+                            .GetCourierIdByBranchIdAsync(shipping.BranchId.Value);
 
-            await AddCourierNotificationAsync(
-                courierId: courierId,
-                branchId: shipping.BranchId,
-                title: "New Order Assigned",
-                message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
-            );
-        }
+                        await AddCourierNotificationAsync(
+                            courierId: courierId,
+                            branchId: shipping.BranchId.Value,
+                            title: "New Order Assigned",
+                            message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+                        );
+                    }
+                }
     }
 }
 

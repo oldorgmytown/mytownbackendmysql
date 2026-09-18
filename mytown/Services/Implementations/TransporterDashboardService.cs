@@ -1,7 +1,8 @@
+using Azure.Storage.Blobs;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
-using Azure.Storage.Blobs;
 
 namespace mytown.Services.Implementations
 {
@@ -30,9 +31,28 @@ namespace mytown.Services.Implementations
         public Task<bool> DeactivatePlanAsync(int planId, int transporterRegId)
             => _repo.DeactivatePlanAsync(planId, transporterRegId);
 
-        public Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
-            => _repo.SearchAvailableTransportersAsync(fromLocation, toLocation, travelDate);
+        public Task<List<AvailableTransporterDto>>
+SearchAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string startState,
+    string startCountry,
+
+    string destinationTown,
+    string destinationCity,
+    string destinationState,
+    string destinationCountry)
+
+
+=> _repo.SearchAvailableTransportersAsync(
+    startTown,
+    startCity,
+    startState,
+    startCountry,
+    destinationTown,
+    destinationCity,
+    destinationState,
+    destinationCountry);
 
         // Request is auto-assigned to the transporter linked to PlanId — no Accept step
         public async Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(
@@ -120,5 +140,74 @@ namespace mytown.Services.Implementations
 
         public async Task MarkEachNotificationReadAsync(int notificationId)
             => await _repo.MarkEachNotificationReadAsync(notificationId);
+
+        // packaged marked as Delivered
+
+       
+
+        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            return await _repo.MarkAsDeliveredAsync(storeOrderId);
+        }
+
+        // Service
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterDeliversSendersOrdersAsync(transporterRegId);
+        }
+
+        //update sendre orders - deliveries
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+           int senderOrderId,
+           int transporterRegId,
+           string deliveryStatus)
+        {
+            return await _repo.UpdateTransporterDeliveryStatusAsync(
+                senderOrderId,
+                transporterRegId,
+                deliveryStatus);
+        }
+
+        public async Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto)
+        {
+            var account = await _repo.GetTransporterAccountDetailByRegId(transRegId);
+
+            if (account == null)
+            {
+                // No existing record — create a new one
+                account = new TransporterAccountDetail
+                {
+                    TransporterRegId = transRegId,
+                    AccountHolderName = dto.AccountHolderName,
+                    BankName = dto.BankName,
+                    AccountNumber = dto.AccountNumber,
+                    IFSCCode = dto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddTransporterAccountDetails(account);
+                return true;
+            }
+
+            // Existing record — update it
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _repo.UpdateTransporterAccountDetails(account);
+            return true;
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId)
+        {
+            return await _repo.GetTransporterAccountDetailByRegId(transRegId);
+        }
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
+        }
     }
 }
