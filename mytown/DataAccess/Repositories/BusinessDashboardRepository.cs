@@ -1308,6 +1308,26 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             })
             .FirstOrDefaultAsync();
     }
+
+    public async Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId)
+    {
+        return await _context.StoreOrders
+            .Where(so => so.StoreId == busRegId)
+            .Join(_context.StorePayouts,
+                so => so.StoreOrderId,
+                sp => sp.StoreOrderId,
+                (so, sp) => new StorePayoutDashboardDto
+                {
+                    StoreOrderId = so.StoreOrderId,
+                    Amount = sp.Amount,
+                    Status = sp.Status,
+                    TransferUtr = sp.TransferUtr,
+                    CreatedDate = sp.CreatedDate,
+                    UpdatedDate = sp.UpdatedDate
+                })
+            .OrderByDescending(x => x.CreatedDate)
+            .ToListAsync();
+    }
 }
 
 
