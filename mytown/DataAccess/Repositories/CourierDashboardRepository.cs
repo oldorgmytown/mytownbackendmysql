@@ -654,5 +654,22 @@ namespace mytown.DataAccess.Repositories
                 })
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<List<CourierPayoutDashboardDto>> GetCourierPayoutsByCourierIdAsync(int courierId)
+        {
+            return await _context.CourierPayouts
+                .Where(cp => cp.CourierId == courierId)
+                .Select(cp => new CourierPayoutDashboardDto
+                {
+                    StoreOrderId = cp.StoreOrderId,
+                    Amount = cp.Amount,
+                    Status = cp.Status,
+                    TransferUtr = cp.TransferUtr,
+                    CreatedDate = cp.CreatedDate,
+                    UpdatedDate = cp.UpdatedDate
+                })
+                .OrderByDescending(x => x.CreatedDate)
+                .ToListAsync();
+        }
     }
 }

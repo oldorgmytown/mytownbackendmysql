@@ -988,5 +988,27 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             _context.TransporterAccountDetails.Update(accountDetail);
             await _context.SaveChangesAsync();
         }
+        //get payouts on dashboard by transporter reg id
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await _context.TransporterPayouts
+                .Join(_context.ShippingDetails,
+                    tp => tp.StoreOrderId,
+                    sd => sd.StoreOrderId,
+                    (tp, sd) => new { tp, sd })
+                .Where(x => x.sd.TransporterRegId == transporterRegId)
+                .Select(x => new TransporterPayoutDashboardDto
+                {
+                    StoreOrderId = x.tp.StoreOrderId,
+                    Amount = x.tp.Amount,
+                    Status = x.tp.Status,
+                    TransferUtr = x.tp.TransferUtr,
+                    CreatedDate = x.tp.CreatedDate,
+                    UpdatedDate = x.tp.UpdatedDate
+                })
+                .OrderByDescending(x => x.CreatedDate)
+                .ToListAsync();
+        }
     }
 }

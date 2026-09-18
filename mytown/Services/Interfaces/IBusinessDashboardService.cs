@@ -80,6 +80,7 @@ namespace mytown.Services.Interfaces
         //edit bankdetails
         Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
         Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
+        Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId);
 
     }
 }

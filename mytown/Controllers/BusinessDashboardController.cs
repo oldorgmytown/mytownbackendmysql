@@ -351,6 +351,16 @@ namespace mytown.Controllers
 
             return Ok(account);
         }
+
+        
+
+        [HttpGet("business-payouts/{busRegId}")]
+        public async Task<IActionResult> GetBusinessPayouts(int busRegId)
+        {
+            var payouts = await _dasboardservice.GetStorePayoutsByBusRegIdAsync(busRegId);
+
+            return Ok(payouts); // empty list if none — that's a valid, expected state, not an error
+        }
     }
 
 

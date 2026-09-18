@@ -70,5 +70,8 @@ namespace mytown.Services.Interfaces
         Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto);
         Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId);
 
+        Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
+
+
     }
 }

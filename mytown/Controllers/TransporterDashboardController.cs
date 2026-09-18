@@ -388,5 +388,14 @@ namespace mytown.Controllers
 
             return Ok(account);
         }
+
+        // get payouts on dasboard 
+        [HttpGet("transporter-payouts/{transporterRegId}")]
+        public async Task<IActionResult> GetTransporterPayouts(int transporterRegId)
+        {
+            var payouts = await _service.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
+
+            return Ok(payouts); // empty list if none, same as business — not an error state
+        }
     }
 }

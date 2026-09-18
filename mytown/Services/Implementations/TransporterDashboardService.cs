@@ -204,5 +204,10 @@ SearchAvailableTransportersAsync(
         {
             return await _repo.GetTransporterAccountDetailByRegId(transRegId);
         }
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
+        }
     }
 }
