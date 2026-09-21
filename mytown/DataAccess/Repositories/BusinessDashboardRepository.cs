@@ -1311,22 +1311,26 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
     public async Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId)
     {
-        return await _context.StoreOrders
-            .Where(so => so.StoreId == busRegId)
-            .Join(_context.StorePayouts,
-                so => so.StoreOrderId,
-                sp => sp.StoreOrderId,
-                (so, sp) => new StorePayoutDashboardDto
-                {
-                    StoreOrderId = so.StoreOrderId,
-                    Amount = sp.Amount,
-                    Status = sp.Status,
-                    TransferUtr = sp.TransferUtr,
-                    CreatedDate = sp.CreatedDate,
-                    UpdatedDate = sp.UpdatedDate
-                })
-            .OrderByDescending(x => x.CreatedDate)
-            .ToListAsync();
+        return await (
+            from so in _context.StoreOrders
+            join sp in _context.StorePayouts on so.StoreOrderId equals sp.StoreOrderId
+            join bad in _context.BusinessAccountDetails on so.StoreId equals bad.BusRegId
+            where so.StoreId == busRegId
+            select new StorePayoutDashboardDto
+            {
+                StoreOrderId = so.StoreOrderId,
+                Amount = sp.Amount,
+                Status = sp.Status,
+                Bankname = bad.BankName,
+                AccountNumber = bad.AccountNumber,
+                CF_TransferId = sp.CfTransferId ?? "",
+                TransferUtr = sp.TransferUtr,
+                CreatedDate = sp.CreatedDate,
+                UpdatedDate = sp.UpdatedDate
+            }
+        )
+        .OrderByDescending(x => x.CreatedDate)
+        .ToListAsync();
     }
 }
 

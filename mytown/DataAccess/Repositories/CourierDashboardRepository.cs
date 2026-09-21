@@ -657,19 +657,25 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<List<CourierPayoutDashboardDto>> GetCourierPayoutsByCourierIdAsync(int courierId)
         {
-            return await _context.CourierPayouts
-                .Where(cp => cp.CourierId == courierId)
-                .Select(cp => new CourierPayoutDashboardDto
+            return await (
+                from cp in _context.CourierPayouts
+                join cad in _context.CourierAccountDetails on cp.CourierId equals cad.CourierId
+                where cp.CourierId == courierId
+                select new CourierPayoutDashboardDto
                 {
                     StoreOrderId = cp.StoreOrderId,
                     Amount = cp.Amount,
                     Status = cp.Status,
+                    Bankname = cad.BankName,
+                    AccountNumber = cad.AccountNumber,
+                    CF_TransferId = cp.CfTransferId ?? "",
                     TransferUtr = cp.TransferUtr,
                     CreatedDate = cp.CreatedDate,
                     UpdatedDate = cp.UpdatedDate
-                })
-                .OrderByDescending(x => x.CreatedDate)
-                .ToListAsync();
+                }
+            )
+            .OrderByDescending(x => x.CreatedDate)
+            .ToListAsync();
         }
     }
 }
