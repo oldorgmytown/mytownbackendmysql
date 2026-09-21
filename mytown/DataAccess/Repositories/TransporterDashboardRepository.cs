@@ -992,23 +992,25 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
         public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
         {
-            return await _context.TransporterPayouts
-                .Join(_context.ShippingDetails,
-                    tp => tp.StoreOrderId,
-                    sd => sd.StoreOrderId,
-                    (tp, sd) => new { tp, sd })
-                .Where(x => x.sd.TransporterRegId == transporterRegId)
-                .Select(x => new TransporterPayoutDashboardDto
+            return await (
+                from tp in _context.TransporterPayouts
+                join tad in _context.TransporterAccountDetails on tp.TransporterRegId equals tad.TransporterRegId
+                where tp.TransporterRegId == transporterRegId
+                select new TransporterPayoutDashboardDto
                 {
-                    StoreOrderId = x.tp.StoreOrderId,
-                    Amount = x.tp.Amount,
-                    Status = x.tp.Status,
-                    TransferUtr = x.tp.TransferUtr,
-                    CreatedDate = x.tp.CreatedDate,
-                    UpdatedDate = x.tp.UpdatedDate
-                })
-                .OrderByDescending(x => x.CreatedDate)
-                .ToListAsync();
+                    StoreOrderId = tp.StoreOrderId,
+                    Amount = tp.Amount,
+                    Status = tp.Status,
+                    Bankname = tad.BankName,
+                    AccountNumber = tad.AccountNumber,
+                    CF_TransferId = tp.CfTransferId ?? tp.TransferId,
+                    TransferUtr = tp.TransferUtr,
+                    CreatedDate = tp.CreatedDate,
+                    UpdatedDate = tp.UpdatedDate
+                }
+            )
+            .OrderByDescending(x => x.CreatedDate)
+            .ToListAsync();
         }
     }
 }
