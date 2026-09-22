@@ -1,5 +1,6 @@
 ﻿namespace mytown.Models.DTO_s
 {
+    //push to prod
     public class TransporterRegisterDto
     {
         public int TransporterId { get; set; }
