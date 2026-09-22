@@ -7,14 +7,14 @@ using mytown.Services.Interfaces;
 using System.Text;
 using System.Text.Json;
 
-public class CourierPayoutService : ICourierPayoutService
+public class TransporterPayoutService : ITransporterPayoutService
 {
-    private readonly ICourierPayoutRepository _repository;
+    private readonly ITransporterPayoutRepository _repository;
     private readonly HttpClient _httpClient;
     private readonly IConfiguration _configuration;
 
-    public CourierPayoutService(
-        ICourierPayoutRepository repository,
+    public TransporterPayoutService(
+        ITransporterPayoutRepository repository,
         HttpClient httpClient,
         IConfiguration configuration)
     {
@@ -43,16 +43,16 @@ public class CourierPayoutService : ICourierPayoutService
             };
         }
 
-        // 2. Get courier + beneficiary + amount
+        // 2. Get transporter + beneficiary + amount
         var payoutDetails =
-            await _repository.GetCourierPayoutDetailsAsync(storeOrderId);
+            await _repository.GetTransporterPayoutDetailsAsync(storeOrderId);
 
         if (payoutDetails == null)
         {
             return new TriggerPayoutResponseDto
             {
                 Success = false,
-                Message = "Courier payout details not found."
+                Message = "Transporter payout details not found."
             };
         }
 
@@ -62,7 +62,7 @@ public class CourierPayoutService : ICourierPayoutService
             return new TriggerPayoutResponseDto
             {
                 Success = false,
-                Message = "Cashfree beneficiary is not configured for this courier."
+                Message = "Cashfree beneficiary is not configured for this transporter."
             };
         }
 
@@ -72,18 +72,18 @@ public class CourierPayoutService : ICourierPayoutService
             return new TriggerPayoutResponseDto
             {
                 Success = false,
-                Message = "Invalid courier payout amount."
+                Message = "Invalid transporter payout amount."
             };
         }
 
         // 5. Create unique transfer ID
-        var transferId = $"MYTOWN_COURIER_ORDER_{storeOrderId}";
+        var transferId = $"MYTOWN_TRANSPORTER_ORDER_{storeOrderId}";
 
         // 6. Create payout record BEFORE calling Cashfree
-        var payout = new CourierPayout
+        var payout = new TransporterPayout
         {
             StoreOrderId = storeOrderId,
-            CourierId = payoutDetails.CourierId,
+            TransporterRegId = payoutDetails.TransporterRegId,
             BeneficiaryId = payoutDetails.BeneficiaryId,
             Amount = payoutDetails.Amount,
             TransferId = transferId,
@@ -101,6 +101,7 @@ public class CourierPayoutService : ICourierPayoutService
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
             var baseUrl = _configuration["CashfreePayout:BaseUrl"];
             var apiVersion = _configuration["CashfreePayout:ApiVersion"];
+            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
             // 8. Cashfree payout request
             var payload = new
@@ -109,7 +110,7 @@ public class CourierPayoutService : ICourierPayoutService
                 transfer_amount = payoutDetails.Amount,
                 transfer_mode = "banktransfer",
                 transfer_remarks =
-                    $"Courier payout for Store Order {storeOrderId}",
+                    $"Transporter payout for Store Order {storeOrderId}",
                 beneficiary_details = new
                 {
                     beneficiary_id = payoutDetails.BeneficiaryId
@@ -125,9 +126,10 @@ public class CourierPayoutService : ICourierPayoutService
             request.Headers.Add("x-client-id", clientId);
             request.Headers.Add("x-client-secret", clientSecret);
             request.Headers.Add("x-api-version", apiVersion);
+
             request.Headers.Add(
-               "x-cf-signature",
-               CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
+                "x-cf-signature",
+                CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
 
             request.Content = new StringContent(
                 json,

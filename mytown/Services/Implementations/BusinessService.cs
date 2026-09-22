@@ -2,6 +2,7 @@
 using mytown.DataAccess;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -146,6 +147,8 @@ namespace mytown.Services
         {
             var clientId = _configuration["CashfreePayout:ClientId"];
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
+            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+           // var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
             // default the beneficiary ID if the caller didn't supply one
             if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
@@ -170,6 +173,8 @@ namespace mytown.Services
                 }
             };
 
+          
+
             var json = JsonSerializer.Serialize(payload);
 
             using var httpRequest = new HttpRequestMessage(
@@ -180,6 +185,12 @@ namespace mytown.Services
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add("x-api-version", "2024-01-01");
             httpRequest.Headers.Add("x-request-id", Guid.NewGuid().ToString());
+
+
+            httpRequest.Headers.Add(
+           "x-cf-signature",
+           CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+
 
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
 

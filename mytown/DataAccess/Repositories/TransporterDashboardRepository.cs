@@ -846,11 +846,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             await _context.SaveChangesAsync();
 
             // Trigger transporter payout
-            if (shipping.TransporterRegId.HasValue)
-            {
-              //  await _storePayoutRepository.CreateTransporterPayoutAsync(storeOrderId);
-            }
-
+           
 
             return "Delivery marked as completed";
 

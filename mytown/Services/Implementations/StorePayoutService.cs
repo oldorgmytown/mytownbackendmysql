@@ -1,9 +1,10 @@
-﻿using System.Text;
-using System.Text.Json;
-using mytown.DTOs;
+﻿using mytown.DTOs;
 using mytown.Enums;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using System.Text;
+using System.Text.Json;
 
 public class StorePayoutService : IStorePayoutService
 {
@@ -86,6 +87,7 @@ public class StorePayoutService : IStorePayoutService
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
             var baseUrl = _configuration["CashfreePayout:BaseUrl"];
             var apiVersion = _configuration["CashfreePayout:ApiVersion"];
+            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
             var payload = new
             {
@@ -106,6 +108,10 @@ public class StorePayoutService : IStorePayoutService
             request.Headers.Add("x-client-id", clientId);
             request.Headers.Add("x-client-secret", clientSecret);
             request.Headers.Add("x-api-version", apiVersion);
+            request.Headers.Add(
+               "x-cf-signature",
+               CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+
 
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
