@@ -95,6 +95,7 @@ public class Startup
         services.AddScoped<IStorePayoutService, StorePayoutService>();
         services.AddScoped<ICourierPayoutRepository, CourierPayoutRepository>();
         services.AddScoped<ICourierPayoutService, CourierPayoutService>();
+        services.AddScoped<ITransporterPayoutRepository, TransporterPayoutRepository>();
 
 
 
@@ -128,7 +129,8 @@ public class Startup
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IConnectionsService, ConnectionsService>();
         services.AddScoped<IMobileAppService, MobileAppService>();
-       
+        services.AddScoped<ITransporterPayoutService, TransporterPayoutService>();
+
 
         services.AddSingleton<ConnectionManager>();
         services.AddHostedService<mytown.Services.Implementations.ChatCleanupBackgroundService>();
