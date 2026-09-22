@@ -17,5 +17,11 @@
         public string? Status { get; set; }
          public bool IsEmailVerified { get; set; }
          public DateTime TransporterRegDate { get; set; }
+        // Bank Account Details
+        public string AccountHolderName { get; set; }
+        public string BankName { get; set; }
+        public string AccountNumber { get; set; }
+        public string IFSCCode { get; set; }
+        public bool IsTermsAccepted { get; set; }
     }
 }
