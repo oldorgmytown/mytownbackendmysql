@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-//push
+//push to prod
 namespace mytown.Models
 {
     [Table("transporter_account_details")]
