@@ -5,6 +5,7 @@ using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
 using Stripe;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using static mytown.Models.busprofilepreview;
@@ -247,6 +248,7 @@ namespace mytown.DataAccess.Repositories
         {
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
+            var signatureClientId = _configuration["CashfreeVerification:SignatureClientId"]; // the ID the public key was generated for
 
             var baseUrl = _configuration["Cashfree:BaseUrl"];
 
@@ -257,6 +259,7 @@ namespace mytown.DataAccess.Repositories
             //var url =
             //    "https://sandbox.cashfree.com/verification/bank-account/sync";
 
+
             var payload = new
             {
                 bank_account = request.AccountNumber,
@@ -265,13 +268,10 @@ namespace mytown.DataAccess.Repositories
 
             var json = JsonSerializer.Serialize(payload);
 
-            //using var httpRequest = new HttpRequestMessage(
-            //    HttpMethod.Post,
-            //    url);
 
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
-
+            httpRequest.Headers.Add("x-cf-signature", GetSignature(signatureClientId)); // generated fresh, right before sending
             httpRequest.Content = new StringContent(
                 json,
                 Encoding.UTF8,
@@ -322,6 +322,28 @@ namespace mytown.DataAccess.Repositories
                 BankName = bankName,
                 Message = "Bank account verified successfully."
             };
+        }
+
+
+        // get signature
+
+        private string GetSignature(string clientId)
+        {
+            string pem = _configuration["CashfreePublicKey"];
+
+            if (string.IsNullOrWhiteSpace(pem))
+                throw new InvalidOperationException("Cashfree public key not configured.");
+
+            using RSA rsa = RSA.Create();
+            rsa.ImportFromPem(pem.ToCharArray());
+
+            long unixTimestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            string encodedData = $"{clientId}.{unixTimestamp}";
+
+            byte[] dataBytes = Encoding.UTF8.GetBytes(encodedData);
+            byte[] encrypted = rsa.Encrypt(dataBytes, RSAEncryptionPadding.OaepSHA1);
+
+            return Convert.ToBase64String(encrypted);
         }
 
         //for adding account details as benificary 

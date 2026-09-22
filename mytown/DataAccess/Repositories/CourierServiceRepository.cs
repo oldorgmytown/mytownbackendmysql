@@ -1004,6 +1004,17 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
-     
+        public async Task<CourierAccountDetail?> GetCourierAccountDetailByCourierId(int courierId)
+        {
+            return await _context.CourierAccountDetails
+                .FirstOrDefaultAsync(c => c.CourierId == courierId);
+        }
+
+        public async Task UpdateCourierAccountDetails(CourierAccountDetail accountDetail)
+        {
+            accountDetail.CreatedDate = DateTime.UtcNow;
+            _context.CourierAccountDetails.Update(accountDetail);
+            await _context.SaveChangesAsync();
+        }
     }
 }

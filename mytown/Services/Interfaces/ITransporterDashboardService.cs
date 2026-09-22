@@ -63,6 +63,15 @@ namespace mytown.Services.Interfaces
             int senderOrderId,
             int transporterRegId,
             string deliveryStatus);
+
        
+
+        // Dashboard: update / get bank account details
+        Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto);
+        Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId);
+
+        Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
+
+
     }
 }

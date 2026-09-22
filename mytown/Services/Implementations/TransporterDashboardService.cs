@@ -3,6 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 
 namespace mytown.Services.Implementations
 {
@@ -148,6 +149,10 @@ SearchAvailableTransportersAsync(
         public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
         {
             return await _repo.MarkAsDeliveredAsync(storeOrderId);
+           
+           //  return await _.CreateTransporterPayoutAsync(storeOrderId);
+            
+
         }
 
         // Service
@@ -166,6 +171,48 @@ SearchAvailableTransportersAsync(
                 senderOrderId,
                 transporterRegId,
                 deliveryStatus);
+        }
+
+        public async Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto)
+        {
+            var account = await _repo.GetTransporterAccountDetailByRegId(transRegId);
+
+            if (account == null)
+            {
+                // No existing record — create a new one
+                account = new TransporterAccountDetail
+                {
+                    TransporterRegId = transRegId,
+                    AccountHolderName = dto.AccountHolderName,
+                    BankName = dto.BankName,
+                    AccountNumber = dto.AccountNumber,
+                    IFSCCode = dto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddTransporterAccountDetails(account);
+                return true;
+            }
+
+            // Existing record — update it
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _repo.UpdateTransporterAccountDetails(account);
+            return true;
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId)
+        {
+            return await _repo.GetTransporterAccountDetailByRegId(transRegId);
+        }
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
         }
     }
 }

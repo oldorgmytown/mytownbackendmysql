@@ -325,6 +325,13 @@ namespace mytown.Controllers
             return Ok(account);
         }
 
+        [HttpGet("courier-payouts/{courierId}")]
+        public async Task<IActionResult> GetCourierPayouts(int courierId)
+        {
+            var payouts = await _courierService.GetCourierPayoutsByCourierIdAsync(courierId);
+            return Ok(payouts);
+        }
+
     }
 
 }

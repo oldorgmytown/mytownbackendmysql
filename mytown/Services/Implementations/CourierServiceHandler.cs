@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Globalization;
+using System.Text;
 using System.Text.Json;
 
 namespace mytown.Services.Implementations
@@ -16,19 +19,21 @@ namespace mytown.Services.Implementations
         private readonly IVerificationLinkBuildercourier _verificationLinkBuilder;
         private readonly IConfiguration _configuration;
         private readonly ILogger<CourierService> _logger;
-        
+        private readonly HttpClient _httpClient;
+
         public CourierServiceHandler(
             ICourierServiceRepository repo,
             IEmailService emailService,
             IVerificationLinkBuildercourier verificationLinkBuilder,
             IConfiguration configuration,
-            ILogger<CourierService> logger)
+            ILogger<CourierService> logger, HttpClient httpClient)
         {
             _repo = repo;
             _emailService = emailService;
             _verificationLinkBuilder = verificationLinkBuilder;
             _configuration = configuration;
             _logger = logger;
+            _httpClient = httpClient;
         }
 
         public async Task<bool> IsCourierEmailTakenAsync(string email)
@@ -161,10 +166,30 @@ namespace mytown.Services.Implementations
                 CreatedDate = DateTime.UtcNow
             };
 
-            await _repo.SaveCourierAccountDetails(bank);
-            await _repo.DeletePendingCourierVerification(token);
+            // --- Cashfree beneficiary creation (non-blocking) ---
+try
+{
+    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequestCourier
+    {
+        CourierId = created.CourierId,
+        BeneficiaryName = bank.AccountHolderName,
+        BankAccountNumber = bank.AccountNumber,
+        BankIfsc = bank.IFSCCode
+    };
 
-            return created;
+    await CreateBeneficiaryAsync(beneficiaryRequest);
+}
+catch (Exception cfEx)
+{
+    _logger.LogError(cfEx,
+        "Cashfree beneficiary creation failed for CourierId {CourierId}. Will retry later.",
+        created.CourierId);
+}
+// --- end beneficiary block ---
+
+await _repo.DeletePendingCourierVerification(token);
+
+return created;
         }
 
         public async Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email)
@@ -428,6 +453,72 @@ namespace mytown.Services.Implementations
                 : null;
 
             return response;
+        }
+
+        public async Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(CreateCashfreeBeneficiaryRequestCourier request)
+        {
+            var clientId = _configuration["CashfreePayout:ClientId"];
+            var clientSecret = _configuration["CashfreePayout:ClientSecret"];
+            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
+            // Falls back to clientId if CashfreePayout:SignatureClientId isn't set -
+            
+            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+
+            if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
+                request.BeneficiaryId = $"COUR_{request.CourierId}";
+
+            var payload = new
+            {
+                beneficiary_id = request.BeneficiaryId,
+                beneficiary_name = request.BeneficiaryName,
+                beneficiary_instrument_details = new
+                {
+                    bank_account_number = request.BankAccountNumber,
+                    bank_ifsc = request.BankIfsc
+                },
+                beneficiary_contact_details = new
+                {
+                    beneficiary_email = request.BeneficiaryEmail,
+                    beneficiary_phone = request.BeneficiaryPhone,
+                    beneficiary_country_code = request.BeneficiaryCountryCode
+                }
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/beneficiary");
+            httpRequest.Headers.Add("x-client-id", clientId);
+            httpRequest.Headers.Add("x-client-secret", clientSecret);
+            httpRequest.Headers.Add("x-api-version", "2024-01-01");
+            httpRequest.Headers.Add("x-request-id", Guid.NewGuid().ToString());
+            httpRequest.Headers.Add(
+    "x-cf-signature",
+    CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+            httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Creating beneficiary failed. Status: {response.StatusCode}, Response: {responseContent}");
+
+            var cfResponse = JsonSerializer.Deserialize<CashfreeBeneficiaryResponse>(responseContent,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            var accountDetail = await _repo.GetCourierAccountDetailByCourierId(request.CourierId);
+            if (accountDetail != null)
+            {
+                accountDetail.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                accountDetail.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                accountDetail.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+                await _repo.UpdateCourierAccountDetails(accountDetail);
+            }
+            else
+            {
+                _logger.LogWarning("Beneficiary created on Cashfree but no CourierAccountDetail found for CourierId {CourierId}", request.CourierId);
+            }
+
+            return cfResponse;
         }
     }
 }

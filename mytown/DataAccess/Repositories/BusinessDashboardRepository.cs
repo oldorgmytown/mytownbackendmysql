@@ -1308,6 +1308,30 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             })
             .FirstOrDefaultAsync();
     }
+
+    public async Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId)
+    {
+        return await (
+            from so in _context.StoreOrders
+            join sp in _context.StorePayouts on so.StoreOrderId equals sp.StoreOrderId
+            join bad in _context.BusinessAccountDetails on so.StoreId equals bad.BusRegId
+            where so.StoreId == busRegId
+            select new StorePayoutDashboardDto
+            {
+                StoreOrderId = so.StoreOrderId,
+                Amount = sp.Amount,
+                Status = sp.Status,
+                Bankname = bad.BankName,
+                AccountNumber = bad.AccountNumber,
+                CF_TransferId = sp.CfTransferId ?? "",
+                TransferUtr = sp.TransferUtr,
+                CreatedDate = sp.CreatedDate,
+                UpdatedDate = sp.UpdatedDate
+            }
+        )
+        .OrderByDescending(x => x.CreatedDate)
+        .ToListAsync();
+    }
 }
 
 

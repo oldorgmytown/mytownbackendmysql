@@ -109,6 +109,7 @@ namespace mytown.Models
             public DbSet<ShopperExperienceComment> ShopperExperienceComments { get; set; }
             public DbSet<BusinessProfileViewer> BusinessProfileViewers { get; set; }
             public DbSet<BusinessConnection> BusinessConnections { get; set; }
+            public DbSet<ChatMessage> ChatMessages { get; set; }
 
             // location images
             public DbSet<LocationImage> LocationImages { get; set; }
@@ -153,6 +154,12 @@ namespace mytown.Models
                     .WithMany(p => p.Images)
                     .HasForeignKey(pi => pi.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
+
+                modelBuilder.Entity<ChatMessage>()
+                    .HasIndex(m => new { m.SenderUserId, m.SenderType, m.ReceiverUserId, m.ReceiverType });
+
+                modelBuilder.Entity<ChatMessage>()
+                    .HasIndex(m => m.SentTime);
 
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {

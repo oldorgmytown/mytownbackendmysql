@@ -959,5 +959,48 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 .TransporterDBNotifications
                 .AddAsync(notification);
         }
+
+        public async Task AddTransporterAccountDetails(TransporterAccountDetail accountDetail)
+        {
+            await _context.TransporterAccountDetails.AddAsync(accountDetail);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId)
+        {
+            return await _context.TransporterAccountDetails
+                .FirstOrDefaultAsync(t => t.TransporterRegId == transRegId);
+        }
+
+        public async Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail)
+        {
+            accountDetail.UpdatedDate = DateTime.UtcNow;
+            _context.TransporterAccountDetails.Update(accountDetail);
+            await _context.SaveChangesAsync();
+        }
+        //get payouts on dashboard by transporter reg id
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await (
+                from tp in _context.TransporterPayouts
+                join tad in _context.TransporterAccountDetails on tp.TransporterRegId equals tad.TransporterRegId
+                where tp.TransporterRegId == transporterRegId
+                select new TransporterPayoutDashboardDto
+                {
+                    StoreOrderId = tp.StoreOrderId,
+                    Amount = tp.Amount,
+                    Status = tp.Status,
+                    Bankname = tad.BankName,
+                    AccountNumber = tad.AccountNumber,
+                    CF_TransferId = tp.CfTransferId ?? tp.TransferId,
+                    TransferUtr = tp.TransferUtr,
+                    CreatedDate = tp.CreatedDate,
+                    UpdatedDate = tp.UpdatedDate
+                }
+            )
+            .OrderByDescending(x => x.CreatedDate)
+            .ToListAsync();
+        }
     }
 }

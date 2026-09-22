@@ -75,4 +75,7 @@ public interface ICourierServiceRepository
         string shopperState,
         string shopperCountry);
 
+    Task<CourierAccountDetail?> GetCourierAccountDetailByCourierId(int courierId);
+    Task UpdateCourierAccountDetails(CourierAccountDetail accountDetail);
+
 }

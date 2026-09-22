@@ -279,5 +279,10 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetCourierAccountDetailsByCourierIdAsync(courierId);
         }
+
+        public async Task<List<CourierPayoutDashboardDto>> GetCourierPayoutsByCourierIdAsync(int courierId)
+        {
+            return await _repository.GetCourierPayoutsByCourierIdAsync(courierId);
+        }
     }
 }

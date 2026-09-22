@@ -329,6 +329,10 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
         }
+        public async Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId)
+        {
+            return await _repository.GetStorePayoutsByBusRegIdAsync(busRegId);
+        }
     }
 
     }

@@ -70,5 +70,11 @@ namespace mytown.DataAccess.Interfaces
           int senderOrderId,
           int transporterRegId,
           string deliveryStatus);
+
+        Task AddTransporterAccountDetails(TransporterAccountDetail accountDetail);
+
+        Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId);
+        Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail);
+        Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
     }
 }

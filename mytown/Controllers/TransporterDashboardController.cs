@@ -12,13 +12,15 @@ namespace mytown.Controllers
     {
         private readonly ITransporterDashboardService _service;
         private readonly ILogger<TransporterDashboardController> _logger;
+        private readonly ITransporterPayoutService _transporterPayoutService;
 
         public TransporterDashboardController(
             ITransporterDashboardService service,
-            ILogger<TransporterDashboardController> logger)
+            ILogger<TransporterDashboardController> logger, ITransporterPayoutService transporterPayoutService)
         {
             _service = service;
             _logger = logger;
+            _transporterPayoutService = transporterPayoutService;
         }
 
         // =========================================================
@@ -289,6 +291,25 @@ namespace mytown.Controllers
             try
             {
                 var result = await _service.MarkAsDeliveredAsync(storeOrderId);
+
+                try
+                {
+                    var payoutResult = await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
+
+                    if (!payoutResult.Success)
+                    {
+                        _logger.LogWarning(
+                            "Transporter payout failed for StoreOrderId {StoreOrderId}: {Message}",
+                            storeOrderId, payoutResult.Message);
+                    }
+                }
+                catch (Exception payoutEx)
+                {
+                    _logger.LogError(payoutEx,
+                        "Transporter payout threw an exception for StoreOrderId {StoreOrderId}",
+                        storeOrderId);
+                }
+
                 return Ok(new { message = result });
             }
             catch (Exception ex)
@@ -344,6 +365,58 @@ namespace mytown.Controllers
                     message = ex.Message
                 });
             }
+        }
+
+        [HttpPut("update-transporter-account/{transRegId}")]
+        public async Task<IActionResult> UpdateTransporterAccount(
+    int transRegId,
+    [FromBody] UpdateTransporterAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _service.UpdateTransporterAccountDetailsAsync(transRegId, dto);
+
+                if (!updated)
+                {
+                    return NotFound(new
+                    {
+                        message = "Transporter account details not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Transporter account details updated successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
+        // get transporter account details by transRegId
+        [HttpGet("gettransporter-bankaccount/{transRegId}")]
+        public async Task<IActionResult> GetTransporterAccountDetails(int transRegId)
+        {
+            var account = await _service.GetTransporterAccountDetailsByTransRegIdAsync(transRegId);
+
+            if (account == null)
+                return NotFound(new { message = "Transporter account details not found." });
+
+            return Ok(account);
+        }
+
+        // get payouts on dasboard 
+        [HttpGet("transporter-payouts/{transporterRegId}")]
+        public async Task<IActionResult> GetTransporterPayouts(int transporterRegId)
+        {
+            var payouts = await _service.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
+
+            return Ok(payouts); // empty list if none, same as business — not an error state
         }
     }
 }

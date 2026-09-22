@@ -90,6 +90,11 @@ public class Startup
         services.AddScoped<IProductsNewRepository, ProductsNewRepository>(); 
 
         services.AddScoped<IProductsNewService, ProductsNewService>();
+        services.AddScoped<IStorePayoutRepository, StorePayoutRepository>();
+        services.AddScoped<IStorePayoutService, StorePayoutService>();
+        services.AddScoped<ICourierPayoutRepository, CourierPayoutRepository>();
+        services.AddScoped<ICourierPayoutService, CourierPayoutService>();
+        services.AddScoped<ITransporterPayoutRepository, TransporterPayoutRepository>();
 
 
 
@@ -123,8 +128,16 @@ public class Startup
         services.AddScoped<IGuestService, GuestService>();
         services.AddScoped<IConnectionsService, ConnectionsService>();
         services.AddScoped<IMobileAppService, MobileAppService>();
+        services.AddScoped<ITransporterPayoutService, TransporterPayoutService>();
+
 
         services.AddSingleton<ConnectionManager>();
+        services.AddHostedService<mytown.Services.Implementations.ChatCleanupBackgroundService>();
+
+        services.Configure<CashfreePayoutOptions>(
+    Configuration.GetSection("CashfreePayout"));
+
+        services.AddHttpClient("CashfreePayout");
     }
 
     private void RegisterControllersAndSwagger(IServiceCollection services)
@@ -199,7 +212,8 @@ public class Startup
                     return false;
                 })
                 .AllowAnyMethod()
-                .AllowAnyHeader();
+                .AllowAnyHeader()
+                .AllowCredentials();
             });
         });
     }
@@ -276,7 +290,7 @@ public class Startup
         app.UseEndpoints(endpoints =>
         {
             endpoints.MapControllers();
-          //  endpoints.MapHub<ChatHub>("/chatHub");
+            endpoints.MapHub<ChatHub>("/chatHub");
         });
 
         LogServerAddresses(app, logger);

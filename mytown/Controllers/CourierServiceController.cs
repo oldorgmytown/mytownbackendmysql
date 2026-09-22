@@ -254,5 +254,26 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        [HttpPost("create-beneficiary")]
+        public async Task<IActionResult> CreateBeneficiary([FromBody] CreateCashfreeBeneficiaryRequestCourier request)
+        {
+            try
+            {
+                var result = await _courierService.CreateBeneficiaryAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    beneficiaryId = result.BeneficiaryId,
+                    beneficiaryName = result.BeneficiaryName,
+                    status = result.BeneficiaryStatus
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating Cashfree beneficiary for courier");
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }
