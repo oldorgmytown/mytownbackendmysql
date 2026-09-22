@@ -3,6 +3,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 
 namespace mytown.Services.Implementations
 {
@@ -148,6 +149,10 @@ SearchAvailableTransportersAsync(
         public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
         {
             return await _repo.MarkAsDeliveredAsync(storeOrderId);
+           
+           //  return await _.CreateTransporterPayoutAsync(storeOrderId);
+            
+
         }
 
         // Service

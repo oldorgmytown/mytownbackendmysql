@@ -12,13 +12,15 @@ namespace mytown.Controllers
     {
         private readonly ITransporterDashboardService _service;
         private readonly ILogger<TransporterDashboardController> _logger;
+        private readonly ITransporterPayoutService _transporterPayoutService;
 
         public TransporterDashboardController(
             ITransporterDashboardService service,
-            ILogger<TransporterDashboardController> logger)
+            ILogger<TransporterDashboardController> logger, ITransporterPayoutService transporterPayoutService)
         {
             _service = service;
             _logger = logger;
+            _transporterPayoutService = transporterPayoutService;
         }
 
         // =========================================================
@@ -289,6 +291,25 @@ namespace mytown.Controllers
             try
             {
                 var result = await _service.MarkAsDeliveredAsync(storeOrderId);
+
+                try
+                {
+                    var payoutResult = await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
+
+                    if (!payoutResult.Success)
+                    {
+                        _logger.LogWarning(
+                            "Transporter payout failed for StoreOrderId {StoreOrderId}: {Message}",
+                            storeOrderId, payoutResult.Message);
+                    }
+                }
+                catch (Exception payoutEx)
+                {
+                    _logger.LogError(payoutEx,
+                        "Transporter payout threw an exception for StoreOrderId {StoreOrderId}",
+                        storeOrderId);
+                }
+
                 return Ok(new { message = result });
             }
             catch (Exception ex)
