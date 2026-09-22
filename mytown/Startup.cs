@@ -17,6 +17,7 @@ using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 using mytown.Services.Interfaces;
 using MyTown.Configurations;
+using MyTown.Models;
 using Stripe;
 using Stripe.Climate;
 using System.Security.Claims;
