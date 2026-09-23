@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
@@ -269,7 +270,9 @@ namespace mytown.DataAccess.Repositories
            
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
-            httpRequest.Headers.Add("x-cf-signature", GetSignature(signatureClientId)); // generated fresh, right before sending
+            httpRequest.Headers.Add(
+               "x-cf-signature",
+               CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePublicKey"]));
             httpRequest.Content = new StringContent(
                 json,
                 Encoding.UTF8,
