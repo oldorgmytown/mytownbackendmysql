@@ -252,8 +252,8 @@ namespace mytown.DataAccess.Repositories
 
 
 
-            var url =
-                "https://sandbox.cashfree.com/verification/bank-account/sync";
+            var baseUrl = _configuration["Cashfree:BaseUrl"];
+            var url = $"{baseUrl}/verification/bank-account/sync";
 
             var payload = new
             {
@@ -266,7 +266,7 @@ namespace mytown.DataAccess.Repositories
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
                 url);
-            var oldId = "CF11177848DACH8GBELO6C73EAAB70";
+           
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add("x-cf-signature", GetSignature(signatureClientId)); // generated fresh, right before sending
