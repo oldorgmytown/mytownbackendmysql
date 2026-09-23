@@ -249,7 +249,7 @@ namespace mytown.DataAccess.Repositories
         {
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
-            var signatureClientId = _configuration["CashfreeVerification:SignatureClientId"]; // the ID the public key was generated for
+            // var signatureClientId = _configuration["CashfreeVerification:SignatureClientId"]; // the ID the public key was generated for
 
 
 
@@ -272,7 +272,7 @@ namespace mytown.DataAccess.Repositories
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add(
                "x-cf-signature",
-               CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePublicKey"]));
+               CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePublicKey"]));
             httpRequest.Content = new StringContent(
                 json,
                 Encoding.UTF8,

@@ -148,8 +148,8 @@ namespace mytown.Services
         {
             var clientId = _configuration["CashfreePayout:ClientId"];
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
-            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
-           // var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+          //  var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+           
 
             // default the beneficiary ID if the caller didn't supply one
             if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
@@ -191,7 +191,7 @@ namespace mytown.Services
 
             httpRequest.Headers.Add(
            "x-cf-signature",
-           CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+           CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
 
 
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
