@@ -214,6 +214,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         StartCity = dto.StartCity,
         StartState = dto.StartState,
         StartCountry = dto.StartCountry,
+        StartLocationPin = dto.StartLocationPin,
 
         // =========================================================
         // DESTINATION LOCATION
@@ -223,6 +224,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         DestinationCity = dto.DestinationCity,
         DestinationState = dto.DestinationState,
         DestinationCountry = dto.DestinationCountry,
+        DestinationPin = dto.DestinationPin,
         PreferredRoute      = dto.PreferredRoute,
         DistanceKm          = dto.DistanceKm,
         StartDate           = dto.StartDate,

@@ -201,16 +201,17 @@ namespace mytown.DataAccess.Implementations
         x.PlanStatus == "Available" &&
         x.StartDate <= pickupDateTime &&
         x.ArrivalDate >= pickupDateTime &&
+         x.StartLocationPin == order.PickupPincode &&
+            x.DestinationPin == order.ReceiverPincode &&
+        //x.StartTown.ToLower() == order.PickupTown.ToLower() &&
+        //x.StartCity.ToLower() == order.PickupCity.ToLower() &&
+        //x.StartState.ToLower() == order.PickupState.ToLower() &&
+        //x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
 
-        x.StartTown.ToLower() == order.PickupTown.ToLower() &&
-        x.StartCity.ToLower() == order.PickupCity.ToLower() &&
-        x.StartState.ToLower() == order.PickupState.ToLower() &&
-        x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
-
-        x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
-        x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
-        x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
-        x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
+        //x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
+        //x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
+        //x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
+        //x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
 
         (!order.IsFragile || x.AcceptsFragile) &&
         (!order.IsPerishable || x.AcceptsPerishable)

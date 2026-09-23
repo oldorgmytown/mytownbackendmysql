@@ -28,8 +28,8 @@ namespace mytown.Models.DTO_s
         public string DestinationCity { get; set; }
         public string DestinationState { get; set; }
         public string DestinationCountry { get; set; }
-        //public string StartLocation { get; set; }
-        //public string Destination { get; set; }
+        public string StartLocationPin { get; set; }
+        public string DestinationPin { get; set; }
         public string PreferredRoute { get; set; }
         public decimal? DistanceKm { get; set; }
 
