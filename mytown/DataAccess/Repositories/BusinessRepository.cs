@@ -249,7 +249,7 @@ namespace mytown.DataAccess.Repositories
         {
             var clientId = _configuration["CashfreeVerification:ClientId"];
             var clientSecret = _configuration["CashfreeVerification:ClientSecret"];
-            var signatureClientId = _configuration["CashfreeVerification:SignatureClientId"]; // the ID the public key was generated for
+            // var signatureClientId = _configuration["CashfreeVerification:SignatureClientId"]; // the ID the public key was generated for
 
             var baseUrl = _configuration["Cashfree:BaseUrl"];
 
@@ -257,9 +257,7 @@ namespace mytown.DataAccess.Repositories
                 HttpMethod.Post,
                 $"{baseUrl}/verification/bank-account/sync");
 
-            //var url =
-            //    "https://sandbox.cashfree.com/verification/bank-account/sync";
-
+            
 
             var payload = new
             {
@@ -269,12 +267,13 @@ namespace mytown.DataAccess.Repositories
 
             var json = JsonSerializer.Serialize(payload);
 
-
+          
+           
             httpRequest.Headers.Add("x-client-id", clientId);
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add(
-              "x-cf-signature",
-              CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePublicKey"])); // generated fresh, right before sending
+               "x-cf-signature",
+               CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePublicKey"]));
             httpRequest.Content = new StringContent(
                 json,
                 Encoding.UTF8,

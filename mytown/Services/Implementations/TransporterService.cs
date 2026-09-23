@@ -175,7 +175,7 @@ namespace mytown.Services.Implementations
             var baseUrl = _configuration["Cashfree:BaseUrl"];
             // Falls back to clientId if CashfreePayout:SignatureClientId isn't set -
             
-            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+          //  var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
             if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
             {
@@ -208,7 +208,7 @@ namespace mytown.Services.Implementations
             httpRequest.Headers.Add("x-request-id", Guid.NewGuid().ToString());
             httpRequest.Headers.Add(
     "x-cf-signature",
-    CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+    CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
             httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _httpClient.SendAsync(httpRequest);
