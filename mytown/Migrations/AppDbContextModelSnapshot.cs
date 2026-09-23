@@ -704,6 +704,49 @@ namespace mytown.Migrations
                     b.ToTable("business_verifications");
                 });
 
+            modelBuilder.Entity("mytown.Models.ChatMessage", b =>
+                {
+                    b.Property<int>("ChatMessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("chat_message_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ChatMessageId"));
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("message");
+
+                    b.Property<int>("ReceiverType")
+                        .HasColumnType("int")
+                        .HasColumnName("receiver_type");
+
+                    b.Property<int>("ReceiverUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("receiver_user_id");
+
+                    b.Property<int>("SenderType")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_type");
+
+                    b.Property<int>("SenderUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_user_id");
+
+                    b.Property<DateTime>("SentTime")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_time");
+
+                    b.HasKey("ChatMessageId");
+
+                    b.HasIndex("SentTime");
+
+                    b.HasIndex("SenderUserId", "SenderType", "ReceiverUserId", "ReceiverType");
+
+                    b.ToTable("chat_messages");
+                });
+
             modelBuilder.Entity("mytown.Models.CityImage", b =>
                 {
                     b.Property<int>("Id")
@@ -4130,6 +4173,11 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(100)")
                         .HasColumnName("destination_country");
 
+                    b.Property<string>("DestinationPin")
+                        .IsRequired()
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("destination_pin");
+
                     b.Property<string>("DestinationState")
                         .IsRequired()
                         .HasColumnType("varchar(100)")
@@ -4209,6 +4257,11 @@ namespace mytown.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("start_date");
+
+                    b.Property<string>("StartLocationPin")
+                        .IsRequired()
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("start_location_pin");
 
                     b.Property<string>("StartState")
                         .IsRequired()
