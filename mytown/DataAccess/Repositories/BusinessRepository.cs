@@ -272,7 +272,7 @@ namespace mytown.DataAccess.Repositories
             httpRequest.Headers.Add("x-client-secret", clientSecret);
             httpRequest.Headers.Add(
                "x-cf-signature",
-               CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePublicKey"]));
+               CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
             httpRequest.Content = new StringContent(
                 json,
                 Encoding.UTF8,
