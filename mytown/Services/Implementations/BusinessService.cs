@@ -178,7 +178,7 @@ namespace mytown.Services
 
             var json = JsonSerializer.Serialize(payload);
 
-            var baseUrl = _configuration["Cashfree:BaseUrl"];
+            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
 
             using var httpRequest = new HttpRequestMessage(
                 HttpMethod.Post,
