@@ -188,9 +188,11 @@ namespace mytown.DataAccess.Implementations
 
             if (courierOption != null)
             {
-                transporterCharges = Math.Round(
-                    courierOption.Cost / 2m,
-                    2);
+                transporterCharges = Math.Round(courierOption.Cost / 2m, 2);
+            }
+            else
+            {
+                transporterCharges = 50m;
             }
 
             // Common matching query
