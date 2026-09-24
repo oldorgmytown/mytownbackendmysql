@@ -184,13 +184,13 @@ namespace mytown.DataAccess.Implementations
                 .OrderBy(x => x.Cost)
                 .FirstOrDefault();
 
-            decimal transporterCharges = 0;
+            decimal transporterCharges;
 
             if (courierOption != null)
             {
-                transporterCharges = Math.Round(
-                    courierOption.Cost / 2m,
-                    2);
+                transporterCharges = courierOption != null
+    ? Math.Round(courierOption.Cost / 2m, 2)
+    : 50m;
             }
 
             // Common matching query
