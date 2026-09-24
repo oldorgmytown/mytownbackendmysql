@@ -110,7 +110,7 @@ namespace mytown.Models
 
         [Column("transporter_plan_id")]
         public int? TransporterPlanId { get; set; }
-        [Column("transporter_charges")]
+        [Column("transporter_charges", TypeName = "decimal(10,2)")]
         public decimal? TransporterCharges { get; set; }
 
         [Column("delivery_status")]

@@ -2734,7 +2734,7 @@ namespace mytown.Migrations
                         .HasColumnName("tracking_id");
 
                     b.Property<decimal?>("TransporterCharges")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("decimal(10,2)")
                         .HasColumnName("transporter_charges");
 
                     b.Property<int?>("TransporterPlanId")
