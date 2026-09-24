@@ -148,6 +148,7 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         StartCity = p.StartCity,
         StartState = p.StartState,
         StartCountry = p.StartCountry,
+        StartLocationPin = p.StartLocationPin,
 
         // =========================================================
         // DESTINATION LOCATION
@@ -157,6 +158,7 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         DestinationCity = p.DestinationCity,
         DestinationState = p.DestinationState,
         DestinationCountry = p.DestinationCountry,
+        DestinationPin = p.DestinationPin,
 
         PreferredRoute = p.PreferredRoute,
         DistanceKm          = p.DistanceKm,

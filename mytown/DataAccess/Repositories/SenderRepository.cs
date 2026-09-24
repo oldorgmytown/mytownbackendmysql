@@ -184,7 +184,7 @@ namespace mytown.DataAccess.Implementations
                 .OrderBy(x => x.Cost)
                 .FirstOrDefault();
 
-            decimal transporterCharges = 0;
+            decimal transporterCharges;
 
             if (courierOption != null)
             {
@@ -201,7 +201,7 @@ namespace mytown.DataAccess.Implementations
     .Where(x =>
         x.IsActive &&
         x.PlanStatus == "Available" &&
-        x.StartDate <= pickupDateTime &&
+        x.StartDate >= pickupDateTime &&
         x.ArrivalDate >= pickupDateTime &&
          x.StartLocationPin == order.PickupPincode &&
             x.DestinationPin == order.ReceiverPincode &&
