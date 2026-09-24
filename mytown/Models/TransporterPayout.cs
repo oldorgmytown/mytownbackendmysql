@@ -12,9 +12,20 @@ namespace mytown.Models
         [Column("payout_id")]
         public int PayoutId { get; set; }
 
-        [Required]
+        //[Required]
+        //[Column("store_order_id")]
+        //public int StoreOrderId { get; set; }
+
         [Column("store_order_id")]
-        public int StoreOrderId { get; set; }
+        public int? StoreOrderId { get; set; }
+
+        [Column("sender_order_id")]
+        public int? SenderOrderId { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        [Column("order_type")]
+        public string OrderType { get; set; } = null!;
 
         [Required]
         [Column("transporter_reg_id")]

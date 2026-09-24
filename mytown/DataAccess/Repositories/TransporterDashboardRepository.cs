@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
+using Stripe;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -14,13 +15,15 @@ namespace mytown.DataAccess.Repositories
         private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
         private readonly IStorePayoutRepository _storePayoutRepository;
+        private readonly ISenderTransporterPayoutService _payoutService;
 
-        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService)
         {
             _context = context;
             _orderRepository = orderRepo;
             _emailService = emailService;
             _storePayoutRepository = storePayoutRepository;
+            _payoutService = payoutService;
         }
 
         // -------------------------------------------------------------------------
@@ -945,6 +948,12 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             await _context.SaveChangesAsync();
 
+            // Trigger payout AFTER the status update is successfully saved
+            if (deliveryStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase))
+            {
+                await _payoutService.CreatePayoutAsync(senderOrderId);
+            }
+
             return true;
         }
 
@@ -997,6 +1006,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 select new TransporterPayoutDashboardDto
                 {
                     StoreOrderId = tp.StoreOrderId,
+                    SenderOrderId = tp.SenderOrderId,
+                    OrderType = tp.OrderType,
                     Amount = tp.Amount,
                     Status = tp.Status,
                     Bankname = tad.BankName,

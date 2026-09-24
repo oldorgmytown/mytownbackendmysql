@@ -97,6 +97,9 @@ public class Startup
         services.AddScoped<ICourierPayoutService, CourierPayoutService>();
         services.AddScoped<ITransporterPayoutRepository, TransporterPayoutRepository>();
 
+        services.AddScoped<ISenderTransporterPayoutRepository, SenderTransporterPayoutRepository>();
+        services.AddScoped<ISenderTransporterPayoutService, SenderTransporterPayoutService>();
+
 
 
         // Mobile Auth
