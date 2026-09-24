@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
 using mytown.DataAccess.Interfaces;
 using mytown.Helpers;
 using mytown.Models;
@@ -253,6 +254,7 @@ return created;
             string town;
             string state;
             string country;
+            string pincode;
 
             Dictionary<int, decimal> storeWeights;
 
@@ -273,6 +275,7 @@ return created;
                     town = altAddress.AltTown;
                     state = altAddress.AltState;
                     country = altAddress.AltCountry;
+                    pincode = altAddress.AltPostalCode;
                 }
                 else
                 {
@@ -280,6 +283,7 @@ return created;
                     town = shopper.Town;
                     state = shopper.State;
                     country = shopper.Country;
+                    pincode = shopper.PostalCode;
                 }
 
                 storeWeights = await _repo.GetStoreWeightsAsync(
@@ -296,7 +300,7 @@ return created;
                 town = guest.Town;
                 state = guest.State;
                 country = guest.Country;
-
+                pincode = guest.PostalCode;
                 storeWeights = request.StoreWeights?
                     .ToDictionary(
                         x => x.StoreId,
@@ -358,17 +362,21 @@ return created;
                 }
 
                 // P2P Matching
-                var matchingTransporter = await _repo.FindMatchingTransporterAsync(
-                    store.Town,
-                    store.BusinessCity,
-                    store.BusinessState,
-                    store.BusinessCountry,                    
-                    town,
-                    city,
-                    state,
-                    country,
-                    totalWeight
-                );
+                //var matchingTransporter = await _repo.FindMatchingTransporterAsync(
+                //    store.Town,
+                //    store.BusinessCity,
+                //    store.BusinessState,
+                //    store.BusinessCountry,                    
+                //    town,
+                //    city,
+                //    state,
+                //    country,
+                //    totalWeight
+                //);
+
+
+                var matchingTransporter = await _repo.FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
+
 
                 if (matchingTransporter != null)
                 {
