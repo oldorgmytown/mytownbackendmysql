@@ -5,6 +5,7 @@
 namespace mytown.Migrations
 {
     /// <inheritdoc />
+    /// //MOVETOQA
     public partial class updatetransporterchargesdecimalprecision : Migration
     {
         /// <inheritdoc />

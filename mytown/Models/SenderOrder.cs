@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
+    //move to QA
     [Table("sender_orders")]
     public class SenderOrder
     {
