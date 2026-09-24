@@ -235,13 +235,16 @@ namespace mytown.DataAccess.Implementations
                     StartDate = x.StartDate,
                     ArrivalDate = x.ArrivalDate,
                     PreferredContact = x.PreferredContact,
-                    transporterCharge = transporterCharges,
+                   // transporterCharge = transporterCharges,
                     Message = "Matching transporter found"
                 })
                 .FirstOrDefaultAsync();
 
             if (exactWeightMatch != null)
+            {
+                exactWeightMatch.transporterCharge = transporterCharges;
                 return exactWeightMatch;
+            }
 
             // Second priority -> all matched except weight
             var overweightTransporter = await matchingQuery
@@ -260,10 +263,15 @@ namespace mytown.DataAccess.Implementations
                  StartDate = x.StartDate,
                  ArrivalDate = x.ArrivalDate,
                  PreferredContact = x.PreferredContact,
-                 transporterCharge = transporterCharges,
+               //  transporterCharge = transporterCharges,
                  Message = "Package weight exceeds transporter maximum weight limit"
              })
              .FirstOrDefaultAsync();
+
+            if (overweightTransporter != null)
+            {
+                overweightTransporter.transporterCharge = transporterCharges;
+            }
 
             return overweightTransporter;
         }
