@@ -3,7 +3,7 @@
     public class CourierOrderDto
     {
         public int StoreOrderId { get; set; }
-
+         public int OrderId { get; set; }
         public int BranchId { get; set; }
 
         public DateOnly Orderdate { get; set; }

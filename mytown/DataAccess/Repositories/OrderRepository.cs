@@ -28,20 +28,43 @@ namespace mytown.DataAccess.Repositories
             // 1️⃣ GET ITEMS (Cart OR BuyNow)
             if (request.UseCart)
             {
+                if (!request.ShopperRegId.HasValue)
+                    throw new Exception("ShopperId is required for cart checkout.");
+
                 var cartItems = await _context.addtocart
-                    .Where(c => c.ShopperRegId == request.ShopperRegId && c.orderstatus == "Cart")
+                    .Where(c => c.ShopperRegId == request.ShopperRegId &&
+                                c.orderstatus == "Cart")
                     .ToListAsync();
 
                 if (!cartItems.Any())
                     return 0;
 
-                items = cartItems.Select(c => new
+                var productIds = cartItems
+                    .Select(c => (long)c.ProductId)
+                    .Distinct()
+                    .ToList();
+
+                var products = await _context.ProductsNew
+                    .Where(p => productIds.Contains(p.ProductId))
+                    .ToListAsync();
+
+                items = cartItems.Select(c =>
                 {
-                    ProductId = c.ProductId,
-                    SkuId = c.SkuId,
-                    BusRegId = c.BusRegId,
-                    Quantity = c.ProdQty,
-                    Price = c.ProductPrice
+                    var product = products.FirstOrDefault(p =>
+                        p.ProductId == (long)c.ProductId);
+
+                    if (product == null)
+                        throw new Exception(
+                            $"Product {c.ProductId} not found.");
+
+                    return new
+                    {
+                        ProductId = (long)c.ProductId,
+                        SkuId = (long)c.SkuId,
+                        BusRegId = product.BusRegId,
+                        Quantity = c.ProdQty,
+                        Price = c.ProductPrice
+                    };
                 }).ToList<dynamic>();
             }
             else
@@ -49,14 +72,14 @@ namespace mytown.DataAccess.Repositories
                 if (request.Items == null || !request.Items.Any())
                     throw new Exception("Items required for Buy Now");
 
-                var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
+                var productIds = request.Items.Select(i => (long)i.ProductId).Distinct().ToList();
 
                 var products = await (
-                    from p in _context.products
+                    from p in _context.ProductsNew
                     join bp in _context.BusinessProfiles
                         on p.BusRegId equals bp.BusRegId
                     where productIds.Contains(p.ProductId)
-                          && p.ProductStatus == "Approved"
+                          && p.ProductStatus == "ACTIVE"
                           && p.IsActive
                           && bp.ProfileStatus == "approved"
                     select p
@@ -67,7 +90,9 @@ namespace mytown.DataAccess.Repositories
 
                 items = request.Items.Select(i =>
                 {
-                    var product = products.FirstOrDefault(p => p.ProductId == i.ProductId);
+                    var product = products.FirstOrDefault(p =>
+                        p.ProductId == i.ProductId);
+
                     if (product == null)
                         throw new Exception($"Product not found: {i.ProductId}");
 
@@ -83,15 +108,15 @@ namespace mytown.DataAccess.Repositories
             }
 
             // 2️⃣ VALIDATION
-            var productIdsList = items.Select(c => (int)c.ProductId).Distinct().ToList();
+            var productIdsList = items.Select(c => (long)c.ProductId).Distinct().ToList();
 
             var invalidItems = await (
-                from p in _context.products
+                from p in _context.ProductsNew
                 join bp in _context.BusinessProfiles
                     on p.BusRegId equals bp.BusRegId
                 where productIdsList.Contains(p.ProductId)
                       && (
-                            p.ProductStatus != "Approved"
+                            p.ProductStatus != "ACTIVE"
                             || !p.IsActive
                             || bp.ProfileStatus != "approved"
                          )
@@ -111,6 +136,8 @@ namespace mytown.DataAccess.Repositories
             var newOrder = new Order
             {
                 ShopperRegId = request.ShopperRegId,
+                GuestRegId = request.GuestRegId,
+                IsGuestOrder = request.IsGuestOrder,
                 SelectedAltAddressId = selectedAltAddressId,
                 TotalAmount = totalAmount,
                 ShippingType = "Multiple",
@@ -124,25 +151,49 @@ namespace mytown.DataAccess.Repositories
             // 4️⃣ ADDRESS
             string deliveryAddress;
 
-            if (selectedAltAddressId.HasValue)
+            if (!request.IsGuestOrder)
             {
-                deliveryAddress = await _context.ShopperAlternateAddresses
-                    .Where(a => a.AltAddressId == selectedAltAddressId.Value)
-                    .Select(a =>
-                        a.AltName + ", " + a.AltAddress + ", " + a.AltTown + ", " +
-                        a.AltCity + ", " + a.AltState + ", " + a.AltCountry +
-                        (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
-                    )
-                    .FirstOrDefaultAsync();
+                if (selectedAltAddressId.HasValue)
+                {
+                    deliveryAddress = await _context.ShopperAlternateAddresses
+                        .Where(a => a.AltAddressId == selectedAltAddressId.Value)
+                        .Select(a =>
+                            a.AltName + ", " +
+                            a.AltAddress + ", " +
+                            a.AltTown + ", " +
+                            a.AltCity + ", " +
+                            a.AltState + ", " +
+                            a.AltCountry +
+                            (a.AltPostalCode != null ? " - " + a.AltPostalCode : "")
+                        )
+                        .FirstOrDefaultAsync();
+                }
+                else
+                {
+                    deliveryAddress = await _context.ShopperRegisters
+                        .Where(s => s.ShopperRegId == request.ShopperRegId)
+                        .Select(s =>
+                            s.Address + ", " +
+                            s.Town + ", " +
+                            s.City + ", " +
+                            s.State + ", " +
+                            s.Country +
+                            (s.PostalCode != null ? " - " + s.PostalCode : "")
+                        )
+                        .FirstOrDefaultAsync();
+                }
             }
             else
             {
-                deliveryAddress = await _context.ShopperRegisters
-                    .Where(s => s.ShopperRegId == request.ShopperRegId)
-                    .Select(s =>
-                        s.Address + ", " + s.Town + ", " + s.City + ", " +
-                        s.State + ", " + s.Country +
-                        (s.PostalCode != null ? " - " + s.PostalCode : "")
+                deliveryAddress = await _context.GuestRegisters
+                    .Where(g => g.GuestRegId == request.GuestRegId)
+                    .Select(g =>
+                        g.Address + ", " +
+                        g.Town + ", " +
+                        g.City + ", " +
+                        g.State + ", " +
+                        g.Country +
+                        (g.PostalCode != null ? " - " + g.PostalCode : "")
                     )
                     .FirstOrDefaultAsync();
             }
@@ -171,7 +222,7 @@ namespace mytown.DataAccess.Repositories
             _context.StoreOrders.AddRange(storeOrders);
             await _context.SaveChangesAsync();
 
-            var storeOrderMap = storeOrders.ToDictionary(s => s.StoreId, s => s.StoreOrderId);
+            var storeOrderMap = storeOrders.ToDictionary(s => (long) s.StoreId, s => s.StoreOrderId);
 
             // 6️⃣ NOTIFICATIONS
             var notifications = storeOrders.Select(so => new BusinessDBNotifications
@@ -236,16 +287,32 @@ namespace mytown.DataAccess.Repositories
                         (travelPlan.ArrivalDate.Date - travelPlan.StartDate.Date).Days);
 
                     var store = await _context.BusinessRegisters
-                        .FirstOrDefaultAsync(b => b.BusRegId == storeOrder.StoreId);
+     .FirstOrDefaultAsync(b => b.BusRegId == storeOrder.StoreId);
 
-                    var shopper = await _context.ShopperRegisters
-                        .FirstOrDefaultAsync(s => s.ShopperRegId == request.ShopperRegId);
+                    string destinationCity = "";
+
+                    if (request.IsGuestOrder)
+                    {
+                        var guest = await _context.GuestRegisters
+                            .FirstOrDefaultAsync(g =>
+                                g.GuestRegId == request.GuestRegId);
+
+                        destinationCity = guest?.City ?? "";
+                    }
+                    else
+                    {
+                        var shopper = await _context.ShopperRegisters
+                            .FirstOrDefaultAsync(s =>
+                                s.ShopperRegId == request.ShopperRegId);
+
+                        destinationCity = shopper?.City ?? "";
+                    }
 
                     decimal p2pCost = 100m; // default fallback
 
-                    if (store != null && shopper != null)
+                    if (store != null && !string.IsNullOrEmpty(destinationCity))
                     {
-                        // Find cheapest surface service for this store → shopper route
+                        // Find cheapest surface service for this store → customer route
                         var surfaceService = await (
                             from branch in _context.CourierBranches
                             join service in _context.CourierBranchServices
@@ -264,12 +331,14 @@ namespace mytown.DataAccess.Repositories
                             .Where(s => s.Destinations
                                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                                 .Select(d => d.Trim().ToLower())
-                                .Contains(shopper.City.ToLower()))
+                                .Contains(destinationCity.ToLower()))
                             .OrderBy(s => s.Charges)
                             .FirstOrDefault();
 
                         if (matchingSurface != null)
-                            p2pCost = Math.Max(50m, Math.Round(matchingSurface.Charges * 0.30m, 2));
+                            p2pCost = Math.Max(
+                                50m,
+                                Math.Round(matchingSurface.Charges * 0.30m, 2));
                     }
 
                     // Save ShippingDetails with BranchId = 1 (P2P has no courier branch)
@@ -277,7 +346,7 @@ namespace mytown.DataAccess.Repositories
 {
     OrderId = newOrder.OrderId,
     StoreOrderId = storeOrder.StoreOrderId,
-    BranchId = 1,
+    BranchId = null,
     ShippingType = "P2P",
     EstimatedDays = estimatedDays,
     Cost = p2pCost,
@@ -319,7 +388,12 @@ namespace mytown.DataAccess.Repositories
                         OrderId = newOrder.OrderId,
                         StoreOrderId = storeOrder.StoreOrderId,
                         BranchId = branch.BranchId,
-                        ShippingType = shippingSelection.ShippingType,
+                        ShippingType = shippingSelection.ShippingType?.Trim().ToLower() switch
+                        {
+                            "standard" => "Standard",
+                            "express" => "Express",
+                            _ => shippingSelection.ShippingType
+                        },
                         EstimatedDays = service.EstimateDays ?? 0,
                         Cost = service.Charges,
                         TrackingId = "",
@@ -491,18 +565,28 @@ namespace mytown.DataAccess.Repositories
         public async Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId)
         {
             // 1️⃣ Order + Shopper basic details + PaymentMethod
-            var order = await _context.Orders
+                        var order = await _context.Orders
                 .Where(o => o.OrderId == orderId)
                 .Select(o => new
                 {
                     o.OrderId,
                     o.OrderDate,
                     o.ShopperRegId,
-                    ShopperName = o.ShopperRegister.Username,
-                    ShopperEmail = o.ShopperRegister.Email,
-                    ShopperPhone = o.ShopperRegister.PhoneNumber,
+                    o.GuestRegId,
+                    o.IsGuestOrder,
 
-                    // Get latest payment object
+                    ShopperName = o.IsGuestOrder
+                        ? o.GuestRegister.Username
+                        : o.ShopperRegister.Username,
+
+                    ShopperEmail = o.IsGuestOrder
+                        ? o.GuestRegister.Email
+                        : o.ShopperRegister.Email,
+
+                    ShopperPhone = o.IsGuestOrder
+                        ? o.GuestRegister.PhoneNumber
+                        : o.ShopperRegister.PhoneNumber,
+
                     LatestPayment = _context.Payments
                         .Where(p => p.OrderId == o.OrderId)
                         .OrderByDescending(p => p.PaymentDate)
@@ -552,6 +636,13 @@ namespace mytown.DataAccess.Repositories
            StoreId = so.StoreId,
            StoreName = b.BusinessName,
            BusinessEmail = b.BusEmail,
+           StoreAddress = b.Address1 + ", " +
+               (string.IsNullOrEmpty(b.Address2) ? "" : b.Address2 + ", ") +
+               b.BusinessCity + ", " +
+               b.BusinessState + ", " +
+               b.BusinessCountry +
+               (string.IsNullOrEmpty(b.PostalCode) ? "" : " - " + b.PostalCode),
+           BusinessPhone = b.BusMobileNo,
 
            // ✅ Courier (only if exists)
            CourierName = c != null ? c.CourierServiceName : null,
@@ -567,7 +658,8 @@ namespace mytown.DataAccess.Repositories
            ShippingAmount = sd.Cost,
            EstimatedDays = sd.EstimatedDays,
            EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
-           ShippingStatus = sd.ShippingStatus
+           ShippingStatus = sd.ShippingStatus,
+           TrackingId = sd.TrackingId
        }
    ).ToListAsync();
 
@@ -582,19 +674,20 @@ namespace mytown.DataAccess.Repositories
             {
                 var items = await (
                     from oi in _context.OrderDetails
-                    join v in _context.Sku_ProductVariants
+                    join v in _context.ProductVariantsNew
                         on oi.SkuId equals v.SkuId
-                    join p in _context.products
+                    join p in _context.ProductsNew
                         on v.ProductId equals p.ProductId
                     where oi.StoreOrderId == store.StoreOrderId
                     select new OrderItemDto
                     {
                         ProductName = p.ProductName,
+                        Productdesc = p.ProductDescription,
                         Quantity = oi.Quantity,
                         FinalPrice = oi.Price,
-                        OriginalPrice = v.Sku_Cost,
-                        DiscountAmount = v.Sku_Cost - oi.Price,
-                        ImageUrl = _context.ProductImages
+                        OriginalPrice = v.Price,
+                        DiscountAmount = v.Price - oi.Price,
+                        ImageUrl = _context.ProductVariantImagesNew
                             .Where(img => img.SkuId == v.SkuId)
                             .OrderBy(img => img.SortOrder)
                             .Select(img => img.FileName)
@@ -614,6 +707,9 @@ namespace mytown.DataAccess.Repositories
                 TotalAmount = order.LatestPayment?.AmountPaid ?? 0,
 
                 ShopperRegId = order.ShopperRegId,
+                GuestRegId = order.GuestRegId,
+                IsGuestOrder = order.IsGuestOrder,
+
                 ShopperName = order.ShopperName,
                 ShopperEmail = order.ShopperEmail,
                 ShopperPhone = order.ShopperPhone,
@@ -625,6 +721,11 @@ namespace mytown.DataAccess.Repositories
 
                 Stores = stores
             };
+        }
+
+        public async Task AddShopperNotificationAsync(ShopperDBNotifications notification)
+        {
+            await _context.ShopperDBNotifications.AddAsync(notification);
         }
     }
 }
