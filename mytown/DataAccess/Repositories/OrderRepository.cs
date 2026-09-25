@@ -308,7 +308,7 @@ namespace mytown.DataAccess.Repositories
                         destinationCity = shopper?.City ?? "";
                     }
 
-                    decimal p2pCost = 100m; // default fallback
+                    decimal p2pCost = 50m; // default fallback
 
                     if (store != null && !string.IsNullOrEmpty(destinationCity))
                     {
