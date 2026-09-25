@@ -1,10 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using mytown.DataAccess.Interfaces;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Text.Json;
+using static mytown.Services.Implementations.SenderService;
 
 namespace mytown.Services.Implementations
 {
@@ -123,5 +127,350 @@ namespace mytown.Services.Implementations
 
             return (true, "Verification email resent.");
         }
+
+        // ---------------- SENDER ORDERS ----------------
+
+        public async Task<int> CreateSenderOrderAsync(CreateSenderOrderDto dto)
+        {
+            return await _repo.CreateSenderOrderAsync(dto);
+        }
+
+        /// ---------------- MATCHING TRANSPORTERS ----------------
+        public async Task<MatchingTransporterDto>
+    GetMatchingTransportersAsync(int senderOrderId)
+        {
+            return await _repo
+                .GetMatchingTransportersAsync(senderOrderId);
+        }
+
+        // odrer summary
+
+        public async Task<SenderOrderSummaryDto>
+    GetOrderSummaryAsync(
+        SenderOrderSummaryRequestDto dto)
+        {
+            return await _repo
+                .GetOrderSummaryAsync(dto);
+        }
+
+   
+
+     
+
+        // sender payment
+
+        public async Task
+           <SenderPaymentIntentResponseDto>
+           CreatePaymentIntentAsync(
+               int senderOrderId)
+        {
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    senderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            decimal amount = 50;
+
+            decimal gstAmount =
+                amount * 0.18m;
+
+            decimal totalAmount =
+                amount + gstAmount;
+
+            long stripeAmount =
+                (long)(totalAmount * 100);
+
+            var options =
+                new PaymentIntentCreateOptions
+                {
+                    Amount = stripeAmount,
+
+                    Currency = "inr",
+
+                    AutomaticPaymentMethods =
+                        new PaymentIntentAutomaticPaymentMethodsOptions
+                        {
+                            Enabled = true
+                        },
+
+                    Metadata =
+                        new Dictionary<string, string>
+                        {
+                            {
+                                "senderOrderId",
+                                senderOrderId
+                                .ToString()
+                            }
+                        }
+                };
+
+            var stripeSecretKey = _configuration["Stripe:SecretKey"];
+var stripeClient = new StripeClient(stripeSecretKey);
+var service = new PaymentIntentService(stripeClient);
+
+            var paymentIntent =
+                await service
+                .CreateAsync(options);
+
+            return new
+                SenderPaymentIntentResponseDto
+            {
+                ClientSecret =
+                    paymentIntent.ClientSecret,
+
+                PaymentIntentId =
+                    paymentIntent.Id
+            };
+        }
+
+        public async Task<bool>
+            ConfirmPaymentAsync(
+                ConfirmSenderPaymentDto dto)
+        {
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    dto.SenderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            decimal amount = 50;
+
+            decimal gstAmount =
+                amount * 0.18m;
+
+            decimal totalAmount =
+                amount + gstAmount;
+
+            var payment =
+                new SenderOrderPayment
+                {
+                    SenderOrderId =
+                        dto.SenderOrderId,
+
+                    StripePaymentIntentId =
+                        dto.StripePaymentIntentId,
+
+                    Amount =
+                        amount,
+
+                    GstAmount =
+                        gstAmount,
+
+                    TotalAmount =
+                        totalAmount,
+
+                    PaymentMethod =
+                        dto.PaymentMethod,
+
+                    PaymentStatus =
+                        "Paid",
+
+                    PaidAt =
+                        DateTime.UtcNow
+                };
+
+await _repo
+                .AddSenderOrderPaymentAsync(
+                    payment);
+
+            order.TransporterRegId = dto.TransporterRegId;
+            order.TransporterPlanId = dto.TransporterPlanId;
+            order.OrderStatus = "Booked";
+
+            await _repo
+                .SaveChangesAsync();
+
+            return true;
+        }
+
+        // sender order confirmation
+
+        public async Task
+     <SenderOrderConfirmationDto>
+     GetOrderConfirmationAsync(
+         int senderOrderId)
+        {
+            var result =
+                await _repo
+                .GetOrderConfirmationAsync(
+                    senderOrderId);
+
+            var order =
+                await _repo
+                .GetSenderOrderAsync(
+                    senderOrderId);
+
+            if (order == null)
+                throw new Exception(
+                    "Order not found");
+
+            if (!order.TransporterRegId.HasValue)
+                throw new Exception(
+                    "Transporter not assigned");
+
+            // Notify Sender
+
+            await _repo.AddSenderNotificationAsync(
+                new SenderDBNotifications
+                {
+                    SenderRegId =
+                        order.SenderRegId,
+
+                    Title =
+                        "Booking Confirmed",
+
+                    Message =
+                        $"Your shipment #{order.SenderOrderId} has been booked successfully.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            // Notify Transporter
+
+            await _repo.AddTransporterNotificationAsync(
+                new TransporterDBNotifications
+                {
+                    TransporterRegId =
+                        order.TransporterRegId.Value,
+
+                    Title =
+                        "New Shipment Assigned",
+
+                    Message =
+                        $"New shipment #{order.SenderOrderId} has been assigned to you.",
+
+                    IsRead = false,
+
+                    CreatedDate =
+                        DateTime.UtcNow
+                });
+
+            await _repo.SaveChangesAsync();
+
+
+            // EMAIL TRIGGER
+            try
+            {
+                var sender =
+                    await _repo.GetSenderByIdAsync(order.SenderRegId);
+
+                var transporter =
+                    await _repo.GetTransporterByIdAsync(
+                        order.TransporterRegId.Value);
+
+                // Sender mail
+                await _emailService.SendSenderOrderConfirmationAsync(
+                    sender.Email,
+                    sender.SenderName,
+                    result
+                );
+
+                // Transporter mail
+                await _emailService.SendTransporterAssignmentAsync(
+                    transporter.Email,
+                    transporter.TransporterName,
+                    result
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+       ex,
+       "Failed to send order confirmation emails for SenderOrderId: {SenderOrderId}",
+       senderOrderId
+   );
+            }
+
+            return result;
+        }
+
+        // sender package delivery status
+
+        public async Task<bool>
+    UpdateSenderPackageDeliveryStatusAsync(
+        UpdateSenderPackageDeliveryStatusDto dto)
+        {
+            return await _repo
+                .UpdateSenderPackageDeliveryStatusAsync(dto);
+        }
+
+       
+
+            public async Task<List<SenderOrdersTabDto>>
+            GetSenderOrdersAsync(
+                int senderId,
+                string orderStatus)
+            {
+                return await _repo
+                    .GetSenderOrdersAsync(
+                        senderId,
+                        orderStatus);
+            }
+
+        public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
+        {
+            return await _repo.GetSenderProfileAsync(senderRegId);
+        }
+
+        public async Task<bool> UpdateSenderProfileAsync(
+    int senderRegId,
+    UpdateSenderProfileDto dto)
+        {
+            return await _repo.UpdateSenderProfileAsync(
+                senderRegId,
+                dto);
+        }
+
+        public async Task<List<SenderDBNotifications>>
+GetUnreadNotificationsAsync(int senderId)
+    => await _repo.GetUnreadNotificationsAsync(senderId);
+
+        public async Task MarkAsReadAsync(int senderId)
+            => await _repo.MarkAllAsReadAsync(senderId);
+
+        public async Task MarkEachNotificationReadAsync(int notificationId)
+            => await _repo.MarkEachNotificationReadAsync(notificationId);
+
+        // ---------------- ALTERNATE ADDRESS ----------------
+
+        public Task<IEnumerable<SenderAlternateAddressDto>>
+        GetAddressesAsync(int senderRegId)
+            => _repo.GetAddressesBySenderIdAsync(senderRegId);
+
+        public async Task<SenderAlternateAddressDto>
+        AddAddressAsync(SenderAlternateAddressDto dto)
+        {
+            var entity = new SenderAlternateAddress
+            {
+                AltAddressId = dto.AltAddressId,
+                SenderRegId = dto.SenderRegId,
+                AltName = dto.AltName,
+                AltPhoneNumber = dto.AltPhoneNumber,
+                AltAddress = dto.AltAddress,
+                AltTown = dto.AltTown,
+                AltCity = dto.AltCity,
+                AltState = dto.AltState,
+                AltCountry = dto.AltCountry,
+                AltPostalCode = dto.AltPostalCode,
+                DeliveryNotes = dto.DeliveryNotes
+            };
+
+            return await _repo.AddAddressAsync(entity);
+        }
+
+        public Task<bool>
+        DeleteAddressAsync(int id)
+            => _repo.DeleteAddressAsync(id);
+
     }
 }

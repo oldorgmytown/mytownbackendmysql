@@ -23,6 +23,9 @@ namespace mytown.Services.Interfaces
         Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int subcatId);
         List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId);
 
+          List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId);
+        
+
         Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync();
         Task<List<busprofilepreview>> GetBusinessProfilesByBusRegIdAsync(int busRegId);
 

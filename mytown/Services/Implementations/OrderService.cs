@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 
@@ -57,7 +58,23 @@ namespace mytown.Services.Implementations
             if (orderConfirmation == null)
                 return null;
 
-            // 2️⃣ Send email using data already present in DTO
+            // Create notification ONLY for registered shoppers
+            if (!orderConfirmation.IsGuestOrder &&
+                orderConfirmation.ShopperRegId.HasValue)
+            {
+                var shopperNotification = new ShopperDBNotifications
+                {
+                    ShopperRegId = orderConfirmation.ShopperRegId.Value,
+                    Title = "Order Confirmation",
+                    Message = $"Your order #{orderId} has been successfully placed.",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddShopperNotificationAsync(shopperNotification);
+            }
+
+            // Send confirmation email for BOTH Shopper and Guest
             if (!string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
             {
                 await _EmailService.SendShopperNotification(

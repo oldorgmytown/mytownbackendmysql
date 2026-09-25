@@ -58,10 +58,26 @@ namespace mytown.Services
 
             var blobClient = containerClient.GetBlobClient(newFileName);
 
-            using (var stream = file.OpenReadStream())
-            {
-                await blobClient.UploadAsync(stream, overwrite: true);
-            }
+using (var stream = file.OpenReadStream())
+{
+    var contentType = Path.GetExtension(file.FileName).ToLowerInvariant() switch
+    {
+        ".png" => "image/png",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".webp" => "image/webp",
+        ".gif" => "image/gif",
+        ".bmp" => "image/bmp",
+        _ => "application/octet-stream"
+    };
+
+    await blobClient.UploadAsync(stream, new Azure.Storage.Blobs.Models.BlobUploadOptions
+    {
+        HttpHeaders = new Azure.Storage.Blobs.Models.BlobHttpHeaders
+        {
+            ContentType = contentType
+        }
+    });
+}
 
             return newFileName; // ✅ frontend unchanged
         }

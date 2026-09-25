@@ -34,10 +34,7 @@ namespace mytown.Controllers
                 if (!result.success)
                     return BadRequest(new { error = result.message });
 
-                return Ok(new
-                {
-                    message = result.message
-                });
+                return Ok(new { message = result.message });
             }
             catch (Exception ex)
             {
@@ -93,7 +90,6 @@ namespace mytown.Controllers
         }
 
         // ---------------- TOWNS WITH STORE COUNT ----------------
-        
         [HttpGet("GetTownsWithStoreCountByCountry/{country}")]
         public async Task<IActionResult> GetTownsWithStoreCountByCountry(string country)
         {
@@ -109,7 +105,7 @@ namespace mytown.Controllers
         }
 
         // ---------------- RECENTLY VIEWED PRODUCTS ----------------
-        [Authorize]
+       // [Authorize]
         [HttpGet("productsrecentlyviewedbyshopper/{shopperId}")]
         public async Task<IActionResult> GetRecentlyViewed(
             int shopperId,
@@ -160,5 +156,25 @@ namespace mytown.Controllers
                 message = $"Alternate address with ID {id} has been successfully deleted."
             });
         }
+
+        // ---------------- CHECK EMAIL EXISTS ----------------
+        [AllowAnonymous]
+        [HttpGet("check-email")]
+        public async Task<IActionResult> CheckEmail([FromQuery] string email)
+        {
+            try
+            {
+                var result = await _shopperService.CheckEmailExistsAsync(email);
+
+                return Ok(new { exists = result.exists, message = result.message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking email {Email}", email);
+                return StatusCode(500, new { error = "Something went wrong." });
+            }
+        }
+
+     
     }
 }
