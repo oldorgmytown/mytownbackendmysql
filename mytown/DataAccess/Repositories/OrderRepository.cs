@@ -723,6 +723,28 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
+        //reduce stock qty after order is placed
+        public async Task ReduceStockAsync(int orderId)
+        {
+            var skuIds = await (
+                from so in _context.StoreOrders
+                join oi in _context.OrderDetails on so.StoreOrderId equals oi.StoreOrderId
+                where so.OrderId == orderId
+                select oi.SkuId
+            ).ToListAsync();
+
+            var variants = await _context.ProductVariantsNew
+                .Where(v => skuIds.Contains(v.SkuId))
+                .ToListAsync();
+
+            foreach (var variant in variants)
+            {
+                variant.StockQuantity -= 1;
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
         public async Task AddShopperNotificationAsync(ShopperDBNotifications notification)
         {
             await _context.ShopperDBNotifications.AddAsync(notification);

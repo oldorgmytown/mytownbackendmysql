@@ -14,6 +14,9 @@ namespace mytown.DataAccess.Interfaces
 
         Task AddShopperNotificationAsync(ShopperDBNotifications notification);
         Task<OrderConfirmationDto> GetOrderConfirmationAsync(int orderId);
+
+        //stock qty reduce after order placed
+        Task ReduceStockAsync(int orderId);
     }
 }
 

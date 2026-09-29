@@ -333,6 +333,11 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetStorePayoutsByBusRegIdAsync(busRegId);
         }
+
+        public async Task<List<RecentOrderDTO>> GetPendingStoreOrders(int busRegId)
+        {
+            return await _repository.GetPendingStoreOrders(busRegId);
+        }
     }
 
     }

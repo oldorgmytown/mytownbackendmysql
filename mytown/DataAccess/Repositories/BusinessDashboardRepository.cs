@@ -17,18 +17,100 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     }
 
 
-   
+
 
 
 
 
     // get order, sales, product, customer count
+    //public async Task<SalesReportDTO> GetSalesReportByStoreId(
+    //   int storeId,
+    //   DateTime? startDate,
+    //   DateTime? endDate,
+    //   int? month,
+    //   int? year)
+    //{
+    //    var query = from od in _context.OrderDetails
+    //                join o in _context.Orders on od.OrderId equals o.OrderId
+    //                join p in _context.Payments on o.OrderId equals p.OrderId
+    //                where od.StoreId == storeId
+    //                      && p.PaymentStatus == "Paid"
+    //                select new
+    //                {
+    //                    od.Quantity,
+    //                    od.Price,
+    //                    od.OrderId,
+    //                    o.ShopperRegId,
+    //                    o.OrderDate
+    //                };
+
+    //    // Growth % (selected month vs previous month), calculated before filters are applied
+    //    decimal? growthPercent = null;
+
+    //    if (month.HasValue && year.HasValue)
+    //    {
+    //        var thisMonthStart = new DateTime(year.Value, month.Value, 1);
+    //        var lastMonthStart = thisMonthStart.AddMonths(-1);
+    //        var nextMonthStart = thisMonthStart.AddMonths(1);
+
+    //        var thisMonthSales = await query
+    //            .Where(x => x.OrderDate >= thisMonthStart && x.OrderDate < nextMonthStart)
+    //            .SumAsync(x => x.Quantity * x.Price);
+
+    //        var lastMonthSales = await query
+    //            .Where(x => x.OrderDate >= lastMonthStart && x.OrderDate < thisMonthStart)
+    //            .SumAsync(x => x.Quantity * x.Price);
+
+    //        growthPercent = lastMonthSales == 0
+    //            ? (thisMonthSales == 0 ? 0 : (decimal?)null)
+    //            : Math.Round((thisMonthSales - lastMonthSales) / lastMonthSales * 100, 2);
+    //    }
+
+
+    //    // Date Range Filter
+    //    if (startDate.HasValue && endDate.HasValue)
+    //    {
+    //        query = query.Where(x => x.OrderDate >= startDate.Value && x.OrderDate <= endDate.Value);
+    //    }
+
+    //    // Monthly Filter
+    //    if (month.HasValue && year.HasValue)
+    //    {
+    //        query = query.Where(x => x.OrderDate.Month == month.Value && x.OrderDate.Year == year.Value);
+    //    }
+
+    //    var reportData = await query.ToListAsync();
+
+    //    if (!reportData.Any())
+    //    {
+    //        return new SalesReportDTO
+    //        {
+    //            TotalSales = 0,
+    //            TotalProductsSold = 0,
+    //            UniqueOrdersCount = 0,
+    //            UniqueShoppersCount = 0
+    //        };
+    //    }
+
+    //    return new SalesReportDTO
+    //    {
+    //        TotalSales = reportData.Sum(x => x.Quantity * x.Price),
+    //        TotalProductsSold = reportData.Sum(x => x.Quantity),
+    //        UniqueOrdersCount = reportData.Select(x => x.OrderId).Distinct().Count(),
+    //        UniqueShoppersCount = reportData.Select(x => x.ShopperRegId).Distinct().Count()
+    //    };
+    //}
+
+
+
+    // get dashboard summary counts and growth % 
+
     public async Task<SalesReportDTO> GetSalesReportByStoreId(
-       int storeId,
-       DateTime? startDate,
-       DateTime? endDate,
-       int? month,
-       int? year)
+    int storeId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int? month,
+    int? year)
     {
         var query = from od in _context.OrderDetails
                     join o in _context.Orders on od.OrderId equals o.OrderId
@@ -40,9 +122,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                         od.Quantity,
                         od.Price,
                         od.OrderId,
+                        od.SkuId,
                         o.ShopperRegId,
                         o.OrderDate
                     };
+
+        var baseQuery = query;   // keep an unfiltered copy for previous month / returning customers
 
         // Date Range Filter
         if (startDate.HasValue && endDate.HasValue)
@@ -58,24 +143,87 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
 
         var reportData = await query.ToListAsync();
 
-        if (!reportData.Any())
-        {
-            return new SalesReportDTO
-            {
-                TotalSales = 0,
-                TotalProductsSold = 0,
-                UniqueOrdersCount = 0,
-                UniqueShoppersCount = 0
-            };
-        }
+        var totalSales = reportData.Sum(x => x.Quantity * x.Price);
+        var totalProducts = reportData.Sum(x => x.Quantity);
+        var totalOrders = reportData.Select(x => x.OrderId).Distinct().Count();
+        var customersNow = reportData.Where(x => x.ShopperRegId != null)
+                                     .Select(x => x.ShopperRegId).Distinct().ToList();
 
-        return new SalesReportDTO
+        var dto = new SalesReportDTO
         {
-            TotalSales = reportData.Sum(x => x.Quantity * x.Price),
-            TotalProductsSold = reportData.Sum(x => x.Quantity),
-            UniqueOrdersCount = reportData.Select(x => x.OrderId).Distinct().Count(),
+            TotalSales = totalSales,
+            TotalProductsSold = totalProducts,
+            UniqueOrdersCount = totalOrders,
             UniqueShoppersCount = reportData.Select(x => x.ShopperRegId).Distinct().Count()
         };
+
+        // ---- Top selling item ----
+        var top = reportData
+            .GroupBy(x => x.SkuId)
+            .Select(g => new { SkuId = g.Key, Qty = g.Sum(x => x.Quantity) })
+            .OrderByDescending(x => x.Qty)
+            .FirstOrDefault();
+
+        if (top != null)
+        {
+            dto.TopSellingSkuId = top.SkuId;
+            dto.TopSellingItemName = await (
+                from v in _context.ProductVariantsNew
+                join pr in _context.ProductsNew on v.ProductId equals pr.ProductId
+                where v.SkuId == top.SkuId
+                select pr.ProductName
+            ).FirstOrDefaultAsync();
+        }
+
+        // ---- Pending orders (change "Pending" to your real status) ----
+        dto.PendingOrders = await (
+            from so in _context.StoreOrders
+            join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+            where so.StoreId == storeId && sd.ShippingStatus == "Pending"
+            select so.StoreOrderId
+        ).Distinct().CountAsync();
+
+        // ---- Previous month comparison + retention (only when month & year are given) ----
+        if (month.HasValue && year.HasValue)
+        {
+            var thisStart = new DateTime(year.Value, month.Value, 1);
+            var lastStart = thisStart.AddMonths(-1);
+
+            var lastMonth = await baseQuery
+                .Where(x => x.OrderDate >= lastStart && x.OrderDate < thisStart)
+                .ToListAsync();
+
+            var ordersPrev = lastMonth.Select(x => x.OrderId).Distinct().Count();
+            var salesPrev = lastMonth.Sum(x => x.Quantity * x.Price);
+            var productsPrev = lastMonth.Sum(x => x.Quantity);
+            var customersPrev = lastMonth.Where(x => x.ShopperRegId != null)
+                                         .Select(x => x.ShopperRegId).Distinct().Count();
+
+            dto.OrdersGrowthPercent = Growth(totalOrders, ordersPrev);
+            dto.SalesGrowthPercent = Growth(totalSales, salesPrev);
+            dto.CustomersGrowthPercent = Growth(customersNow.Count, customersPrev);
+            dto.ProductsChange = totalProducts - productsPrev;
+
+            // Returning = bought in this month AND had a paid order before this month
+            dto.ReturningCustomers = await baseQuery
+                .Where(x => x.OrderDate < thisStart && customersNow.Contains(x.ShopperRegId))
+                .Select(x => x.ShopperRegId)
+                .Distinct()
+                .CountAsync();
+
+            dto.RetentionPercent = customersNow.Count == 0
+                ? 0
+                : Math.Round((decimal)dto.ReturningCustomers / customersNow.Count * 100, 2);
+        }
+
+        return dto;
+    }
+
+    private static decimal? Growth(decimal current, decimal previous)
+    {
+        if (previous == 0)
+            return current == 0 ? 0 : (decimal?)null;   // null = "New"
+        return Math.Round((current - previous) / previous * 100, 2);
     }
     // to get location counts - tiwns, cities, states, country
     public async Task<LocationStatsDto> GetLocationCountsByStoreIdAsync(int storeId)
@@ -822,15 +970,24 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         int daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
 
         var revenueTrend = Enumerable.Range(1, daysInMonth)
-            .Select(day => new DateTime(selectedYear, selectedMonth, day))
-            .Select(date => new SalesTrendDto
-            {
-                Date = date,
-                Revenue = orders
-                    .Where(o => o.Order.OrderDate.Date == date.Date)
-                    .Sum(o => o.StoreTotalAmount)
-            })
-            .ToList();
+     .Select(day => new DateTime(selectedYear, selectedMonth, day))
+     .Select(date =>
+     {
+         var dayOrders = orders.Where(o => o.Order.OrderDate.Date == date.Date).ToList();
+
+         return new SalesTrendDto
+         {
+             Date = date,
+             Revenue = dayOrders.Sum(o => o.StoreTotalAmount),
+             TotalOrders = dayOrders.Count,
+             TotalCustomers = dayOrders
+                 .Where(o => o.Order.ShopperRegId != null)
+                 .Select(o => o.Order.ShopperRegId)
+                 .Distinct()
+                 .Count()
+         };
+     })
+     .ToList();
 
         return new BusinessSalesSummaryDto
         {
@@ -1331,6 +1488,43 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         )
         .OrderByDescending(x => x.CreatedDate)
         .ToListAsync();
+    }
+
+    //recent orders
+    public async Task<List<RecentOrderDTO>> GetPendingStoreOrders(int busRegId)
+    {
+        return await (
+            from so in _context.StoreOrders
+            join o in _context.Orders on so.OrderId equals o.OrderId
+            join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+            where so.StoreId == busRegId
+                  && sd.ShippingStatus == "Pending"
+            orderby o.OrderDate descending
+            select new RecentOrderDTO
+            {
+                StoreOrderId = so.StoreOrderId,
+
+                ShopperName = o.IsGuestOrder
+                    ? o.GuestRegister.Username
+                    : o.ShopperRegister.Username,
+
+                ProductName = (
+                    from d in _context.OrderDetails
+                    join v in _context.ProductVariantsNew on d.SkuId equals v.SkuId
+                    join p in _context.ProductsNew on v.ProductId equals p.ProductId
+                    where d.StoreOrderId == so.StoreOrderId
+                    select p.ProductName
+                ).FirstOrDefault(),
+
+                OrderDate = o.OrderDate,
+
+                Amount = _context.OrderDetails
+                    .Where(d => d.StoreOrderId == so.StoreOrderId)
+                    .Sum(d => d.Quantity * d.Price),
+
+                Status = sd.ShippingStatus
+            })
+            .ToListAsync();
     }
 }
 

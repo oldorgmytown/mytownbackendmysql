@@ -58,6 +58,8 @@ namespace mytown.Services.Implementations
             if (orderConfirmation == null)
                 return null;
 
+            //reduce stock for each product in the order
+            await _repo.ReduceStockAsync(orderId);
             // Create notification ONLY for registered shoppers
             if (!orderConfirmation.IsGuestOrder &&
                 orderConfirmation.ShopperRegId.HasValue)
