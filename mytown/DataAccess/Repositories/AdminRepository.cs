@@ -154,7 +154,7 @@ namespace mytown.DataAccess.Repositories
                 status => status,
                 status => businessProfiles.Count(bp =>
                     bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
-                    bp.BusCatId == 1
+                    bp.BusCatId >= 1
                 )
             );
 
@@ -162,7 +162,7 @@ namespace mytown.DataAccess.Repositories
                 status => status,
                 status => businessProfiles.Count(bp =>
                     bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
-                    bp.BusServId == 1
+                    bp.BusServId >= 1
                 )
             );
 
