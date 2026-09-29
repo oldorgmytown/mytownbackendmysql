@@ -361,6 +361,13 @@ namespace mytown.Controllers
 
             return Ok(payouts); // empty list if none — that's a valid, expected state, not an error
         }
+
+        [HttpGet("recent-pending-orders/{busRegId}")]
+        public async Task<IActionResult> GetPendingStoreOrders(int busRegId)
+        {
+            var result = await _dasboardservice.GetPendingStoreOrders(busRegId);
+            return Ok(result);
+        }
     }
 
 

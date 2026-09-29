@@ -81,6 +81,7 @@ namespace mytown.Services.Interfaces
         Task<bool> UpdateBusinessAccountDetailsAsync(int busRegId, UpdateBusinessAccountDetailDto dto);
         Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
         Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId);
+        Task<List<RecentOrderDTO>> GetPendingStoreOrders(int busRegId);
 
     }
 }
