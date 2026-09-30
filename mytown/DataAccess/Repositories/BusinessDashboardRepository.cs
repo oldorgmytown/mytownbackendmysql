@@ -950,7 +950,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     //Monthly sales
 
     public async Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(
-    int storeId, int? year, int? month, string? currency)
+     int storeId, int? year, int? month, string? currency)
     {
         int selectedYear = year ?? DateTime.Now.Year;
         int selectedMonth = month ?? DateTime.Now.Month;
@@ -967,27 +967,49 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var totalOrders = orders.Count;
         var totalRevenue = orders.Sum(x => x.StoreTotalAmount);
 
+        // Payout status: one query for all store orders in the month
+        var storeOrderIds = orders.Select(o => o.StoreOrderId).ToList();
+
+        var paidStatuses = new[] { "success" };   // change to the real "completed" value(s) in store_payout.status
+
+        var paidStoreOrderIds = (await _context.StorePayouts   // use your actual DbSet name
+            .Where(p => storeOrderIds.Contains(p.StoreOrderId)
+                        && paidStatuses.Contains(p.Status.ToLower()))
+            .Select(p => p.StoreOrderId)
+            .ToListAsync())
+            .ToHashSet();
+
         int daysInMonth = DateTime.DaysInMonth(selectedYear, selectedMonth);
 
         var revenueTrend = Enumerable.Range(1, daysInMonth)
-     .Select(day => new DateTime(selectedYear, selectedMonth, day))
-     .Select(date =>
-     {
-         var dayOrders = orders.Where(o => o.Order.OrderDate.Date == date.Date).ToList();
+            .Select(day => new DateTime(selectedYear, selectedMonth, day))
+            .Select(date =>
+            {
+                var dayOrders = orders.Where(o => o.Order.OrderDate.Date == date.Date).ToList();
 
-         return new SalesTrendDto
-         {
-             Date = date,
-             Revenue = dayOrders.Sum(o => o.StoreTotalAmount),
-             TotalOrders = dayOrders.Count,
-             TotalCustomers = dayOrders
-                 .Where(o => o.Order.ShopperRegId != null)
-                 .Select(o => o.Order.ShopperRegId)
-                 .Distinct()
-                 .Count()
-         };
-     })
-     .ToList();
+                var paidCount = dayOrders.Count(o => paidStoreOrderIds.Contains(o.StoreOrderId));
+                var pendingCount = dayOrders.Count - paidCount;
+
+                return new SalesTrendDto
+                {
+                    Date = date,
+                    Revenue = dayOrders.Sum(o => o.StoreTotalAmount),
+                    TotalOrders = dayOrders.Count,
+                    TotalCustomers = dayOrders
+                        .Where(o => o.Order.ShopperRegId != null)
+                        .Select(o => o.Order.ShopperRegId)
+                        .Distinct()
+                        .Count(),
+
+                    PaidOrders = paidCount,
+                    PendingOrders = pendingCount,
+                    PayoutStatus = dayOrders.Count == 0 ? null
+                                 : pendingCount == 0 ? "Paid"
+                                 : paidCount == 0 ? "Pending"
+                                 : "Partial"
+                };
+            })
+            .ToList();
 
         return new BusinessSalesSummaryDto
         {
