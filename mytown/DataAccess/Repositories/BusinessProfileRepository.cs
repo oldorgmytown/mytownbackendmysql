@@ -238,9 +238,12 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<IEnumerable<ProductSubCategory>> GetAllSubCategoriesAsync()
         {
-            return await _context.product_sub_categories.ToListAsync();
+            return await _context.product_sub_categories
+                .OrderByDescending(sc => _context.ProductsNew
+                    .Count(p => p.ProdSubcatId == sc.ProdSubcatId && p.IsActive))
+                .ThenBy(sc => sc.ProdSubcatName)
+                .ToListAsync();
         }
-
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
         {
             var result = (from product in _context.ProductsNew
