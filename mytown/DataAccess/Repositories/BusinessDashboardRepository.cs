@@ -1539,10 +1539,11 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 ).FirstOrDefault(),
 
                 OrderDate = o.OrderDate,
+                Amount = so.StoreTotalAmount,
 
-                Amount = _context.OrderDetails
-                    .Where(d => d.StoreOrderId == so.StoreOrderId)
-                    .Sum(d => d.Quantity * d.Price),
+                //Amount = _context.OrderDetails
+                //    .Where(d => d.StoreOrderId == so.StoreOrderId)
+                //    .Sum(d => d.Quantity * d.Price),
 
                 Status = sd.ShippingStatus
             })
