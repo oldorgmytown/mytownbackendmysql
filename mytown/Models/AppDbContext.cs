@@ -101,6 +101,7 @@ namespace mytown.Models
             public DbSet<SenderAlternateAddress> SenderAlternateAddresses { get; set; }
 
             // shopper experience
+
             public DbSet<ShopperExperience> ShopperExperiences { get; set; }
             public DbSet<ShopperExperiencePhoto> ShopperExperiencePhotos { get; set; }
 
@@ -110,6 +111,10 @@ namespace mytown.Models
             public DbSet<BusinessProfileViewer> BusinessProfileViewers { get; set; }
             public DbSet<BusinessConnection> BusinessConnections { get; set; }
             public DbSet<ChatMessage> ChatMessages { get; set; }
+
+            //product review
+            public DbSet<ProductReview> ProductReviews { get; set; }
+            public DbSet<ProductReviewPhoto> ProductReviewPhotos { get; set; }
 
             // location images
             public DbSet<LocationImage> LocationImages { get; set; }

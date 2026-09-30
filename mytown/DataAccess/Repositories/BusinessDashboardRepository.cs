@@ -905,11 +905,20 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                     .Sum(od => (int?)od.Quantity) ?? 0,
 
                 ProductImage = _context.ProductVariantImagesNew
-                    .Where(i => i.SkuId == x.v.SkuId)
-                    .OrderBy(i => i.SortOrder)
-                    .ThenBy(i => i.ImageId)
-                    .Select(i => i.FileName)
-                    .FirstOrDefault()
+    .Where(i => i.SkuId == x.v.SkuId)
+    .OrderBy(i => i.SortOrder)
+    .ThenBy(i => i.ImageId)
+    .Select(i => i.FileName)
+    .FirstOrDefault(),
+
+                AverageRating = _context.ProductReviews
+    .Where(r => r.ProductId == x.p.ProductId
+                && r.Status == "Approved"
+                && r.Rating != null)
+    .Average(r => (decimal?)r.Rating) ?? 0,
+
+                TotalReviews = _context.ProductReviews
+    .Count(r => r.ProductId == x.p.ProductId && r.Status == "Approved")
             })
             .ToListAsync();
     }
