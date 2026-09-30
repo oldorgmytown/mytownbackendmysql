@@ -150,7 +150,11 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.LogoPath = businessProfile.LogoPath;
                 }
 
-                if (!string.IsNullOrEmpty(businessProfile.ProfileStatus))
+                var isAlreadyApproved = string.Equals(
+    existingProfile.ProfileStatus, "approved", StringComparison.OrdinalIgnoreCase);
+
+                // Keep "approved" as is; otherwise take the incoming status
+                if (!isAlreadyApproved && !string.IsNullOrEmpty(businessProfile.ProfileStatus))
                     existingProfile.ProfileStatus = businessProfile.ProfileStatus;
 
                 if (businessProfile.BusCatId != 0)

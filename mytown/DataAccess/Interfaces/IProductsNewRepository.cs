@@ -1,6 +1,7 @@
 ﻿using MimeKit.Tnef;
 using mytown.Models;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.Repositories.Interfaces
 {
@@ -27,5 +28,8 @@ namespace mytown.Repositories.Interfaces
 
         Task<List<ProductSearchResultDto>> SearchProductsAsync(
     ProductSearchRequestDto request);
+
+        Task<ProductReview> AddProductReviewAsync(AddProductReviewDto dto);
+        Task<ProductReviewSummaryDto> GetProductReviewsAsync(long productId);
     }
 }
