@@ -959,7 +959,7 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
     //Monthly sales
 
     public async Task<BusinessSalesSummaryDto> GetMonthlySalesAsync(
-     int storeId, int? year, int? month, string? currency)
+        int storeId, int? year, int? month, string? currency)
     {
         int selectedYear = year ?? DateTime.Now.Year;
         int selectedMonth = month ?? DateTime.Now.Month;
@@ -976,15 +976,13 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         var totalOrders = orders.Count;
         var totalRevenue = orders.Sum(x => x.StoreTotalAmount);
 
-        // Payout status: one query for all store orders in the month
+        // Payout table row exists = paid
         var storeOrderIds = orders.Select(o => o.StoreOrderId).ToList();
 
-        var paidStatuses = new[] { "success" };   // change to the real "completed" value(s) in store_payout.status
-
-        var paidStoreOrderIds = (await _context.StorePayouts   // use your actual DbSet name
-            .Where(p => storeOrderIds.Contains(p.StoreOrderId)
-                        && paidStatuses.Contains(p.Status.ToLower()))
+        var paidStoreOrderIds = (await _context.StorePayouts
+            .Where(p => storeOrderIds.Contains(p.StoreOrderId))
             .Select(p => p.StoreOrderId)
+            .Distinct()
             .ToListAsync())
             .ToHashSet();
 

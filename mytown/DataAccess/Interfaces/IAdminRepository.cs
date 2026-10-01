@@ -86,5 +86,8 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
 
         //payouts
         Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year);
+        Task<PagedResultDto<AdminOrderRowDto>> GetAdminOrderDetailsAsync(
+    int month, int year, int? storeOrderId, int? orderId, string? shippingStatus,
+    int pageNumber, int pageSize);
     }
 }

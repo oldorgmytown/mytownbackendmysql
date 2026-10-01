@@ -1333,72 +1333,189 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 select so.StoreOrderId
             ).Distinct().CountAsync();
 
-            // ---- Store payouts ----
-            var storeIds = _context.StorePayouts
-                .Where(p => p.CreatedDate >= start && p.CreatedDate < end)
-                .Select(p => p.StoreOrderId)
-                .Distinct();
+            // ---- Payouts due this month (amounts from store order and shipping details) ----
+            var due = await (
+                from so in _context.StoreOrders
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+                where o.OrderDate >= start && o.OrderDate < end
+                      && _context.Payments.Any(p => p.OrderId == o.OrderId && p.PaymentStatus == "Paid")
+                select new
+                {
+                    so.StoreOrderId,
+                    StoreAmount = so.StoreTotalAmount,
+                    CourierAmount = sd.BranchId != null ? (decimal?)sd.Cost : null,
+                    TransporterAmount = sd.TransporterRegId != null ? (decimal?)sd.Cost : null
+                }
+            ).ToListAsync();
 
-            var store = await _context.StorePayouts
-                .Where(p => storeIds.Contains(p.StoreOrderId))
-                .Select(p => new { p.StoreOrderId, p.Amount, p.Status, p.CreatedDate })
-                .ToListAsync();
+            var ids = due.Select(d => d.StoreOrderId).ToList();
 
-            // ---- Courier payouts ----
-            var courierIds = _context.CourierPayouts
-                .Where(p => p.CreatedDate >= start && p.CreatedDate < end)
-                .Select(p => p.StoreOrderId)
-                .Distinct();
+            // ---- Paid = a payout row exists ----
+            var storePaid = (await _context.StorePayouts
+                .Where(p => ids.Contains(p.StoreOrderId))
+                .Select(p => p.StoreOrderId).Distinct().ToListAsync()).ToHashSet();
 
-            var courier = await _context.CourierPayouts
-                .Where(p => courierIds.Contains(p.StoreOrderId))
-                .Select(p => new { p.StoreOrderId, p.Amount, p.Status, p.CreatedDate })
-                .ToListAsync();
+            var courierPaid = (await _context.CourierPayouts
+                .Where(p => ids.Contains(p.StoreOrderId))
+                .Select(p => p.StoreOrderId).Distinct().ToListAsync()).ToHashSet();
 
-            // ---- P2P logistics: shopper (store order) payouts only, no sender orders ----
-            var transporterIds = _context.TransporterPayouts
-                .Where(p => p.CreatedDate >= start && p.CreatedDate < end
-                            && p.StoreOrderId != null && p.SenderOrderId == null)
-                .Select(p => p.StoreOrderId.Value)
-                .Distinct();
-
-            var transporter = await _context.TransporterPayouts
+            // P2P: shopper (store order) payouts only, no sender orders
+            var transporterPaid = (await _context.TransporterPayouts
                 .Where(p => p.StoreOrderId != null && p.SenderOrderId == null
-                            && transporterIds.Contains(p.StoreOrderId.Value))
-                .Select(p => new { StoreOrderId = p.StoreOrderId.Value, p.Amount, p.Status, p.CreatedDate })
-                .ToListAsync();
+                            && ids.Contains(p.StoreOrderId.Value))
+                .Select(p => p.StoreOrderId.Value).Distinct().ToListAsync()).ToHashSet();
 
             return new AdminPayoutsSummaryDto
             {
                 TotalOrders = totalOrders,
                 OrdersGrowthPercent = growth,
                 DeliveredOrders = delivered,
-                StorePayouts = BuildCard(store.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate))),
-                P2PLogistics = BuildCard(transporter.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate))),
-                CourierLogistics = BuildCard(courier.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate)))
+
+                StorePayouts = BuildCard(
+                    due.Select(d => (d.StoreOrderId, d.StoreAmount)), storePaid),
+
+                CourierLogistics = BuildCard(
+                    due.Where(d => d.CourierAmount != null)
+                       .Select(d => (d.StoreOrderId, d.CourierAmount!.Value)), courierPaid),
+
+                P2PLogistics = BuildCard(
+                    due.Where(d => d.TransporterAmount != null)
+                       .Select(d => (d.StoreOrderId, d.TransporterAmount!.Value)), transporterPaid)
             };
         }
 
         private static PayoutCardDto BuildCard(
-            IEnumerable<(int StoreOrderId, decimal Amount, string Status, DateTime CreatedDate)> rows)
+            IEnumerable<(int Id, decimal Amount)> due, HashSet<int> paidIds)
         {
-            // One row per store order: the latest payout attempt
-            var latest = rows
-                .GroupBy(x => x.StoreOrderId)
-                .Select(g => g.OrderByDescending(x => x.CreatedDate).First())
-                .ToList();
-
-            var settledCount = latest.Count(x =>
-                string.Equals(x.Status, "success", StringComparison.OrdinalIgnoreCase));
+            var list = due.ToList();
+            var settled = list.Count(d => paidIds.Contains(d.Id));
 
             return new PayoutCardDto
             {
-                TotalAmount = latest.Sum(x => x.Amount),
-                PayoutCount = latest.Count,
-                SettledCount = settledCount,
-                SettledPercent = latest.Count == 0
-                    ? 0
-                    : Math.Round((decimal)settledCount / latest.Count * 100, 0)
+                PayoutCount = list.Count,                                                  // "Total 15 Payouts This month"
+                SettledCount = settled,                                                    // 14
+                SettledPercent = list.Count == 0 ? 0
+                    : Math.Round((decimal)settled / list.Count * 100, 0),                  // 93
+                TotalAmount = list.Sum(d => d.Amount),                                     // total payable
+              //  PaidAmount = list.Where(d => paidIds.Contains(d.Id)).Sum(d => d.Amount)    // paid so far
+            };
+        }
+
+        public async Task<PagedResultDto<AdminOrderRowDto>> GetAdminOrderDetailsAsync(
+      int month, int year,
+      int? storeOrderId, int? orderId, string? shippingStatus,
+      int pageNumber, int pageSize)
+        {
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var query =
+                from so in _context.StoreOrders
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+                where o.OrderDate >= start && o.OrderDate < end
+                select new { so, o, b, sd };
+
+            // Optional filters
+            if (storeOrderId.HasValue)
+                query = query.Where(x => x.so.StoreOrderId == storeOrderId.Value);
+
+            if (orderId.HasValue)
+                query = query.Where(x => x.o.OrderId == orderId.Value);
+
+            if (!string.IsNullOrWhiteSpace(shippingStatus))
+                query = query.Where(x => x.sd.ShippingStatus == shippingStatus);
+
+            var totalCount = await query.CountAsync();
+
+            var page = await query
+                .OrderByDescending(x => x.o.OrderDate)
+                .ThenByDescending(x => x.so.StoreOrderId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    x.so.StoreOrderId,
+                    x.o.OrderId,
+                    x.o.OrderDate,
+                    x.o.IsGuestOrder,
+
+                    ShopperName = x.o.IsGuestOrder
+                        ? x.o.GuestRegister.Username
+                        : x.o.ShopperRegister.Username,
+
+                    // Registered shopper: town + city. Guest: delivery address.
+                    ShopperLocation = x.o.IsGuestOrder
+                        ? x.sd.DeliveryAddress
+                        : x.o.ShopperRegister.Town + ", " + x.o.ShopperRegister.City,
+
+                    StoreName = x.b.BusinessName,
+                    StoreLocation = x.b.BusinessCity,
+                    Amount = x.o.TotalAmount,   // shopper's order amount (change to x.so.StoreTotalAmount for the store's share)
+
+                    // Payout amounts
+                    StoreAmount = x.so.StoreTotalAmount,
+                    CourierAmount = x.sd.BranchId != null ? (decimal?)x.sd.Cost : null,
+                    TransporterAmount = x.sd.TransporterRegId != null ? (decimal?)x.sd.Cost : null,
+
+                    ShippingStatus = x.sd.ShippingStatus
+                })
+                .ToListAsync();
+
+            var ids = page.Select(p => p.StoreOrderId).ToList();
+
+            // Paid = a payout row exists (payout tables are used for status only)
+            var storePaid = (await _context.StorePayouts
+                .Where(p => ids.Contains(p.StoreOrderId))
+                .Select(p => p.StoreOrderId).Distinct().ToListAsync()).ToHashSet();
+
+            var courierPaid = (await _context.CourierPayouts
+                .Where(p => ids.Contains(p.StoreOrderId))
+                .Select(p => p.StoreOrderId).Distinct().ToListAsync()).ToHashSet();
+
+            // P2P: shopper (store order) payouts only, no sender orders
+            var transporterPaid = (await _context.TransporterPayouts
+                .Where(p => p.StoreOrderId != null && p.SenderOrderId == null
+                            && ids.Contains(p.StoreOrderId.Value))
+                .Select(p => p.StoreOrderId.Value).Distinct().ToListAsync()).ToHashSet();
+
+            var items = page.Select(p => new AdminOrderRowDto
+            {
+                StoreOrderId = p.StoreOrderId,
+                OrderId = p.OrderId,
+                OrderDate = p.OrderDate,
+
+                ShopperName = p.ShopperName,
+                IsGuestOrder = p.IsGuestOrder,
+                ShopperLocation = p.ShopperLocation,
+
+                StoreName = p.StoreName,
+                StoreLocation = p.StoreLocation,
+                Amount = p.Amount,
+
+                StorePayoutAmount = p.StoreAmount,
+                StorePayoutStatus = storePaid.Contains(p.StoreOrderId) ? "Paid" : "Pending",
+
+                // null amount/status = role not used, frontend shows "—"
+                CourierPayoutAmount = p.CourierAmount,
+                CourierPayoutStatus = p.CourierAmount == null ? null
+                    : courierPaid.Contains(p.StoreOrderId) ? "Paid" : "Pending",
+
+                TransporterPayoutAmount = p.TransporterAmount,
+                TransporterPayoutStatus = p.TransporterAmount == null ? null
+                    : transporterPaid.Contains(p.StoreOrderId) ? "Paid" : "Pending",
+
+                ShippingStatus = p.ShippingStatus
+            }).ToList();
+
+            return new PagedResultDto<AdminOrderRowDto>
+            {
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Items = items
             };
         }
 
