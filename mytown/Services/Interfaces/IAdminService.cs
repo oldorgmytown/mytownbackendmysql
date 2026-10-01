@@ -70,5 +70,8 @@ namespace mytown.Services.Interfaces
         // Orders tab — full order list, paginated
         Task<(List<OrderFullDetailsDto> Records, int TotalRecords)>
             GetAllOrdersFullDetailsPaginatedAsync(int page, int pageSize, string? status, string? search);
+
+        //payouts
+        Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year);
     }
 }

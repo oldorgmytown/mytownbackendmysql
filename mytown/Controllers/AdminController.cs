@@ -4,6 +4,7 @@ using MySqlConnector;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Diagnostics;
 
 namespace mytown.Controllers
@@ -496,5 +497,13 @@ public async Task<IActionResult> GetBusinessLocationCounts()
         return StatusCode(500, new { message = "Error retrieving business location counts", error = ex.Message });
     }
 }
+        //payouts
+
+        [HttpGet("admin-payout-summary")]
+        public async Task<IActionResult> GetAdminSummary([FromQuery] int month, [FromQuery] int year)
+        {
+            var result = await _adminService.GetAdminSummaryAsync(month, year);
+            return Ok(result);
+        }
     }
 }

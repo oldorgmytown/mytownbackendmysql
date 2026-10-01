@@ -1304,5 +1304,103 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             return (records, totalRecords);
         }
 
+        //payouts
+
+        public async Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year)
+        {
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+            var prevStart = start.AddMonths(-1);
+
+            // ---- Total orders + growth vs previous month ----
+            var totalOrders = await _context.Orders
+                .CountAsync(o => o.OrderDate >= start && o.OrderDate < end);
+
+            var prevOrders = await _context.Orders
+                .CountAsync(o => o.OrderDate >= prevStart && o.OrderDate < start);
+
+            decimal? growth = prevOrders == 0
+                ? (totalOrders == 0 ? 0 : (decimal?)null)
+                : Math.Round((decimal)(totalOrders - prevOrders) / prevOrders * 100, 2);
+
+            // ---- Delivered store orders (orders placed this month) ----
+            var delivered = await (
+                from so in _context.StoreOrders
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+                where o.OrderDate >= start && o.OrderDate < end
+                      && sd.ShippingStatus == "Delivered"
+                select so.StoreOrderId
+            ).Distinct().CountAsync();
+
+            // ---- Store payouts ----
+            var storeIds = _context.StorePayouts
+                .Where(p => p.CreatedDate >= start && p.CreatedDate < end)
+                .Select(p => p.StoreOrderId)
+                .Distinct();
+
+            var store = await _context.StorePayouts
+                .Where(p => storeIds.Contains(p.StoreOrderId))
+                .Select(p => new { p.StoreOrderId, p.Amount, p.Status, p.CreatedDate })
+                .ToListAsync();
+
+            // ---- Courier payouts ----
+            var courierIds = _context.CourierPayouts
+                .Where(p => p.CreatedDate >= start && p.CreatedDate < end)
+                .Select(p => p.StoreOrderId)
+                .Distinct();
+
+            var courier = await _context.CourierPayouts
+                .Where(p => courierIds.Contains(p.StoreOrderId))
+                .Select(p => new { p.StoreOrderId, p.Amount, p.Status, p.CreatedDate })
+                .ToListAsync();
+
+            // ---- P2P logistics: shopper (store order) payouts only, no sender orders ----
+            var transporterIds = _context.TransporterPayouts
+                .Where(p => p.CreatedDate >= start && p.CreatedDate < end
+                            && p.StoreOrderId != null && p.SenderOrderId == null)
+                .Select(p => p.StoreOrderId.Value)
+                .Distinct();
+
+            var transporter = await _context.TransporterPayouts
+                .Where(p => p.StoreOrderId != null && p.SenderOrderId == null
+                            && transporterIds.Contains(p.StoreOrderId.Value))
+                .Select(p => new { StoreOrderId = p.StoreOrderId.Value, p.Amount, p.Status, p.CreatedDate })
+                .ToListAsync();
+
+            return new AdminPayoutsSummaryDto
+            {
+                TotalOrders = totalOrders,
+                OrdersGrowthPercent = growth,
+                DeliveredOrders = delivered,
+                StorePayouts = BuildCard(store.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate))),
+                P2PLogistics = BuildCard(transporter.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate))),
+                CourierLogistics = BuildCard(courier.Select(x => (x.StoreOrderId, x.Amount, x.Status, x.CreatedDate)))
+            };
+        }
+
+        private static PayoutCardDto BuildCard(
+            IEnumerable<(int StoreOrderId, decimal Amount, string Status, DateTime CreatedDate)> rows)
+        {
+            // One row per store order: the latest payout attempt
+            var latest = rows
+                .GroupBy(x => x.StoreOrderId)
+                .Select(g => g.OrderByDescending(x => x.CreatedDate).First())
+                .ToList();
+
+            var settledCount = latest.Count(x =>
+                string.Equals(x.Status, "success", StringComparison.OrdinalIgnoreCase));
+
+            return new PayoutCardDto
+            {
+                TotalAmount = latest.Sum(x => x.Amount),
+                PayoutCount = latest.Count,
+                SettledCount = settledCount,
+                SettledPercent = latest.Count == 0
+                    ? 0
+                    : Math.Round((decimal)settledCount / latest.Count * 100, 0)
+            };
+        }
+
     }
 }
