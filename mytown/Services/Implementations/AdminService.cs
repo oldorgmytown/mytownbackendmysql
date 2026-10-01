@@ -277,5 +277,10 @@ GetSenderRegistersPaginatedAsync(
             return await _adminRepo.GetAllOrdersFullDetailsPaginatedAsync(page, pageSize, status, search);
         }
 
+        //payouts
+        public async Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year)
+        {
+            return await _adminRepo.GetAdminSummaryAsync(month, year);
+        }
     }
 }
