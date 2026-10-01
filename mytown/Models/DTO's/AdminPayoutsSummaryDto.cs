@@ -20,5 +20,6 @@
         public int PayoutCount { get; set; }          // "Total 15 Payouts This month"
         public int SettledCount { get; set; }         // "14 of 15 settled"
         public decimal SettledPercent { get; set; }   // 0-100
+      //  public decimal PaidAmount { get; set; }
     }
 }

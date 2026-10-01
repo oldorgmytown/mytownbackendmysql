@@ -1,8 +1,7 @@
 ﻿namespace mytown.Models.DTO_s
 {
-    public class AdminPayoutOrderRowDto
+    public class AdminOrderRowDto
     {
-
         public int StoreOrderId { get; set; }
         public int OrderId { get; set; }                 // shows as "#490"
         public DateTime OrderDate { get; set; }
@@ -34,4 +33,3 @@
         public List<T> Items { get; set; } = new();
     }
 }
-

@@ -505,5 +505,17 @@ public async Task<IActionResult> GetBusinessLocationCounts()
             var result = await _adminService.GetAdminSummaryAsync(month, year);
             return Ok(result);
         }
+
+        [HttpGet("admin-payout-orders")]
+        public async Task<IActionResult> GetAdminOrders(
+    [FromQuery] int month, [FromQuery] int year,
+    [FromQuery] int? storeOrderId, [FromQuery] int? orderId,
+    [FromQuery] string? shippingStatus,
+    [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _adminService.GetAdminOrderDetailsAsync(
+                month, year, storeOrderId, orderId, shippingStatus, pageNumber, pageSize);
+            return Ok(result);
+        }
     }
 }

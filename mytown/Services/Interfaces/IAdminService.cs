@@ -73,5 +73,8 @@ namespace mytown.Services.Interfaces
 
         //payouts
         Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year);
+        Task<PagedResultDto<AdminOrderRowDto>> GetAdminOrderDetailsAsync(
+    int month, int year, int? storeOrderId, int? orderId, string? shippingStatus,
+    int pageNumber, int pageSize);
     }
 }
