@@ -1,0 +1,28 @@
+using mytown.DTOs;
+using mytown.Models;
+using mytown.Models.DTO_s;
+using mytown.Models.DTOs;
+using MyTown.Models;
+
+namespace mytown.DataAccess.Interfaces
+{
+    public interface IBusinessServiceRepository
+    {
+        Task<List<mytown.Models.BusinessService>> GetAllServicesAsync();
+        
+        Task<List<ServiceSubCategory>> GetByBusServIdAsync(int busServId);
+        Task<bool> AddOrUpdateServiceProfileAsync(CreateServiceProfileDto dto);
+
+        Task<BusinessRegister?> GetByBusRegIdAsync(int busRegId);
+
+        Task<ServiceProfileDetailsDto?> GetServiceProfileDetailsAsync(int busRegId);
+
+        Task<List<BusinessServiceTypesDto>> GetBusinessServiceTypesAsync(int busRegId);
+
+        //get allservices
+        Task<List<Service>> GetServicesByBusRegIdAsync(int busRegId);
+
+        // edit service types
+        Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
+    }
+}

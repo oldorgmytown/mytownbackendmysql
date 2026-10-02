@@ -61,11 +61,9 @@ namespace mytown.Services.Implementations
             return await _repo.AddProductVariantAsync(dto);
         }
 
-        public async Task<Sku_ProductVariant?> UpdateVariantAsync(
-            Sku_ProductVariantDto dto,
-            List<IFormFile> images)
+        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto)
         {
-            return await _repo.UpdateVariantAsync(dto, images);
+            return await _repo.UpdateVariantAsync(dto);
         }
 
         public async Task DeleteVariantAsync(int productId, int skuId)

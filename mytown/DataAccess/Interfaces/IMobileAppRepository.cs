@@ -1,0 +1,26 @@
+﻿using mytown.Models.DTO_s;
+
+namespace mytown.DataAccess.Interfaces
+{
+    public interface IMobileAppRepository
+    {
+        Task<List<PopularProductDto>> GetPopularProductsAsync();
+        Task<List<PopularStoresDto>> GetPopularStoresAsync();
+        Task<List<TownStoreCountDto>> GetExploreTownsAsync();
+        Task<List<AvailableTransporterDto>> GetAvailableTransportersAsync(
+        string startTown,
+        string startCity,
+        string destinationTown,
+        string destinationCity);
+        Task<List<PopularCityDto>> GetPopularCitiesAsync();
+        Task<List<TownListDto>> GetTownListByCityAsync(string city);
+        Task<List<AllProductsDto>> GetAllProductsAsync();
+        Task<List<AllProductsDto>> GetProductsBySubCategoryAsync(int subCategoryId);
+        Task<List<StoreBySubCategoryDto>> GetStoresBySubCategoryAsync(int prodSubcatId);
+        Task<List<LocationImageDto>> GetLocationImagesAsync();
+        Task<List<LocationImageDto>> GetLocationImageCountriesAsync();
+        Task<List<LocationImageDto>> GetLocationImageCitiesAsync();
+        Task<List<CountryDto>> GetAllCountriesAsync();  // added
+        
+    }
+}

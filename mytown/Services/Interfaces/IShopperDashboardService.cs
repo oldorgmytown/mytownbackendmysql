@@ -13,10 +13,10 @@ namespace mytown.Services.Interfaces
      int pageSize);
 
         Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
-            int storeOrderId,
-            string? search,
-            int pageNumber,
-            int pageSize);
+           int storeOrderId,
+           string? search,
+           int pageNumber,
+           int pageSize);
         Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
      int shopperRegId,
      string? search,
@@ -39,7 +39,13 @@ namespace mytown.Services.Interfaces
         Task<ShopperDetailsDto?> GetShopperDetailsAsync(int shopperRegId);
         Task<bool> UpdateShopperDetailsAsync(UpdateShopperDetailsDto dto);
 
-       // Task<bool> UpdatePasswordAsync(UpdatePasswordDto dto);
+        // Task<bool> UpdatePasswordAsync(UpdatePasswordDto dto);
+
+        Task<List<ShopperNotificationDto>> GetShopperNotificationsAsync(int shopperId, bool onlyUnread);
+
+        Task MarkAllShopperAsReadAsync(int shopperId);
+
+        Task MarkEachShopperNotificationAsReadAsync(int notificationId);
 
     }
 }
