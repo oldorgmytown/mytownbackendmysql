@@ -1519,5 +1519,251 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             };
         }
 
+        public async Task<AdminOrderDetailDto?> GetAdminOrderDetailAsync(int storeOrderId)
+        {
+            var head = await (
+                from so in _context.StoreOrders
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
+                where so.StoreOrderId == storeOrderId
+                select new
+                {
+                    so.StoreOrderId,
+                    so.OrderId,
+                    so.StoreId,
+                    so.StoreTotalAmount,
+                    o.OrderDate,
+                    o.IsGuestOrder,
+                    b.BusinessName,
+                    b.BusinessUsername,
+                    b.Address1,
+                    b.Address2,
+                    b.BusinessCity,
+                    b.BusinessState,
+                    b.PostalCode,
+                    b.BusMobileNo,
+                    sd.BranchId,
+                    sd.TransporterRegId,
+                    sd.TransporterPlanId,
+                    sd.Cost,
+                    sd.EstimatedDays,
+                    sd.DeliveredDate,
+                    sd.TrackingId,
+                    sd.ShippingStatus,
+                    sd.DeliveryAddress,
+                    ShopperName = o.IsGuestOrder ? o.GuestRegister.Username : o.ShopperRegister.Username,
+                    ShopperPhone = o.IsGuestOrder ? o.GuestRegister.PhoneNumber : o.ShopperRegister.PhoneNumber
+                }
+            ).FirstOrDefaultAsync();
+
+            if (head == null) return null;
+
+            // ---- Items ----
+            var items = await (
+                from od in _context.OrderDetails
+                join v in _context.ProductVariantsNew on od.SkuId equals v.SkuId
+                join p in _context.ProductsNew on v.ProductId equals p.ProductId
+                where od.StoreOrderId == storeOrderId
+                select new AdminOrderItemDto
+                {
+                    ProductName = p.ProductName,
+                    SkuId = v.SkuId,
+                    Weight = v.Weight,
+                    MeasurementUnit = v.MeasurementUnit,
+                    Quantity = od.Quantity,
+                    Price = od.Price,
+                    ImageUrl = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault()
+                }
+            ).ToListAsync();
+
+            var subtotal = items.Sum(i => i.Quantity * i.Price);
+
+            // ---- Transaction id: latest payment of the order ----
+            var transactionId = await _context.Payments
+                .Where(p => p.OrderId == head.OrderId)
+                .OrderByDescending(p => p.PaymentDate)
+                .Select(p => (long?)p.PaymentId)
+                .FirstOrDefaultAsync();
+
+            // ---- Store payout + bank (row exists = paid; amount from the store order) ----
+            var sp = await _context.StorePayouts
+                .Where(p => p.StoreOrderId == storeOrderId)
+                .OrderByDescending(p => p.CreatedDate)
+                .Select(p => new { p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
+                .FirstOrDefaultAsync();
+
+            var storeBanks = (await _context.BusinessAccountDetails
+                    .Where(a => a.BusRegId == head.StoreId)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .Select(a => new { a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId })
+                    .ToListAsync())
+                .Select(a => (a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId))
+                .ToList();
+
+            var (storeBankName, storeLast4) = PickBank(storeBanks, sp?.BeneficiaryId);
+
+            var storePayout = new PayoutInfoDto
+            {
+                Status = sp != null ? "Paid" : "Pending",
+                Amount = head.StoreTotalAmount,
+                SettledDate = sp == null ? null : sp.UpdatedDate ?? sp.CreatedDate,
+                CashfreeReferenceId = sp?.CfTransferId,
+                BeneficiaryId = sp?.BeneficiaryId,
+                BankName = storeBankName,
+                AccountLast4 = storeLast4
+            };
+
+            // ---- Shipping provider + its payout ----
+            string? method = null, providerName = null, providerPhone = null, vehicleNumber = null;
+            PayoutInfoDto? providerPayout = null;
+
+            if (head.TransporterRegId != null)
+            {
+                method = "Transporter (P2P)";
+
+                var t = await _context.TransporterRegisters
+                    .Where(x => x.TransporterRegId == head.TransporterRegId)
+                    .Select(x => new { x.TransporterName, x.PhoneNumber })
+                    .FirstOrDefaultAsync();
+                providerName = t?.TransporterName;
+                providerPhone = t?.PhoneNumber;
+
+                vehicleNumber = await _context.TransporterTravelPlans
+                    .Where(p => p.PlanId == head.TransporterPlanId)
+                    .Select(p => p.VehicleRegistration)
+                    .FirstOrDefaultAsync();
+
+                var tp = await _context.TransporterPayouts
+                    .Where(p => p.StoreOrderId == storeOrderId && p.SenderOrderId == null)
+                    .OrderByDescending(p => p.CreatedDate)
+                    .Select(p => new { p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
+                    .FirstOrDefaultAsync();
+
+                var tBanks = (await _context.TransporterAccountDetails
+                        .Where(a => a.TransporterRegId == head.TransporterRegId)
+                        .OrderByDescending(a => a.CreatedDate)
+                        .Select(a => new { a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId })
+                        .ToListAsync())
+                    .Select(a => (a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId))
+                    .ToList();
+
+                var (tBank, tLast4) = PickBank(tBanks, tp?.BeneficiaryId);
+
+                providerPayout = new PayoutInfoDto
+                {
+                    Status = tp != null ? "Paid" : "Pending",
+                    Amount = head.Cost,
+                    SettledDate = tp == null ? null : tp.UpdatedDate ?? tp.CreatedDate,
+                    CashfreeReferenceId = tp?.CfTransferId,
+                    BeneficiaryId = tp?.BeneficiaryId,
+                    BankName = tBank,
+                    AccountLast4 = tLast4
+                };
+            }
+            else if (head.BranchId != null)
+            {
+                method = "Courier";
+
+                var c = await (
+                    from br in _context.CourierBranches
+                    join cs in _context.CourierService on br.CourierId equals cs.CourierId
+                    where br.BranchId == head.BranchId
+                    select new { br.CourierId, cs.CourierServiceName, br.BranchPhoneNumber }
+                ).FirstOrDefaultAsync();
+                providerName = c?.CourierServiceName;
+                providerPhone = c?.BranchPhoneNumber;
+
+                var cp = await _context.CourierPayouts
+                    .Where(p => p.StoreOrderId == storeOrderId)
+                    .OrderByDescending(p => p.CreatedDate)
+                    .Select(p => new { p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
+                    .FirstOrDefaultAsync();
+
+                var courierId = c?.CourierId;
+                var cBanks = (await _context.CourierAccountDetails
+                        .Where(a => a.CourierId == courierId)
+                        .OrderByDescending(a => a.CreatedDate)
+                        .Select(a => new { a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId })
+                        .ToListAsync())
+                    .Select(a => (a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId))
+                    .ToList();
+
+                var (cBank, cLast4) = PickBank(cBanks, cp?.BeneficiaryId);
+
+                providerPayout = new PayoutInfoDto
+                {
+                    Status = cp != null ? "Paid" : "Pending",
+                    Amount = head.Cost,
+                    SettledDate = cp == null ? null : cp.UpdatedDate ?? cp.CreatedDate,
+                    CashfreeReferenceId = cp?.CfTransferId,
+                    BeneficiaryId = cp?.BeneficiaryId,
+                    BankName = cBank,
+                    AccountLast4 = cLast4
+                };
+            }
+
+            return new AdminOrderDetailDto
+            {
+                StoreOrderId = head.StoreOrderId,
+                OrderId = head.OrderId,
+                OrderDate = head.OrderDate,
+                TransactionId = transactionId,
+                ShippingStatus = head.ShippingStatus,
+
+                StoreId = head.StoreId,
+                StoreName = head.BusinessName,
+                OwnerName = head.BusinessUsername,
+                StoreAddress = head.Address1 + ", " +
+                    (string.IsNullOrEmpty(head.Address2) ? "" : head.Address2 + ", ") +
+                    head.BusinessCity + ", " + head.BusinessState +
+                    (string.IsNullOrEmpty(head.PostalCode) ? "" : " " + head.PostalCode),
+                StorePhone = head.BusMobileNo,
+                StorePayout = storePayout,
+
+                ShippingMethod = method,
+                ProviderName = providerName,
+                ProviderPhone = providerPhone,
+                VehicleNumber = vehicleNumber,
+                ProviderPayout = providerPayout,
+
+                Items = items,
+                Subtotal = subtotal,
+                ShippingCost = head.Cost,
+                Total = subtotal + head.Cost,
+
+                ShopperName = head.ShopperName,
+                IsGuestOrder = head.IsGuestOrder,
+                DeliveryAddress = head.DeliveryAddress,
+                ShopperPhone = head.ShopperPhone,
+                EstimatedDeliveryDate = head.OrderDate.AddDays(head.EstimatedDays),
+                DeliveredDate = head.DeliveredDate,
+                TrackingId = head.TrackingId
+            };
+        }
+
+        // Prefer the account whose beneficiary matches the payout, else the latest account.
+        // Returns only the bank name and last 4 digits, never the full account number.
+        private static (string? BankName, string? Last4) PickBank(
+            List<(string BankName, string AccountNumber, string? BeneficiaryId)> banks,
+            string? payoutBeneficiaryId)
+        {
+            if (banks.Count == 0) return (null, null);
+
+            var pick = banks.FirstOrDefault(b => payoutBeneficiaryId != null
+                                                 && b.BeneficiaryId == payoutBeneficiaryId);
+            if (pick.BankName == null) pick = banks[0];
+
+            var last4 = pick.AccountNumber.Length >= 4
+                ? pick.AccountNumber[^4..]
+                : pick.AccountNumber;
+
+            return (pick.BankName, last4);
+        }
+
     }
 }
