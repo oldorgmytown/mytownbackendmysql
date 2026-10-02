@@ -18,61 +18,94 @@ namespace mytown.DataAccess.Repositories
             _configuration = configuration;
         }
 
-        //latest code to add produicts main data and varinats with images
+        // ---------------- Add Product (old-shaped in/out, new-table storage) ----------------
+
         public async Task<Products> AddProductAsync(Products product)
         {
-            _context.products.Add(product);
-            await _context.SaveChangesAsync();
-            return product;
-        }
-        public async Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto)
-        {
-            var variant = new Sku_ProductVariant
+            var entity = new ProductsNew
             {
-                ProductId = dto.ProductId,
-                Color = dto.Color,
-                SizeId = dto.SizeId,
-                Sku_Cost = dto.Sku_Cost ?? 0,
-                DiscountPrice = dto.DiscountPrice,
-                Quantity = dto.Quantity ?? 0,
-                Length = dto.Length,
-                Width = dto.Width,
-                Height = dto.Height,
-                Weight = dto.Weight,
-                Discount = dto.Discount
+                BusRegId = product.BusRegId,
+                BusCatId = product.BuscatId,          // int -> long? implicit, fine
+                ProdSubcatId = product.ProdSubcatId,  // int -> long? implicit, fine
+                ProductName = product.ProductName ?? string.Empty,
+                ProductDescription = product.ProductDescription,
+                ProductStatus = product.ProductStatus ?? "Pending",
+                IsActive = product.IsActive,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
-            await _context.Sku_ProductVariants.AddAsync(variant);
-            await _context.SaveChangesAsync(); // ensures SkuId is generated
+            _context.ProductsNew.Add(entity);
+            await _context.SaveChangesAsync();
+
+            product.ProductId = (int)entity.ProductId;
+            return product;
+        }
+
+        public async Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto)
+        {
+            var parentProduct = await _context.ProductsNew
+                .FirstOrDefaultAsync(p => p.ProductId == dto.ProductId);
+
+            if (parentProduct == null)
+                throw new Exception($"Product {dto.ProductId} not found.");
+
+            var variant = new ProductVariantNew
+            {
+                ProductId = parentProduct.ProductId,
+                Price = dto.Sku_Cost ?? 0,
+                DiscountPrice = dto.DiscountPrice,
+                Discount = dto.Discount ?? 0,
+                StockQuantity = dto.Quantity ?? 0,
+                Weight = dto.Weight,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.ProductVariantsNew.Add(variant);
+            await _context.SaveChangesAsync(); // generates VariantId
+
+            await UpsertColorSizeAttributesAsync(
+                variant, dto.Color, dto.SizeId,
+                parentProduct.ProdSubcatId, parentProduct.BusCatId);
+
+            if (dto.Attributes != null && dto.Attributes.Any())
+            {
+                foreach (var attr in dto.Attributes)
+                {
+                    _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                    {
+                        SkuId = variant.SkuId,
+                        AttributeId = attr.AttributeId,
+                        AttributeValueId = attr.AttributeValueId,
+                        AttributeValue = attr.AttributeValue,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
 
             if (dto.Images != null && dto.Images.Any())
             {
                 int order = 1;
-
                 foreach (var file in dto.Images)
                 {
-                    // Upload to blob storage
                     var fileName = await UploadToBlobAsync(file, "product");
 
-                    var image = new ProductImage
+                    _context.ProductVariantImagesNew.Add(new ProductVariantImageNew
                     {
-                        ProductId = variant.ProductId,
                         SkuId = variant.SkuId,
                         FileName = fileName,
-                        SortOrder = order++
-                    };
-
-                    await _context.ProductImages.AddAsync(image);
+                        SortOrder = order++,
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
-
                 await _context.SaveChangesAsync();
             }
 
-            return variant;
+            return MapVariantToOld(variant, dto.Color, dto.SizeId);
         }
-
-
-        // get Size measurements on add product form
 
         public async Task<ProductSizeMeasurementDto?> GetMeasurementBySizeIdAsync(int sizeId)
         {
@@ -90,164 +123,108 @@ namespace mytown.DataAccess.Repositories
                 })
                 .FirstOrDefaultAsync();
         }
+
         public async Task<ProdVariantdetailsDto?> GetProductandVariantAsync(int productId)
         {
-            var product = await _context.products
+            var product = await _context.ProductsNew
                 .Include(p => p.BusinessRegister)
-                .Include(p => p.Sku_ProductVariants)
+                .Include(p => p.Variants)
+                    .ThenInclude(v => v.Attributes)
+                .Include(p => p.Variants)
                     .ThenInclude(v => v.Images)
-                .Include(p => p.Sku_ProductVariants)
-            .ThenInclude(v => v.Size) //get sizename
                 .FirstOrDefaultAsync(p => p.ProductId == productId);
 
             if (product == null) return null;
 
-            return new ProdVariantdetailsDto
+            return MapProductToDto(product);
+        }
+
+        public async Task<Products> UpdateProductAsync(int productId, ProductCreateDto dto)
+        {
+            var existing = await _context.ProductsNew.FindAsync((long)productId);
+            if (existing == null) return null;
+
+            if (dto.BuscatId != 0) existing.BusCatId = dto.BuscatId;
+            if (dto.ProdSubcatId != 0) existing.ProdSubcatId = dto.ProdSubcatId;
+            if (!string.IsNullOrWhiteSpace(dto.ProductName)) existing.ProductName = dto.ProductName;
+            if (!string.IsNullOrWhiteSpace(dto.ProductDescription)) existing.ProductDescription = dto.ProductDescription;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return new Products
             {
-                ProductId = product.ProductId,
-                BusRegId = product.BusRegId,
-                BuscatId = product.BuscatId,
-                ProdSubcatId = product.ProdSubcatId,
-                ProductName = product.ProductName,
-                ProductDescription = product.ProductDescription,
-                SupplierName = product.BusinessRegister.BusinessName,
-                ProductTypeId = product.ProductTypeId,
-                FabricId = product.FabricId,
-                DesignId = product.DesignId,
-                IsProductAvailable =
-                        product.ProductStatus == "Approved"
-                        && product.IsActive == true,
-                        
-
-
-                Variants = product.Sku_ProductVariants.Select(v => new Sku_ProductVariantDto
-                {
-                    SkuId_Productvariant = v.SkuId,
-                    ProductId = v.ProductId,
-                    Color = v.Color,
-                    SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
-                    Sku_Cost = v.Sku_Cost,
-                    DiscountPrice = v.DiscountPrice,
-                    Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
-                    Weight = v.Weight,
-                    Discount = v.Discount,
-                    Images = v.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
-                        {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
-                        })
-                        .ToList()
-                }).ToList()
+                ProductId = (int)existing.ProductId,
+                BusRegId = existing.BusRegId,
+                BuscatId = (int)(existing.BusCatId ?? 0),
+                ProdSubcatId = (int)(existing.ProdSubcatId ?? 0),
+                ProductName = existing.ProductName,
+                ProductDescription = existing.ProductDescription,
+                ProductStatus = existing.ProductStatus,
+                IsActive = existing.IsActive
             };
         }
 
-
-
-
-       
-
-
-        //Update only product main details
-        public async Task<Products> UpdateProductAsync(int productId, ProductCreateDto dto)
-{
-    var existingProduct = await _context.products.FindAsync(productId);
-    if (existingProduct == null) return null;
-
-    // Only update if new value is not null
-    if (dto.BusRegId != 0) existingProduct.BusRegId = dto.BusRegId;
-    if (dto.BuscatId != 0) existingProduct.BuscatId = dto.BuscatId;
-    if (dto.ProdSubcatId != 0) existingProduct.ProdSubcatId = dto.ProdSubcatId;
-
-    if (!string.IsNullOrWhiteSpace(dto.ProductName))
-        existingProduct.ProductName = dto.ProductName;
-
-    if (!string.IsNullOrWhiteSpace(dto.ProductDescription))
-        existingProduct.ProductDescription = dto.ProductDescription;
-
-    if (!string.IsNullOrWhiteSpace(dto.SupplierName))
-        existingProduct.SupplierName = dto.SupplierName;
-
-    if (dto.ProductTypeId.HasValue)
-        existingProduct.ProductTypeId = dto.ProductTypeId;
-
-    if (dto.FabricId.HasValue)
-        existingProduct.FabricId = dto.FabricId;
-
-    if (dto.DesignId.HasValue)
-        existingProduct.DesignId = dto.DesignId;
-
-    _context.products.Update(existingProduct);
-    await _context.SaveChangesAsync();
-
-    return existingProduct;
-}
-
-
-        // Update Product Variant details
-
-        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> files)
+        public async Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto)
         {
-            var variant = await _context.Sku_ProductVariants
+            var variant = await _context.ProductVariantsNew
+                .Include(v => v.Attributes)
                 .Include(v => v.Images)
-                .FirstOrDefaultAsync(v => v.SkuId == dto.SkuId_Productvariant);
+                .FirstOrDefaultAsync(v => v.SkuId== dto.SkuId_Productvariant);
 
-            if (variant == null)
-                return null;
+            if (variant == null) return null;
 
-            // --- Update only if values were supplied ---
-            if (!string.IsNullOrWhiteSpace(dto.Color))
-                variant.Color = dto.Color;
-
-            if (dto.SizeId.HasValue)
-                variant.SizeId = dto.SizeId;
-
-            if (dto.Sku_Cost.HasValue)
-                variant.Sku_Cost = dto.Sku_Cost.Value;
-
-            if (dto.Quantity.HasValue)
-                variant.Quantity = dto.Quantity.Value;
-
-            if (dto.DiscountPrice.HasValue)
-                variant.DiscountPrice = dto.DiscountPrice.Value;
-
-            if (dto.Length.HasValue) variant.Length = dto.Length.Value;
-            if (dto.Width.HasValue) variant.Width = dto.Width.Value;
-            if (dto.Height.HasValue) variant.Height = dto.Height.Value;
+            if (dto.Sku_Cost.HasValue) variant.Price = dto.Sku_Cost.Value;
+            if (dto.Quantity.HasValue) variant.StockQuantity = dto.Quantity.Value;
+            if (dto.DiscountPrice.HasValue) variant.DiscountPrice = dto.DiscountPrice.Value;
             if (dto.Weight.HasValue) variant.Weight = dto.Weight.Value;
             if (dto.Discount.HasValue) variant.Discount = dto.Discount.Value;
+            variant.UpdatedAt = DateTime.UtcNow;
 
-            // ----- Handle images -----
-            if (files != null && files.Any())
+            // Replace attributes entirely with what was submitted
+            if (dto.Attributes != null)
             {
-                // delete old images (db + blob)
-                foreach (var img in variant.Images)
-                    await DeleteFromBlobAsync(img.FileName);
+                _context.ProductVariantAttributesNew.RemoveRange(variant.Attributes);
 
-                _context.ProductImages.RemoveRange(variant.Images);
+                foreach (var attr in dto.Attributes)
+                {
+                    _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                    {
+                        SkuId = variant.SkuId,
+                        AttributeId = attr.AttributeId,
+                        AttributeValueId = attr.AttributeValueId,
+                        AttributeValue = attr.AttributeValue,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+            }
+
+            // Replace images entirely with the submitted filename list
+            if (dto.UpdatedImageFileNames != null)
+            {
+                var oldFileNames = variant.Images.Select(i => i.FileName).ToList();
+                var removedFileNames = oldFileNames.Except(dto.UpdatedImageFileNames).ToList();
+
+                foreach (var fileName in removedFileNames)
+                    await DeleteFromBlobAsync(fileName);
+
+                _context.ProductVariantImagesNew.RemoveRange(variant.Images);
 
                 int order = 1;
-                foreach (var file in files)
+                foreach (var fileName in dto.UpdatedImageFileNames)
                 {
-                    var storedFileName = await UploadToBlobAsync(file, "product");
-
-                    await _context.ProductImages.AddAsync(new ProductImage
+                    _context.ProductVariantImagesNew.Add(new ProductVariantImageNew
                     {
-                        ProductId = variant.ProductId,
                         SkuId = variant.SkuId,
-                        FileName = storedFileName,
-                        SortOrder = order++
+                        FileName = fileName,
+                        SortOrder = order++,
+                        CreatedAt = DateTime.UtcNow
                     });
                 }
             }
 
             await _context.SaveChangesAsync();
-            return variant;
+            return MapVariantToOld(variant, null, null);
         }
 
         public async Task<string> UploadToBlobAsync(IFormFile file, string imageType)
@@ -267,15 +244,11 @@ namespace mytown.DataAccess.Repositories
             var newFileName = $"{imageType}_{fileNameWithoutExtension}_{timestamp}{fileExtension}";
 
             var blobClient = containerClient.GetBlobClient(newFileName);
-
             using (var stream = file.OpenReadStream())
-            {
                 await blobClient.UploadAsync(stream, overwrite: true);
-            }
 
-            return newFileName; // store only file name in DB
+            return newFileName;
         }
-
 
         public async Task DeleteFromBlobAsync(string fileName)
         {
@@ -284,93 +257,39 @@ namespace mytown.DataAccess.Repositories
 
             var blobServiceClient = new BlobServiceClient(connectionString);
             var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
-
             var blobClient = containerClient.GetBlobClient(fileName);
             await blobClient.DeleteIfExistsAsync();
         }
 
-
-
         public async Task DeleteProductAsync(int productId)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
-
+            using var tx = await _context.Database.BeginTransactionAsync();
             try
             {
-                //  Get product with variants and images
-                var product = await _context.products
-                    .Include(p => p.Sku_ProductVariants)
+                var product = await _context.ProductsNew
+                    .Include(p => p.Variants)
+                        .ThenInclude(v => v.Attributes)
+                    .Include(p => p.Variants)
                         .ThenInclude(v => v.Images)
                     .FirstOrDefaultAsync(p => p.ProductId == productId);
 
-                if (product == null)
-                    return;
+                if (product == null) return;
 
-                //  Delete product images from Blob
-                foreach (var variant in product.Sku_ProductVariants)
-                {
-                    foreach (var img in variant.Images)
-                    {
-                        try
-                        {
-                            await DeleteFromBlobAsync(img.FileName); // ✅ reuse your method
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new Exception($"Failed to delete blob {img.FileName}", ex);
-                        }
-                    }
+                var variantIds = product.Variants.Select(v => v.SkuId).ToList();
 
-                    _context.ProductImages.RemoveRange(variant.Images);
-                }
+                var images = await _context.ProductVariantImagesNew
+                    .Where(i => variantIds.Contains(i.SkuId))
+                    .ToListAsync();
 
-                // Delete variants
-                _context.Sku_ProductVariants.RemoveRange(product.Sku_ProductVariants);
+                foreach (var img in images)
+                    await DeleteFromBlobAsync(img.FileName);
+                _context.ProductVariantImagesNew.RemoveRange(images);
 
-                // 4️ Delete product itself
-                _context.products.Remove(product);
+                var attrs = product.Variants.SelectMany(v => v.Attributes).ToList();
+                _context.ProductVariantAttributesNew.RemoveRange(attrs);
 
-                // 5️ Save and commit
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        public async Task DeleteProductVariantAsync(int productId, int skuId)
-        {
-            using var tx = await _context.Database.BeginTransactionAsync();
-
-            try
-            {
-                // 1️⃣ Load variant with its images
-                var variant = await _context.Sku_ProductVariants
-                    .Include(v => v.Images)
-                    .FirstOrDefaultAsync(v => v.ProductId == productId && v.SkuId == skuId);
-
-                if (variant == null)
-                    return;
-
-                // 2️⃣ Delete images from blob + DB
-                foreach (var img in variant.Images)
-                {
-                    try
-                    {
-                        await DeleteFromBlobAsync(img.FileName);                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"Failed to delete blob {img.FileName}", ex);
-                    }
-                }
-
-                _context.ProductImages.RemoveRange(variant.Images);
-
-                // 3️ Delete the variant itself
-                _context.Sku_ProductVariants.Remove(variant);
+                _context.ProductVariantsNew.RemoveRange(product.Variants);
+                _context.ProductsNew.Remove(product);
 
                 await _context.SaveChangesAsync();
                 await tx.CommitAsync();
@@ -382,213 +301,284 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
+        public async Task DeleteProductVariantAsync(int productId, int skuId)
+        {
+            using var tx = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var variant = await _context.ProductVariantsNew
+                    .Include(v => v.Attributes)
+                    .Include(v => v.Images)
+                    .FirstOrDefaultAsync(v => v.ProductId == productId && v.SkuId == skuId);
 
-     
+                if (variant == null) return;
 
+                foreach (var img in variant.Images)
+                    await DeleteFromBlobAsync(img.FileName);
+                _context.ProductVariantImagesNew.RemoveRange(variant.Images);
 
+                _context.ProductVariantAttributesNew.RemoveRange(variant.Attributes);
+                _context.ProductVariantsNew.Remove(variant);
 
+                await _context.SaveChangesAsync();
+                await tx.CommitAsync();
+            }
+            catch
+            {
+                await tx.RollbackAsync();
+                throw;
+            }
+        }
 
         public async Task<IEnumerable<ProdVariantdetailsDto>> GetAllProductsAsync(int busRegId)
         {
-            return await _context.products
-        .Where(p => p.BusRegId == busRegId)
-        .Include(p => p.Images) // product images
-        .Include(p => p.Sku_ProductVariants)
-            .ThenInclude(v => v.Images) // variant images
-         .Include(p => p.Sku_ProductVariants)
-            .ThenInclude(v => v.Size) //get sizename
-        .Include(p => p.BusinessRegister) // business info
-        .Select(p => new ProdVariantdetailsDto
-        {
-            ProductId = p.ProductId,
-            BusRegId = p.BusRegId,
-            BuscatId = p.BuscatId,
-            ProdSubcatId = p.ProdSubcatId,
-            ProductName = p.ProductName,
-            ProductDescription = p.ProductDescription,
-            SupplierName = p.BusinessRegister.BusinessName,
-            ProductTypeId = p.ProductTypeId,
-            FabricId = p.FabricId,
-            DesignId = p.DesignId,
-            
-            // Variants
-            Variants = p.Sku_ProductVariants
-                .Select(v => new Sku_ProductVariantDto
+            return await _context.ProductsNew
+                .AsNoTracking()
+                .Where(p => p.BusRegId == busRegId)
+                .Select(p => new ProdVariantdetailsDto
                 {
-                    SkuId_Productvariant = v.SkuId,
-                    ProductId = v.ProductId,
-                    Color = v.Color,
-                    SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
-                    Sku_Cost = v.Sku_Cost,
+                    ProductId = (int)p.ProductId,
+                    BusRegId = p.BusRegId,
+                    BuscatId = (int)(p.BusCatId ?? 0),
+                    ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+
+                    ProductGroupId = p.ProductGroupId.HasValue
+                        ? (int)p.ProductGroupId.Value
+                        : null,
+
+                    ProductTypeId = p.ProdTypeId.HasValue
+                        ? (int)p.ProdTypeId.Value
+                        : null,
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = p.BusinessRegister != null
+                        ? p.BusinessRegister.BusinessName
+                        : null,
+
+                    IsProductAvailable = p.ProductStatus == "ACTIVE"
+                                         && p.IsActive,
+
+                    Country = p.BusinessRegister != null
+                        ? p.BusinessRegister.BusinessCountry
+                        : "",
+
+                    Location = p.BusinessRegister != null
+                        ? p.BusinessRegister.Town + ", "
+                          + p.BusinessRegister.BusinessCity + ", "
+                          + p.BusinessRegister.BusinessState
+                        : "",
+
+                    Variants = p.Variants
+                        .Select(v => new Sku_ProductVariantDto
+                        {
+                            SkuId_Productvariant = (int)v.SkuId,
+                            ProductId = (int)v.ProductId,
+
+                            Sku_Cost = v.Price,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.StockQuantity,
+                            Weight = v.Weight,
+                            metric = v.MeasurementUnit,
+                            Discount = v.Discount,
+
+                            Images = v.Images
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
+        {
+            return await (
+                from v in _context.ProductVariantsNew
+
+                join p in _context.ProductsNew
+                    on v.ProductId equals p.ProductId
+
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals(long?) pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+      
+
+                where v.Discount != null
+                      && v.Discount > 0
+                      && p.ProductStatus == "ACTIVE"
+                      && p.IsActive
+
+                select new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)p.ProductId,
+
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
+
+                    BuscatId = (int)p.BusCatId,
+
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
+
+                    ProdcatId = (int)p.ProdSubcatId,
+
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
+
+                 
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = bp.BusinessName,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
+                new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = (int)v.SkuId,
+                    ProductId = (int)v.ProductId,
+
+                    Sku_Cost = v.Price,
                     DiscountPrice = v.DiscountPrice,
-                    Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
+                    Quantity = v.StockQuantity,
                     Weight = v.Weight,
                     Discount = v.Discount,
-                    Images = v.Images
+
+                    Images = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
                         .OrderBy(i => i.SortOrder)
                         .Select(i => new ProductImageDto
                         {
                             FileName = i.FileName,
                             SortOrder = i.SortOrder
                         })
-                        .ToList()
-                })
-                .ToList()
-        })
-        .ToListAsync();
-        }
+                        .ToList(),
 
+                 Attributes = v.Attributes
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
 
-        public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
-        {
-            return await _context.Sku_ProductVariants
-       .Where(v => v.Discount != null && v.Discount > 0 &&
-    v.Product.ProductStatus == "Approved" &&
-    v.Product.IsActive) // only discounted variants
-       .Include(v => v.Images)
-       .Include(v => v.Product)
-           .ThenInclude(p => p.BusinessRegister)
-       .Include(v => v.Product)
-           .ThenInclude(p => p.ProductType)
-       .Include(v => v.Product)
-           .ThenInclude(p => p.Fabric)
-       .Include(v => v.Product)
-           .ThenInclude(p => p.Design)
-       .Select(v => new ProdcVariantforShopperDto
-       {
-           ProductId = v.ProductId,
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
 
-           BusRegId = v.Product.BusRegId,
-           BusinessName = v.Product.BusinessRegister.BusinessName,
-
-           BuscatId = v.Product.BuscatId,
-         //  BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
-
-           ProdcatId = v.Product.ProdSubcatId,
-           // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
-
-           ProductTypeId = v.Product.ProductTypeId,
-           ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,
-
-           FabricId = v.Product.FabricId,
-           FabricName = v.Product.Fabric != null ? v.Product.Fabric.FabricName: null,
-
-           DesignId = v.Product.DesignId,
-           DesignName = v.Product.Design != null ? v.Product.Design.DesignName : null,
-
-           ProductName = v.Product.ProductName,
-           ProductDescription = v.Product.ProductDescription,
-           SupplierName = v.Product.BusinessRegister.BusinessName,
-
-           Variants = new List<Sku_ProductVariantDto>
-           {
-                new Sku_ProductVariantDto
-                {
-                    SkuId_Productvariant = v.SkuId,
-                    ProductId = v.ProductId,
-                    Color = v.Color,
-                     SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
-                    Sku_Cost = v.Sku_Cost,
-                    DiscountPrice = v.DiscountPrice,
-                    Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
-                    Weight = v.Weight,
-                    Discount = v.Discount,
-                    Images = v.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
-                        {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
-                        }).ToList()
+                        AttributeValue = a.AttributeValue
+                            ?? _context.ProductAttributeValues
+                                .Where(av =>
+                                    a.AttributeValueId.HasValue &&
+                                    av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                    })
+                    .ToList()
                 }
-           }
-       })
-       .ToListAsync();
+                    }
+                }
+            ).ToListAsync();
         }
-
 
 
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetProductsBySubCategoryAsync(int subCategoryId)
         {
-            return await _context.Sku_ProductVariants
-        .Where(v => v.Product.ProdSubcatId == subCategoryId &&
-            v.Product.ProductStatus == "Approved" &&
-            v.Product.IsActive)
-        .Include(v => v.Images)
-        .Include(v => v.Product)
-            .ThenInclude(p => p.BusinessRegister)
-        .Include(v => v.Product)
-            .ThenInclude(p => p.ProductType)
-        .Include(v => v.Product)
-            .ThenInclude(p => p.Fabric)
-        .Include(v => v.Product)
-            .ThenInclude(p => p.Design)
-        .Select(v => new ProdcVariantforShopperDto
-        {
-            ProductId = v.ProductId,
+            return await (
+                from v in _context.ProductVariantsNew
+                join p in _context.ProductsNew
+                    on v.ProductId equals p.ProductId
 
-            BusRegId = v.Product.BusRegId,
-            BusinessName = v.Product.BusinessRegister.BusinessName,
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
 
-            BuscatId = v.Product.BuscatId,
-            //BuscatName = v.Product.BusinessRegister.Businesscategory_name, // adjust as per your model
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
 
-            ProdcatId = v.Product.ProdSubcatId,
-            // ProdcatName = v.Product.Productsubcategory_name, // adjust as per your model
+                where p.ProdSubcatId == subCategoryId
+                      && p.ProductStatus == "ACTIVE"
+                      && p.IsActive
 
-            ProductTypeId = v.Product.ProductTypeId,
-            ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,
+                select new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)p.ProductId,
 
-            FabricId = v.Product.FabricId,
-            FabricName = v.Product.Fabric != null ? v.Product.Fabric.FabricName : null,
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
 
-            DesignId = v.Product.DesignId,
-            DesignName = v.Product.Design != null ? v.Product.Design.DesignName : null,
+                    BuscatId = (int)p.BusCatId,
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
 
+                    ProdcatId = (int)p.ProdSubcatId,
 
-            ProductName = v.Product.ProductName,
-            ProductDescription = v.Product.ProductDescription,
-            SupplierName = v.Product.BusinessRegister.BusinessName,
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
 
-            Variants = new List<Sku_ProductVariantDto>
-            {
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+                    SupplierName = bp.BusinessName,
+
+                    Variants = new List<Sku_ProductVariantDto>
+                    {
                 new Sku_ProductVariantDto
                 {
-                    SkuId_Productvariant = v.SkuId,
-                    ProductId = v.ProductId,
-                    Color = v.Color,
-                    SizeId = v.SizeId,
-                    SizeName = v.Size != null ? v.Size.SizeName : null,
-                    Sku_Cost = v.Sku_Cost,
+                    SkuId_Productvariant = (int)v.SkuId,
+                    ProductId = (int)v.ProductId,
+
+                    Sku_Cost = v.Price,
                     DiscountPrice = v.DiscountPrice,
-                    Quantity = v.Quantity,
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
+                    Quantity = v.StockQuantity,
                     Weight = v.Weight,
                     Discount = v.Discount,
-                    Images = v.Images
+
+                    Images = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == v.SkuId)
                         .OrderBy(i => i.SortOrder)
                         .Select(i => new ProductImageDto
                         {
                             FileName = i.FileName,
                             SortOrder = i.SortOrder
-                        }).ToList()
-                }
-            }
-        })
-        .ToListAsync();
-           
-        }
+                        })
+                        .ToList(),
 
+                   Attributes = v.Attributes
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
+
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
+
+                        AttributeValue = a.AttributeValue
+                            ?? _context.ProductAttributeValues
+                                .Where(av =>
+                                    a.AttributeValueId.HasValue &&
+                                    av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                    })
+                    .ToList()
+                }
+                    }
+                }
+            ).ToListAsync();
+        }
 
         // save shopper recently viewd products
         public async Task SaveProductViewAsync(int shopperId, int productId)
@@ -604,7 +594,7 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-    
+
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
         {
             if (string.IsNullOrEmpty(location))
@@ -612,11 +602,32 @@ namespace mytown.DataAccess.Repositories
 
             var query =
                 from bp in _context.BusinessProfiles
-                where bp.BusinessLocation != null && bp.BusinessLocation.Contains(location)
-                join p in _context.products on bp.BusRegId equals p.BusRegId
-                join v in _context.Sku_ProductVariants on p.ProductId equals v.ProductId
-                where p.ProductStatus == "Approved" && p.IsActive
-                select new { Product = p, Variant = v, Store = bp };
+                join br in _context.BusinessRegisters
+                    on bp.BusRegId equals br.BusRegId
+                where bp.BusinessLocation != null &&
+                      bp.BusinessLocation.Contains(location)
+
+                join p in _context.ProductsNew
+                    on bp.BusRegId equals p.BusRegId
+
+                join v in _context.ProductVariantsNew
+                    on p.ProductId equals v.ProductId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+                where p.ProductStatus == "ACTIVE" &&
+                      p.IsActive
+
+                select new
+                {
+                    Product = p,
+                    Variant = v,
+                    Store = bp,
+                    Business = br,
+                    ProductType = pt
+                };
 
             var result = await query
                 .Select(x => new
@@ -624,6 +635,9 @@ namespace mytown.DataAccess.Repositories
                     Product = x.Product,
                     Variant = x.Variant,
                     Store = x.Store,
+                    Business = x.Business,
+                    ProductType = x.ProductType,
+
                     TotalOrders = _context.OrderDetails
                         .Where(o => o.ProductId == x.Product.ProductId)
                         .Sum(o => (int?)o.Quantity) ?? 0
@@ -632,55 +646,71 @@ namespace mytown.DataAccess.Repositories
                 .OrderByDescending(x => x.TotalOrders)
                 .Select(x => new ProdcVariantforShopperDto
                 {
-                    ProductId = x.Product.ProductId,
+                    ProductId = (int)x.Product.ProductId,
 
                     BusRegId = x.Store.BusRegId,
                     BusinessName = x.Store.BusinessName,
 
-                    BuscatId = x.Product.BuscatId,
-                    //BuscatName = x.Product.BusinessRegister != null ? x.Product.BusinessRegister.Businesscategory_name : null,
+                    BuscatId = (int)x.Product.BusCatId,
 
-                    ProdcatId = x.Product.ProdSubcatId,
-                    // ProdcatName = x.Product.Productsubcategory_name,
+                    Location = x.Business.BusinessCity + ", " +
+                               x.Business.BusinessState,
 
-                    ProductTypeId = x.Product.ProductTypeId,
-                    ProductTypeName = x.Product.ProductType != null ? x.Product.ProductType.ProdTypeName : null,
+                    Country = x.Business.BusinessCountry,
 
-                    FabricId = x.Product.FabricId,
-                    FabricName = x.Product.Fabric != null ? x.Product.Fabric.FabricName : null,
+                    ProdcatId = (int)x.Product.ProdSubcatId,
 
-                    DesignId = x.Product.DesignId,
-                    DesignName = x.Product.Design != null ? x.Product.Design.DesignName : null,
+                    ProductTypeId = (int?)x.Product.ProdTypeId,
+
+                    ProductTypeName = x.ProductType != null
+                        ? x.ProductType.ProdTypeName
+                        : null,
 
                     ProductName = x.Product.ProductName,
                     ProductDescription = x.Product.ProductDescription,
-                    SupplierName = x.Product.BusinessRegister.BusinessName,
+
+                    SupplierName = x.Store.BusinessName,
 
                     Variants = new List<Sku_ProductVariantDto>
                     {
                 new Sku_ProductVariantDto
                 {
-                    SkuId_Productvariant = x.Variant.SkuId,
-                    ProductId = x.Variant.ProductId,
-                    Color = x.Variant.Color,
-                    SizeId = x.Variant.SizeId,
-                    SizeName = x.Variant.Size != null ? x.Variant.Size.SizeName : null,
-                    Sku_Cost = x.Variant.Sku_Cost,
+                    SkuId_Productvariant = (int)x.Variant.SkuId,
+                    ProductId = (int)x.Variant.ProductId,
+
+                    Sku_Cost = x.Variant.Price,
                     DiscountPrice = x.Variant.DiscountPrice,
-                    Quantity = x.Variant.Quantity,
-                    Length = x.Variant.Length,
-                    Width = x.Variant.Width,
-                    Height = x.Variant.Height,
+                    Quantity = x.Variant.StockQuantity,
                     Weight = x.Variant.Weight,
                     Discount = x.Variant.Discount,
-                    Images = x.Variant.Images
-                        .OrderBy(i => i.SortOrder)
-                        .Select(i => new ProductImageDto
-                        {
-                            FileName = i.FileName,
-                            SortOrder = i.SortOrder
-                        })
-                        .ToList()
+                        Images = _context.ProductVariantImagesNew
+                            .Where(i => i.SkuId == x.Variant.SkuId)
+                            .OrderBy(i => i.SortOrder)
+                            .Select(i => new ProductImageDto
+                            {
+                                FileName = i.FileName,
+                                SortOrder = i.SortOrder
+                            })
+                            .ToList(),
+
+                        Attributes = x.Variant.Attributes
+                            .Select(a => new VariantAttributeDto
+                            {
+                                AttributeId = (int)a.AttributeId,
+
+                                AttributeValueId = a.AttributeValueId.HasValue
+                                    ? (int?)a.AttributeValueId.Value
+                                    : null,
+
+                                AttributeValue = a.AttributeValue
+                                    ?? _context.ProductAttributeValues
+                                        .Where(av =>
+                                            a.AttributeValueId.HasValue &&
+                                            av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                        .Select(av => av.AttributeValue)
+                                        .FirstOrDefault()
+                            })
+                            .ToList()
                 }
                     }
                 })
@@ -690,6 +720,147 @@ namespace mytown.DataAccess.Repositories
         }
 
 
+        // ---------------- Helpers ----------------
+
+        private async Task UpsertColorSizeAttributesAsync(
+            ProductVariantNew variant, string? color, int? sizeId, long? prodSubcatId, long? busCatId)
+        {
+            int? prodSubcatIdInt = prodSubcatId.HasValue ? (int)prodSubcatId.Value : (int?)null;
+            int? busCatIdInt = busCatId.HasValue ? (int)busCatId.Value : (int?)null;
+
+            if (!string.IsNullOrWhiteSpace(color))
+            {
+                var colorAttr = await _context.ProductAttributes.FirstOrDefaultAsync(a =>
+                    a.AttributeName.ToLower() == "color" &&
+                    a.ProdSubcatId == prodSubcatIdInt && a.BusCatId == busCatIdInt);
+
+                if (colorAttr != null)
+                {
+                    var row = await _context.ProductVariantAttributesNew.FirstOrDefaultAsync(a =>
+                        a.SkuId == variant.SkuId && a.AttributeId == colorAttr.AttributeId);
+
+                    if (row == null)
+                        _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                        {
+                            SkuId = variant.SkuId,
+                            AttributeId = colorAttr.AttributeId,
+                            AttributeValue = color,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    else
+                        row.AttributeValue = color;
+                }
+            }
+
+            if (sizeId.HasValue)
+            {
+                var sizeAttr = await _context.ProductAttributes.FirstOrDefaultAsync(a =>
+                    a.AttributeName.ToLower() == "size" &&
+                    a.ProdSubcatId == prodSubcatIdInt && a.BusCatId == busCatIdInt);
+
+                if (sizeAttr != null)
+                {
+                    var row = await _context.ProductVariantAttributesNew.FirstOrDefaultAsync(a =>
+                        a.SkuId == variant.SkuId && a.AttributeId == sizeAttr.AttributeId);
+
+                    if (row == null)
+                        _context.ProductVariantAttributesNew.Add(new ProductVariantAttributeNew
+                        {
+                            SkuId = variant.SkuId,
+                            AttributeId = sizeAttr.AttributeId,
+                            AttributeValueId = sizeId.Value,
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    else
+                        row.AttributeValueId = sizeId.Value;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private Sku_ProductVariant MapVariantToOld(ProductVariantNew v, string? color, int? sizeId)
+        {
+            return new Sku_ProductVariant
+            {
+                SkuId = (int)v.SkuId,
+                ProductId = (int)v.ProductId,
+                Color = color,
+                SizeId = sizeId,
+                Sku_Cost = v.Price,
+                DiscountPrice = v.DiscountPrice,
+                Quantity = v.StockQuantity,
+                Weight = v.Weight,
+                Discount = v.Discount
+            };
+        }
+
+        private ProdVariantdetailsDto MapProductToDto(ProductsNew p)
+        {
+            var biz = p.BusinessRegister;
+            var location = biz != null
+                ? string.Join(", ", new[] { biz.Town, biz.BusinessCity, biz.BusinessState }
+                    .Where(s => !string.IsNullOrWhiteSpace(s)))
+                : "";
+
+            return new ProdVariantdetailsDto
+            {
+                ProductId = (int)p.ProductId,
+                BusRegId = p.BusRegId,
+                BuscatId = (int)(p.BusCatId ?? 0),
+                ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+                ProductGroupId = p.ProductGroupId.HasValue ? (int)p.ProductGroupId.Value : (int?)null,
+                ProductTypeId = p.ProdTypeId.HasValue ? (int)p.ProdTypeId.Value : (int?)null,
+                ProductName = p.ProductName,
+                ProductDescription = p.ProductDescription,
+                SupplierName = biz?.BusinessName,
+                IsProductAvailable = p.ProductStatus == "ACTIVE" && p.IsActive,
+                Location = location,
+                Country = biz?.BusinessCountry ?? "",
+
+                Variants = p.Variants.Select(v => new Sku_ProductVariantDto
+                {
+                    SkuId_Productvariant = (int)v.SkuId,
+                    ProductId = (int)v.ProductId,
+                    Sku_Cost = v.Price,
+                    DiscountPrice = v.DiscountPrice,
+                    Quantity = v.StockQuantity,
+                    Weight = v.Weight,
+                    metric = v.MeasurementUnit,
+                    Discount = v.Discount,
+                    Images = _context.ProductVariantImagesNew
+                    .Where(i => i.SkuId == v.SkuId)
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new ProductImageDto
+                    {
+                        FileName = i.FileName,
+                        SortOrder = i.SortOrder
+                    })
+                    .ToList(),
+                    Attributes = v.Attributes
+                    .Select(a => new VariantAttributeDto
+                    {
+                        AttributeId = (int)a.AttributeId,
+
+                        AttributeName = _context.ProductAttributes
+                            .Where(pa => pa.AttributeId == (int)a.AttributeId)
+                            .Select(pa => pa.AttributeName)
+                            .FirstOrDefault(),
+
+                        AttributeValueId = a.AttributeValueId.HasValue
+                            ? (int?)a.AttributeValueId.Value
+                            : null,
+
+                        AttributeValue = a.AttributeValueId.HasValue
+                            ? _context.ProductAttributeValues
+                                .Where(av => av.AttributeValueId == (int)a.AttributeValueId.Value)
+                                .Select(av => av.AttributeValue)
+                                .FirstOrDefault()
+                            : a.AttributeValue
+                    })
+                    .ToList()
+                }).ToList()
+            };
+        }
     }
 }
-

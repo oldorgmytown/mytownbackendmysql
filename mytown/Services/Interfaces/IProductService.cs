@@ -12,7 +12,7 @@ namespace mytown.Services.Interfaces
 
         // Variants
         Task<Sku_ProductVariant> AddProductVariantAsync(Sku_CreateVariantDto dto);
-        Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> images);
+        Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto);
         Task DeleteVariantAsync(int productId, int skuId);
 
         // Fetch

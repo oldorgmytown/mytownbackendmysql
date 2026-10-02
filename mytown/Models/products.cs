@@ -92,6 +92,9 @@ namespace mytown.Models
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
 
+        [ForeignKey("ProdSubcatId")]
+        public ProductSubCategory ProductSubCategory { get; set; }
+
         [JsonPropertyName("images")]
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
 

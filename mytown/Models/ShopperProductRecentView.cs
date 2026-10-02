@@ -16,7 +16,7 @@ namespace mytown.Models
 
         [ForeignKey("Product")]
         [Column("product_id")]
-        public int ProductId { get; set; }     // Product viewed
+        public long ProductId { get; set; }     // Product viewed
 
         [Column("last_viewed_at")]
         public DateTime LastViewedAt { get; set; } = DateTime.UtcNow; // Last viewed time
@@ -26,6 +26,6 @@ namespace mytown.Models
 
         // Navigation Properties
         public virtual ShopperRegister Shopper { get; set; }
-        public virtual Products Product { get; set; }
+        public virtual ProductsNew Product { get; set; }
     }
 }

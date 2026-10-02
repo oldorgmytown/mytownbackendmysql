@@ -11,6 +11,7 @@ using mytown.Services.Implementations;
 using mytown.DataAccess.Interfaces;
 using MyTown.Models;
 
+//push
 namespace mytown.Controllers
 {
     [Route("api/business")]
@@ -129,6 +130,50 @@ namespace mytown.Controllers
 
                 await _businessService.RegisterBusiness(newBusiness);
 
+                // add bank account details to that table
+                var bankDetails = new BusinessAccountDetail
+                {
+                    BusRegId = newBusiness.BusRegId,
+                    AccountHolderName = businessDto.AccountHolderName,
+                    BankName = businessDto.BankName,
+                    AccountNumber = businessDto.AccountNumber,
+                    IFSCCode = businessDto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _businessService.SaveBusinessAccountDetails(bankDetails);
+
+                // --- Cashfree beneficiary creation (non-blocking) ---
+                bool beneficiaryCreated = false;
+                try
+                {
+                    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequest
+                    {
+                        BeneficiaryId = $"BEN_{newBusiness.BusRegId}",
+                        BeneficiaryName = bankDetails.AccountHolderName,
+                        BankAccountNumber = bankDetails.AccountNumber,
+                        BankIfsc = bankDetails.IFSCCode
+                    };
+
+                    var cfResponse = await _businessService.CreateBeneficiaryAsync(beneficiaryRequest);
+
+                    bankDetails.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                    bankDetails.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                    bankDetails.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+
+                    await _businessService.SaveBusinessAccountDetails(bankDetails);
+
+                    beneficiaryCreated = true;
+                }
+                catch (Exception cfEx)
+                {
+                    _logger.LogError(cfEx,
+                        "Cashfree beneficiary creation failed for BusRegId {BusRegId}. Will retry at payout time.",
+                        newBusiness.BusRegId);
+                    // swallow — registration must still succeed
+                }
+                // --- end beneficiary block ---
+
                 var newProfile = new BusinessProfile
                 {
                     BusRegId = newBusiness.BusRegId,
@@ -150,9 +195,12 @@ namespace mytown.Controllers
 
                 return Ok(new
                 {
-                    message = "Your email is verified and your business account is created!",
+                    message = beneficiaryCreated
+                        ? "Your email is verified, your business account is created, and your payout account is set up!"
+                        : "Your email is verified and your business account is created! Payout setup is still in progress and will complete shortly.",
                     busRegId = newBusiness.BusRegId,
-                    token = jwtToken
+                    token = jwtToken,
+                    payoutReady = beneficiaryCreated
                 });
             }
             catch (Exception ex)
@@ -265,7 +313,7 @@ namespace mytown.Controllers
         }
 
         // ================== CATEGORIES ===================
-        [Authorize]
+        //[Authorize]
         [HttpGet("BusinessCategories")]
         public async Task<ActionResult> GetBusinessCategories()
         {
@@ -275,12 +323,44 @@ namespace mytown.Controllers
         }
 
 
-        [Authorize]
+        // [Authorize]
         [HttpGet("BusinessSubCategoriesforStores")]
         public async Task<ActionResult<IEnumerable<BusinessCategory>>> BusinessSubCategoriesforStores(int buscatid)
         {
             return Ok(await _businessService.BusinessSubCategoriesforStores(buscatid));
         }
+
+        // [Authorize]
+        [HttpGet("SubCategorybyProductsubcat")]
+        public async Task<ActionResult<IEnumerable<ProductGroupResponseDto>>> ProductGroupsBySubCategory(int prodSubcatId)
+        {
+            return Ok(await _businessService.GetProductGroupsBySubCategoryId(prodSubcatId));
+        }
+
+        //  [Authorize]
+        [HttpGet("ProductTypesByGroupAndSubCategory")]
+        public async Task<ActionResult<IEnumerable<ProductType>>> ProductTypesByGroupAndSubCategory(
+    int prodSubcatId,
+    int prodGroupId)
+        {
+            return Ok(await _businessService.GetProductTypesByGroupAndSubCategory(
+                prodSubcatId,
+                prodGroupId));
+        }
+
+        //[Authorize]
+        [HttpGet("ProductAttributesBySubCategory")]
+        public async Task<ActionResult<IEnumerable<ProductAttributes>>> ProductAttributesBySubCategory(
+     int prodSubcatId,
+     int busCatId,
+     int productGroupId)
+        {
+            return Ok(await _businessService.GetAttributesBySubCategoryId(
+                prodSubcatId,
+                busCatId,
+                productGroupId));
+        }
+
 
         // ================== UPLOAD IMAGE ===================
         [Authorize]
@@ -306,10 +386,76 @@ namespace mytown.Controllers
 
             using (var stream = file.OpenReadStream())
             {
-                await blobClient.UploadAsync(stream, overwrite: true);
+                var contentType = Path.GetExtension(file.FileName).ToLowerInvariant() switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".webp" => "image/webp",
+                    ".gif" => "image/gif",
+                    ".bmp" => "image/bmp",
+                    _ => "application/octet-stream"
+                };
+
+                await blobClient.UploadAsync(stream, new Azure.Storage.Blobs.Models.BlobUploadOptions
+                {
+                    HttpHeaders = new Azure.Storage.Blobs.Models.BlobHttpHeaders
+                    {
+                        ContentType = contentType
+                    }
+                });
             }
 
             return Ok(new { FileName = newFileName, Url = blobClient.Uri.AbsoluteUri });
+        }
+
+
+        [HttpPost("verifyBankAccount")]
+        public async Task<IActionResult> VerifyBankAccount(
+         [FromBody] BankVerificationRequestDto request)
+        {
+            var result =
+                await _businessService
+                    .VerifyBankAccountAsync(request);
+
+            if (!result.Success)
+            {
+                return BadRequest(result);
+            }
+
+            return Ok(result);
+        }
+
+     
+        [HttpPost("create-beneficiary")]
+        public async Task<IActionResult> CreateBeneficiary(
+    [FromBody] CreateCashfreeBeneficiaryRequest request)
+        {
+            try
+            {
+                var result =
+                    await _businessService
+                        .CreateBeneficiaryAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    beneficiaryId = result.BeneficiaryId,
+                    beneficiaryName = result.BeneficiaryName,
+                    status = result.BeneficiaryStatus
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Error creating Cashfree beneficiary");
+
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
     }
 }
