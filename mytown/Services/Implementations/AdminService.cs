@@ -295,5 +295,18 @@ GetSenderRegistersPaginatedAsync(
         {
             return await _adminRepo.GetAdminOrderDetailAsync(storeOrderId);
         }
+
+        public async Task<PagedResultDto<AdminSenderOrderRowDto>> GetAdminSenderOrdersAsync(
+    int month, int year, int? senderOrderId, DateTime? pickupDate, string? deliveryStatus,
+    int pageNumber, int pageSize)
+        {
+            return await _adminRepo.GetAdminSenderOrdersAsync(
+                month, year, senderOrderId, pickupDate, deliveryStatus, pageNumber, pageSize);
+        }
+
+        public async Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId)
+        {
+            return await _adminRepo.GetAdminSenderOrderDetailAsync(senderOrderId);
+        }
     }
 }
