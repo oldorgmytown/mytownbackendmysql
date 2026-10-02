@@ -517,5 +517,12 @@ public async Task<IActionResult> GetBusinessLocationCounts()
                 month, year, storeOrderId, orderId, shippingStatus, pageNumber, pageSize);
             return Ok(result);
         }
+
+        [HttpGet("admin-payout-orders/{storeOrderId}")]
+        public async Task<IActionResult> GetAdminOrderDetail(int storeOrderId)
+        {
+            var result = await _adminService.GetAdminOrderDetailAsync(storeOrderId);
+            return result == null ? NotFound() : Ok(result);
+        }
     }
 }

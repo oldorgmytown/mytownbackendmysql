@@ -290,5 +290,10 @@ GetSenderRegistersPaginatedAsync(
             return await _adminRepo.GetAdminOrderDetailsAsync(
                 month, year, storeOrderId, orderId, shippingStatus, pageNumber, pageSize);
         }
+
+        public async Task<AdminOrderDetailDto?> GetAdminOrderDetailAsync(int storeOrderId)
+        {
+            return await _adminRepo.GetAdminOrderDetailAsync(storeOrderId);
+        }
     }
 }
