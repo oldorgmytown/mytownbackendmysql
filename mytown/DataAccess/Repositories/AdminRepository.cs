@@ -1819,13 +1819,21 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
 
             var ids = page.Select(p => p.SenderOrderId).ToList();
 
-            // Paid = a transporter payout row exists for the sender order (use its own amount)
-            var payouts = (await _context.TransporterPayouts
+            // Paid status only: a transporter payout row exists for the sender order
+            var paidIds = (await _context.TransporterPayouts
                     .Where(p => p.SenderOrderId != null && ids.Contains(p.SenderOrderId.Value))
-                    .Select(p => new { SenderOrderId = p.SenderOrderId!.Value, p.Amount, p.CreatedDate })
+                    .Select(p => p.SenderOrderId!.Value)
+                    .Distinct()
+                    .ToListAsync())
+                .ToHashSet();
+
+            // Amount: always from the sender's payment (latest paid row per sender order)
+            var amounts = (await _context.SenderOrderPayments
+                    .Where(p => ids.Contains(p.SenderOrderId) && p.PaymentStatus == "Paid")
+                    .Select(p => new { p.SenderOrderId, p.Amount, p.CreatedAt })   // use p.TotalAmount if you want GST included
                     .ToListAsync())
                 .GroupBy(p => p.SenderOrderId)
-                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.CreatedDate).First().Amount);
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.CreatedAt).First().Amount);
 
             // Pending fallback: what the sender paid for this order
             var expected = (await _context.SenderOrderPayments
@@ -1844,14 +1852,11 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 TransporterName = p.TransporterName,
                 TransporterLocation = p.TransporterLocation,
                 ProductName = p.ProductName,
-
                 PayoutAmount = p.TransporterRegId == null ? null
-                    : payouts.TryGetValue(p.SenderOrderId, out var paidAmt) ? paidAmt
-                    : expected.TryGetValue(p.SenderOrderId, out var expAmt) ? expAmt
-                    : (decimal?)null,
+    : amounts.TryGetValue(p.SenderOrderId, out var amt) ? amt : (decimal?)null,
 
                 PayoutStatus = p.TransporterRegId == null ? null
-                    : payouts.ContainsKey(p.SenderOrderId) ? "Paid" : "Pending",
+    : paidIds.Contains(p.SenderOrderId) ? "Paid" : "Pending",
 
                 DeliveryStatus = p.DeliveryStatus
             }).ToList();
