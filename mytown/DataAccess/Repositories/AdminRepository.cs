@@ -1766,9 +1766,9 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         }
 
         public async Task<PagedResultDto<AdminSenderOrderRowDto>> GetAdminSenderOrdersAsync(
-    int month, int year,
-    int? senderOrderId, DateTime? pickupDate, string? deliveryStatus,
-    int pageNumber, int pageSize)
+      int month, int year,
+      int? senderOrderId, DateTime? pickupDate, string? deliveryStatus,
+      int pageNumber, int pageSize)
         {
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
@@ -1813,19 +1813,27 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                     TransporterLocation = x.pl != null ? x.pl.StartTown + ", " + x.pl.StartCity : null,
                     x.so.ProductName,
                     x.so.TransporterRegId,
-                    x.so.TransporterCharges,
                     x.so.DeliveryStatus
                 })
                 .ToListAsync();
 
             var ids = page.Select(p => p.SenderOrderId).ToList();
 
-            // Paid = a transporter payout row exists for this sender order
-            var paidIds = (await _context.TransporterPayouts
-                .Where(p => p.SenderOrderId != null && ids.Contains(p.SenderOrderId.Value))
-                .Select(p => p.SenderOrderId!.Value)
-                .Distinct()
-                .ToListAsync()).ToHashSet();
+            // Paid = a transporter payout row exists for the sender order (use its own amount)
+            var payouts = (await _context.TransporterPayouts
+                    .Where(p => p.SenderOrderId != null && ids.Contains(p.SenderOrderId.Value))
+                    .Select(p => new { SenderOrderId = p.SenderOrderId!.Value, p.Amount, p.CreatedDate })
+                    .ToListAsync())
+                .GroupBy(p => p.SenderOrderId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.CreatedDate).First().Amount);
+
+            // Pending fallback: what the sender paid for this order
+            var expected = (await _context.SenderOrderPayments
+                    .Where(p => ids.Contains(p.SenderOrderId) && p.PaymentStatus == "Paid")
+                    .Select(p => new { p.SenderOrderId, p.Amount, p.CreatedAt })
+                    .ToListAsync())
+                .GroupBy(p => p.SenderOrderId)
+                .ToDictionary(g => g.Key, g => g.OrderByDescending(p => p.CreatedAt).First().Amount);
 
             var items = page.Select(p => new AdminSenderOrderRowDto
             {
@@ -1837,9 +1845,13 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 TransporterLocation = p.TransporterLocation,
                 ProductName = p.ProductName,
 
-                PayoutAmount = p.TransporterRegId == null ? null : p.TransporterCharges,
+                PayoutAmount = p.TransporterRegId == null ? null
+                    : payouts.TryGetValue(p.SenderOrderId, out var paidAmt) ? paidAmt
+                    : expected.TryGetValue(p.SenderOrderId, out var expAmt) ? expAmt
+                    : (decimal?)null,
+
                 PayoutStatus = p.TransporterRegId == null ? null
-                    : paidIds.Contains(p.SenderOrderId) ? "Paid" : "Pending",
+                    : payouts.ContainsKey(p.SenderOrderId) ? "Paid" : "Pending",
 
                 DeliveryStatus = p.DeliveryStatus
             }).ToList();
@@ -1856,29 +1868,29 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
         public async Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId)
         {
             var head = await (
-                 from sOrder in _context.SenderOrders
-                 join s in _context.SenderRegisters on sOrder.SenderRegId equals s.SenderRegId
-                 where sOrder.SenderOrderId == senderOrderId
-                 select new
-                 {
-                     so = sOrder,
-                     s.SenderName,
-                     s.Email,
-                     s.PhoneNumber,
-                     SenderAddress = s.Address + ", " + s.Town + ", " + s.City + ", " + s.State
-                                     + (string.IsNullOrEmpty(s.PostalCode) ? "" : " " + s.PostalCode)
-                 }
-             ).FirstOrDefaultAsync();
+                from sOrder in _context.SenderOrders
+                join s in _context.SenderRegisters on sOrder.SenderRegId equals s.SenderRegId
+                where sOrder.SenderOrderId == senderOrderId
+                select new
+                {
+                    so = sOrder,
+                    s.SenderName,
+                    s.Email,
+                    s.PhoneNumber,
+                    SenderAddress = s.Address + ", " + s.Town + ", " + s.City + ", " + s.State
+                                    + (string.IsNullOrEmpty(s.PostalCode) ? "" : " " + s.PostalCode)
+                }
+            ).FirstOrDefaultAsync();
 
             if (head == null) return null;
 
             var so = head.so;
 
-            // Transaction: latest payment for this sender order
+            // Sender's payment: latest paid row (transaction id + amount paid by the sender)
             var payment = await _context.SenderOrderPayments
-                .Where(p => p.SenderOrderId == senderOrderId)
+                .Where(p => p.SenderOrderId == senderOrderId && p.PaymentStatus == "Paid")
                 .OrderByDescending(p => p.CreatedAt)
-                .Select(p => new { p.SenderPaymentId, p.StripePaymentIntentId })
+                .Select(p => new { p.SenderPaymentId, p.StripePaymentIntentId, p.Amount })
                 .FirstOrDefaultAsync();
 
             var dto = new AdminSenderOrderDetailDto
@@ -1915,7 +1927,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 IsPerishable = so.IsPerishable,
                 SpecialInstructions = so.SpecialInstructions,
 
-                DeliveryCost = so.TransporterCharges
+                DeliveryCost = payment?.Amount
             };
 
             if (so.TransporterRegId == null) return dto;   // not assigned yet
@@ -1936,11 +1948,11 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             dto.EstimatedDelivery = plan?.ArrivalDate;
             dto.DeliveryDays = plan == null ? null : (int?)(plan.ArrivalDate.Date - plan.StartDate.Date).Days;
 
-            // ---- Payout: row exists = paid, amount from TransporterCharges ----
+            // ---- Payout: a row in transporter_payout = paid ----
             var tp = await _context.TransporterPayouts
                 .Where(p => p.SenderOrderId == senderOrderId)
                 .OrderByDescending(p => p.CreatedDate)
-                .Select(p => new { p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
+                .Select(p => new { p.Amount, p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
                 .FirstOrDefaultAsync();
 
             var banks = (await _context.TransporterAccountDetails
@@ -1956,7 +1968,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             dto.Payout = new PayoutInfoDto
             {
                 Status = tp != null ? "Paid" : "Pending",
-                Amount = so.TransporterCharges ?? 0,
+                Amount = tp?.Amount ?? payment?.Amount ?? 0,
                 SettledDate = tp == null ? null : tp.UpdatedDate ?? tp.CreatedDate,
                 CashfreeReferenceId = tp?.CfTransferId,
                 BeneficiaryId = tp?.BeneficiaryId,
@@ -1967,5 +1979,6 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             return dto;
         }
 
+       
     }
 }
