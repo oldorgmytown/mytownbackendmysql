@@ -1765,5 +1765,207 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
             return (pick.BankName, last4);
         }
 
+        public async Task<PagedResultDto<AdminSenderOrderRowDto>> GetAdminSenderOrdersAsync(
+    int month, int year,
+    int? senderOrderId, DateTime? pickupDate, string? deliveryStatus,
+    int pageNumber, int pageSize)
+        {
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var query =
+                from so in _context.SenderOrders
+                join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
+                join t in _context.TransporterRegisters on so.TransporterRegId equals t.TransporterRegId into tj
+                from t in tj.DefaultIfEmpty()
+                join pl in _context.TransporterTravelPlans on so.TransporterPlanId equals pl.PlanId into pj
+                from pl in pj.DefaultIfEmpty()
+                where so.PickupDate >= start && so.PickupDate < end
+                      && so.OrderStatus != "Draft"
+                select new { so, s, t, pl };
+
+            if (senderOrderId.HasValue)
+                query = query.Where(x => x.so.SenderOrderId == senderOrderId.Value);
+
+            if (pickupDate.HasValue)
+            {
+                var d = pickupDate.Value.Date;
+                query = query.Where(x => x.so.PickupDate >= d && x.so.PickupDate < d.AddDays(1));
+            }
+
+            if (!string.IsNullOrWhiteSpace(deliveryStatus))
+                query = query.Where(x => x.so.DeliveryStatus == deliveryStatus);
+
+            var totalCount = await query.CountAsync();
+
+            var page = await query
+                .OrderByDescending(x => x.so.PickupDate)
+                .ThenByDescending(x => x.so.SenderOrderId)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .Select(x => new
+                {
+                    x.so.SenderOrderId,
+                    x.so.PickupDate,
+                    SenderName = x.s.SenderName,
+                    SenderLocation = x.so.PickupTown + ", " + x.so.PickupCity,
+                    TransporterName = x.t != null ? x.t.TransporterName : null,
+                    TransporterLocation = x.pl != null ? x.pl.StartTown + ", " + x.pl.StartCity : null,
+                    x.so.ProductName,
+                    x.so.TransporterRegId,
+                    x.so.TransporterCharges,
+                    x.so.DeliveryStatus
+                })
+                .ToListAsync();
+
+            var ids = page.Select(p => p.SenderOrderId).ToList();
+
+            // Paid = a transporter payout row exists for this sender order
+            var paidIds = (await _context.TransporterPayouts
+                .Where(p => p.SenderOrderId != null && ids.Contains(p.SenderOrderId.Value))
+                .Select(p => p.SenderOrderId!.Value)
+                .Distinct()
+                .ToListAsync()).ToHashSet();
+
+            var items = page.Select(p => new AdminSenderOrderRowDto
+            {
+                SenderOrderId = p.SenderOrderId,
+                PickupDate = p.PickupDate,
+                SenderName = p.SenderName,
+                SenderLocation = p.SenderLocation,
+                TransporterName = p.TransporterName,
+                TransporterLocation = p.TransporterLocation,
+                ProductName = p.ProductName,
+
+                PayoutAmount = p.TransporterRegId == null ? null : p.TransporterCharges,
+                PayoutStatus = p.TransporterRegId == null ? null
+                    : paidIds.Contains(p.SenderOrderId) ? "Paid" : "Pending",
+
+                DeliveryStatus = p.DeliveryStatus
+            }).ToList();
+
+            return new PagedResultDto<AdminSenderOrderRowDto>
+            {
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Items = items
+            };
+        }
+
+        public async Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId)
+        {
+            var head = await (
+                 from sOrder in _context.SenderOrders
+                 join s in _context.SenderRegisters on sOrder.SenderRegId equals s.SenderRegId
+                 where sOrder.SenderOrderId == senderOrderId
+                 select new
+                 {
+                     so = sOrder,
+                     s.SenderName,
+                     s.Email,
+                     s.PhoneNumber,
+                     SenderAddress = s.Address + ", " + s.Town + ", " + s.City + ", " + s.State
+                                     + (string.IsNullOrEmpty(s.PostalCode) ? "" : " " + s.PostalCode)
+                 }
+             ).FirstOrDefaultAsync();
+
+            if (head == null) return null;
+
+            var so = head.so;
+
+            // Transaction: latest payment for this sender order
+            var payment = await _context.SenderOrderPayments
+                .Where(p => p.SenderOrderId == senderOrderId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new { p.SenderPaymentId, p.StripePaymentIntentId })
+                .FirstOrDefaultAsync();
+
+            var dto = new AdminSenderOrderDetailDto
+            {
+                SenderOrderId = so.SenderOrderId,
+                PickupDate = so.PickupDate,
+                TransactionId = payment?.SenderPaymentId,
+                StripePaymentIntentId = payment?.StripePaymentIntentId,
+                DeliveryStatus = so.DeliveryStatus,
+                TrackingId = so.TrackingId,
+
+                SenderRegId = so.SenderRegId,
+                SenderName = head.SenderName,
+                SenderAddress = head.SenderAddress,
+                SenderPhone = head.PhoneNumber,
+                SenderEmail = head.Email,
+
+                PickupAddress = so.PickupAddress + ", " + so.PickupTown + ", " + so.PickupCity + ", "
+                                + so.PickupState + " - " + so.PickupPincode,
+                PickupTime = so.PickupTime,
+
+                ReceiverName = so.ReceiverName,
+                ReceiverPhone = so.ReceiverPhone,
+                ReceiverAddress = so.ReceiverAddress + ", " + so.ReceiverTown + ", " + so.ReceiverCity + ", "
+                                  + so.ReceiverState + " - " + so.ReceiverPincode,
+
+                ProductName = so.ProductName,
+                ProductCost = so.ProductCost,
+                PackageLength = so.PackageLength,
+                PackageWidth = so.PackageWidth,
+                PackageHeight = so.PackageHeight,
+                PackageWeight = so.PackageWeight,
+                IsFragile = so.IsFragile,
+                IsPerishable = so.IsPerishable,
+                SpecialInstructions = so.SpecialInstructions,
+
+                DeliveryCost = so.TransporterCharges
+            };
+
+            if (so.TransporterRegId == null) return dto;   // not assigned yet
+
+            // ---- Transporter ----
+            var t = await _context.TransporterRegisters
+                .Where(x => x.TransporterRegId == so.TransporterRegId)
+                .Select(x => new { x.TransporterName, x.PhoneNumber })
+                .FirstOrDefaultAsync();
+            dto.TransporterName = t?.TransporterName;
+            dto.TransporterPhone = t?.PhoneNumber;
+
+            var plan = await _context.TransporterTravelPlans
+                .Where(p => p.PlanId == so.TransporterPlanId)
+                .Select(p => new { p.VehicleRegistration, p.StartDate, p.ArrivalDate })
+                .FirstOrDefaultAsync();
+            dto.VehicleNumber = plan?.VehicleRegistration;
+            dto.EstimatedDelivery = plan?.ArrivalDate;
+            dto.DeliveryDays = plan == null ? null : (int?)(plan.ArrivalDate.Date - plan.StartDate.Date).Days;
+
+            // ---- Payout: row exists = paid, amount from TransporterCharges ----
+            var tp = await _context.TransporterPayouts
+                .Where(p => p.SenderOrderId == senderOrderId)
+                .OrderByDescending(p => p.CreatedDate)
+                .Select(p => new { p.CreatedDate, p.UpdatedDate, p.CfTransferId, p.BeneficiaryId })
+                .FirstOrDefaultAsync();
+
+            var banks = (await _context.TransporterAccountDetails
+                    .Where(a => a.TransporterRegId == so.TransporterRegId)
+                    .OrderByDescending(a => a.CreatedDate)
+                    .Select(a => new { a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId })
+                    .ToListAsync())
+                .Select(a => (a.BankName, a.AccountNumber, a.CashfreeBeneficiaryId))
+                .ToList();
+
+            var (bankName, last4) = PickBank(banks, tp?.BeneficiaryId);
+
+            dto.Payout = new PayoutInfoDto
+            {
+                Status = tp != null ? "Paid" : "Pending",
+                Amount = so.TransporterCharges ?? 0,
+                SettledDate = tp == null ? null : tp.UpdatedDate ?? tp.CreatedDate,
+                CashfreeReferenceId = tp?.CfTransferId,
+                BeneficiaryId = tp?.BeneficiaryId,
+                BankName = bankName,
+                AccountLast4 = last4
+            };
+
+            return dto;
+        }
+
     }
 }

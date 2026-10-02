@@ -518,10 +518,29 @@ public async Task<IActionResult> GetBusinessLocationCounts()
             return Ok(result);
         }
 
-        [HttpGet("admin-payout-orders/{storeOrderId}")]
+        [HttpGet("admin-payout-orders-details/{storeOrderId}")]
         public async Task<IActionResult> GetAdminOrderDetail(int storeOrderId)
         {
             var result = await _adminService.GetAdminOrderDetailAsync(storeOrderId);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("admin-sender-orders")]
+        public async Task<IActionResult> GetAdminSenderOrders(
+    [FromQuery] int month, [FromQuery] int year,
+    [FromQuery] int? senderOrderId, [FromQuery] DateTime? pickupDate,
+    [FromQuery] string? deliveryStatus,
+    [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _adminService.GetAdminSenderOrdersAsync(
+                month, year, senderOrderId, pickupDate, deliveryStatus, pageNumber, pageSize);
+            return Ok(result);
+        }
+
+        [HttpGet("admin-sender-orders-details/{senderOrderId}")]
+        public async Task<IActionResult> GetAdminSenderOrderDetail(int senderOrderId)
+        {
+            var result = await _adminService.GetAdminSenderOrderDetailAsync(senderOrderId);
             return result == null ? NotFound() : Ok(result);
         }
     }
