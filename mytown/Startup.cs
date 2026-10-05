@@ -134,7 +134,8 @@ public class Startup
         services.AddScoped<IMobileAppService, MobileAppService>();
         services.AddScoped<ITransporterPayoutService, TransporterPayoutService>();
 
-
+        services.AddScoped<IHubRepository, HubRepository>();
+        services.AddScoped<IHubService, HubService>();
         services.AddSingleton<ConnectionManager>();
         services.AddHostedService<mytown.Services.Implementations.ChatCleanupBackgroundService>();
 
