@@ -993,6 +993,76 @@ namespace mytown.DataAccess.Repositories
 
                 return null;
             }
+
+            // ---------------- HUB LOGIN ----------------
+            if (role == "Hub")
+            {
+                password = password?.Trim();
+
+                var hub = await _context.HubDetails
+                    .FirstOrDefaultAsync(h => h.HubEmail.ToLower() == email.ToLower().Trim());
+
+                if (hub != null)
+                {
+                    bool isValidPassword;
+
+                    if (!string.IsNullOrEmpty(hub.HubPassword) && hub.HubPassword.StartsWith("$2"))
+                        isValidPassword = BCrypt.Net.BCrypt.Verify(password, hub.HubPassword);
+                    else
+                        isValidPassword = hub.HubPassword == password;   // plain text for now
+
+                    if (isValidPassword)
+                    {
+                        var oldSession = await _context.UserSessions
+                            .Where(s => s.UserId == hub.HubId && s.UserType == "Hub" && s.IsActive)
+                            .FirstOrDefaultAsync();
+
+                        if (oldSession != null)
+                        {
+                            oldSession.IsActive = false;
+                            _context.UserSessions.Update(oldSession);
+                        }
+
+                        var newSession = new UserSession
+                        {
+                            UserId = hub.HubId,
+                            UserType = "Hub",
+                            SessionGuid = Guid.NewGuid().ToString(),
+                            IsActive = true,
+                            CreatedAt = DateTime.UtcNow
+                        };
+
+                        _context.UserSessions.Add(newSession);
+                        await _context.SaveChangesAsync();
+
+                        var token = _tokenService.GenerateToken(
+                            hub.HubId, hub.HubEmail, "Hub", newSession.SessionGuid);
+
+                        return new
+                        {
+                            userType = "Hub",
+                            token,
+                            sessionId = newSession.SessionGuid,
+                            hub = new HubLoginDto
+                            {
+                                HubId = hub.HubId,
+                                HubAddressId = hub.HubAddressId,
+                                HubName = hub.HubName,
+                                HubEmail = hub.HubEmail,
+                                AddressLine = hub.AddressLine,
+                                Town = hub.Town,
+                                City = hub.City,
+                                State = hub.State,
+                                Country = hub.Country,
+                                Pin = hub.Pin,
+                                Phone = hub.Phone
+                            }
+                        };
+                    }
+                }
+
+                return null;
+            }
             return null;
         }
 

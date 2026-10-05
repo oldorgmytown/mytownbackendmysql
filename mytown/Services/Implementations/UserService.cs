@@ -54,6 +54,7 @@ namespace mytown.Services
             AddIfExists("hasBranches");
             AddIfExists("transporter");
             AddIfExists("sender");
+            AddIfExists("hub");
 
             return (response, token!, sessionId!);
         }

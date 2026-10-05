@@ -439,6 +439,10 @@ var plan =
                 DeclaredValue = order.ProductCost,
 
                 PickupAddress = order.PickupAddress,
+                PickupTown = order.PickupTown,
+                PickupCity = order.PickupCity,
+                PickupState = order.PickupState,
+                PickupCountry = order.PickupCountry,
                 PickupDate = order.PickupDate,
                 PickupTime = order.PickupTime,
 

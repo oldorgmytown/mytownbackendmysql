@@ -659,9 +659,28 @@ namespace mytown.DataAccess.Repositories
            EstimatedDays = sd.EstimatedDays,
            EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
            ShippingStatus = sd.ShippingStatus,
-           TrackingId = sd.TrackingId
+           TrackingId = sd.TrackingId,
+
+              // ✅ Hub matched by store pincode
+        HubAddress = _context.HubDetails
+            .Where(h => h.Pin == b.PostalCode)
+            .Select(h => new HubAddressDto
+            {
+                HubId = h.HubId,
+                HubAddressId = h.HubAddressId,
+                HubName = h.HubName,
+                AddressLine = h.AddressLine,
+                Town = h.Town,
+                City = h.City,
+                State = h.State,
+                Country = h.Country,
+                Pin = h.Pin,
+                Phone = h.Phone
+            })
+            .FirstOrDefault()
        }
-   ).ToListAsync();
+).ToListAsync();
+       
 
             // ✅ Get DeliveryAddress from ShippingDetails (any one store is enough)
             var deliveryAddress = await _context.ShippingDetails
