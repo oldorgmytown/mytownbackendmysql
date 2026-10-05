@@ -51,8 +51,80 @@ namespace mytown.DataAccess.Repositories
                     })
                     .ToListAsync();
             }
-            
-        
+
+
+        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync()
+        {
+            var rows = await (
+                from sd in _context.ShippingDetails
+                join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+                join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on sd.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where sd.TransporterRegId != null
+                orderby so.StoreOrderId descending
+                select new
+                {
+                    so.StoreOrderId,
+                    so.OrderId,
+                    so.Storeorder_Status,
+                    t.TransporterRegId,
+                    t.TransporterName,
+                    PickupDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    StoreId = b.BusRegId,
+                    b.BusinessName,
+                    b.Town,
+                    b.BusinessCity,
+
+                    Package = _context.ShippingPackageDetails
+                        .Where(p => p.StoreOrderId == so.StoreOrderId)
+                        .Select(p => new
+                        {
+                            p.PackageLength,
+                            p.PackageWidth,
+                            p.PackageHeight,
+                            p.DimensionUnit,
+                            p.PackageWeight,
+                            p.WeightUnit
+                        })
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return rows.Select(r => new HubStoreOrderListDto
+            {
+                StoreOrderId = r.StoreOrderId,
+                OrderId = r.OrderId,
+                OrderStatus =
+                    r.Storeorder_Status == "Pending" ? "New" :
+                    r.Storeorder_Status == "Delivered" ? "Completed" :
+                    "In Progress",
+
+                TransporterRegId = r.TransporterRegId,
+                TransporterName = r.TransporterName,
+                PickupDate = r.PickupDate,
+
+                StoreId = r.StoreId,
+                StoreName = r.BusinessName,
+                StoreLocation = r.Town + ", " + r.BusinessCity,
+
+                PackageSpecs = r.Package != null
+                    && r.Package.PackageLength.HasValue
+                    && r.Package.PackageWidth.HasValue
+                    && r.Package.PackageHeight.HasValue
+                    ? $"{r.Package.PackageLength:0.##} × {r.Package.PackageWidth:0.##} × {r.Package.PackageHeight:0.##} {r.Package.DimensionUnit}"
+                    : null,
+                PackageWeight = r.Package?.PackageWeight,
+                WeightUnit = r.Package?.WeightUnit,
+
+                HubStatus = null
+            }).ToList();
+        }
+
     }
         
 }

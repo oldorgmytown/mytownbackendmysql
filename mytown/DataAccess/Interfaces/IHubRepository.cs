@@ -6,5 +6,6 @@ namespace mytown.DataAccess.Interfaces
     {
 
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
+        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync();
     }
 }

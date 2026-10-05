@@ -22,5 +22,8 @@ namespace mytown.Services.Implementations
 
         public Task<List<HubAddressDto>> GetAllHubLocationsAsync()
        => _hubRepo.GetAllHubLocationsAsync();
+
+        public Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync()
+        => _hubRepo.GetTransporterStoreOrdersAsync();
     }
 }

@@ -30,5 +30,11 @@ namespace mytown.Controllers
             var hubs = await _hubService.GetAllHubLocationsAsync();
             return Ok(hubs);
         }
+        [HttpGet("store-orders-onhub")]
+        public async Task<IActionResult> GetStoreOrders()
+        {
+            var data = await _hubService.GetTransporterStoreOrdersAsync();
+            return Ok(data);
+        }
     }
 }

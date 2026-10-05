@@ -7,5 +7,6 @@ namespace mytown.Services.Interfaces
     public interface IHubService
     {
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
+        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync();
     }
 }
