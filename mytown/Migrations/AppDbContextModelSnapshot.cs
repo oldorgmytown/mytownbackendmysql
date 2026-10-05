@@ -86,7 +86,7 @@ namespace mytown.Migrations
                     b.HasIndex("BusRegId")
                         .IsUnique();
 
-                    b.ToTable("business_account_details", (string)null);
+                    b.ToTable("business_account_details");
                 });
 
             modelBuilder.Entity("MyTown.Models.BusinessRegister", b =>
@@ -205,7 +205,71 @@ namespace mytown.Migrations
 
                     b.HasIndex("BusCatId");
 
-                    b.ToTable("business_registers", (string)null);
+                    b.ToTable("business_registers");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ProductReview", b =>
+                {
+                    b.Property<int>("ProductReviewId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("product_review_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProductReviewId"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<bool>("IsAnonymous")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_anonymous");
+
+                    b.Property<string>("PostType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)")
+                        .HasColumnName("post_type");
+
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("product_id");
+
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(65,30)")
+                        .HasColumnName("rating");
+
+                    b.Property<string>("Review")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("review");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<bool>("VerifiedPurchase")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("verified_purchase");
+
+                    b.HasKey("ProductReviewId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ShopperRegId");
+
+                    b.ToTable("product_reviews");
                 });
 
             modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
@@ -269,7 +333,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("shopper_experiences", (string)null);
+                    b.ToTable("shopper_experiences");
                 });
 
             modelBuilder.Entity("MyTown.Models.ShopperExperienceComment", b =>
@@ -304,7 +368,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ShopperExperienceCommentId");
 
-                    b.ToTable("shopper_experience_comments", (string)null);
+                    b.ToTable("shopper_experience_comments");
                 });
 
             modelBuilder.Entity("MyTown.Models.ShopperExperienceLike", b =>
@@ -330,7 +394,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ShopperExperienceLikeId");
 
-                    b.ToTable("shopper_experience_likes", (string)null);
+                    b.ToTable("shopper_experience_likes");
                 });
 
             modelBuilder.Entity("mytown.Models.AddToCart", b =>
@@ -386,7 +450,7 @@ namespace mytown.Migrations
 
                     b.HasKey("CartId");
 
-                    b.ToTable("addtocart", (string)null);
+                    b.ToTable("addtocart");
                 });
 
             modelBuilder.Entity("mytown.Models.AdminComment", b =>
@@ -426,7 +490,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("BusRegId");
 
-                    b.ToTable("admin_comments", (string)null);
+                    b.ToTable("admin_comments");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessCategory", b =>
@@ -448,7 +512,7 @@ namespace mytown.Migrations
 
                     b.HasKey("BusCatId");
 
-                    b.ToTable("business_categories", (string)null);
+                    b.ToTable("business_categories");
 
                     b.HasData(
                         new
@@ -494,7 +558,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("business_connections", (string)null);
+                    b.ToTable("business_connections");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessDBNotifications", b =>
@@ -530,7 +594,7 @@ namespace mytown.Migrations
 
                     b.HasKey("NotificationId");
 
-                    b.ToTable("business_db_notifications", (string)null);
+                    b.ToTable("business_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessProfile", b =>
@@ -610,7 +674,7 @@ namespace mytown.Migrations
                     b.HasIndex("BusRegId")
                         .IsUnique();
 
-                    b.ToTable("business_profiles", (string)null);
+                    b.ToTable("business_profiles");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessProfileViewer", b =>
@@ -644,7 +708,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("business_profile_viewers", (string)null);
+                    b.ToTable("business_profile_viewers");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessService", b =>
@@ -664,7 +728,7 @@ namespace mytown.Migrations
 
                     b.HasKey("BusServId");
 
-                    b.ToTable("business_services", (string)null);
+                    b.ToTable("business_services");
                 });
 
             modelBuilder.Entity("mytown.Models.BusinessVerification", b =>
@@ -701,7 +765,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("BusRegId");
 
-                    b.ToTable("business_verifications", (string)null);
+                    b.ToTable("business_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.ChatMessage", b =>
@@ -744,7 +808,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SenderUserId", "SenderType", "ReceiverUserId", "ReceiverType");
 
-                    b.ToTable("chat_messages", (string)null);
+                    b.ToTable("chat_messages");
                 });
 
             modelBuilder.Entity("mytown.Models.CityImage", b =>
@@ -772,7 +836,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("city_images", (string)null);
+                    b.ToTable("city_images");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierAccountDetail", b =>
@@ -839,7 +903,7 @@ namespace mytown.Migrations
                     b.HasIndex("CourierId")
                         .IsUnique();
 
-                    b.ToTable("courier_account_details", (string)null);
+                    b.ToTable("courier_account_details");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranch", b =>
@@ -913,7 +977,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("CourierId");
 
-                    b.ToTable("courier_branch", (string)null);
+                    b.ToTable("courier_branch");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierBranchService", b =>
@@ -965,7 +1029,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("BranchId");
 
-                    b.ToTable("courier_branch_service", (string)null);
+                    b.ToTable("courier_branch_service");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierDBNotifications", b =>
@@ -1009,7 +1073,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("CourierId");
 
-                    b.ToTable("courier_db_notifications", (string)null);
+                    b.ToTable("courier_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierPayout", b =>
@@ -1076,7 +1140,7 @@ namespace mytown.Migrations
 
                     b.HasKey("PayoutId");
 
-                    b.ToTable("courier_payout", (string)null);
+                    b.ToTable("courier_payout");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierService", b =>
@@ -1168,7 +1232,7 @@ namespace mytown.Migrations
 
                     b.HasKey("CourierId");
 
-                    b.ToTable("courier_service", (string)null);
+                    b.ToTable("courier_service");
                 });
 
             modelBuilder.Entity("mytown.Models.CourierVerification", b =>
@@ -1205,7 +1269,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("CourierId");
 
-                    b.ToTable("courier_verifications", (string)null);
+                    b.ToTable("courier_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.DTO_s.ShopperAlternateAddress", b =>
@@ -1281,7 +1345,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("shopper_alternate_address", (string)null);
+                    b.ToTable("shopper_alternate_address");
                 });
 
             modelBuilder.Entity("mytown.Models.DTO_s.TransporterDBNotifications", b =>
@@ -1319,7 +1383,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_db_notifications", (string)null);
+                    b.ToTable("transporter_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.Design", b =>
@@ -1346,7 +1410,7 @@ namespace mytown.Migrations
 
                     b.HasKey("DesignId");
 
-                    b.ToTable("designs", (string)null);
+                    b.ToTable("designs");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "design");
                 });
@@ -1375,7 +1439,7 @@ namespace mytown.Migrations
 
                     b.HasKey("FabricId");
 
-                    b.ToTable("fabrics", (string)null);
+                    b.ToTable("fabrics");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "fabric");
                 });
@@ -1463,7 +1527,68 @@ namespace mytown.Migrations
 
                     b.HasKey("GuestRegId");
 
-                    b.ToTable("guest_registers", (string)null);
+                    b.ToTable("guest_registers");
+                });
+
+            modelBuilder.Entity("mytown.Models.HubDetail", b =>
+                {
+                    b.Property<int>("HubId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("hubid");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("HubId"));
+
+                    b.Property<string>("AddressLine")
+                        .HasColumnType("longtext")
+                        .HasColumnName("addressline");
+
+                    b.Property<string>("City")
+                        .HasColumnType("longtext")
+                        .HasColumnName("city");
+
+                    b.Property<string>("Country")
+                        .HasColumnType("longtext")
+                        .HasColumnName("country");
+
+                    b.Property<int>("HubAddressId")
+                        .HasColumnType("int")
+                        .HasColumnName("hubaddressid");
+
+                    b.Property<string>("HubEmail")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hubemail");
+
+                    b.Property<string>("HubName")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hubname");
+
+                    b.Property<string>("HubPassword")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hubpassword");
+
+                    b.Property<string>("Phone")
+                        .HasColumnType("longtext")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("Pin")
+                        .HasColumnType("longtext")
+                        .HasColumnName("pin");
+
+                    b.Property<string>("State")
+                        .HasColumnType("longtext")
+                        .HasColumnName("state");
+
+                    b.Property<string>("Town")
+                        .HasColumnType("longtext")
+                        .HasColumnName("town");
+
+                    b.HasKey("HubId");
+
+                    b.ToTable("hubdetails");
                 });
 
             modelBuilder.Entity("mytown.Models.LocationImage", b =>
@@ -1499,7 +1624,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("location_images", (string)null);
+                    b.ToTable("location_images");
                 });
 
             modelBuilder.Entity("mytown.Models.Order", b =>
@@ -1553,7 +1678,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("orders", (string)null);
+                    b.ToTable("orders");
                 });
 
             modelBuilder.Entity("mytown.Models.PasswordResetRequest", b =>
@@ -1586,7 +1711,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("password_reset_requests", (string)null);
+                    b.ToTable("password_reset_requests");
                 });
 
             modelBuilder.Entity("mytown.Models.Payments", b =>
@@ -1629,7 +1754,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("payments", (string)null);
+                    b.ToTable("payments");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingBusinessVerification", b =>
@@ -1662,7 +1787,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_business_verifications", (string)null);
+                    b.ToTable("pending_business_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingCourierVerification", b =>
@@ -1695,7 +1820,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_courier_verifications", (string)null);
+                    b.ToTable("pending_courier_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingGuestVerification", b =>
@@ -1732,7 +1857,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_guest_verification", (string)null);
+                    b.ToTable("pending_guest_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingSenderVerification", b =>
@@ -1765,7 +1890,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_sender_verifications", (string)null);
+                    b.ToTable("pending_sender_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingTransporterVerification", b =>
@@ -1798,7 +1923,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_transporter_verifications", (string)null);
+                    b.ToTable("pending_transporter_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.PendingVerification", b =>
@@ -1831,7 +1956,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("pending_verifications", (string)null);
+                    b.ToTable("pending_verifications");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductAttributeValue", b =>
@@ -1858,7 +1983,7 @@ namespace mytown.Migrations
 
                     b.HasKey("AttributeValueId");
 
-                    b.ToTable("product_attribute_values", (string)null);
+                    b.ToTable("product_attribute_values");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductAttributes", b =>
@@ -1895,7 +2020,7 @@ namespace mytown.Migrations
 
                     b.HasKey("AttributeId");
 
-                    b.ToTable("product_attributes", (string)null);
+                    b.ToTable("product_attributes");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductGroup", b =>
@@ -1922,7 +2047,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ProdGroupId");
 
-                    b.ToTable("product_group", (string)null);
+                    b.ToTable("product_group");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductImage", b =>
@@ -1958,9 +2083,34 @@ namespace mytown.Migrations
 
                     b.HasIndex("SkuId");
 
-                    b.ToTable("product_images", (string)null);
+                    b.ToTable("product_images");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "images");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductReviewPhoto", b =>
+                {
+                    b.Property<int>("ProductReviewPhotoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("product_review_photo_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ProductReviewPhotoId"));
+
+                    b.Property<string>("PhotoPath")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("photo_path");
+
+                    b.Property<int>("ProductReviewId")
+                        .HasColumnType("int")
+                        .HasColumnName("product_review_id");
+
+                    b.HasKey("ProductReviewPhotoId");
+
+                    b.HasIndex("ProductReviewId");
+
+                    b.ToTable("product_review_photos");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductSize", b =>
@@ -2005,7 +2155,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ProdSubcatId");
 
-                    b.ToTable("product_sizes", (string)null);
+                    b.ToTable("product_sizes");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductSize_Measurement", b =>
@@ -2046,7 +2196,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SizeId");
 
-                    b.ToTable("productsize_measurements", (string)null);
+                    b.ToTable("productsize_measurements");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductSubCategory", b =>
@@ -2078,7 +2228,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ProdSubcatId");
 
-                    b.ToTable("product_sub_categories", (string)null);
+                    b.ToTable("product_sub_categories");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductType", b =>
@@ -2109,7 +2259,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ProdTypeId");
 
-                    b.ToTable("product_type", (string)null);
+                    b.ToTable("product_type");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "product_type");
                 });
@@ -2151,7 +2301,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SkuId");
 
-                    b.ToTable("product_variant_attributes", (string)null);
+                    b.ToTable("product_variant_attributes");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "attributes");
                 });
@@ -2191,7 +2341,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SkuId");
 
-                    b.ToTable("product_variant_images", (string)null);
+                    b.ToTable("product_variant_images");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "images");
                 });
@@ -2266,7 +2416,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("product_variants", (string)null);
+                    b.ToTable("product_variants");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "variants");
                 });
@@ -2362,7 +2512,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ProductTypeId");
 
-                    b.ToTable("products", (string)null);
+                    b.ToTable("products");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductsNew", b =>
@@ -2437,7 +2587,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("BusRegId");
 
-                    b.ToTable("products_new", (string)null);
+                    b.ToTable("products_new");
                 });
 
             modelBuilder.Entity("mytown.Models.Registration", b =>
@@ -2521,7 +2671,7 @@ namespace mytown.Migrations
 
                     b.HasKey("RegId");
 
-                    b.ToTable("registrations", (string)null);
+                    b.ToTable("registrations");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderAlternateAddress", b =>
@@ -2588,7 +2738,7 @@ namespace mytown.Migrations
 
                     b.HasKey("AltAddressId");
 
-                    b.ToTable("sender_alternate_address", (string)null);
+                    b.ToTable("sender_alternate_address");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderDBNotifications", b =>
@@ -2626,7 +2776,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SenderRegId");
 
-                    b.ToTable("sender_db_notifications", (string)null);
+                    b.ToTable("sender_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderOrder", b =>
@@ -2777,7 +2927,7 @@ namespace mytown.Migrations
                         .HasColumnName("tracking_id");
 
                     b.Property<decimal?>("TransporterCharges")
-                        .HasColumnType("decimal(65,30)")
+                        .HasColumnType("decimal(10,2)")
                         .HasColumnName("transporter_charges");
 
                     b.Property<int?>("TransporterPlanId")
@@ -2790,7 +2940,7 @@ namespace mytown.Migrations
 
                     b.HasKey("SenderOrderId");
 
-                    b.ToTable("sender_orders", (string)null);
+                    b.ToTable("sender_orders");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderOrderPayment", b =>
@@ -2843,7 +2993,7 @@ namespace mytown.Migrations
 
                     b.HasKey("SenderPaymentId");
 
-                    b.ToTable("sender_order_payments", (string)null);
+                    b.ToTable("sender_order_payments");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderRegister", b =>
@@ -2929,7 +3079,7 @@ namespace mytown.Migrations
 
                     b.HasKey("SenderRegId");
 
-                    b.ToTable("sender_registers", (string)null);
+                    b.ToTable("sender_registers");
                 });
 
             modelBuilder.Entity("mytown.Models.SenderVerification", b =>
@@ -2966,7 +3116,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("sender_verification", (string)null);
+                    b.ToTable("sender_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.Service", b =>
@@ -3020,7 +3170,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ServiceId");
 
-                    b.ToTable("services", (string)null);
+                    b.ToTable("services");
                 });
 
             modelBuilder.Entity("mytown.Models.ServiceProfile", b =>
@@ -3105,7 +3255,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ServiceProfileId");
 
-                    b.ToTable("service_profiles", (string)null);
+                    b.ToTable("service_profiles");
                 });
 
             modelBuilder.Entity("mytown.Models.ServiceSubCategory", b =>
@@ -3129,7 +3279,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ServSubcatId");
 
-                    b.ToTable("services_sub_categories", (string)null);
+                    b.ToTable("services_sub_categories");
                 });
 
             modelBuilder.Entity("mytown.Models.ShippingDetails", b =>
@@ -3207,7 +3357,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("shipping_details", (string)null);
+                    b.ToTable("shipping_details");
                 });
 
             modelBuilder.Entity("mytown.Models.ShippingPackageDetails", b =>
@@ -3255,7 +3405,7 @@ namespace mytown.Migrations
 
                     b.HasKey("PackageDetailId");
 
-                    b.ToTable("shipping_package_details", (string)null);
+                    b.ToTable("shipping_package_details");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperDBNotifications", b =>
@@ -3293,7 +3443,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperRegId");
 
-                    b.ToTable("shopper_db_notifications", (string)null);
+                    b.ToTable("shopper_db_notifications");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperExperiencePhoto", b =>
@@ -3322,7 +3472,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperExperienceId");
 
-                    b.ToTable("shopper_experience_photos", (string)null);
+                    b.ToTable("shopper_experience_photos");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
@@ -3357,7 +3507,7 @@ namespace mytown.Migrations
                     b.HasIndex("ShopperId", "ProductId")
                         .IsUnique();
 
-                    b.ToTable("shopper_product_recent_view", (string)null);
+                    b.ToTable("shopper_product_recent_view");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperRegister", b =>
@@ -3449,7 +3599,7 @@ namespace mytown.Migrations
 
                     b.HasKey("ShopperRegId");
 
-                    b.ToTable("shopper_registers", (string)null);
+                    b.ToTable("shopper_registers");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperVerification", b =>
@@ -3486,7 +3636,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("ShopperId");
 
-                    b.ToTable("shopper_verification", (string)null);
+                    b.ToTable("shopper_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.Sku_ProductVariant", b =>
@@ -3549,7 +3699,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("SizeId");
 
-                    b.ToTable("sku_product_variants", (string)null);
+                    b.ToTable("sku_product_variants");
 
                     b.HasAnnotation("Relational:JsonPropertyName", "sku_product_variants");
                 });
@@ -3591,7 +3741,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("store_orders", (string)null);
+                    b.ToTable("store_orders");
                 });
 
             modelBuilder.Entity("mytown.Models.StorePayout", b =>
@@ -3656,7 +3806,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("StoreOrderId");
 
-                    b.ToTable("store_payout", (string)null);
+                    b.ToTable("store_payout");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterAccountDetail", b =>
@@ -3726,7 +3876,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_account_details", (string)null);
+                    b.ToTable("transporter_account_details");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterBankDetails", b =>
@@ -3774,7 +3924,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_bank_details", (string)null);
+                    b.ToTable("transporter_bank_details");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterDeliveryRequest", b =>
@@ -3890,7 +4040,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_delivery_requests", (string)null);
+                    b.ToTable("transporter_delivery_requests");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterExceptionReport", b =>
@@ -3934,7 +4084,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_exception_reports", (string)null);
+                    b.ToTable("transporter_exception_reports");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterKYC", b =>
@@ -3982,7 +4132,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_kyc", (string)null);
+                    b.ToTable("transporter_kyc");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterPayout", b =>
@@ -4013,6 +4163,16 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_date");
 
+                    b.Property<string>("OrderType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("order_type");
+
+                    b.Property<int?>("SenderOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_order_id");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -4024,7 +4184,7 @@ namespace mytown.Migrations
                         .HasColumnType("varchar(500)")
                         .HasColumnName("status_description");
 
-                    b.Property<int>("StoreOrderId")
+                    b.Property<int?>("StoreOrderId")
                         .HasColumnType("int")
                         .HasColumnName("store_order_id");
 
@@ -4049,7 +4209,7 @@ namespace mytown.Migrations
 
                     b.HasKey("PayoutId");
 
-                    b.ToTable("transporter_payout", (string)null);
+                    b.ToTable("transporter_payout");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterRegister", b =>
@@ -4135,7 +4295,7 @@ namespace mytown.Migrations
 
                     b.HasKey("TransporterRegId");
 
-                    b.ToTable("transporter_registers", (string)null);
+                    b.ToTable("transporter_registers");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterTravelPlan", b =>
@@ -4172,6 +4332,11 @@ namespace mytown.Migrations
                         .IsRequired()
                         .HasColumnType("varchar(100)")
                         .HasColumnName("destination_country");
+
+                    b.Property<string>("DestinationPin")
+                        .IsRequired()
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("destination_pin");
 
                     b.Property<string>("DestinationState")
                         .IsRequired()
@@ -4253,6 +4418,11 @@ namespace mytown.Migrations
                         .HasColumnType("datetime(6)")
                         .HasColumnName("start_date");
 
+                    b.Property<string>("StartLocationPin")
+                        .IsRequired()
+                        .HasColumnType("varchar(300)")
+                        .HasColumnName("start_location_pin");
+
                     b.Property<string>("StartState")
                         .IsRequired()
                         .HasColumnType("varchar(100)")
@@ -4286,7 +4456,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterRegId");
 
-                    b.ToTable("transporter_travel_plans", (string)null);
+                    b.ToTable("transporter_travel_plans");
                 });
 
             modelBuilder.Entity("mytown.Models.TransporterVerification", b =>
@@ -4323,7 +4493,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("TransporterId");
 
-                    b.ToTable("transporter_verification", (string)null);
+                    b.ToTable("transporter_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.User", b =>
@@ -4347,7 +4517,7 @@ namespace mytown.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users");
                 });
 
             modelBuilder.Entity("mytown.Models.UserSession", b =>
@@ -4395,7 +4565,7 @@ namespace mytown.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("user_sessions", (string)null);
+                    b.ToTable("user_sessions");
                 });
 
             modelBuilder.Entity("mytown.Models.Wishlist", b =>
@@ -4437,7 +4607,7 @@ namespace mytown.Migrations
 
                     b.HasKey("WishlistId");
 
-                    b.ToTable("wishlist", (string)null);
+                    b.ToTable("wishlist");
                 });
 
             modelBuilder.Entity("mytown.Models.orderdetails", b =>
@@ -4490,7 +4660,7 @@ namespace mytown.Migrations
 
                     b.HasIndex("StoreOrderId");
 
-                    b.ToTable("orderdetails", (string)null);
+                    b.ToTable("orderdetails");
                 });
 
             modelBuilder.Entity("mytown.Models.subcategoryimages_busregid", b =>
@@ -4550,6 +4720,25 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("BusinessCategory");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ProductReview", b =>
+                {
+                    b.HasOne("mytown.Models.ProductsNew", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
+                        .WithMany()
+                        .HasForeignKey("ShopperRegId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ShopperRegister");
                 });
 
             modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>
@@ -4774,6 +4963,17 @@ namespace mytown.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("ProductVariant");
+                });
+
+            modelBuilder.Entity("mytown.Models.ProductReviewPhoto", b =>
+                {
+                    b.HasOne("MyTown.Models.ProductReview", "ProductReview")
+                        .WithMany("Photos")
+                        .HasForeignKey("ProductReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProductReview");
                 });
 
             modelBuilder.Entity("mytown.Models.ProductSize", b =>
@@ -5198,6 +5398,11 @@ namespace mytown.Migrations
                     b.Navigation("BusinessAccountDetail");
 
                     b.Navigation("BusinessProfile");
+                });
+
+            modelBuilder.Entity("MyTown.Models.ProductReview", b =>
+                {
+                    b.Navigation("Photos");
                 });
 
             modelBuilder.Entity("MyTown.Models.ShopperExperience", b =>

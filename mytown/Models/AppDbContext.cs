@@ -135,6 +135,9 @@ namespace mytown.Models
 
             public DbSet<TransporterPayout> TransporterPayouts { get; set; }
 
+            //Hub login - 5oct 2026
+            public DbSet<HubDetail> HubDetails { get; set; }
+
 
 
 
