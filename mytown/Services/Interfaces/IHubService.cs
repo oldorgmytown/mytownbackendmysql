@@ -16,6 +16,8 @@ namespace mytown.Services.Interfaces
 
         Task<SenderVerificationDto?> GetSenderVerificationAsync(int senderOrderId);
         Task<(bool Success, string? Error, SenderVerificationDto? Data)> SaveSenderVerificationAsync(
-            int senderOrderId, SaveSenderVerificationDto dto);
+            int senderOrderId, SaveHubVerificationDto dto);
+
+        Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId);
     }
 }

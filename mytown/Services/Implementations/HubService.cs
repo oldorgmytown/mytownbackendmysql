@@ -63,5 +63,8 @@ namespace mytown.Services.Implementations
             var saved = await _hubRepo.SaveSenderVerificationAsync(senderOrderId, dto);
             return (true, null, saved);
         }
+
+        public Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
+    => _hubRepo.GetStoreOrderDetailsAsync(storeOrderId);
     }
 }

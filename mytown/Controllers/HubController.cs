@@ -90,5 +90,17 @@ namespace mytown.Controllers
 
             return Ok(result.Data);
         }
+
+        // GET: api/hub/store-orders/490/details
+        [HttpGet("get-store-orders-details")]
+        public async Task<IActionResult> GetStoreOrderDetails(int storeOrderId)
+        {
+            var data = await _hubService.GetStoreOrderDetailsAsync(storeOrderId);
+
+            if (data == null)
+                return NotFound(new { message = "Store order not found or no transporter assigned." });
+
+            return Ok(data);
+        }
     }
 }
