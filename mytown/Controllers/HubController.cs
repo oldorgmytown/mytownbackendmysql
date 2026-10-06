@@ -54,7 +54,7 @@ namespace mytown.Controllers
         }
 
         // PUT: api/hub/store-orders/490/verification
-        [HttpPut("save_store-orders_verification")]
+        [HttpPut("save-store-orders_verification")]
         public async Task<IActionResult> SaveVerification(
             int storeOrderId, [FromBody] SaveHubVerificationDto dto)
         {
@@ -62,6 +62,29 @@ namespace mytown.Controllers
 
             if (!result.Success)
                 return result.Error == "Store order not found."
+                    ? NotFound(new { message = result.Error })
+                    : BadRequest(new { message = result.Error });
+
+            return Ok(result.Data);
+        }
+
+        // GET: api/hub/sender-orders/12/verification
+        [HttpGet("get-sender-orders-verified")]
+        public async Task<IActionResult> GetSenderVerification(int senderOrderId)
+        {
+            var data = await _hubService.GetSenderVerificationAsync(senderOrderId);
+            return Ok(data);   // null if verification hasn't started
+        }
+
+        // PUT: api/hub/sender-orders/12/verification
+        [HttpPut("save-sender-orders-verification")]
+        public async Task<IActionResult> SaveSenderVerification(
+            int senderOrderId, [FromBody] SaveHubVerificationDto dto)
+        {
+            var result = await _hubService.SaveSenderVerificationAsync(senderOrderId, dto);
+
+            if (!result.Success)
+                return result.Error == "Sender order not found."
                     ? NotFound(new { message = result.Error })
                     : BadRequest(new { message = result.Error });
 

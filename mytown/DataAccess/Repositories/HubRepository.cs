@@ -75,23 +75,14 @@ namespace mytown.DataAccess.Repositories
                     t.TransporterRegId,
                     t.TransporterName,
                     PickupDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
                     StoreId = b.BusRegId,
                     b.BusinessName,
                     b.Town,
                     b.BusinessCity,
 
-                    Package = _context.ShippingPackageDetails
-                        .Where(p => p.StoreOrderId == so.StoreOrderId)
-                        .Select(p => new
-                        {
-                            p.PackageLength,
-                            p.PackageWidth,
-                            p.PackageHeight,
-                            p.DimensionUnit,
-                            p.PackageWeight,
-                            p.WeightUnit
-                        })
-                        .FirstOrDefault()
+                    IsHandedOver = _context.HubStoreOrderVerifications
+                        .Any(v => v.StoreOrderId == so.StoreOrderId)
                 }
             ).AsNoTracking().ToListAsync();
 
@@ -107,21 +98,13 @@ namespace mytown.DataAccess.Repositories
                 TransporterRegId = r.TransporterRegId,
                 TransporterName = r.TransporterName,
                 PickupDate = r.PickupDate,
+                EstimatedDeliveryDate = r.EstimatedDeliveryDate,
 
                 StoreId = r.StoreId,
                 StoreName = r.BusinessName,
                 StoreLocation = r.Town + ", " + r.BusinessCity,
 
-                PackageSpecs = r.Package != null
-                    && r.Package.PackageLength.HasValue
-                    && r.Package.PackageWidth.HasValue
-                    && r.Package.PackageHeight.HasValue
-                    ? $"{r.Package.PackageLength:0.##} × {r.Package.PackageWidth:0.##} × {r.Package.PackageHeight:0.##} {r.Package.DimensionUnit}"
-                    : null,
-                PackageWeight = r.Package?.PackageWeight,
-                WeightUnit = r.Package?.WeightUnit,
-
-                HubStatus = null
+                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
             }).ToList();
         }
 
@@ -144,7 +127,7 @@ namespace mytown.DataAccess.Repositories
                     so.DeliveryStatus,
                     t.TransporterRegId,
                     t.TransporterName,
-                    PickupDate = tp != null ? tp.ArrivalDate : so.PickupDate,
+                    PickupDate = tp != null ? tp.StartDate : so.PickupDate,
                     EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
                     so.SenderRegId,
                     s.SenderName,
@@ -169,6 +152,7 @@ namespace mytown.DataAccess.Repositories
                 SenderRegId = r.SenderRegId,
                 SenderName = r.SenderName,
                 SenderLocation = r.PickupTown + ", " + r.PickupCity,
+
 
                 HubStatus = null
             }).ToList();
@@ -233,6 +217,67 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
             return ToDto(v);
         }
+
+        // ---------------- SENDER ORDER VERIFICATION ----------------
+        public Task<bool> SenderOrderExistsAsync(int senderOrderId)
+            => _context.SenderOrders.AnyAsync(s => s.SenderOrderId == senderOrderId);
+
+        public async Task<SenderVerificationDto?> GetSenderVerificationAsync(int senderOrderId)
+        {
+            var v = await _context.HubSenderOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            if (v == null)
+                return null;
+
+            return ToSenderDto(v);
+        }
+
+        public async Task<SenderVerificationDto> SaveSenderVerificationAsync(
+            int senderOrderId, SaveHubVerificationDto dto)
+        {
+            var v = await _context.HubSenderOrderVerifications
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            if (v == null)
+            {
+                v = new HubSenderOrderVerification
+                {
+                    SenderOrderId = senderOrderId,
+                    HubId = dto.HubId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.HubSenderOrderVerifications.Add(v);
+            }
+
+            v.PackageVerified = dto.PackageVerified;
+            v.SecurityCheck = dto.SecurityCheck;
+            v.TravelPlanVerified = dto.TravelPlanVerified;
+            v.TransporterVerified = dto.TransporterVerified;
+            v.PackageHandedOver = dto.PackageHandedOver;
+            v.Remarks = dto.Remarks;
+            v.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return ToSenderDto(v);
+        }
+
+        private static SenderVerificationDto ToSenderDto(HubSenderOrderVerification v) => new()
+        {
+            VerificationId = v.VerificationId,
+            SenderOrderId = v.SenderOrderId,
+            HubId = v.HubId,
+            PackageVerified = v.PackageVerified,
+            SecurityCheck = v.SecurityCheck,
+            TravelPlanVerified = v.TravelPlanVerified,
+            TransporterVerified = v.TransporterVerified,
+            PackageHandedOver = v.PackageHandedOver,
+            Remarks = v.Remarks,
+            UpdatedAt = v.UpdatedAt,
+            HubStatus = v.PackageHandedOver ? "Handed Over" : "New"
+        };
     }
+}
 
 }

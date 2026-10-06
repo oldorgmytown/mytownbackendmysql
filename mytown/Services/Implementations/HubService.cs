@@ -46,5 +46,22 @@ namespace mytown.Services.Implementations
             var saved = await _hubRepo.SaveVerificationAsync(storeOrderId, dto);
             return (true, null, saved);
         }
+        public Task<SenderVerificationDto?> GetSenderVerificationAsync(int senderOrderId)
+    => _hubRepo.GetSenderVerificationAsync(senderOrderId);
+
+        public async Task<(bool Success, string? Error, SenderVerificationDto? Data)> SaveSenderVerificationAsync(
+            int senderOrderId, SaveHubVerificationDto dto)
+        {
+            if (!await _hubRepo.SenderOrderExistsAsync(senderOrderId))
+                return (false, "Sender order not found.", null);
+
+            // Handover is allowed only after the first four checks
+            if (dto.PackageHandedOver &&
+                !(dto.PackageVerified && dto.SecurityCheck && dto.TravelPlanVerified && dto.TransporterVerified))
+                return (false, "Complete all verification checks before handing over the package.", null);
+
+            var saved = await _hubRepo.SaveSenderVerificationAsync(senderOrderId, dto);
+            return (true, null, saved);
+        }
     }
 }

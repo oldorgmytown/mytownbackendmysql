@@ -15,7 +15,9 @@
         public string StoreName { get; set; }
         public string StoreLocation { get; set; }      // Town, City
 
-        public string? PackageSpecs { get; set; }      // "10 × 10 × 5 cm"
+      //  public string? PackageSpecs { get; set; }      // "10 × 10 × 5 cm"
+        public DateTime? EstimatedDeliveryDate { get; set; }
+
         public string? HubStatus { get; set; }         // later
 
             
