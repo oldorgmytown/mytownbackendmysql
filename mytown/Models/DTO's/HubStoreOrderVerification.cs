@@ -10,6 +10,8 @@ namespace mytown.Models.DTO_s
         [Column("store_order_id")] public int StoreOrderId { get; set; }
         [Column("hubid")] public int HubId { get; set; }
 
+        [Column("hub_status")] public string HubStatus { get; set; } = "New";
+
         [Column("package_verified")] public bool PackageVerified { get; set; }
         [Column("security_check")] public bool SecurityCheck { get; set; }
         [Column("travel_plan_verified")] public bool TravelPlanVerified { get; set; }

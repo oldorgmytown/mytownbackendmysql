@@ -21,5 +21,9 @@ namespace mytown.Services.Interfaces
         Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId);
 
         Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId);
+
+        //summary counts
+        Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year);
+        Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year);
     }
 }

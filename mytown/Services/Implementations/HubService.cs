@@ -40,7 +40,7 @@ namespace mytown.Services.Implementations
 
             // Handover is allowed only after the first four checks
             if (dto.PackageHandedOver &&
-                !(dto.PackageVerified && dto.SecurityCheck && dto.TravelPlanVerified && dto.TransporterVerified))
+                !(dto.PackageVerified && dto.SecurityCheck))
                 return (false, "Complete all verification checks before handing over the package.", null);
 
             var saved = await _hubRepo.SaveVerificationAsync(storeOrderId, dto);
@@ -55,9 +55,9 @@ namespace mytown.Services.Implementations
             if (!await _hubRepo.SenderOrderExistsAsync(senderOrderId))
                 return (false, "Sender order not found.", null);
 
-            // Handover is allowed only after the first four checks
+            // Handover is allowed only after the first 2 checks
             if (dto.PackageHandedOver &&
-                !(dto.PackageVerified && dto.SecurityCheck && dto.TravelPlanVerified && dto.TransporterVerified))
+                !(dto.PackageVerified && dto.SecurityCheck ))
                 return (false, "Complete all verification checks before handing over the package.", null);
 
             var saved = await _hubRepo.SaveSenderVerificationAsync(senderOrderId, dto);
@@ -69,5 +69,11 @@ namespace mytown.Services.Implementations
 
         public Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId)
     => _hubRepo.GetSenderOrderDetailsAsync(senderOrderId);
+
+        public Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year)
+    => _hubRepo.GetStoreOrderCountsAsync(month, year);
+
+        public Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year)
+            => _hubRepo.GetSenderOrderCountsAsync(month, year);
     }
 }

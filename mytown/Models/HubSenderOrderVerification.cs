@@ -9,6 +9,7 @@ namespace mytown.Models
         [Key][Column("verification_id")] public int VerificationId { get; set; }
         [Column("sender_order_id")] public int SenderOrderId { get; set; }
         [Column("hubid")] public int HubId { get; set; }
+        [Column("hub_status")] public string HubStatus { get; set; } = "New";
 
         [Column("package_verified")] public bool PackageVerified { get; set; }
         [Column("security_check")] public bool SecurityCheck { get; set; }
