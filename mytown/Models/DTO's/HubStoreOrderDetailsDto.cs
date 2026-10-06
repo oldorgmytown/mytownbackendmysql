@@ -41,21 +41,26 @@
         public string? Status { get; set; }
     }
 
+   
     public class TravelDetailsDto
     {
-        // Start = assigned hub (from hubdetails)
-        public string? StartLocationName { get; set; }      // e.g. "Jayanagar Hub"
-        public string? StartLocationAddress { get; set; }   // e.g. "Bengaluru, Karnataka"
+        // Start = assigned hub
+        public string? StartLocationName { get; set; }      // Jayanagar Hub
+        public string? StartLocationAddress { get; set; }   // Bengaluru, Karnataka
 
-        // End + vehicle = from transporter travel plan
-        public string? EndLocationName { get; set; }
-        public string? EndLocationAddress { get; set; }
+        // Destination = transporter travel plan
+        public string? DestinationTown { get; set; }
+        public string? DestinationCity { get; set; }
+        public string? DestinationState { get; set; }
+        public string? DestinationCountry { get; set; }
+        public string? DestinationPin { get; set; }
 
         public DateTime? StartDate { get; set; }
         public DateTime? EtaDate { get; set; }
 
         public string? VehicleName { get; set; }
         public string? VehicleNumber { get; set; }
+        public string? VehicleType { get; set; }
     }
     public class ChecklistDto
     {

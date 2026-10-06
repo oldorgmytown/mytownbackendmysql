@@ -6,8 +6,8 @@ namespace mytown.DataAccess.Interfaces
     {
 
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
-        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync();
-        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync();
+        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year);
+        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year);
 
         Task<bool> StoreOrderExistsAsync(int storeOrderId);
         Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId);
@@ -18,5 +18,7 @@ namespace mytown.DataAccess.Interfaces
         Task<SenderVerificationDto?> GetSenderVerificationAsync(int senderOrderId);
         Task<SenderVerificationDto> SaveSenderVerificationAsync(int senderOrderId, SaveHubVerificationDto dto);
         Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId);
+
+        Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId);
     }
 }

@@ -53,11 +53,12 @@ namespace mytown.DataAccess.Repositories
             }
 
 
-        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync()
+        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year)
         {
             var rows = await (
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+                join o in _context.Orders on so.OrderId equals o.OrderId
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
                 join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
 
@@ -66,11 +67,14 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.TransporterRegId != null
+                      && (!year.HasValue || o.OrderDate.Year == year.Value)
+                      && (!month.HasValue || o.OrderDate.Month == month.Value)
                 orderby so.StoreOrderId descending
                 select new
                 {
                     so.StoreOrderId,
                     so.OrderId,
+                    OrderDate = o.OrderDate,
                     so.Storeorder_Status,
                     t.TransporterRegId,
                     t.TransporterName,
@@ -82,7 +86,7 @@ namespace mytown.DataAccess.Repositories
                     b.BusinessCity,
 
                     IsHandedOver = _context.HubStoreOrderVerifications
-                        .Any(v => v.StoreOrderId == so.StoreOrderId)
+                        .Any(v => v.StoreOrderId == so.StoreOrderId && v.PackageHandedOver)
                 }
             ).AsNoTracking().ToListAsync();
 
@@ -90,6 +94,7 @@ namespace mytown.DataAccess.Repositories
             {
                 StoreOrderId = r.StoreOrderId,
                 OrderId = r.OrderId,
+                OrderDate = r.OrderDate,
                 OrderStatus =
                     r.Storeorder_Status == "Pending" ? "New" :
                     r.Storeorder_Status == "Delivered" ? "Completed" :
@@ -107,8 +112,7 @@ namespace mytown.DataAccess.Repositories
                 HubStatus = r.IsHandedOver ? "Handed Over" : "New"
             }).ToList();
         }
-
-        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync()
+        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year)
         {
             var rows = await (
                 from so in _context.SenderOrders
@@ -120,10 +124,13 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where so.TransporterRegId != null
+                      && (!year.HasValue || so.CreatedAt.Year == year.Value)
+                      && (!month.HasValue || so.CreatedAt.Month == month.Value)
                 orderby so.SenderOrderId descending
                 select new
                 {
                     so.SenderOrderId,
+                    OrderDate = so.CreatedAt,
                     so.DeliveryStatus,
                     t.TransporterRegId,
                     t.TransporterName,
@@ -132,13 +139,17 @@ namespace mytown.DataAccess.Repositories
                     so.SenderRegId,
                     s.SenderName,
                     so.PickupTown,
-                    so.PickupCity
+                    so.PickupCity,
+
+                    IsHandedOver = _context.HubSenderOrderVerifications
+                        .Any(v => v.SenderOrderId == so.SenderOrderId && v.PackageHandedOver)
                 }
             ).AsNoTracking().ToListAsync();
 
             return rows.Select(r => new HubSenderOrderListDto
             {
                 SenderOrderId = r.SenderOrderId,
+                OrderDate = r.OrderDate,
                 OrderStatus =
                     r.DeliveryStatus == "Pending" ? "New" :
                     r.DeliveryStatus == "Delivered" ? "Completed" :
@@ -153,8 +164,7 @@ namespace mytown.DataAccess.Repositories
                 SenderName = r.SenderName,
                 SenderLocation = r.PickupTown + ", " + r.PickupCity,
 
-
-                HubStatus = null
+                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
             }).ToList();
         }
 
@@ -322,6 +332,7 @@ namespace mytown.DataAccess.Repositories
                     DestTown = tp != null ? tp.DestinationTown : null,
                     DestCity = tp != null ? tp.DestinationCity : null,
                     DestState = tp != null ? tp.DestinationState : null,
+                    DestCountry = tp != null ? tp.DestinationCountry : null,
                     DestPin = tp != null ? tp.DestinationPin : null,
                     VehicleName = tp != null ? tp.VehicleName : null,
                     VehicleReg = tp != null ? tp.VehicleRegistration : null,
@@ -387,20 +398,168 @@ namespace mytown.DataAccess.Repositories
                     Status = r.Status
                 },
 
-                //Travel = new TravelDetailsDto
-                //{
-                //    StartLocationName = r.Hub?.HubName,
-                //    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+                Travel = new TravelDetailsDto
+                {
+                    StartLocationName = r.Hub?.HubName,
+                    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
 
-                //    EndLocationName = r.,
-                //    EndLocationAddress = null,
+                    DestinationTown = r.DestTown,
+                    DestinationCity = r.DestCity,
+                    DestinationState = r.DestState,
+                    DestinationCountry = r.DestCountry,
+                    DestinationPin = r.DestPin,
 
-                //    StartDate = r.PlanStartDate,
-                //    EtaDate = r.PlanArrivalDate,
+                    StartDate = r.PlanStartDate,
+                    EtaDate = r.PlanArrivalDate,
 
-                //    VehicleName = r.PlanVehicleName,
-                //    VehicleNumber = r.PlanVehicleNumber
-                //},
+                    VehicleName = r.VehicleName,
+                    VehicleNumber = r.VehicleReg,
+                    VehicleType = r.VehicleType
+                },
+
+                Checklist = new ChecklistDto
+                {
+                    PackageVerified = v?.PackageVerified ?? false,
+                    SecurityCheck = v?.SecurityCheck ?? false,
+                    TravelPlanVerified = v?.TravelPlanVerified ?? false,
+                    TransporterVerified = v?.TransporterVerified ?? false,
+                    PackageHandedOver = v?.PackageHandedOver ?? false
+                }
+            };
+
+
+        }
+
+        public async Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId)
+        {
+            var r = await (
+                from so in _context.SenderOrders
+                join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
+                join t in _context.TransporterRegisters on so.TransporterRegId.Value equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on so.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where so.SenderOrderId == senderOrderId && so.TransporterRegId != null
+                select new
+                {
+                    so.SenderOrderId,
+                    so.DeliveryStatus,
+
+                    // Package (from sender_orders)
+                    so.PackageLength,
+                    so.PackageWidth,
+                    so.PackageHeight,
+                    so.PackageWeight,
+
+                    // Sender (from sender register)
+                    SenderId = s.SenderRegId,
+                    SenderName = s.SenderName,
+                    SenderAddr = s.Address,
+                    SenderTown = s.Town,
+                    SenderCity = s.City,
+                    SenderState = s.State,
+                    SenderPostal = s.PostalCode,
+                    SenderPhone = s.PhoneNumber,
+                    SenderEmail = s.Email,
+
+                    // Transporter
+                    TransporterId = t.TransporterRegId,
+                    TransporterName = t.TransporterName,
+                    TransporterAddr = t.Address,
+                    TransporterTown = t.Town,
+                    TransporterCity = t.City,
+                    TransporterState = t.State,
+                    TransporterPostal = t.PostalCode,
+                    TransporterPhone = t.PhoneNumber,
+                    TransporterStatus = t.Status,
+
+                    // Travel plan
+                    PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    PlanArrivalDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    DestTown = tp != null ? tp.DestinationTown : null,
+                    DestCity = tp != null ? tp.DestinationCity : null,
+                    DestState = tp != null ? tp.DestinationState : null,
+                    DestCountry = tp != null ? tp.DestinationCountry : null,
+                    DestPin = tp != null ? tp.DestinationPin : null,
+                    VehicleName = tp != null ? tp.VehicleName : null,
+                    VehicleReg = tp != null ? tp.VehicleRegistration : null,
+                    VehicleType = tp != null ? tp.VehicleType : null,
+
+                    // Start location = assigned hub (pin matches pickup pincode)
+                    Hub = _context.HubDetails
+                        .Where(h => h.Pin == so.PickupPincode)
+                        .Select(h => new { h.HubName, h.City, h.State })
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().FirstOrDefaultAsync();
+
+            if (r == null)
+                return null;
+
+            var v = await _context.HubSenderOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            return new HubSenderOrderDetailsDto
+            {
+                SenderOrderId = r.SenderOrderId,
+                OrderStatus =
+                    r.DeliveryStatus == "Pending" ? "New" :
+                    r.DeliveryStatus == "Delivered" ? "Completed" : "In Progress",
+                HubStatus = (v != null && v.PackageHandedOver) ? "Handed Over" : "New",
+
+                Package = new PackageDetailsDto
+                {
+                    Length = r.PackageLength,
+                    Width = r.PackageWidth,
+                    Height = r.PackageHeight,
+                    DimensionUnit = "cm",
+                    Weight = r.PackageWeight,
+                    WeightUnit = "kg"
+                },
+
+                Sender = new SenderDetailsDto
+                {
+                    SenderRegId = r.SenderId,
+                    SenderName = r.SenderName,
+                    Address = string.Join(", ", new[] { r.SenderAddr, r.SenderTown, r.SenderCity, r.SenderState }
+                                  .Where(x => !string.IsNullOrWhiteSpace(x)))
+                              + (string.IsNullOrEmpty(r.SenderPostal) ? "" : " " + r.SenderPostal),
+                    Phone = r.SenderPhone,
+                    Email = r.SenderEmail
+                },
+
+                Transporter = new TransporterDetailsDto
+                {
+                    TransporterRegId = r.TransporterId,
+                    TransporterName = r.TransporterName,
+                    Address = string.Join(", ", new[] { r.TransporterAddr, r.TransporterTown, r.TransporterCity, r.TransporterState }
+                                  .Where(x => !string.IsNullOrWhiteSpace(x)))
+                              + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
+                    Phone = r.TransporterPhone,
+                    Status = r.TransporterStatus
+                },
+
+                Travel = new TravelDetailsDto
+                {
+                    StartLocationName = r.Hub?.HubName,
+                    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+
+                    DestinationTown = r.DestTown,
+                    DestinationCity = r.DestCity,
+                    DestinationState = r.DestState,
+                    DestinationCountry = r.DestCountry,
+                    DestinationPin = r.DestPin,
+
+                    StartDate = r.PlanStartDate,
+                    EtaDate = r.PlanArrivalDate,
+
+                    VehicleName = r.VehicleName,
+                    VehicleNumber = r.VehicleReg,
+                    VehicleType = r.VehicleType
+                },
 
                 Checklist = new ChecklistDto
                 {

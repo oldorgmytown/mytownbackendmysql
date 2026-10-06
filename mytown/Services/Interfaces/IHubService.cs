@@ -7,8 +7,8 @@ namespace mytown.Services.Interfaces
     public interface IHubService
     {
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
-        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync();
-        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync();
+        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year);
+        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year);
 
         Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId);
         Task<(bool Success, string? Error, HubStoreVerificationDto? Data)> SaveVerificationAsync(
@@ -19,5 +19,7 @@ namespace mytown.Services.Interfaces
             int senderOrderId, SaveHubVerificationDto dto);
 
         Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId);
+
+        Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId);
     }
 }
