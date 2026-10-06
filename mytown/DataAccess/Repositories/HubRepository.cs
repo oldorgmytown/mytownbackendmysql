@@ -52,7 +52,6 @@ namespace mytown.DataAccess.Repositories
                     .ToListAsync();
             }
 
-
         public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year)
         {
             var rows = await (
@@ -85,8 +84,10 @@ namespace mytown.DataAccess.Repositories
                     b.Town,
                     b.BusinessCity,
 
-                    IsHandedOver = _context.HubStoreOrderVerifications
-                        .Any(v => v.StoreOrderId == so.StoreOrderId && v.PackageHandedOver)
+                    HubStatusDb = _context.HubStoreOrderVerifications
+                        .Where(v => v.StoreOrderId == so.StoreOrderId)
+                        .Select(v => v.HubStatus)
+                        .FirstOrDefault()
                 }
             ).AsNoTracking().ToListAsync();
 
@@ -109,7 +110,7 @@ namespace mytown.DataAccess.Repositories
                 StoreName = r.BusinessName,
                 StoreLocation = r.Town + ", " + r.BusinessCity,
 
-                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
+                HubStatus = r.HubStatusDb ?? "New"
             }).ToList();
         }
         public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year)
@@ -141,8 +142,10 @@ namespace mytown.DataAccess.Repositories
                     so.PickupTown,
                     so.PickupCity,
 
-                    IsHandedOver = _context.HubSenderOrderVerifications
-                        .Any(v => v.SenderOrderId == so.SenderOrderId && v.PackageHandedOver)
+                    HubStatusDb = _context.HubSenderOrderVerifications
+                        .Where(v => v.SenderOrderId == so.SenderOrderId)
+                        .Select(v => v.HubStatus)
+                        .FirstOrDefault()
                 }
             ).AsNoTracking().ToListAsync();
 
@@ -164,10 +167,9 @@ namespace mytown.DataAccess.Repositories
                 SenderName = r.SenderName,
                 SenderLocation = r.PickupTown + ", " + r.PickupCity,
 
-                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
+                HubStatus = r.HubStatusDb ?? "New"
             }).ToList();
         }
-
         public Task<bool> StoreOrderExistsAsync(int storeOrderId)
     => _context.StoreOrders.AnyAsync(s => s.StoreOrderId == storeOrderId);
 
@@ -179,6 +181,19 @@ namespace mytown.DataAccess.Repositories
 
             return v == null ? null : ToDto(v);
         }
+        private static string GetHubStatus(HubStoreOrderVerification v)
+        {
+            if (v.PackageHandedOver)
+                return "Handed Over";
+
+            if (v.PackageVerified && v.SecurityCheck)
+                return "Package Reached Hub";
+
+            return "New";
+        }
+
+        //------------save store ordre veriifcation with status in hub_status column----------------
+
         private static HubStoreVerificationDto ToDto(HubStoreOrderVerification v) => new()
         {
             VerificationId = v.VerificationId,
@@ -191,16 +206,11 @@ namespace mytown.DataAccess.Repositories
             PackageHandedOver = v.PackageHandedOver,
             Remarks = v.Remarks,
             UpdatedAt = v.UpdatedAt,
-            HubStatus = "Handed Over"
-        //v.PackageHandedOver ? "Handed Over" :
-        //(v.PackageVerified && v.SecurityCheck && v.TravelPlanVerified && v.TransporterVerified)
-        //    ? "Ready for Handover" :
-        //(v.PackageVerified || v.SecurityCheck || v.TravelPlanVerified || v.TransporterVerified)
-        //    ? "In Verification" :
-        //"New Intake"
+            HubStatus = v.HubStatus          // read from the column
         };
 
-        public async Task<HubStoreVerificationDto> SaveVerificationAsync(int storeOrderId, SaveHubVerificationDto dto)
+        public async Task<HubStoreVerificationDto> SaveVerificationAsync(
+            int storeOrderId, SaveHubVerificationDto dto)
         {
             var v = await _context.HubStoreOrderVerifications
                 .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
@@ -222,6 +232,8 @@ namespace mytown.DataAccess.Repositories
             v.TransporterVerified = dto.TransporterVerified;
             v.PackageHandedOver = dto.PackageHandedOver;
             v.Remarks = dto.Remarks;
+
+            v.HubStatus = GetHubStatus(v);       // stored in hub_status
             v.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -242,6 +254,19 @@ namespace mytown.DataAccess.Repositories
                 return null;
 
             return ToSenderDto(v);
+        }
+
+        //------------SAVE sender order verification checks---------------
+
+        private static string GetSenderHubStatus(HubSenderOrderVerification v)
+        {
+            if (v.PackageHandedOver)
+                return "Handed Over";
+
+            if (v.PackageVerified && v.SecurityCheck)
+                return "Package Reached Hub";
+
+            return "New";
         }
 
         public async Task<SenderVerificationDto> SaveSenderVerificationAsync(
@@ -267,6 +292,8 @@ namespace mytown.DataAccess.Repositories
             v.TransporterVerified = dto.TransporterVerified;
             v.PackageHandedOver = dto.PackageHandedOver;
             v.Remarks = dto.Remarks;
+
+            v.HubStatus = GetSenderHubStatus(v);   // stored in hub_status
             v.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -285,7 +312,7 @@ namespace mytown.DataAccess.Repositories
             PackageHandedOver = v.PackageHandedOver,
             Remarks = v.Remarks,
             UpdatedAt = v.UpdatedAt,
-            HubStatus = v.PackageHandedOver ? "Handed Over" : "New"
+            HubStatus = v.HubStatus          
         };
 
         public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
@@ -571,7 +598,73 @@ namespace mytown.DataAccess.Repositories
                 }
             };
         }
+
+            //summary counts
+
+          public async Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year)
+        {
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var rows = await (
+                from sd in _context.ShippingDetails
+                join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                where sd.TransporterRegId != null
+                      && o.OrderDate >= start && o.OrderDate < end
+                select new
+                {
+                    sd.ShippingStatus,
+                    HubStatus = _context.HubStoreOrderVerifications
+                        .Where(v => v.StoreOrderId == so.StoreOrderId)
+                        .Select(v => v.HubStatus)
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return new HubMonthlyCountsDto
+            {
+                Month = month,
+                Year = year,
+                Total = rows.Count,
+                Pending = rows.Count(x =>
+                    x.ShippingStatus == "Pending" || x.ShippingStatus == "Not Shipped"),
+                ReachedHub = rows.Count(x => x.HubStatus == "Package Reached Hub"),
+                HandedOver = rows.Count(x => x.HubStatus == "Handed Over")
+            };
+        }
+
+        public async Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year)
+        {
+            var start = new DateTime(year, month, 1);
+            var end = start.AddMonths(1);
+
+            var rows = await (
+                from so in _context.SenderOrders
+                where so.TransporterRegId != null
+                      && so.CreatedAt >= start && so.CreatedAt < end
+                select new
+                {
+                    so.DeliveryStatus,
+                    HubStatus = _context.HubSenderOrderVerifications
+                        .Where(v => v.SenderOrderId == so.SenderOrderId)
+                        .Select(v => v.HubStatus)
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return new HubMonthlyCountsDto
+            {
+                Month = month,
+                Year = year,
+                Total = rows.Count,
+                Pending = rows.Count(x => x.DeliveryStatus == "Pending"),
+                ReachedHub = rows.Count(x => x.HubStatus == "Package Reached Hub"),
+                HandedOver = rows.Count(x => x.HubStatus == "Handed Over")
+            };
+        }
     }
-}
+    }
+
 
 
