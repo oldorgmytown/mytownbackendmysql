@@ -8,5 +8,10 @@ namespace mytown.Services.Interfaces
     {
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
         Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync();
+        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync();
+
+        Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId);
+        Task<(bool Success, string? Error, HubStoreVerificationDto? Data)> SaveVerificationAsync(
+            int storeOrderId, SaveHubVerificationDto dto);
     }
 }

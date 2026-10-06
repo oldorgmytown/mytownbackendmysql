@@ -36,5 +36,36 @@ namespace mytown.Controllers
             var data = await _hubService.GetTransporterStoreOrdersAsync();
             return Ok(data);
         }
+
+        // GET: api/hub/sender-orders
+        [HttpGet("sender-orders-onhub")]
+        public async Task<IActionResult> GetSenderOrders()
+        {
+            var data = await _hubService.GetTransporterSenderOrdersAsync();
+            return Ok(data);
+        }
+
+        
+        [HttpGet("get_store-orders_verified")]
+        public async Task<IActionResult> GetVerification(int storeOrderId)
+        {
+            var data = await _hubService.GetVerificationAsync(storeOrderId);
+            return Ok(data);   // null if the hub hasn't started verification yet
+        }
+
+        // PUT: api/hub/store-orders/490/verification
+        [HttpPut("save_store-orders_verification")]
+        public async Task<IActionResult> SaveVerification(
+            int storeOrderId, [FromBody] SaveHubVerificationDto dto)
+        {
+            var result = await _hubService.SaveVerificationAsync(storeOrderId, dto);
+
+            if (!result.Success)
+                return result.Error == "Store order not found."
+                    ? NotFound(new { message = result.Error })
+                    : BadRequest(new { message = result.Error });
+
+            return Ok(result.Data);
+        }
     }
 }

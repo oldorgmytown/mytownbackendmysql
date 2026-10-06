@@ -125,6 +125,114 @@ namespace mytown.DataAccess.Repositories
             }).ToList();
         }
 
+        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync()
+        {
+            var rows = await (
+                from so in _context.SenderOrders
+                join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
+                join t in _context.TransporterRegisters on so.TransporterRegId equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on so.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where so.TransporterRegId != null
+                orderby so.SenderOrderId descending
+                select new
+                {
+                    so.SenderOrderId,
+                    so.DeliveryStatus,
+                    t.TransporterRegId,
+                    t.TransporterName,
+                    PickupDate = tp != null ? tp.ArrivalDate : so.PickupDate,
+                    EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    so.SenderRegId,
+                    s.SenderName,
+                    so.PickupTown,
+                    so.PickupCity
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return rows.Select(r => new HubSenderOrderListDto
+            {
+                SenderOrderId = r.SenderOrderId,
+                OrderStatus =
+                    r.DeliveryStatus == "Pending" ? "New" :
+                    r.DeliveryStatus == "Delivered" ? "Completed" :
+                    "In Progress",
+
+                TransporterRegId = r.TransporterRegId,
+                TransporterName = r.TransporterName,
+                PickupDate = r.PickupDate,
+                EstimatedDeliveryDate = r.EstimatedDeliveryDate,
+
+                SenderRegId = r.SenderRegId,
+                SenderName = r.SenderName,
+                SenderLocation = r.PickupTown + ", " + r.PickupCity,
+
+                HubStatus = null
+            }).ToList();
+        }
+
+        public Task<bool> StoreOrderExistsAsync(int storeOrderId)
+    => _context.StoreOrders.AnyAsync(s => s.StoreOrderId == storeOrderId);
+
+        public async Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId)
+        {
+            var v = await _context.HubStoreOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            return v == null ? null : ToDto(v);
+        }
+        private static HubStoreVerificationDto ToDto(HubStoreOrderVerification v) => new()
+        {
+            VerificationId = v.VerificationId,
+            StoreOrderId = v.StoreOrderId,
+            HubId = v.HubId,
+            PackageVerified = v.PackageVerified,
+            SecurityCheck = v.SecurityCheck,
+            TravelPlanVerified = v.TravelPlanVerified,
+            TransporterVerified = v.TransporterVerified,
+            PackageHandedOver = v.PackageHandedOver,
+            Remarks = v.Remarks,
+            UpdatedAt = v.UpdatedAt,
+            HubStatus = "Handed Over"
+        //v.PackageHandedOver ? "Handed Over" :
+        //(v.PackageVerified && v.SecurityCheck && v.TravelPlanVerified && v.TransporterVerified)
+        //    ? "Ready for Handover" :
+        //(v.PackageVerified || v.SecurityCheck || v.TravelPlanVerified || v.TransporterVerified)
+        //    ? "In Verification" :
+        //"New Intake"
+        };
+
+        public async Task<HubStoreVerificationDto> SaveVerificationAsync(int storeOrderId, SaveHubVerificationDto dto)
+        {
+            var v = await _context.HubStoreOrderVerifications
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            if (v == null)
+            {
+                v = new HubStoreOrderVerification
+                {
+                    StoreOrderId = storeOrderId,
+                    HubId = dto.HubId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.HubStoreOrderVerifications.Add(v);
+            }
+
+            v.PackageVerified = dto.PackageVerified;
+            v.SecurityCheck = dto.SecurityCheck;
+            v.TravelPlanVerified = dto.TravelPlanVerified;
+            v.TransporterVerified = dto.TransporterVerified;
+            v.PackageHandedOver = dto.PackageHandedOver;
+            v.Remarks = dto.Remarks;
+            v.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return ToDto(v);
+        }
     }
-        
+
 }

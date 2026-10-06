@@ -95,7 +95,7 @@ public class EmailService : IEmailService
             }
         }
 
-         catch (Exception ex)
+        catch (Exception ex)
         {
             Console.WriteLine(ex.ToString());
             throw;
@@ -195,7 +195,7 @@ public class EmailService : IEmailService
         }
     }
 
-   
+
 
 
     //order email confirmation to shopper
@@ -280,6 +280,8 @@ public class EmailService : IEmailService
                 // =============================
                 // FULL EMAIL BODY
                 // =============================
+                var hubHtml = BuildHubDetailsHtml(storedto.HubAddress);
+
                 var body = $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -495,6 +497,8 @@ public class EmailService : IEmailService
     </td>
   </tr>
 </table>
+
+        {hubHtml}
 
         <!-- ===== DELIVERY ADDRESS ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -1062,6 +1066,49 @@ public class EmailService : IEmailService
             return false;
         }
     }
+
+    private string BuildHubDetailsHtml(HubAddressDto? hub)
+    {
+        if (hub == null) return string.Empty;
+
+        var fullAddress = string.Join(", ",
+            new[] { hub.AddressLine, hub.Town, hub.City, hub.State, hub.Country, hub.Pin }
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => WebUtility.HtmlEncode(p)));
+
+        return $@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+       style=""background:#fff;border:1px solid rgba(139,139,139,0.10);
+              border-radius:8px;padding:24px;margin-bottom:16px;"">
+  <tr>
+    <td>
+      <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:16px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Hub Details</div>
+      <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+             style=""border:1px solid #E5E7EB;border-radius:12px;padding:16px;"">
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Hub Name</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.HubName ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Phone</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.Phone ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td colspan=""2"">
+            <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;"">Address</div>
+            <div style=""color:#000;font-size:14px;font-weight:600;line-height:1.5;"">{fullAddress}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>";
+    }
     public async Task SendEmailToCourierAsync(
       string email,
       string courierName,
@@ -1487,7 +1534,7 @@ public class EmailService : IEmailService
                 smtpClient.EnableSsl = true;
 
                 string body =
-                    BuildReadyToShipCourierTemplate(courierName, dto,packageSummary);
+                    BuildReadyToShipCourierTemplate(courierName, dto, packageSummary);
 
                 var mailMessage = new MailMessage
                 {
@@ -1513,8 +1560,8 @@ public class EmailService : IEmailService
     string courierName,
     BusinessOrderDetailsDto dto,
     string packageSummary)
-{
-    return $@"
+    {
+        return $@"
 <!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -1712,7 +1759,7 @@ public class EmailService : IEmailService
 
 </body>
 </html>";
-}
+    }
     //Admin Approval or Rejection of submitted business profile
 
     public async Task SendBusinessStatusEmailAsync(string email, string businessUsername, string businessName, string status)
@@ -2072,7 +2119,7 @@ public class EmailService : IEmailService
             </div>
             <div style=""color:#9CA3AF;font-size:12px;font-weight:400;line-height:16px;margin-bottom:4px;
                          font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(item.Productdesc?? string.Empty)}
+              {WebUtility.HtmlEncode(item.Productdesc ?? string.Empty)}
             </div>
            
           </td>
@@ -2221,7 +2268,7 @@ public class EmailService : IEmailService
                         </td>
                         <td align=""right"" style=""color:#585858;font-size:14px;font-weight:600;padding-bottom:8px;
                                                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                          {WebUtility.HtmlEncode(storedto.BusinessPhone?? string.Empty)}
+                          {WebUtility.HtmlEncode(storedto.BusinessPhone ?? string.Empty)}
                         </td>
                       </tr>
                       <tr>
@@ -2276,6 +2323,8 @@ public class EmailService : IEmailService
             </td>
           </tr>
         </table>
+
+        {hubHtml}
 
         <!-- ===== CUSTOMER INFORMATION ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -2439,8 +2488,8 @@ public class EmailService : IEmailService
     string transporterName,
     BusinessOrderDetailsDto dto,
     string packageSummary)
-{
-    return $@"<!DOCTYPE html>
+    {
+        return $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
   <meta charset=""UTF-8"">
@@ -2637,7 +2686,7 @@ public class EmailService : IEmailService
 
 </body>
 </html>";
-}
+    }
 
     // ============================================================
     // METHOD 1: Sender Order Confirmation Email
@@ -2829,16 +2878,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
               <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {WebUtility.HtmlEncode(dto.PickupAddress)}
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style=""color:#585858;font-size:14px;font-weight:400;padding-bottom:8px;
-                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
-            <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
-                                       font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+              {WebUtility.HtmlEncode(dto.SenderPhone)}
             </td>
           </tr>
           <tr>
@@ -3519,7 +3559,7 @@ public class EmailService : IEmailService
  
 </body>
 </html>";
-}
+    }
 
 
     public async Task SendGuestNotificationforTracking(
@@ -3536,7 +3576,7 @@ public class EmailService : IEmailService
                 WebUtility.HtmlEncode(guestName),
                 orderdto);
 
-        
+
             using (var smtpClient = new SmtpClient(_smtpServer))
             {
                 smtpClient.Port = _smtpPort;
@@ -3567,21 +3607,21 @@ public class EmailService : IEmailService
     }
 
     private string BuildGuestTrackingTemplate(string guestName, OrderConfirmationDto orderdto)
-{
-    var storesBuilder = new StringBuilder();
-    var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
-
-    foreach (var store in orderdto.Stores)
     {
-        var productsBuilder = new StringBuilder();
+        var storesBuilder = new StringBuilder();
+        var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
 
-        foreach (var item in store.Items)
+        foreach (var store in orderdto.Stores)
         {
-            string imageSrc = string.IsNullOrEmpty(item.ImageUrl)
-                ? "https://via.placeholder.com/80x80?text=No+Image"
-                : item.ImageUrl;
+            var productsBuilder = new StringBuilder();
 
-            productsBuilder.Append($@"
+            foreach (var item in store.Items)
+            {
+                string imageSrc = string.IsNullOrEmpty(item.ImageUrl)
+                    ? "https://via.placeholder.com/80x80?text=No+Image"
+                    : item.ImageUrl;
+
+                productsBuilder.Append($@"
 <!-- Product Card -->
 <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
        style=""border:1px solid #E5E7EB;border-radius:12px;margin-bottom:12px;"">
@@ -3621,9 +3661,9 @@ public class EmailService : IEmailService
     </td>
   </tr>
 </table>");
-        }
+            }
 
-        storesBuilder.Append($@"
+            storesBuilder.Append($@"
 <!-- ===== STORE BLOCK ===== -->
 <!-- Tracking Card -->
 <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -3799,9 +3839,9 @@ public class EmailService : IEmailService
     </td>
   </tr>
 </table>");
-    }
+        }
 
-    return $@"<!DOCTYPE html>
+        return $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
   <meta charset=""UTF-8"">
@@ -3991,26 +4031,26 @@ public class EmailService : IEmailService
 </html>";
 
 
-}  // closes BuildGuestTrackingTemplate
+    }  // closes BuildGuestTrackingTemplate
 
-public async Task SendOtpEmailAsync(string email, string name, string otp)
-{
-    if (!await DomainHasMX(email))
-        throw new Exception("The email domain is not valid (no MX records found).");
-
-    using (var smtpClient = new SmtpClient(_smtpServer))
+    public async Task SendOtpEmailAsync(string email, string name, string otp)
     {
-        smtpClient.Port = _smtpPort;
-        smtpClient.UseDefaultCredentials = false;
-        smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
-        smtpClient.EnableSsl = true;
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
 
-        var mailMessage = new MailMessage
+        using (var smtpClient = new SmtpClient(_smtpServer))
         {
-            From = new MailAddress(_senderEmail),
-            Subject = "Your OTP - MyTown",
-            IsBodyHtml = true,
-            Body = $@"
+            smtpClient.Port = _smtpPort;
+            smtpClient.UseDefaultCredentials = false;
+            smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+            smtpClient.EnableSsl = true;
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_senderEmail),
+                Subject = "Your OTP - MyTown",
+                IsBodyHtml = true,
+                Body = $@"
 <div style='font-family:Arial,sans-serif;background:#fff;padding:40px;text-align:center;'>
   <div style='max-width:500px;margin:auto;background:#fff;padding:30px;border-radius:10px;
               box-shadow:0px 4px 10px rgba(0,0,0,0.2);border:2px solid #004481;'>
@@ -4027,11 +4067,11 @@ public async Task SendOtpEmailAsync(string email, string name, string otp)
     <p style='font-size:10px;color:#777;'>© 2025 MyTown. All rights reserved.</p>
   </div>
 </div>"
-        };
-        mailMessage.To.Add(email);
-        await smtpClient.SendMailAsync(mailMessage);
+            };
+            mailMessage.To.Add(email);
+            await smtpClient.SendMailAsync(mailMessage);
+        }
     }
-}
 
 } // closes EmailService class
 
