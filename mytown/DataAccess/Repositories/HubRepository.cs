@@ -53,9 +53,244 @@ namespace mytown.DataAccess.Repositories
             }
 
 
-        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync()
+        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year)
         {
             var rows = await (
+                from sd in _context.ShippingDetails
+                join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+                join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on sd.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where sd.TransporterRegId != null
+                      && (!year.HasValue || o.OrderDate.Year == year.Value)
+                      && (!month.HasValue || o.OrderDate.Month == month.Value)
+                orderby so.StoreOrderId descending
+                select new
+                {
+                    so.StoreOrderId,
+                    so.OrderId,
+                    OrderDate = o.OrderDate,
+                    so.Storeorder_Status,
+                    t.TransporterRegId,
+                    t.TransporterName,
+                    PickupDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    StoreId = b.BusRegId,
+                    b.BusinessName,
+                    b.Town,
+                    b.BusinessCity,
+
+                    IsHandedOver = _context.HubStoreOrderVerifications
+                        .Any(v => v.StoreOrderId == so.StoreOrderId && v.PackageHandedOver)
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return rows.Select(r => new HubStoreOrderListDto
+            {
+                StoreOrderId = r.StoreOrderId,
+                OrderId = r.OrderId,
+                OrderDate = r.OrderDate,
+                OrderStatus =
+                    r.Storeorder_Status == "Pending" ? "New" :
+                    r.Storeorder_Status == "Delivered" ? "Completed" :
+                    "In Progress",
+
+                TransporterRegId = r.TransporterRegId,
+                TransporterName = r.TransporterName,
+                PickupDate = r.PickupDate,
+                EstimatedDeliveryDate = r.EstimatedDeliveryDate,
+
+                StoreId = r.StoreId,
+                StoreName = r.BusinessName,
+                StoreLocation = r.Town + ", " + r.BusinessCity,
+
+                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
+            }).ToList();
+        }
+        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year)
+        {
+            var rows = await (
+                from so in _context.SenderOrders
+                join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
+                join t in _context.TransporterRegisters on so.TransporterRegId equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on so.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where so.TransporterRegId != null
+                      && (!year.HasValue || so.CreatedAt.Year == year.Value)
+                      && (!month.HasValue || so.CreatedAt.Month == month.Value)
+                orderby so.SenderOrderId descending
+                select new
+                {
+                    so.SenderOrderId,
+                    OrderDate = so.CreatedAt,
+                    so.DeliveryStatus,
+                    t.TransporterRegId,
+                    t.TransporterName,
+                    PickupDate = tp != null ? tp.StartDate : so.PickupDate,
+                    EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    so.SenderRegId,
+                    s.SenderName,
+                    so.PickupTown,
+                    so.PickupCity,
+
+                    IsHandedOver = _context.HubSenderOrderVerifications
+                        .Any(v => v.SenderOrderId == so.SenderOrderId && v.PackageHandedOver)
+                }
+            ).AsNoTracking().ToListAsync();
+
+            return rows.Select(r => new HubSenderOrderListDto
+            {
+                SenderOrderId = r.SenderOrderId,
+                OrderDate = r.OrderDate,
+                OrderStatus =
+                    r.DeliveryStatus == "Pending" ? "New" :
+                    r.DeliveryStatus == "Delivered" ? "Completed" :
+                    "In Progress",
+
+                TransporterRegId = r.TransporterRegId,
+                TransporterName = r.TransporterName,
+                PickupDate = r.PickupDate,
+                EstimatedDeliveryDate = r.EstimatedDeliveryDate,
+
+                SenderRegId = r.SenderRegId,
+                SenderName = r.SenderName,
+                SenderLocation = r.PickupTown + ", " + r.PickupCity,
+
+                HubStatus = r.IsHandedOver ? "Handed Over" : "New"
+            }).ToList();
+        }
+
+        public Task<bool> StoreOrderExistsAsync(int storeOrderId)
+    => _context.StoreOrders.AnyAsync(s => s.StoreOrderId == storeOrderId);
+
+        public async Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId)
+        {
+            var v = await _context.HubStoreOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            return v == null ? null : ToDto(v);
+        }
+        private static HubStoreVerificationDto ToDto(HubStoreOrderVerification v) => new()
+        {
+            VerificationId = v.VerificationId,
+            StoreOrderId = v.StoreOrderId,
+            HubId = v.HubId,
+            PackageVerified = v.PackageVerified,
+            SecurityCheck = v.SecurityCheck,
+            TravelPlanVerified = v.TravelPlanVerified,
+            TransporterVerified = v.TransporterVerified,
+            PackageHandedOver = v.PackageHandedOver,
+            Remarks = v.Remarks,
+            UpdatedAt = v.UpdatedAt,
+            HubStatus = "Handed Over"
+        //v.PackageHandedOver ? "Handed Over" :
+        //(v.PackageVerified && v.SecurityCheck && v.TravelPlanVerified && v.TransporterVerified)
+        //    ? "Ready for Handover" :
+        //(v.PackageVerified || v.SecurityCheck || v.TravelPlanVerified || v.TransporterVerified)
+        //    ? "In Verification" :
+        //"New Intake"
+        };
+
+        public async Task<HubStoreVerificationDto> SaveVerificationAsync(int storeOrderId, SaveHubVerificationDto dto)
+        {
+            var v = await _context.HubStoreOrderVerifications
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            if (v == null)
+            {
+                v = new HubStoreOrderVerification
+                {
+                    StoreOrderId = storeOrderId,
+                    HubId = dto.HubId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.HubStoreOrderVerifications.Add(v);
+            }
+
+            v.PackageVerified = dto.PackageVerified;
+            v.SecurityCheck = dto.SecurityCheck;
+            v.TravelPlanVerified = dto.TravelPlanVerified;
+            v.TransporterVerified = dto.TransporterVerified;
+            v.PackageHandedOver = dto.PackageHandedOver;
+            v.Remarks = dto.Remarks;
+            v.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return ToDto(v);
+        }
+
+        // ---------------- SENDER ORDER VERIFICATION ----------------
+        public Task<bool> SenderOrderExistsAsync(int senderOrderId)
+            => _context.SenderOrders.AnyAsync(s => s.SenderOrderId == senderOrderId);
+
+        public async Task<SenderVerificationDto?> GetSenderVerificationAsync(int senderOrderId)
+        {
+            var v = await _context.HubSenderOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            if (v == null)
+                return null;
+
+            return ToSenderDto(v);
+        }
+
+        public async Task<SenderVerificationDto> SaveSenderVerificationAsync(
+            int senderOrderId, SaveHubVerificationDto dto)
+        {
+            var v = await _context.HubSenderOrderVerifications
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            if (v == null)
+            {
+                v = new HubSenderOrderVerification
+                {
+                    SenderOrderId = senderOrderId,
+                    HubId = dto.HubId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.HubSenderOrderVerifications.Add(v);
+            }
+
+            v.PackageVerified = dto.PackageVerified;
+            v.SecurityCheck = dto.SecurityCheck;
+            v.TravelPlanVerified = dto.TravelPlanVerified;
+            v.TransporterVerified = dto.TransporterVerified;
+            v.PackageHandedOver = dto.PackageHandedOver;
+            v.Remarks = dto.Remarks;
+            v.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return ToSenderDto(v);
+        }
+
+        private static SenderVerificationDto ToSenderDto(HubSenderOrderVerification v) => new()
+        {
+            VerificationId = v.VerificationId,
+            SenderOrderId = v.SenderOrderId,
+            HubId = v.HubId,
+            PackageVerified = v.PackageVerified,
+            SecurityCheck = v.SecurityCheck,
+            TravelPlanVerified = v.TravelPlanVerified,
+            TransporterVerified = v.TransporterVerified,
+            PackageHandedOver = v.PackageHandedOver,
+            Remarks = v.Remarks,
+            UpdatedAt = v.UpdatedAt,
+            HubStatus = v.PackageHandedOver ? "Handed Over" : "New"
+        };
+
+        public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
+        {
+            var r = await (
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
@@ -65,66 +300,278 @@ namespace mytown.DataAccess.Repositories
                     on sd.TransporterPlanId equals tp.PlanId into tpGroup
                 from tp in tpGroup.DefaultIfEmpty()
 
-                where sd.TransporterRegId != null
-                orderby so.StoreOrderId descending
+                where sd.StoreOrderId == storeOrderId && sd.TransporterRegId != null
                 select new
                 {
                     so.StoreOrderId,
                     so.OrderId,
                     so.Storeorder_Status,
-                    t.TransporterRegId,
-                    t.TransporterName,
-                    PickupDate = tp != null ? tp.StartDate : (DateTime?)null,
-                    StoreId = b.BusRegId,
+
+                    b.BusRegId,
                     b.BusinessName,
+                    b.Address1,
+                    b.Address2,
                     b.Town,
                     b.BusinessCity,
+                    b.BusinessState,
+                    b.PostalCode,
+                    b.BusMobileNo,
+
+                    t.TransporterRegId,
+                    t.TransporterName,
+                    t.Address,
+                    TransporterTown = t.Town,
+                    TransporterCity = t.City,
+                    TransporterState = t.State,
+                    TransporterPostal = t.PostalCode,
+                    t.PhoneNumber,
+                    t.Status,
+
+                    PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    PlanArrivalDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    DestTown = tp != null ? tp.DestinationTown : null,
+                    DestCity = tp != null ? tp.DestinationCity : null,
+                    DestState = tp != null ? tp.DestinationState : null,
+                    DestCountry = tp != null ? tp.DestinationCountry : null,
+                    DestPin = tp != null ? tp.DestinationPin : null,
+                    VehicleName = tp != null ? tp.VehicleName : null,
+                    VehicleReg = tp != null ? tp.VehicleRegistration : null,
+                    VehicleType = tp != null ? tp.VehicleType : null,
+
+                    // Start location = hub whose pin matches the store pincode
+                    Hub = _context.HubDetails
+                        .Where(h => h.Pin == b.PostalCode)
+                        .Select(h => new { h.HubName, h.City, h.State })
+                        .FirstOrDefault(),
 
                     Package = _context.ShippingPackageDetails
                         .Where(p => p.StoreOrderId == so.StoreOrderId)
-                        .Select(p => new
+                        .Select(p => new PackageDetailsDto
                         {
-                            p.PackageLength,
-                            p.PackageWidth,
-                            p.PackageHeight,
-                            p.DimensionUnit,
-                            p.PackageWeight,
-                            p.WeightUnit
+                            Length = p.PackageLength,
+                            Width = p.PackageWidth,
+                            Height = p.PackageHeight,
+                            DimensionUnit = p.DimensionUnit,
+                            Weight = p.PackageWeight,
+                            WeightUnit = p.WeightUnit
                         })
                         .FirstOrDefault()
                 }
-            ).AsNoTracking().ToListAsync();
+            ).AsNoTracking().FirstOrDefaultAsync();
 
-            return rows.Select(r => new HubStoreOrderListDto
+            if (r == null)
+                return null;
+
+            var v = await _context.HubStoreOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            return new HubStoreOrderDetailsDto
             {
                 StoreOrderId = r.StoreOrderId,
                 OrderId = r.OrderId,
                 OrderStatus =
                     r.Storeorder_Status == "Pending" ? "New" :
-                    r.Storeorder_Status == "Delivered" ? "Completed" :
-                    "In Progress",
+                    r.Storeorder_Status == "Delivered" ? "Completed" : "In Progress",
+                HubStatus = (v != null && v.PackageHandedOver) ? "Handed Over" : "New",
 
-                TransporterRegId = r.TransporterRegId,
-                TransporterName = r.TransporterName,
-                PickupDate = r.PickupDate,
+                Package = r.Package,
 
-                StoreId = r.StoreId,
-                StoreName = r.BusinessName,
-                StoreLocation = r.Town + ", " + r.BusinessCity,
+                Business = new BusinessDetailsDto
+                {
+                    StoreId = r.BusRegId,
+                    StoreName = r.BusinessName,
+                    Address = string.Join(", ", new[] { r.Address1, r.Address2, r.Town, r.BusinessCity, r.BusinessState }
+                                  .Where(s => !string.IsNullOrWhiteSpace(s)))
+                              + (string.IsNullOrEmpty(r.PostalCode) ? "" : " " + r.PostalCode),
+                    Phone = r.BusMobileNo
+                },
 
-                PackageSpecs = r.Package != null
-                    && r.Package.PackageLength.HasValue
-                    && r.Package.PackageWidth.HasValue
-                    && r.Package.PackageHeight.HasValue
-                    ? $"{r.Package.PackageLength:0.##} × {r.Package.PackageWidth:0.##} × {r.Package.PackageHeight:0.##} {r.Package.DimensionUnit}"
-                    : null,
-                PackageWeight = r.Package?.PackageWeight,
-                WeightUnit = r.Package?.WeightUnit,
+                Transporter = new TransporterDetailsDto
+                {
+                    TransporterRegId = r.TransporterRegId,
+                    TransporterName = r.TransporterName,
+                    Address = string.Join(", ", new[] { r.Address, r.TransporterTown, r.TransporterCity, r.TransporterState }
+                                  .Where(s => !string.IsNullOrWhiteSpace(s)))
+                              + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
+                    Phone = r.PhoneNumber,
+                    Status = r.Status
+                },
 
-                HubStatus = null
-            }).ToList();
+                Travel = new TravelDetailsDto
+                {
+                    StartLocationName = r.Hub?.HubName,
+                    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+
+                    DestinationTown = r.DestTown,
+                    DestinationCity = r.DestCity,
+                    DestinationState = r.DestState,
+                    DestinationCountry = r.DestCountry,
+                    DestinationPin = r.DestPin,
+
+                    StartDate = r.PlanStartDate,
+                    EtaDate = r.PlanArrivalDate,
+
+                    VehicleName = r.VehicleName,
+                    VehicleNumber = r.VehicleReg,
+                    VehicleType = r.VehicleType
+                },
+
+                Checklist = new ChecklistDto
+                {
+                    PackageVerified = v?.PackageVerified ?? false,
+                    SecurityCheck = v?.SecurityCheck ?? false,
+                    TravelPlanVerified = v?.TravelPlanVerified ?? false,
+                    TransporterVerified = v?.TransporterVerified ?? false,
+                    PackageHandedOver = v?.PackageHandedOver ?? false
+                }
+            };
+
+
         }
 
+        public async Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId)
+        {
+            var r = await (
+                from so in _context.SenderOrders
+                join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
+                join t in _context.TransporterRegisters on so.TransporterRegId.Value equals t.TransporterRegId
+
+                join tp in _context.TransporterTravelPlans
+                    on so.TransporterPlanId equals tp.PlanId into tpGroup
+                from tp in tpGroup.DefaultIfEmpty()
+
+                where so.SenderOrderId == senderOrderId && so.TransporterRegId != null
+                select new
+                {
+                    so.SenderOrderId,
+                    so.DeliveryStatus,
+
+                    // Package (from sender_orders)
+                    so.PackageLength,
+                    so.PackageWidth,
+                    so.PackageHeight,
+                    so.PackageWeight,
+
+                    // Sender (from sender register)
+                    SenderId = s.SenderRegId,
+                    SenderName = s.SenderName,
+                    SenderAddr = s.Address,
+                    SenderTown = s.Town,
+                    SenderCity = s.City,
+                    SenderState = s.State,
+                    SenderPostal = s.PostalCode,
+                    SenderPhone = s.PhoneNumber,
+                    SenderEmail = s.Email,
+
+                    // Transporter
+                    TransporterId = t.TransporterRegId,
+                    TransporterName = t.TransporterName,
+                    TransporterAddr = t.Address,
+                    TransporterTown = t.Town,
+                    TransporterCity = t.City,
+                    TransporterState = t.State,
+                    TransporterPostal = t.PostalCode,
+                    TransporterPhone = t.PhoneNumber,
+                    TransporterStatus = t.Status,
+
+                    // Travel plan
+                    PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
+                    PlanArrivalDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+                    DestTown = tp != null ? tp.DestinationTown : null,
+                    DestCity = tp != null ? tp.DestinationCity : null,
+                    DestState = tp != null ? tp.DestinationState : null,
+                    DestCountry = tp != null ? tp.DestinationCountry : null,
+                    DestPin = tp != null ? tp.DestinationPin : null,
+                    VehicleName = tp != null ? tp.VehicleName : null,
+                    VehicleReg = tp != null ? tp.VehicleRegistration : null,
+                    VehicleType = tp != null ? tp.VehicleType : null,
+
+                    // Start location = assigned hub (pin matches pickup pincode)
+                    Hub = _context.HubDetails
+                        .Where(h => h.Pin == so.PickupPincode)
+                        .Select(h => new { h.HubName, h.City, h.State })
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().FirstOrDefaultAsync();
+
+            if (r == null)
+                return null;
+
+            var v = await _context.HubSenderOrderVerifications
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.SenderOrderId == senderOrderId);
+
+            return new HubSenderOrderDetailsDto
+            {
+                SenderOrderId = r.SenderOrderId,
+                OrderStatus =
+                    r.DeliveryStatus == "Pending" ? "New" :
+                    r.DeliveryStatus == "Delivered" ? "Completed" : "In Progress",
+                HubStatus = (v != null && v.PackageHandedOver) ? "Handed Over" : "New",
+
+                Package = new PackageDetailsDto
+                {
+                    Length = r.PackageLength,
+                    Width = r.PackageWidth,
+                    Height = r.PackageHeight,
+                    DimensionUnit = "cm",
+                    Weight = r.PackageWeight,
+                    WeightUnit = "kg"
+                },
+
+                Sender = new SenderDetailsDto
+                {
+                    SenderRegId = r.SenderId,
+                    SenderName = r.SenderName,
+                    Address = string.Join(", ", new[] { r.SenderAddr, r.SenderTown, r.SenderCity, r.SenderState }
+                                  .Where(x => !string.IsNullOrWhiteSpace(x)))
+                              + (string.IsNullOrEmpty(r.SenderPostal) ? "" : " " + r.SenderPostal),
+                    Phone = r.SenderPhone,
+                    Email = r.SenderEmail
+                },
+
+                Transporter = new TransporterDetailsDto
+                {
+                    TransporterRegId = r.TransporterId,
+                    TransporterName = r.TransporterName,
+                    Address = string.Join(", ", new[] { r.TransporterAddr, r.TransporterTown, r.TransporterCity, r.TransporterState }
+                                  .Where(x => !string.IsNullOrWhiteSpace(x)))
+                              + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
+                    Phone = r.TransporterPhone,
+                    Status = r.TransporterStatus
+                },
+
+                Travel = new TravelDetailsDto
+                {
+                    StartLocationName = r.Hub?.HubName,
+                    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+
+                    DestinationTown = r.DestTown,
+                    DestinationCity = r.DestCity,
+                    DestinationState = r.DestState,
+                    DestinationCountry = r.DestCountry,
+                    DestinationPin = r.DestPin,
+
+                    StartDate = r.PlanStartDate,
+                    EtaDate = r.PlanArrivalDate,
+
+                    VehicleName = r.VehicleName,
+                    VehicleNumber = r.VehicleReg,
+                    VehicleType = r.VehicleType
+                },
+
+                Checklist = new ChecklistDto
+                {
+                    PackageVerified = v?.PackageVerified ?? false,
+                    SecurityCheck = v?.SecurityCheck ?? false,
+                    TravelPlanVerified = v?.TravelPlanVerified ?? false,
+                    TransporterVerified = v?.TransporterVerified ?? false,
+                    PackageHandedOver = v?.PackageHandedOver ?? false
+                }
+            };
+        }
     }
-        
 }
+
+

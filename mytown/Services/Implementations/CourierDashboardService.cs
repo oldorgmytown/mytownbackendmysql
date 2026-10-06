@@ -118,8 +118,7 @@ namespace mytown.Services.Implementations
             await _repository.SaveAsync();
             // Trigger courier payout
 
-            // Trigger courier payout
-            await _courierPayoutService.CreatePayoutAsync(storeOrderId);
+           
         }
 
         public async Task<CourierOrderDetailDto> GetCourierOrderDetailAsync(int storeOrderId)
@@ -272,7 +271,12 @@ namespace mytown.Services.Implementations
 
         public async Task<string> UploadDeliveryProofAsync(int storeOrderId, IFormFile file)
         {
-            return await _repository.UploadDeliveryProofAsync(storeOrderId, file);
+            var result = await _repository.UploadDeliveryProofAsync(storeOrderId, file);
+
+            // Trigger courier payout after proof is saved
+            await _courierPayoutService.CreatePayoutAsync(storeOrderId);
+
+            return result;
         }
 
         public async Task<bool> UpdateCourierAccountDetailsAsync(

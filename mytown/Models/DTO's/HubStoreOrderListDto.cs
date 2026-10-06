@@ -5,6 +5,7 @@
         public int StoreOrderId { get; set; }
         public int OrderId { get; set; }
         public string OrderStatus { get; set; }        // New / In Progress / Completed
+        public DateTime OrderDate { get; set; }
 
         public int TransporterRegId { get; set; }
         public string TransporterName { get; set; }
@@ -15,7 +16,9 @@
         public string StoreName { get; set; }
         public string StoreLocation { get; set; }      // Town, City
 
-        public string? PackageSpecs { get; set; }      // "10 × 10 × 5 cm"
+      //  public string? PackageSpecs { get; set; }      // "10 × 10 × 5 cm"
+        public DateTime? EstimatedDeliveryDate { get; set; }
+
         public string? HubStatus { get; set; }         // later
 
             

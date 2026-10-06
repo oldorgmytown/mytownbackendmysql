@@ -280,6 +280,8 @@ public class EmailService : IEmailService
                 // =============================
                 // FULL EMAIL BODY
                 // =============================
+                var hubHtml = BuildHubDetailsHtml(storedto.HubAddress);
+
                 var body = $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -495,6 +497,8 @@ public class EmailService : IEmailService
     </td>
   </tr>
 </table>
+
+        {hubHtml}
 
         <!-- ===== DELIVERY ADDRESS ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -1062,6 +1066,49 @@ public class EmailService : IEmailService
             return false;
         }
     }
+
+    private string BuildHubDetailsHtml(HubAddressDto? hub)
+{
+    if (hub == null) return string.Empty;
+
+    var fullAddress = string.Join(", ",
+        new[] { hub.AddressLine, hub.Town, hub.City, hub.State, hub.Country, hub.Pin }
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p)));
+
+    return $@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+       style=""background:#fff;border:1px solid rgba(139,139,139,0.10);
+              border-radius:8px;padding:24px;margin-bottom:16px;"">
+  <tr>
+    <td>
+      <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:16px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Hub Details</div>
+      <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+             style=""border:1px solid #E5E7EB;border-radius:12px;padding:16px;"">
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Hub Name</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.HubName ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Phone</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.Phone ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td colspan=""2"">
+            <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;"">Address</div>
+            <div style=""color:#000;font-size:14px;font-weight:600;line-height:1.5;"">{fullAddress}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>";
+}
     public async Task SendEmailToCourierAsync(
       string email,
       string courierName,
@@ -2040,6 +2087,7 @@ public class EmailService : IEmailService
       StoreOrderConfirmationDto storedto)
     {
         var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
+        var hubHtml = BuildHubDetailsHtml(storedto.HubAddress);
 
         // ===== BUILD PRODUCT ROWS =====
         var productsBuilder = new StringBuilder();
@@ -2276,6 +2324,8 @@ public class EmailService : IEmailService
             </td>
           </tr>
         </table>
+
+        {hubHtml}
 
         <!-- ===== CUSTOMER INFORMATION ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -2838,7 +2888,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
             <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+              {WebUtility.HtmlEncode(dto.SenderPhone)}
             </td>
           </tr>
           <tr>
@@ -4034,8 +4084,3 @@ public async Task SendOtpEmailAsync(string email, string name, string otp)
 }
 
 } // closes EmailService class
-
-
-
-
-

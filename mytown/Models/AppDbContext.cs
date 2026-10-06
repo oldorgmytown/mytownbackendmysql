@@ -138,6 +138,8 @@ namespace mytown.Models
 
             //Hub login - 5oct 2026
             public DbSet<HubDetail> HubDetails { get; set; }
+            public DbSet<HubStoreOrderVerification> HubStoreOrderVerifications { get; set; }
+            public DbSet<HubSenderOrderVerification> HubSenderOrderVerifications { get; set; }
 
 
 
