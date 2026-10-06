@@ -4043,24 +4043,24 @@ public class EmailService : IEmailService
 
 }  // closes BuildGuestTrackingTemplate
 
-public async Task SendOtpEmailAsync(string email, string name, string otp)
-{
-    if (!await DomainHasMX(email))
-        throw new Exception("The email domain is not valid (no MX records found).");
-
-    using (var smtpClient = new SmtpClient(_smtpServer))
+    public async Task SendOtpEmailAsync(string email, string name, string otp)
     {
-        smtpClient.Port = _smtpPort;
-        smtpClient.UseDefaultCredentials = false;
-        smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
-        smtpClient.EnableSsl = true;
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
 
-        var mailMessage = new MailMessage
+        using (var smtpClient = new SmtpClient(_smtpServer))
         {
-            From = new MailAddress(_senderEmail),
-            Subject = "Your OTP - MyTown",
-            IsBodyHtml = true,
-            Body = $@"
+            smtpClient.Port = _smtpPort;
+            smtpClient.UseDefaultCredentials = false;
+            smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+            smtpClient.EnableSsl = true;
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_senderEmail),
+                Subject = "Your OTP - MyTown",
+                IsBodyHtml = true,
+                Body = $@"
 <div style='font-family:Arial,sans-serif;background:#fff;padding:40px;text-align:center;'>
   <div style='max-width:500px;margin:auto;background:#fff;padding:30px;border-radius:10px;
               box-shadow:0px 4px 10px rgba(0,0,0,0.2);border:2px solid #004481;'>
@@ -4077,10 +4077,63 @@ public async Task SendOtpEmailAsync(string email, string name, string otp)
     <p style='font-size:10px;color:#777;'>© 2025 MyTown. All rights reserved.</p>
   </div>
 </div>"
-        };
-        mailMessage.To.Add(email);
-        await smtpClient.SendMailAsync(mailMessage);
+            };
+            mailMessage.To.Add(email);
+            await smtpClient.SendMailAsync(mailMessage);
+        }
+    }
+
+    //------------------------Package Reday email from Hub------------------------------------
+
+        // ========================================
+        // READY TO SHIP EMAIL TO TRANSPORTER
+        // ========================================
+    public async Task SendTransporterHubEmailAsync(
+        string email,
+        string transporterName, string packageSummary,
+       HubLoginDto dto)
+        
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("Invalid email domain.");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials =
+                    new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                //string body =
+                //    BuildReadyToShipTransporterTemplate(
+                //        transporterName,
+                //        dto, packageSummary
+                //    );
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Package Ready for Pickup",
+                   // Body = body,
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+            throw new Exception(
+                "Failed to send transporter email."
+            );
+        }
     }
 }
 
-} // closes EmailService class
+ // closes EmailService class

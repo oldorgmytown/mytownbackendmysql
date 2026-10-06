@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
+using System.Runtime.CompilerServices;
 
 
 namespace mytown.Controllers
@@ -15,12 +16,14 @@ namespace mytown.Controllers
     {
         private readonly IHubService _hubService;
         private readonly ILogger<HubController> _logger;
+        private readonly IEmailService _emailService;
 
         public HubController(IHubService hubService,
-                             ILogger<HubController> logger)
+                             ILogger<HubController> logger, IEmailService emailService)
         {
             _hubService = hubService ?? throw new ArgumentNullException(nameof(hubService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         // GET: api/hub/locations
@@ -152,6 +155,16 @@ namespace mytown.Controllers
                 return BadRequest(new { message = "Invalid year." });
 
             return Ok(await _hubService.GetSenderOrderCountsAsync(m, y));
+        }
+        // POST: api/hub/send-transporter-email
+        [HttpPost("send-pckrdy-transporter-email")]
+        public async Task<IActionResult> SendTransporterEmail(string transporteremail, string trasnporteremail, string packagedimensions, [FromBody] HubLoginDto dto)
+        {
+            var result =  _emailService.SendTransporterHubEmailAsync(transporteremail, trasnporteremail, packagedimensions, dto);
+
+          
+
+            return Ok(new { message = "Email sent to transporter." });
         }
     }
 }

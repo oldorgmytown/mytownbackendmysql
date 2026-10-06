@@ -1,6 +1,8 @@
-﻿using mytown.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using MyTown.Models;
+using Stripe;
 
 namespace mytown.Services.Interfaces
 {
@@ -25,5 +27,6 @@ namespace mytown.Services.Interfaces
         //summary counts
         Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year);
         Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year);
+       // Task<(bool Success, string? Error)> SendTransporterHubEmailAsync(string transporteremail, string trasnporteremail, string packagedimensions, [FromBody] HubLoginDto dto);
     }
 }
