@@ -209,7 +209,7 @@ namespace mytown.Controllers
                 {
                     TransporterRegId = transporterRegId,
                     Title = "Package Ready at Hub",
-                    Message = $"StoreOrder #{storeOrderId} package has reached the hub and is ready for pickup."
+                    Message = $"Order #{storeOrderId} package has reached the hub and is ready for pickup."
                 };
 
                 await _service.AddTransporterNotificationAsync(transporterNotification);
