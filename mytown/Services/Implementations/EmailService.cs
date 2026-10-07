@@ -4082,17 +4082,12 @@ public class EmailService : IEmailService
             await smtpClient.SendMailAsync(mailMessage);
         }
     }
-
-    //------------------------Package Reday email from Hub------------------------------------
-
-        // ========================================
-        // READY TO SHIP EMAIL TO TRANSPORTER
-        // ========================================
+        //------------------------Package Ready email from Hub------------------------------------
     public async Task SendTransporterHubEmailAsync(
         string email,
-        string transporterName, string packageSummary,
-       HubLoginDto dto)
-        
+        string transporterName,
+        string packageSummary,
+        HubLoginDto dto)
     {
         if (!await DomainHasMX(email))
             throw new Exception("Invalid email domain.");
@@ -4103,37 +4098,143 @@ public class EmailService : IEmailService
             {
                 smtpClient.Port = _smtpPort;
                 smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials =
-                    new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
                 smtpClient.EnableSsl = true;
-
-                //string body =
-                //    BuildReadyToShipTransporterTemplate(
-                //        transporterName,
-                //        dto, packageSummary
-                //    );
 
                 var mailMessage = new MailMessage
                 {
                     From = new MailAddress(_senderEmail),
-                    Subject = "Package Ready for Pickup",
-                   // Body = body,
+                    Subject = "Package Ready for Pickup at Hub",
+                    Body = BuildHubPackageReadyTemplate(transporterName, packageSummary, dto),
                     IsBodyHtml = true
                 };
 
                 mailMessage.To.Add(email);
-
                 await smtpClient.SendMailAsync(mailMessage);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
-            throw new Exception(
-                "Failed to send transporter email."
-            );
+            Console.WriteLine($"Error sending hub package-ready email: {ex.Message}");
+            throw new Exception("Failed to send transporter email.");
         }
     }
-}
 
- // closes EmailService class
+    private string BuildHubPackageReadyTemplate(string transporterName, string packageSummary, HubLoginDto dto)
+    {
+        var fullAddress = string.Join(", ",
+            new[] { dto.AddressLine, dto.Town, dto.City, dto.State, dto.Country, dto.Pin }
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Select(p => WebUtility.HtmlEncode(p)));
+
+        var font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
+
+        return $@"<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Package Ready for Pickup - ITISMYTOWN</title>
+</head>
+<body style='margin:0;padding:0;background:#FAFBFC;{font}'>
+<table width='100%' cellpadding='0' cellspacing='0' border='0' bgcolor='#FAFBFC'>
+<tr><td align='center'>
+<table width='600' cellpadding='0' cellspacing='0' border='0' style='max-width:600px;width:100%;background:#FAFBFC;'>
+
+  <tr>
+    <td align='center' style='padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;'>
+      <img src='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png'
+           alt='ITISMYTOWN' height='55' style='height:55px;width:auto;display:block;margin:0 auto;' />
+    </td>
+  </tr>
+
+  <tr>
+    <td align='center' style='padding:0;background:#FAFBFC;'>
+      <img src='https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg'
+           alt='Package Ready for Pickup' width='600'
+           style='width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;' />
+    </td>
+  </tr>
+
+  <tr>
+    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;background:#fff;'>
+      <p style='color:#000;font-size:16px;font-weight:700;line-height:1.5;margin:0 0 8px 0;{font}'>
+        Hello {WebUtility.HtmlEncode(transporterName ?? string.Empty)},
+      </p>
+      <p style='color:#585858;font-size:16px;font-weight:400;line-height:1.5;margin:0;{font}'>
+        Your package has reached the hub and is ready for pickup. Please collect it from the hub below.
+      </p>
+    </td>
+  </tr>
+
+  <tr>
+    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;'>
+      <h2 style='color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;{font}'>Package Details</h2>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='border:1px solid #E5E7EB;border-radius:12px;padding:20px;'>
+        <tr>
+          <td style='color:#585858;font-size:14px;font-weight:500;{font}'>Dimensions</td>
+          <td align='right' style='color:#000;font-size:14px;font-weight:600;{font}'>
+            {WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(packageSummary) ? "-" : packageSummary)}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;'>
+      <h2 style='color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;{font}'>Pickup From Hub</h2>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='border:1px solid #E5E7EB;border-radius:12px;padding:20px;'>
+        <tr>
+          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Hub Name</td>
+          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
+            {WebUtility.HtmlEncode(dto.HubName ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Phone</td>
+          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
+            {WebUtility.HtmlEncode(dto.Phone ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Email</td>
+          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
+            {WebUtility.HtmlEncode(dto.HubEmail ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td colspan='2'>
+            <div style='color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;{font}'>Address</div>
+            <div style='color:#000;font-size:14px;font-weight:600;line-height:1.5;{font}'>{fullAddress}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td align='center' style='padding:24px 30px;'>
+      <a href='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/my-plans'
+         style='display:inline-block;background:#004481;color:#fff;border:1px solid #004481;border-radius:8px;
+                padding:14px 40px;font-size:16px;font-weight:400;text-decoration:none;text-align:center;{font}'>
+        View Order
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td style='background:rgba(139,139,139,0.08);padding:20px 30px 24px;' align='center'>
+      <span style='color:#585858;font-size:12px;{font}'>&copy; 2026 itismytown. All rights reserved.</span>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>";
+    }
+}

@@ -33,7 +33,7 @@ namespace mytown.Controllers
             var hubs = await _hubService.GetAllHubLocationsAsync();
             return Ok(hubs);
         }
-       // [HttpGet("store-orders-onhub")]
+
         // GET: api/hub/store-orders-onhub?month=9&year=2026
         [HttpGet("store-orders-onhub")]
         public async Task<IActionResult> GetStoreOrders([FromQuery] int? month, [FromQuery] int? year)
@@ -156,15 +156,34 @@ namespace mytown.Controllers
 
             return Ok(await _hubService.GetSenderOrderCountsAsync(m, y));
         }
-        // POST: api/hub/send-transporter-email
+
+        // POST: api/hub/send-pckrdy-transporter-email
+        // NOTE: `trasnporteremail` (typo kept so the URL contract stays the same) carries the transporter NAME.
         [HttpPost("send-pckrdy-transporter-email")]
-        public async Task<IActionResult> SendTransporterEmail(string transporteremail, string trasnporteremail, string packagedimensions, [FromBody] HubLoginDto dto)
+        public async Task<IActionResult> SendTransporterEmail(
+            [FromQuery] string? transporteremail,
+            [FromQuery] string? trasnporteremail,
+            [FromQuery] string? packagedimensions,
+            [FromBody] HubLoginDto dto)
         {
-            var result =  _emailService.SendTransporterHubEmailAsync(transporteremail, trasnporteremail, packagedimensions, dto);
+            if (string.IsNullOrWhiteSpace(transporteremail))
+                return BadRequest(new { message = "Transporter email is required." });
 
-          
+            try
+            {
+                await _emailService.SendTransporterHubEmailAsync(
+                    transporteremail,
+                    string.IsNullOrWhiteSpace(trasnporteremail) ? "Transporter" : trasnporteremail,
+                    packagedimensions ?? string.Empty,
+                    dto);
 
-            return Ok(new { message = "Email sent to transporter." });
+                return Ok(new { message = "Email sent to transporter." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send package-ready email to transporter {Email}", transporteremail);
+                return StatusCode(500, new { message = "Failed to send email to transporter." });
+            }
         }
     }
 }
