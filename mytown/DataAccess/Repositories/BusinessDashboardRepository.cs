@@ -540,7 +540,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 EstimatedDeliveryDate =
                     x.Shipping != null
                         ? x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays)
-                        : null
+                        : null,
+                PayoutStatus = _context.StorePayouts
+    .Where(sp => sp.StoreOrderId == x.StoreOrder.StoreOrderId)
+    .OrderByDescending(sp => sp.CreatedDate)
+    .Select(sp => sp.Status)
+    .FirstOrDefault()
             })
             .ToListAsync();
     }
@@ -578,7 +583,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 Status = "In Progress",
                 EstimatedDeliveryDate =
                     x.Order.OrderDate.AddDays(x.Shipping.EstimatedDays),
-                TrackingId = x.Shipping.TrackingId
+                TrackingId = x.Shipping.TrackingId,
+                PayoutStatus = _context.StorePayouts
+    .Where(sp => sp.StoreOrderId == x.StoreOrder.StoreOrderId)
+    .OrderByDescending(sp => sp.CreatedDate)
+    .Select(sp => sp.Status)
+    .FirstOrDefault()
             })
             .ToListAsync();
     }
@@ -614,7 +624,12 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 OrderId = x.Order.OrderId,
                 Status = "Delivered",
                 DeliveredDate = x.Shipping.DeliveredDate,
-                TrackingId = x.Shipping.TrackingId
+                TrackingId = x.Shipping.TrackingId,
+                PayoutStatus = _context.StorePayouts
+    .Where(sp => sp.StoreOrderId == x.StoreOrder.StoreOrderId)
+    .OrderByDescending(sp => sp.CreatedDate)
+    .Select(sp => sp.Status)
+    .FirstOrDefault()
             })
             .ToListAsync();
     }

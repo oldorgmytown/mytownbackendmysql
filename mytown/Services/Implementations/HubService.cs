@@ -22,13 +22,11 @@ namespace mytown.Services.Implementations
 
         public Task<List<HubAddressDto>> GetAllHubLocationsAsync()
        => _hubRepo.GetAllHubLocationsAsync();
+        public Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int hubId, int? month, int? year)
+            => _hubRepo.GetTransporterStoreOrdersAsync(hubId, month, year);
 
-        public Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year)
-        => _hubRepo.GetTransporterStoreOrdersAsync(month, year);
-
-        public Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year)
-            => _hubRepo.GetTransporterSenderOrdersAsync(month, year);
-
+        public Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int hubId, int? month, int? year)
+            => _hubRepo.GetTransporterSenderOrdersAsync(hubId, month, year);
         public Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId)
     => _hubRepo.GetVerificationAsync(storeOrderId);
 
@@ -70,10 +68,10 @@ namespace mytown.Services.Implementations
         public Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId)
     => _hubRepo.GetSenderOrderDetailsAsync(senderOrderId);
 
-        public Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year)
-    => _hubRepo.GetStoreOrderCountsAsync(month, year);
+        public Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int hubId)
+        => _hubRepo.GetStoreOrderCountsAsync(month, year, hubId);
 
-        public Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year)
-            => _hubRepo.GetSenderOrderCountsAsync(month, year);
+        public Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int hubId)
+            => _hubRepo.GetSenderOrderCountsAsync(month, year, hubId);
     }
 }

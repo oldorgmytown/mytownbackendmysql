@@ -32,24 +32,31 @@ namespace mytown.Controllers
         }
        // [HttpGet("store-orders-onhub")]
         // GET: api/hub/store-orders-onhub?month=9&year=2026
+        // GET: api/hub/store-orders-onhub?hubId=1&month=9&year=2026
         [HttpGet("store-orders-onhub")]
-        public async Task<IActionResult> GetStoreOrders([FromQuery] int? month, [FromQuery] int? year)
+        public async Task<IActionResult> GetStoreOrders(
+            [FromQuery] int hubId, [FromQuery] int? month, [FromQuery] int? year)
         {
+            if (hubId <= 0)
+                return BadRequest(new { message = "hubId is required." });
             if (month.HasValue && (month < 1 || month > 12))
                 return BadRequest(new { message = "Month must be between 1 and 12." });
 
-            var data = await _hubService.GetTransporterStoreOrdersAsync(month, year);
+            var data = await _hubService.GetTransporterStoreOrdersAsync(hubId, month, year);
             return Ok(data);
         }
 
-        // GET: api/hub/sender-orders-onhub?month=9&year=2026
+        // GET: api/hub/sender-orders-onhub?hubId=1&month=9&year=2026
         [HttpGet("sender-orders-onhub")]
-        public async Task<IActionResult> GetSenderOrders([FromQuery] int? month, [FromQuery] int? year)
+        public async Task<IActionResult> GetSenderOrders(
+            [FromQuery] int hubId, [FromQuery] int? month, [FromQuery] int? year)
         {
+            if (hubId <= 0)
+                return BadRequest(new { message = "hubId is required." });
             if (month.HasValue && (month < 1 || month > 12))
                 return BadRequest(new { message = "Month must be between 1 and 12." });
 
-            var data = await _hubService.GetTransporterSenderOrdersAsync(month, year);
+            var data = await _hubService.GetTransporterSenderOrdersAsync(hubId, month, year);
             return Ok(data);
         }
 
@@ -123,35 +130,40 @@ namespace mytown.Controllers
         }
 
         // GET: api/hub/store-order-counts?month=9&year=2026
+        // GET: api/hub/store-order-summary-counts?month=9&year=2026&hubId=1
         [HttpGet("store-order-summary-counts")]
         public async Task<IActionResult> GetStoreOrderCounts(
-            [FromQuery] int? month, [FromQuery] int? year)
+            [FromQuery] int hubId, [FromQuery] int? month, [FromQuery] int? year)
         {
             var m = month ?? DateTime.Today.Month;
             var y = year ?? DateTime.Today.Year;
 
+            if (hubId <= 0)
+                return BadRequest(new { message = "hubId is required." });
             if (m < 1 || m > 12)
                 return BadRequest(new { message = "Month must be between 1 and 12." });
             if (y < 2000 || y > 2100)
                 return BadRequest(new { message = "Invalid year." });
 
-            return Ok(await _hubService.GetStoreOrderCountsAsync(m, y));
+            return Ok(await _hubService.GetStoreOrderCountsAsync(m, y, hubId));
         }
 
-        // GET: api/hub/sender-order-counts?month=9&year=2026
+        // GET: api/hub/sender-order-summary-counts?month=9&year=2026&hubId=1
         [HttpGet("sender-order-summary-counts")]
         public async Task<IActionResult> GetSenderOrderCounts(
-            [FromQuery] int? month, [FromQuery] int? year)
+            [FromQuery] int hubId, [FromQuery] int? month, [FromQuery] int? year)
         {
             var m = month ?? DateTime.Today.Month;
             var y = year ?? DateTime.Today.Year;
 
+            if (hubId <= 0)
+                return BadRequest(new { message = "hubId is required." });
             if (m < 1 || m > 12)
                 return BadRequest(new { message = "Month must be between 1 and 12." });
             if (y < 2000 || y > 2100)
                 return BadRequest(new { message = "Invalid year." });
 
-            return Ok(await _hubService.GetSenderOrderCountsAsync(m, y));
+            return Ok(await _hubService.GetSenderOrderCountsAsync(m, y, hubId));
         }
     }
 }

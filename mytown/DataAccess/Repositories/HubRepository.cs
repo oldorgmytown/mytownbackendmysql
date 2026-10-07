@@ -52,8 +52,18 @@ namespace mytown.DataAccess.Repositories
                     .ToListAsync();
             }
 
-        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? month, int? year)
+        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int hubId, int? month, int? year)
         {
+            var hubPin = await _context.HubDetails
+                .Where(h => h.HubId == hubId)
+                .Select(h => h.Pin)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(hubPin))
+                return new List<HubStoreOrderListDto>();
+
+            hubPin = hubPin.Trim();
+
             var rows = await (
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
@@ -66,6 +76,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.TransporterRegId != null
+                      && b.PostalCode == hubPin
                       && (!year.HasValue || o.OrderDate.Year == year.Value)
                       && (!month.HasValue || o.OrderDate.Month == month.Value)
                 orderby so.StoreOrderId descending
@@ -113,8 +124,19 @@ namespace mytown.DataAccess.Repositories
                 HubStatus = r.HubStatusDb ?? "New"
             }).ToList();
         }
-        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? month, int? year)
+
+        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int hubId, int? month, int? year)
         {
+            var hubPin = await _context.HubDetails
+                .Where(h => h.HubId == hubId)
+                .Select(h => h.Pin)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(hubPin))
+                return new List<HubSenderOrderListDto>();
+
+            hubPin = hubPin.Trim();
+
             var rows = await (
                 from so in _context.SenderOrders
                 join s in _context.SenderRegisters on so.SenderRegId equals s.SenderRegId
@@ -125,6 +147,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where so.TransporterRegId != null
+                      && so.PickupPincode == hubPin
                       && (!year.HasValue || so.CreatedAt.Year == year.Value)
                       && (!month.HasValue || so.CreatedAt.Month == month.Value)
                 orderby so.SenderOrderId descending
@@ -599,19 +622,31 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-            //summary counts
+        //summary counts
 
-          public async Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year)
+        public async Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int hubId)
         {
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
+
+            var hubPin = await _context.HubDetails
+                .Where(h => h.HubId == hubId)
+                .Select(h => h.Pin)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(hubPin))
+                return new HubMonthlyCountsDto { Month = month, Year = year };
+
+            hubPin = hubPin.Trim();
 
             var rows = await (
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
                 join o in _context.Orders on so.OrderId equals o.OrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
                 where sd.TransporterRegId != null
                       && o.OrderDate >= start && o.OrderDate < end
+                      && b.PostalCode == hubPin
                 select new
                 {
                     sd.ShippingStatus,
@@ -628,21 +663,35 @@ namespace mytown.DataAccess.Repositories
                 Year = year,
                 Total = rows.Count,
                 Pending = rows.Count(x =>
-                    x.ShippingStatus == "Pending" || x.ShippingStatus == "Not Shipped"),
+                    string.IsNullOrWhiteSpace(x.ShippingStatus) ||
+                    x.ShippingStatus.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase) ||
+                    x.ShippingStatus.Trim().Equals("Not Shipped", StringComparison.OrdinalIgnoreCase) ||
+                    x.ShippingStatus.Trim().Equals("NotShipped", StringComparison.OrdinalIgnoreCase)),
                 ReachedHub = rows.Count(x => x.HubStatus == "Package Reached Hub"),
                 HandedOver = rows.Count(x => x.HubStatus == "Handed Over")
             };
         }
 
-        public async Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year)
+        public async Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int hubId)
         {
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
+
+            var hubPin = await _context.HubDetails
+                .Where(h => h.HubId == hubId)
+                .Select(h => h.Pin)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrWhiteSpace(hubPin))
+                return new HubMonthlyCountsDto { Month = month, Year = year };
+
+            hubPin = hubPin.Trim();
 
             var rows = await (
                 from so in _context.SenderOrders
                 where so.TransporterRegId != null
                       && so.CreatedAt >= start && so.CreatedAt < end
+                      && so.PickupPincode == hubPin
                 select new
                 {
                     so.DeliveryStatus,
@@ -658,7 +707,9 @@ namespace mytown.DataAccess.Repositories
                 Month = month,
                 Year = year,
                 Total = rows.Count,
-                Pending = rows.Count(x => x.DeliveryStatus == "Pending"),
+                Pending = rows.Count(x =>
+                    string.IsNullOrWhiteSpace(x.DeliveryStatus) ||
+                    x.DeliveryStatus.Trim().Equals("Pending", StringComparison.OrdinalIgnoreCase)),
                 ReachedHub = rows.Count(x => x.HubStatus == "Package Reached Hub"),
                 HandedOver = rows.Count(x => x.HubStatus == "Handed Over")
             };

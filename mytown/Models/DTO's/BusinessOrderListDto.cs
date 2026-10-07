@@ -9,6 +9,8 @@
         public DateTime? EstimatedDeliveryDate { get; set; }
         public DateTime? DeliveredDate { get; set; }
 
+        public string? PayoutStatus { get; set; }
+
         public string? TrackingId { get; set; }
     }
 }
