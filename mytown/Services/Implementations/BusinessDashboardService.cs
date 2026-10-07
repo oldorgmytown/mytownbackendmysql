@@ -211,20 +211,20 @@ namespace mytown.Services.Implementations
             }
 
             // 6️⃣ Transporter notification
-            if (shipping.TransporterRegId.HasValue &&
-                shipping.TransporterRegister != null)
-            {
-                var transporterNotification = new TransporterDBNotifications
-                {
-                    TransporterRegId = shipping.TransporterRegId.Value,
-                    Title = "Order Ready to Ship",
-                    Message = $"StoreOrder #{storeOrderId} is ready for pickup."
-                };
+            //if (shipping.TransporterRegId.HasValue &&
+            //    shipping.TransporterRegister != null)
+            //{
+            //    var transporterNotification = new TransporterDBNotifications
+            //    {
+            //        TransporterRegId = shipping.TransporterRegId.Value,
+            //        Title = "Order Ready to Ship",
+            //        Message = $"StoreOrder #{storeOrderId} is ready for pickup."
+            //    };
 
-                await _repository.AddTransporterNotificationAsync(
-                    transporterNotification
-                );
-            }
+            //    await _repository.AddTransporterNotificationAsync(
+            //        transporterNotification
+            //    );
+            //}
 
 
             //  mark notified for thia package 
@@ -249,16 +249,16 @@ namespace mytown.Services.Implementations
                 );
             }
 
-            if (orderDetails != null &&
-                shipping.TransporterRegId.HasValue &&
-                shipping.TransporterRegister != null)
-            {
-                await _emailService.SendPackagerdyEmailToTransporterAsync(
-                    orderDetails.TransporterEmail,
-                    orderDetails.TransporterName,
-                    orderDetails,packageSummary
-                );
-            }
+            //if (orderDetails != null &&
+            //    shipping.TransporterRegId.HasValue &&
+            //    shipping.TransporterRegister != null)
+            //{
+            //    await _emailService.SendPackagerdyEmailToTransporterAsync(
+            //        orderDetails.TransporterEmail,
+            //        orderDetails.TransporterName,
+            //        orderDetails,packageSummary
+            //    );
+            //}
         }
         //public async Task MarkReadyToShipAsync(int storeOrderId)
         //{

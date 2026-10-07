@@ -214,5 +214,20 @@ SearchAvailableTransportersAsync(
         {
             return await _repo.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
         }
+
+        public async Task AddTransporterNotificationAsync(TransporterDBNotifications notification)
+        {
+            if (notification == null)
+                throw new ArgumentNullException(nameof(notification));
+
+            if (notification.TransporterRegId <= 0)
+                throw new ArgumentException("TransporterRegId is required.", nameof(notification));
+
+            if (string.IsNullOrWhiteSpace(notification.Title) ||
+                string.IsNullOrWhiteSpace(notification.Message))
+                throw new ArgumentException("Title and message are required.", nameof(notification));
+
+            await _repo.AddTransporterNotificationAsync(notification);
+        }
     }
 }
