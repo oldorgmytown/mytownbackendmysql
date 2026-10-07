@@ -352,6 +352,7 @@ namespace mytown.DataAccess.Repositories
                     TransporterState = t.State,
                     TransporterPostal = t.PostalCode,
                     t.PhoneNumber,
+                    TransporterEmail = t.Email,
                     t.Status,
 
                     PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
@@ -422,6 +423,7 @@ namespace mytown.DataAccess.Repositories
                                   .Where(s => !string.IsNullOrWhiteSpace(s)))
                               + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
                     Phone = r.PhoneNumber,
+                    Email = r.TransporterEmail,
                     Status = r.Status
                 },
 
@@ -500,6 +502,7 @@ namespace mytown.DataAccess.Repositories
                     TransporterState = t.State,
                     TransporterPostal = t.PostalCode,
                     TransporterPhone = t.PhoneNumber,
+                    TransporterEmail = t.Email,
                     TransporterStatus = t.Status,
 
                     // Travel plan
@@ -566,6 +569,7 @@ namespace mytown.DataAccess.Repositories
                                   .Where(x => !string.IsNullOrWhiteSpace(x)))
                               + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
                     Phone = r.TransporterPhone,
+                    Email = r.TransporterEmail,
                     Status = r.TransporterStatus
                 },
 
