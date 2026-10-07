@@ -139,6 +139,9 @@ namespace mytown.Models
             public DbSet<HubDetail> HubDetails { get; set; }
             public DbSet<HubStoreOrderVerification> HubStoreOrderVerifications { get; set; }
             public DbSet<HubSenderOrderVerification> HubSenderOrderVerifications { get; set; }
+                        // Ads / promotions
+            public DbSet<AdPromotion> AdPromotions { get; set; }
+            public DbSet<AdPaymentOrder> AdPaymentOrders { get; set; }
 
 
 
@@ -169,6 +172,11 @@ namespace mytown.Models
 
                 modelBuilder.Entity<ChatMessage>()
                     .HasIndex(m => m.SentTime);
+
+                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.RazorpayOrderId).IsUnique();
+                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.RazorpayPaymentId).IsUnique();
+                modelBuilder.Entity<AdPromotion>().HasIndex(p => p.PaymentOrderId).IsUnique();
+                modelBuilder.Entity<AdPromotion>().HasIndex(p => p.BusRegId);
 
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {
