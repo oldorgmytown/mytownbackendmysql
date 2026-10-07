@@ -91,6 +91,7 @@ public class Startup
         services.AddScoped<IProductsNewRepository, ProductsNewRepository>(); 
 
         services.AddScoped<IProductsNewService, ProductsNewService>();
+        services.AddScoped<IAdsService, AdsService>();
         services.AddScoped<IStorePayoutRepository, StorePayoutRepository>();
         services.AddScoped<IStorePayoutService, StorePayoutService>();
         services.AddScoped<ICourierPayoutRepository, CourierPayoutRepository>();

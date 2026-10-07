@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
+using System.Runtime.CompilerServices;
 
 
 namespace mytown.Controllers
@@ -15,12 +16,14 @@ namespace mytown.Controllers
     {
         private readonly IHubService _hubService;
         private readonly ILogger<HubController> _logger;
+        private readonly IEmailService _emailService;
 
         public HubController(IHubService hubService,
-                             ILogger<HubController> logger)
+                             ILogger<HubController> logger, IEmailService emailService)
         {
             _hubService = hubService ?? throw new ArgumentNullException(nameof(hubService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
         }
 
         // GET: api/hub/locations
@@ -30,7 +33,7 @@ namespace mytown.Controllers
             var hubs = await _hubService.GetAllHubLocationsAsync();
             return Ok(hubs);
         }
-       // [HttpGet("store-orders-onhub")]
+
         // GET: api/hub/store-orders-onhub?month=9&year=2026
         // GET: api/hub/store-orders-onhub?hubId=1&month=9&year=2026
         [HttpGet("store-orders-onhub")]
@@ -164,6 +167,35 @@ namespace mytown.Controllers
                 return BadRequest(new { message = "Invalid year." });
 
             return Ok(await _hubService.GetSenderOrderCountsAsync(m, y, hubId));
+        }
+
+        // POST: api/hub/send-pckrdy-transporter-email
+        // NOTE: `trasnporteremail` (typo kept so the URL contract stays the same) carries the transporter NAME.
+        [HttpPost("send-pckrdy-transporter-email")]
+        public async Task<IActionResult> SendTransporterEmail(
+            [FromQuery] string? transporteremail,
+            [FromQuery] string? trasnporteremail,
+            [FromQuery] string? packagedimensions,
+            [FromBody] HubLoginDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(transporteremail))
+                return BadRequest(new { message = "Transporter email is required." });
+
+            try
+            {
+                await _emailService.SendTransporterHubEmailAsync(
+                    transporteremail,
+                    string.IsNullOrWhiteSpace(trasnporteremail) ? "Transporter" : trasnporteremail,
+                    packagedimensions ?? string.Empty,
+                    dto);
+
+                return Ok(new { message = "Email sent to transporter." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send package-ready email to transporter {Email}", transporteremail);
+                return StatusCode(500, new { message = "Failed to send email to transporter." });
+            }
         }
     }
 }

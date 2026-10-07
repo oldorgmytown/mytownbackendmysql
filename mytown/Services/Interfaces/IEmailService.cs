@@ -42,5 +42,12 @@ namespace mytown.Services.Interfaces
         Task SendTransporterAssignmentAsync(string email, string transporterName, SenderOrderConfirmationDto dto);
 
         Task SendGuestNotificationforTracking(string email, string guestName, OrderConfirmationDto orderdto);
+
+        // send package rdy email to transporter for sender order and store order
+        Task SendTransporterHubEmailAsync(
+       string email,
+       string transporterName, string packageSummary,
+
+      HubLoginDto dto);
     }
 }
