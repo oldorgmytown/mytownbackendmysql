@@ -30,39 +30,43 @@ namespace mytown.DataAccess.Repositories
             _connectionString = config.GetConnectionString("mysqlConnection");
             _cache = cache;
         }
-        
-            public async Task<List<HubAddressDto>> GetAllHubLocationsAsync()
-            {
-                return await _context.HubDetails
-                    .AsNoTracking()
-                    .OrderBy(h => h.State).ThenBy(h => h.City).ThenBy(h => h.HubName)
-                    .Select(h => new HubAddressDto
-                    {
-                        HubId = h.HubId,
-                        HubAddressId = h.HubAddressId,
-                        HubName = h.HubName,
-                        AddressLine = h.AddressLine,
-                        Town = h.Town,
-                        City = h.City,
-                        State = h.State,
-                        Country = h.Country,
-                        Pin = h.Pin,
-                        Phone = h.Phone
-                    })
-                    .ToListAsync();
-            }
 
-        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int hubId, int? month, int? year)
+        public async Task<List<HubAddressDto>> GetAllHubLocationsAsync()
         {
-            var hubPin = await _context.HubDetails
-                .Where(h => h.HubId == hubId)
-                .Select(h => h.Pin)
-                .FirstOrDefaultAsync();
+            return await _context.HubDetails
+                .AsNoTracking()
+                .OrderBy(h => h.State).ThenBy(h => h.City).ThenBy(h => h.HubName)
+                .Select(h => new HubAddressDto
+                {
+                    HubId = h.HubId,
+                    HubAddressId = h.HubAddressId,
+                    HubName = h.HubName,
+                    AddressLine = h.AddressLine,
+                    Town = h.Town,
+                    City = h.City,
+                    State = h.State,
+                    Country = h.Country,
+                    Pin = h.Pin,
+                    Phone = h.Phone
+                })
+                .ToListAsync();
+        }
 
-            if (string.IsNullOrWhiteSpace(hubPin))
-                return new List<HubStoreOrderListDto>();
+        public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? hubId, int? month, int? year)
+        {
+            string? hubPin = null;
+            if (hubId.HasValue)
+            {
+                hubPin = await _context.HubDetails
+                    .Where(h => h.HubId == hubId.Value)
+                    .Select(h => h.Pin)
+                    .FirstOrDefaultAsync();
 
-            hubPin = hubPin.Trim();
+                if (string.IsNullOrWhiteSpace(hubPin))
+                    return new List<HubStoreOrderListDto>();
+
+                hubPin = hubPin.Trim();
+            }
 
             var rows = await (
                 from sd in _context.ShippingDetails
@@ -76,7 +80,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.TransporterRegId != null
-                      && b.PostalCode == hubPin
+                      && (hubPin == null || b.PostalCode == hubPin)
                       && (!year.HasValue || o.OrderDate.Year == year.Value)
                       && (!month.HasValue || o.OrderDate.Month == month.Value)
                 orderby so.StoreOrderId descending
@@ -125,17 +129,21 @@ namespace mytown.DataAccess.Repositories
             }).ToList();
         }
 
-        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int hubId, int? month, int? year)
+        public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? hubId, int? month, int? year)
         {
-            var hubPin = await _context.HubDetails
-                .Where(h => h.HubId == hubId)
-                .Select(h => h.Pin)
-                .FirstOrDefaultAsync();
+            string? hubPin = null;
+            if (hubId.HasValue)
+            {
+                hubPin = await _context.HubDetails
+                    .Where(h => h.HubId == hubId.Value)
+                    .Select(h => h.Pin)
+                    .FirstOrDefaultAsync();
 
-            if (string.IsNullOrWhiteSpace(hubPin))
-                return new List<HubSenderOrderListDto>();
+                if (string.IsNullOrWhiteSpace(hubPin))
+                    return new List<HubSenderOrderListDto>();
 
-            hubPin = hubPin.Trim();
+                hubPin = hubPin.Trim();
+            }
 
             var rows = await (
                 from so in _context.SenderOrders
@@ -147,7 +155,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where so.TransporterRegId != null
-                      && so.PickupPincode == hubPin
+                      && (hubPin == null || so.PickupPincode == hubPin)
                       && (!year.HasValue || so.CreatedAt.Year == year.Value)
                       && (!month.HasValue || so.CreatedAt.Month == month.Value)
                 orderby so.SenderOrderId descending
@@ -335,7 +343,7 @@ namespace mytown.DataAccess.Repositories
             PackageHandedOver = v.PackageHandedOver,
             Remarks = v.Remarks,
             UpdatedAt = v.UpdatedAt,
-            HubStatus = v.HubStatus          
+            HubStatus = v.HubStatus
         };
 
         public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
@@ -627,21 +635,25 @@ namespace mytown.DataAccess.Repositories
         }
 
         //summary counts
-
-        public async Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int hubId)
+        public async Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int? hubId)
         {
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
 
-            var hubPin = await _context.HubDetails
-                .Where(h => h.HubId == hubId)
-                .Select(h => h.Pin)
-                .FirstOrDefaultAsync();
+            string? hubPin = null;
+            if (hubId.HasValue)
+            {
+                hubPin = await _context.HubDetails
+                    .Where(h => h.HubId == hubId.Value)
+                    .Select(h => h.Pin)
+                    .FirstOrDefaultAsync();
 
-            if (string.IsNullOrWhiteSpace(hubPin))
-                return new HubMonthlyCountsDto { Month = month, Year = year };
+                // Unknown hub -> zero counts
+                if (string.IsNullOrWhiteSpace(hubPin))
+                    return new HubMonthlyCountsDto { Month = month, Year = year };
 
-            hubPin = hubPin.Trim();
+                hubPin = hubPin.Trim();
+            }
 
             var rows = await (
                 from sd in _context.ShippingDetails
@@ -650,7 +662,7 @@ namespace mytown.DataAccess.Repositories
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
                 where sd.TransporterRegId != null
                       && o.OrderDate >= start && o.OrderDate < end
-                      && b.PostalCode == hubPin
+                      && (hubPin == null || b.PostalCode == hubPin)
                 select new
                 {
                     sd.ShippingStatus,
@@ -676,26 +688,30 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-        public async Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int hubId)
+        public async Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int? hubId)
         {
             var start = new DateTime(year, month, 1);
             var end = start.AddMonths(1);
 
-            var hubPin = await _context.HubDetails
-                .Where(h => h.HubId == hubId)
-                .Select(h => h.Pin)
-                .FirstOrDefaultAsync();
+            string? hubPin = null;
+            if (hubId.HasValue)
+            {
+                hubPin = await _context.HubDetails
+                    .Where(h => h.HubId == hubId.Value)
+                    .Select(h => h.Pin)
+                    .FirstOrDefaultAsync();
 
-            if (string.IsNullOrWhiteSpace(hubPin))
-                return new HubMonthlyCountsDto { Month = month, Year = year };
+                if (string.IsNullOrWhiteSpace(hubPin))
+                    return new HubMonthlyCountsDto { Month = month, Year = year };
 
-            hubPin = hubPin.Trim();
+                hubPin = hubPin.Trim();
+            }
 
             var rows = await (
                 from so in _context.SenderOrders
                 where so.TransporterRegId != null
                       && so.CreatedAt >= start && so.CreatedAt < end
-                      && so.PickupPincode == hubPin
+                      && (hubPin == null || so.PickupPincode == hubPin)
                 select new
                 {
                     so.DeliveryStatus,
@@ -719,7 +735,7 @@ namespace mytown.DataAccess.Repositories
             };
         }
     }
-    }
+}
 
 
 

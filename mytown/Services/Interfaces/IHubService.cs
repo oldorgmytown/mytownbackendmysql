@@ -9,8 +9,8 @@ namespace mytown.Services.Interfaces
     public interface IHubService
     {
         Task<List<HubAddressDto>> GetAllHubLocationsAsync();
-        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int hubId, int? month, int? year);
-        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int hubId, int? month, int? year);
+        Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? hubId, int? month, int? year);
+        Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? hubId, int? month, int? year);
 
         Task<HubStoreVerificationDto?> GetVerificationAsync(int storeOrderId);
         Task<(bool Success, string? Error, HubStoreVerificationDto? Data)> SaveVerificationAsync(
@@ -25,8 +25,8 @@ namespace mytown.Services.Interfaces
         Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId);
 
         //summary counts
-        Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int hubId);
-        Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int hubId);
+        Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int? hubId);
+        Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int? hubId);
         // Task<(bool Success, string? Error)> SendTransporterHubEmailAsync(string transporteremail, string trasnporteremail, string packagedimensions, [FromBody] HubLoginDto dto);
     }
 }
