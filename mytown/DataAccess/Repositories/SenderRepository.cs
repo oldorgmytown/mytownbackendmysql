@@ -5,6 +5,7 @@ using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using Razorpay.Api;
 using Stripe;
 
 namespace mytown.DataAccess.Implementations
@@ -565,77 +566,59 @@ GetTransporterByIdAsync(int transporterId)
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<SenderOrdersTabDto>>
- GetSenderOrdersAsync(int senderId, string orderStatus)
+        public async Task<List<SenderOrdersTabDto>> GetSenderOrdersAsync(int senderId, string orderStatus)
         {
             var today = DateTime.UtcNow.Date;
 
             var query =
                 from o in _context.SenderOrders
-
                 where o.SenderRegId == senderId
-               && o.TransporterRegId != null
+                      && o.TransporterRegId != null
 
                 join t in _context.TransporterRegisters
-                on o.TransporterRegId equals t.TransporterRegId
-                into transporterGroup
-
+                    on o.TransporterRegId equals t.TransporterRegId
+                    into transporterGroup
                 from transporter in transporterGroup.DefaultIfEmpty()
 
-                where o.SenderRegId == senderId
+                    // LEFT JOIN travel plan for the arrival date
+                join tp in _context.TransporterTravelPlans
+                    on o.TransporterPlanId equals tp.PlanId
+                    into planGroup
+                from plan in planGroup.DefaultIfEmpty()
 
                 select new SenderOrdersTabDto
                 {
                     SenderOrderId = o.SenderOrderId,
-
                     ProductName = o.ProductName,
-
                     BookingDate = o.CreatedAt,
-
                     PickupLocation = o.PickupAddress,
-
                     DeliveryLocation = o.ReceiverAddress,
-
                     DeliveryStatus = o.DeliveryStatus,
 
                     OrderType =
                         o.DeliveryStatus == "Delivered"
                             ? "Delivered"
                             : o.DeliveryStatus == "Pending"
-                                ? (o.CreatedAt.Date == today
-                                    ? "New"
-                                    : "Pending")
-                                : "InProgress",
+                                ? (o.CreatedAt.Date == today ? "New" : "Pending")
+                                : "InProgress",   // includes Package Reached Hub / Handed Over
 
-                    TransporterName =
-                        transporter != null
-                            ? transporter.TransporterName
-                            : null,
+                    TransporterName = transporter != null ? transporter.TransporterName : null,
+                    TransporterPhone = transporter != null ? transporter.PhoneNumber : null,
+                    TrackingId = o.TrackingId,
 
-                    TransporterPhone =
-                        transporter != null
-                            ? transporter.PhoneNumber
-                            : null,
-                    TrackingId = o.TrackingId
+                    EstDeliveryDate = plan != null ? plan.ArrivalDate : (DateTime?)null
                 };
 
-            // NEW = Today's pending orders
             if (orderStatus == "New")
             {
                 query = query.Where(x =>
                     x.DeliveryStatus == "Pending" &&
                     x.BookingDate.Date == today);
             }
-
-            // PENDING = Previous pending orders
             else if (orderStatus == "Pending")
             {
-                query = query.Where(x =>
-                    x.DeliveryStatus == "Pending");
+                query = query.Where(x => x.DeliveryStatus == "Pending");
             }
-
-            //sender In Progress status error fixed - changed to In Progress from InProgress
-
             else if (orderStatus == "In Progress")
             {
                 query = query.Where(x =>
@@ -643,46 +626,18 @@ GetTransporterByIdAsync(int transporterId)
                     x.DeliveryStatus.ToLower() == "inprogress" ||
                     x.DeliveryStatus.ToLower() == "in progress" ||
                     x.DeliveryStatus.ToLower() == "intransit" ||
-                    x.DeliveryStatus.ToLower() == "in transit");
+                    x.DeliveryStatus.ToLower() == "in transit" ||
+                    x.DeliveryStatus.ToLower() == "package reached hub" ||
+                    x.DeliveryStatus.ToLower() == "handed over");
             }
-
-            // DELIVERED
             else if (orderStatus == "Delivered")
             {
-                query = query.Where(x =>
-                    x.DeliveryStatus == "Delivered");
+                query = query.Where(x => x.DeliveryStatus == "Delivered");
             }
 
             return await query
                 .OrderByDescending(x => x.BookingDate)
                 .ToListAsync();
-        }
-        public async Task<SenderRegisterDto?> GetSenderProfileAsync(int senderRegId)
-        {
-            return await _context.SenderRegisters
-                .Where(x => x.SenderRegId == senderRegId)
-                .Select(x => new SenderRegisterDto
-                {
-                    SenderId = x.SenderRegId,
-                    SenderName = x.SenderName,
-                    Email = x.Email,
-
-                    // Usually don't expose password in API
-                    Password = "",
-
-                    Address = x.Address,
-                    Town = x.Town,
-                    City = x.City,
-                    State = x.State,
-                    Country = x.Country,
-                    PostalCode = x.PostalCode,
-                    PhoneNumber = x.PhoneNumber,
-
-                    Status = x.Status,
-                    SenderRegDate = x.SenderRegDate,
-                    IsEmailVerified = x.IsEmailVerified
-                })
-                .FirstOrDefaultAsync();
         }
 
         public async Task<bool> UpdateSenderProfileAsync(
