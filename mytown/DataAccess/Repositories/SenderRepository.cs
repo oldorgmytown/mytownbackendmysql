@@ -297,7 +297,7 @@ namespace mytown.DataAccess.Implementations
                 .FirstOrDefaultAsync(x => x.PlanId == dto.TransporterPlanId);
 
             decimal transportCharge = order.TransporterCharges ??  0m;
-            decimal gstAmount = transportCharge * 0.18m;
+            decimal gstAmount = transportCharge * 0m; // changed to 0% GST as per new requirement
             decimal totalAmount = transportCharge + gstAmount;
 
             string startLocation =
