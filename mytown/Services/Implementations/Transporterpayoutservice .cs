@@ -83,6 +83,8 @@ public class TransporterPayoutService : ITransporterPayoutService
         var payout = new TransporterPayout
         {
             StoreOrderId = storeOrderId,
+            SenderOrderId = null,
+            OrderType = "StoreOrder",
             TransporterRegId = payoutDetails.TransporterRegId,
             BeneficiaryId = payoutDetails.BeneficiaryId,
             Amount = payoutDetails.Amount,
