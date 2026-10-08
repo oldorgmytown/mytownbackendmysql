@@ -564,7 +564,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
                 x.StoreOrder.StoreId == storeId &&
                 x.Shipping != null &&
                 (x.Shipping.ShippingStatus == "In Progress" ||
-                x.Shipping.ShippingStatus == "Ready to Ship"));
+                x.Shipping.ShippingStatus == "Ready to Ship" || x.Shipping.ShippingStatus == "Package Reached Hub" ||
+             x.Shipping.ShippingStatus == "Handed Over"));
         if (!string.IsNullOrEmpty(search))
         {
             query = query.Where(x =>

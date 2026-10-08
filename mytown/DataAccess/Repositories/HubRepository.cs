@@ -267,6 +267,16 @@ namespace mytown.DataAccess.Repositories
             v.HubStatus = GetHubStatus(v);       // stored in hub_status
             v.UpdatedAt = DateTime.UtcNow;
 
+            var shipping = await _context.ShippingDetails
+        .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
+
+            if (shipping != null && v.HubStatus != "New")
+            {
+                shipping.ShippingStatus = v.HubStatus;   // "Package Reached Hub" / "Handed Over"
+            }
+
+            
+
             await _context.SaveChangesAsync();
             return ToDto(v);
         }
@@ -326,6 +336,15 @@ namespace mytown.DataAccess.Repositories
 
             v.HubStatus = GetSenderHubStatus(v);   // stored in hub_status
             v.UpdatedAt = DateTime.UtcNow;
+
+            // Keep sender_orders.delivery_status in step with the hub status
+            var senderOrder = await _context.SenderOrders
+                .FirstOrDefaultAsync(s => s.SenderOrderId == senderOrderId);
+
+            if (senderOrder != null && v.HubStatus != "New")
+            {
+                senderOrder.DeliveryStatus = v.HubStatus;
+            }
 
             await _context.SaveChangesAsync();
             return ToSenderDto(v);

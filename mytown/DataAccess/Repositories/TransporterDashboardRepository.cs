@@ -512,7 +512,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 {
 
                     if (dto.NewStatus == "PickedUp" &&
-           shipping.ShippingStatus != "Ready to Ship")
+           shipping.ShippingStatus != "Handed Over")
                     {
                         return false;
                     }
