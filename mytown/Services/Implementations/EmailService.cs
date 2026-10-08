@@ -2734,6 +2734,17 @@ public class EmailService : IEmailService
         }
     }
 
+    private static string BuildPickupFullAddress(SenderOrderConfirmationDto dto)
+{
+    string?[] parts = dto.HubAddress != null
+        ? new[] { dto.HubAddress.HubName, dto.HubAddress.AddressLine, dto.HubAddress.Town, dto.HubAddress.City, dto.HubAddress.State, dto.HubAddress.Country, dto.HubAddress.Pin }
+        : new[] { dto.PickupAddress, dto.PickupTown, dto.PickupCity, dto.PickupState, dto.PickupCountry };
+
+    return string.Join(", ", parts
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p!)));
+}
+
     private string BuildSenderOrderConfirmationTemplate(
         string senderName,
         SenderOrderConfirmationDto dto)
@@ -2879,7 +2890,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
               <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {WebUtility.HtmlEncode(dto.PickupAddress)}
+                {BuildPickupFullAddress(dto)}
               </div>
             </td>
           </tr>
@@ -3334,7 +3345,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
               <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {WebUtility.HtmlEncode(dto.PickupAddress)}
+                {BuildPickupFullAddress(dto)}
               </div>
             </td>
           </tr>
@@ -4120,34 +4131,45 @@ public class EmailService : IEmailService
         }
     }
 
-    private string BuildHubPackageReadyTemplate(string transporterName, string packageSummary, HubLoginDto dto)
-    {
-        var fullAddress = string.Join(", ",
-            new[] { dto.AddressLine, dto.Town, dto.City, dto.State, dto.Country, dto.Pin }
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .Select(p => WebUtility.HtmlEncode(p)));
+// File: EmailService.cs
+private string BuildHubPackageReadyTemplate(string transporterName, string packageSummary, HubLoginDto dto)
+{
+    var fullAddress = string.Join(", ",
+        new[] { dto.AddressLine, dto.Town, dto.City, dto.State, dto.Country, dto.Pin }
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p)));
 
-        var font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
+    var font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
 
-        return $@"<!DOCTYPE html>
+    var safeTransporter = WebUtility.HtmlEncode(transporterName ?? string.Empty);
+    var safeHubName = WebUtility.HtmlEncode(dto.HubName ?? string.Empty);
+    var safePhone = WebUtility.HtmlEncode(dto.Phone ?? string.Empty);
+    var safeEmail = WebUtility.HtmlEncode(dto.HubEmail ?? string.Empty);
+    var safePackage = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(packageSummary) ? "-" : packageSummary);
+
+    return $@"<!DOCTYPE html>
 <html lang='en'>
 <head>
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>Package Ready for Pickup - ITISMYTOWN</title>
 </head>
-<body style='margin:0;padding:0;background:#FAFBFC;{font}'>
-<table width='100%' cellpadding='0' cellspacing='0' border='0' bgcolor='#FAFBFC'>
-<tr><td align='center'>
-<table width='600' cellpadding='0' cellspacing='0' border='0' style='max-width:600px;width:100%;background:#FAFBFC;'>
+<body style='margin:0;padding:0;background:#F3F5F8;{font}'>
+<table width='100%' cellpadding='0' cellspacing='0' border='0' bgcolor='#F3F5F8'>
+<tr><td align='center' style='padding:24px 12px;'>
 
+<table width='600' cellpadding='0' cellspacing='0' border='0'
+       style='max-width:600px;width:100%;background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'>
+
+  <!-- ===== HEADER (LOGO) ===== -->
   <tr>
-    <td align='center' style='padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#fff;'>
+    <td align='center' style='padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#FFFFFF;'>
       <img src='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png'
            alt='ITISMYTOWN' height='55' style='height:55px;width:auto;display:block;margin:0 auto;' />
     </td>
   </tr>
 
+  <!-- ===== BANNER ===== -->
   <tr>
     <td align='center' style='padding:0;background:#FAFBFC;'>
       <img src='https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg'
@@ -4156,85 +4178,121 @@ public class EmailService : IEmailService
     </td>
   </tr>
 
+  <!-- ===== GREETING ===== -->
   <tr>
-    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;background:#fff;'>
-      <p style='color:#000;font-size:16px;font-weight:700;line-height:1.5;margin:0 0 8px 0;{font}'>
-        Hello {WebUtility.HtmlEncode(transporterName ?? string.Empty)},
+    <td style='padding:28px 30px 8px 30px;background:#FFFFFF;'>
+      <table cellpadding='0' cellspacing='0' border='0' style='margin-bottom:16px;'>
+        <tr>
+          <td style='background:#DCFCE7;color:#166534;font-size:12px;font-weight:600;
+                     padding:6px 14px;border-radius:99px;letter-spacing:0.04em;text-transform:uppercase;{font}'>
+            &#10003;&nbsp; Ready for Pickup
+          </td>
+        </tr>
+      </table>
+      <p style='color:#000000;font-size:20px;font-weight:700;line-height:1.4;margin:0 0 8px 0;{font}'>
+        Hello {safeTransporter},
       </p>
-      <p style='color:#585858;font-size:16px;font-weight:400;line-height:1.5;margin:0;{font}'>
-        Your package has reached the hub and is ready for pickup. Please collect it from the hub below.
+      <p style='color:#585858;font-size:15px;font-weight:400;line-height:1.6;margin:0;{font}'>
+        Your package has reached the hub and is ready to be picked up.
+        Please collect it from the hub details given below.
       </p>
     </td>
   </tr>
 
+  <!-- ===== PACKAGE DETAILS ===== -->
   <tr>
-    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;'>
-      <h2 style='color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;{font}'>Package Details</h2>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <div style='color:#000000;font-size:17px;font-weight:600;margin-bottom:12px;{font}'>&#128230;&nbsp; Package Details</div>
       <table width='100%' cellpadding='0' cellspacing='0' border='0'
-             style='border:1px solid #E5E7EB;border-radius:12px;padding:20px;'>
+             style='background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;'>
         <tr>
-          <td style='color:#585858;font-size:14px;font-weight:500;{font}'>Dimensions</td>
-          <td align='right' style='color:#000;font-size:14px;font-weight:600;{font}'>
-            {WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(packageSummary) ? "-" : packageSummary)}
+          <td style='padding:16px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Dimensions</td>
+          <td align='right' style='padding:16px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safePackage}
           </td>
         </tr>
       </table>
     </td>
   </tr>
 
+  <!-- ===== PICKUP FROM HUB ===== -->
   <tr>
-    <td style='padding:24px 30px;border-bottom:1px solid #F1F1F3;'>
-      <h2 style='color:#000;font-size:18px;font-weight:500;margin:0 0 16px 0;{font}'>Pickup From Hub</h2>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <div style='color:#000000;font-size:17px;font-weight:600;margin-bottom:12px;{font}'>&#128205;&nbsp; Pickup From Hub</div>
       <table width='100%' cellpadding='0' cellspacing='0' border='0'
-             style='border:1px solid #E5E7EB;border-radius:12px;padding:20px;'>
+             style='background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;'>
         <tr>
-          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Hub Name</td>
-          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
-            {WebUtility.HtmlEncode(dto.HubName ?? string.Empty)}
+          <td colspan='2' style='padding:18px 20px 6px 20px;'>
+            <div style='color:#14532D;font-size:18px;font-weight:700;line-height:1.4;{font}'>{safeHubName}</div>
           </td>
         </tr>
         <tr>
-          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Phone</td>
-          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
-            {WebUtility.HtmlEncode(dto.Phone ?? string.Empty)}
+          <td colspan='2' style='padding:0 20px 14px 20px;'>
+            <div style='color:#374151;font-size:14px;font-weight:400;line-height:1.6;{font}'>{fullAddress}</div>
           </td>
         </tr>
         <tr>
-          <td style='color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;{font}'>Email</td>
-          <td align='right' style='color:#000;font-size:14px;font-weight:600;padding-bottom:12px;{font}'>
-            {WebUtility.HtmlEncode(dto.HubEmail ?? string.Empty)}
+          <td colspan='2' style='padding:0 20px;'>
+            <div style='height:1px;background:#BBF7D0;'></div>
           </td>
         </tr>
         <tr>
-          <td colspan='2'>
-            <div style='color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;{font}'>Address</div>
-            <div style='color:#000;font-size:14px;font-weight:600;line-height:1.5;{font}'>{fullAddress}</div>
+          <td style='padding:14px 20px 8px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Phone</td>
+          <td align='right' style='padding:14px 20px 8px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safePhone}
+          </td>
+        </tr>
+        <tr>
+          <td style='padding:8px 20px 16px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Email</td>
+          <td align='right' style='padding:8px 20px 16px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safeEmail}
           </td>
         </tr>
       </table>
     </td>
   </tr>
 
+  <!-- ===== NOTE ===== -->
   <tr>
-    <td align='center' style='padding:24px 30px;'>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='background:#FEFCE8;border:1px solid #FDE68A;border-radius:10px;'>
+        <tr>
+          <td style='padding:14px 16px;color:#713F12;font-size:13px;line-height:1.6;{font}'>
+            <strong>Please note:</strong> Carry a valid ID and verify the package before pickup.
+            Contact the hub if you need directions.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ===== BUTTON ===== -->
+  <tr>
+    <td align='center' style='padding:24px 30px 32px 30px;background:#FFFFFF;'>
       <a href='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/my-plans'
-         style='display:inline-block;background:#004481;color:#fff;border:1px solid #004481;border-radius:8px;
-                padding:14px 40px;font-size:16px;font-weight:400;text-decoration:none;text-align:center;{font}'>
+         style='display:inline-block;background:#004481;color:#FFFFFF;border:1px solid #004481;border-radius:8px;
+                padding:14px 44px;font-size:16px;font-weight:600;text-decoration:none;text-align:center;{font}'>
         View Order
       </a>
     </td>
   </tr>
 
+  <!-- ===== FOOTER ===== -->
   <tr>
-    <td style='background:rgba(139,139,139,0.08);padding:20px 30px 24px;' align='center'>
-      <span style='color:#585858;font-size:12px;{font}'>&copy; 2026 itismytown. All rights reserved.</span>
+    <td align='center' style='background:#F3F4F6;padding:20px 30px 24px 30px;'>
+      <div style='color:#6B7280;font-size:12px;line-height:1.6;margin-bottom:6px;{font}'>
+        You&#39;re receiving this email because you&#39;re a transporter on our platform.
+      </div>
+      <div style='color:#6B7280;font-size:12px;{font}'>&copy; 2026 itismytown. All rights reserved.</div>
     </td>
   </tr>
 
 </table>
+
 </td></tr>
 </table>
 </body>
 </html>";
-    }
+}
 }
