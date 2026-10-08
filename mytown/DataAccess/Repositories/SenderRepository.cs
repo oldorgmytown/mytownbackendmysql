@@ -137,7 +137,8 @@ namespace mytown.DataAccess.Implementations
                 ReceiverCity = dto.ReceiverCity,
                 ReceiverState = dto.ReceiverState,
                 ReceiverCountry = dto.ReceiverCountry,
-                ReceiverPincode = dto.ReceiverPincode
+                ReceiverPincode = dto.ReceiverPincode,
+                TransporterCharges = 50m, // Default transporter charges
             };
 
             _context.SenderOrders.Add(order);
@@ -579,11 +580,7 @@ GetTransporterByIdAsync(int transporterId)
                     into transporterGroup
                 from transporter in transporterGroup.DefaultIfEmpty()
 
-                    // LEFT JOIN travel plan for the arrival date
-                join tp in _context.TransporterTravelPlans
-                    on o.TransporterPlanId equals tp.PlanId
-                    into planGroup
-                from plan in planGroup.DefaultIfEmpty()
+                   
 
                 select new SenderOrdersTabDto
                 {
@@ -605,7 +602,10 @@ GetTransporterByIdAsync(int transporterId)
                     TransporterPhone = transporter != null ? transporter.PhoneNumber : null,
                     TrackingId = o.TrackingId,
 
-                    EstDeliveryDate = plan != null ? plan.ArrivalDate : (DateTime?)null
+                    EstDeliveryDate = _context.TransporterTravelPlans
+        .Where(tp => tp.PlanId == o.TransporterPlanId)
+        .Select(tp => (DateTime?)tp.ArrivalDate)
+        .FirstOrDefault()
                 };
 
             if (orderStatus == "New")
