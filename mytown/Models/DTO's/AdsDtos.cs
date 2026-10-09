@@ -33,4 +33,11 @@ namespace mytown.Models.DTO_s
         public string RazorpayPaymentId { get; set; } = string.Empty;
         public string RazorpaySignature { get; set; } = string.Empty;
     }
+    
+    public class AdsStripeConfirmDto
+    {
+        public int BusRegId { get; set; }
+        public int OrderId { get; set; }
+        public string PaymentIntentId { get; set; } = string.Empty;
+    }
 }

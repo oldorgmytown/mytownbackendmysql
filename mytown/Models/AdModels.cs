@@ -26,14 +26,22 @@ namespace mytown.Models
         [Column("total", TypeName = "decimal(12,2)")]
         public decimal Total { get; set; }
 
-        [Required]
         [StringLength(100)]
         [Column("razorpay_order_id")]
-        public string RazorpayOrderId { get; set; } = string.Empty;
+        public string? RazorpayOrderId { get; set; }
 
         [StringLength(100)]
         [Column("razorpay_payment_id")]
         public string? RazorpayPaymentId { get; set; }
+
+        [Required]
+        [StringLength(20)]
+        [Column("provider")]
+        public string Provider { get; set; } = "Razorpay";
+
+        [StringLength(100)]
+        [Column("stripe_payment_intent_id")]
+        public string? StripePaymentIntentId { get; set; }
 
         [Required]
         [StringLength(20)]
