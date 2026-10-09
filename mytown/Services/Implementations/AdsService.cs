@@ -20,8 +20,8 @@ namespace mytown.Services.Implementations
 
     public class AdsService : IAdsService
     {
-        private const decimal FeeRate = 0.05m;
-        private const decimal GstRate = 0.18m;
+        private const decimal FeeRate = 0m;   // platform fee removed
+        private const decimal GstRate = 0m;   // GST removed
         private const decimal PricePerDay = 500m;
         private static readonly HashSet<string> ValidTypes = new() { "offer", "product", "video", "store" };
 
@@ -208,7 +208,8 @@ namespace mytown.Services.Implementations
                 if ((end - start).TotalDays > days + 1)
                     throw new AdsException("Promotion dates are longer than the paid duration.");
 
-                promo.Status = "Pending";
+                promo.Status = "Active";
+                promo.ApprovedAt = DateTime.UtcNow;
                 promo.PaymentOrderId = order.AdPaymentOrderId;
                 promo.TransactionId = order.RazorpayPaymentId ?? order.StripePaymentIntentId;
                 promo.Budget = order.Budget;
