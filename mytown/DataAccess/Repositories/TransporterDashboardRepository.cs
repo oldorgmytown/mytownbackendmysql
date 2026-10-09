@@ -16,6 +16,7 @@ namespace mytown.DataAccess.Repositories
         private readonly IEmailService _emailService;
         private readonly IStorePayoutRepository _storePayoutRepository;
         private readonly ISenderTransporterPayoutService _payoutService;
+        private readonly ILogger<TransporterDashboardRepository> _logger;
 
         public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService)
         {
@@ -962,7 +963,26 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             // Trigger payout AFTER the status update is successfully saved
             if (deliveryStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase))
             {
-                await _payoutService.CreatePayoutAsync(senderOrderId);
+                string? payoutWarning = null;
+                try
+                {
+                    var payoutResult = await _payoutService.CreatePayoutAsync(senderOrderId);
+
+                    if (payoutResult == null || !payoutResult.Success)
+                    {
+                        _logger.LogWarning(
+                            "Transporter payout failed for SenderOrderId {SenderOrderId}: {Message}",
+                            senderOrderId, payoutResult?.Message ?? "No result returned");
+                    }
+                }
+               
+
+               
+                catch (Exception payoutEx)
+                {
+                    _logger.LogError(payoutEx, "Payout threw for SenderOrderId {Id}", senderOrderId);
+                    payoutWarning = payoutEx.Message + " | " + payoutEx.InnerException?.Message;
+                }
             }
 
             return true;
