@@ -428,8 +428,7 @@ namespace mytown.Services.Implementations
                 throw new AdsException("Duration must be between 1 and 365 days.");
 
             var secret = _config["Stripe:SecretKey"]?.Trim();
-            var pub = _config["Stripe:PublishableKey"]?.Trim();
-            if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(pub))
+            if (string.IsNullOrEmpty(secret))
                 throw new AdsException("Card payments are not configured on the server.");
 
             var price = Price(dto.DurationDays * PricePerDay);
@@ -474,7 +473,6 @@ namespace mytown.Services.Implementations
             {
                 orderId = entity.AdPaymentOrderId,
                 clientSecret = pi.ClientSecret,
-                publishableKey = pub,
                 budget = price.Budget, fee = price.Fee, gst = price.Gst, total = price.Total
             };
         }
