@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
+using Serilog.Core;
 using Stripe;
 
 namespace mytown.DataAccess.Repositories
@@ -18,13 +19,15 @@ namespace mytown.DataAccess.Repositories
         private readonly ISenderTransporterPayoutService _payoutService;
         private readonly ILogger<TransporterDashboardRepository> _logger;
 
-        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService, ILogger<TransporterDashboardRepository> logger)
+            
         {
             _context = context;
             _orderRepository = orderRepo;
             _emailService = emailService;
             _storePayoutRepository = storePayoutRepository;
             _payoutService = payoutService;
+            _logger = logger; 
         }
 
         // -------------------------------------------------------------------------
