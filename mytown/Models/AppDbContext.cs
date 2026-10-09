@@ -175,7 +175,7 @@ namespace mytown.Models
                     .HasIndex(m => m.SentTime);
 
                 modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.RazorpayOrderId).IsUnique();
-                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.RazorpayPaymentId).IsUnique();
+                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.StripePaymentIntentId).IsUnique();
                 modelBuilder.Entity<AdPromotion>().HasIndex(p => p.PaymentOrderId).IsUnique();
                 modelBuilder.Entity<AdPromotion>().HasIndex(p => p.BusRegId);
 

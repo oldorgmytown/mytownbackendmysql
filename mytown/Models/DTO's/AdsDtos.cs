@@ -17,6 +17,7 @@ namespace mytown.Models.DTO_s
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int? OrderId { get; set; }
+        public int? Id { get; set; }   // set when re-saving an existing draft
     }
 
     public class AdsPaymentOrderRequestDto
@@ -32,5 +33,12 @@ namespace mytown.Models.DTO_s
         public string RazorpayOrderId { get; set; } = string.Empty;
         public string RazorpayPaymentId { get; set; } = string.Empty;
         public string RazorpaySignature { get; set; } = string.Empty;
+    }
+    
+    public class AdsStripeConfirmDto
+    {
+        public int BusRegId { get; set; }
+        public int OrderId { get; set; }
+        public string PaymentIntentId { get; set; } = string.Empty;
     }
 }
