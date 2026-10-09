@@ -88,7 +88,7 @@ namespace mytown.Controllers
                     : BadRequest(new { message = result.Error });
 
             // 2. Package not verified: nothing more to do
-            if (!dto.PackageVerified)
+            if (!dto.TransporterVerified)
                 return Ok(result.Data);
 
             // 3. Package verified: trigger payout

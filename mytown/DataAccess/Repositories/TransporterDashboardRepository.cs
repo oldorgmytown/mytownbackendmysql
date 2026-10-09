@@ -538,6 +538,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     if (dto.NewStatus == "Delivered")
                     {
                         shipping.DeliveredDate = DateTime.UtcNow;
+                        
                     }
                 }
             }
