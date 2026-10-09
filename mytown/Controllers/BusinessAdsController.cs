@@ -72,6 +72,11 @@ namespace mytown.Controllers
 public Task<IActionResult> DeletePromotion([FromQuery] int busRegId, [FromQuery] int id)
     => Run(() => _service.DeletePromotionAsync(busRegId, id));
 
+        [AllowAnonymous]
+        [HttpGet("getStoreAds")]
+        public Task<IActionResult> GetStoreAds([FromQuery] int busRegId)
+            => Run(() => _service.GetStoreAdsAsync(busRegId));
+
         [HttpGet("getProducts")]
         public Task<IActionResult> GetProducts([FromQuery] int busRegId)
             => Run(() => _service.GetProductsAsync(busRegId));
