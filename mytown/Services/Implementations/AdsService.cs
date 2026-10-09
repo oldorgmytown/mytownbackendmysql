@@ -8,6 +8,7 @@ using mytown.Services.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Stripe;
 
 namespace mytown.Services.Implementations
 {
@@ -19,8 +20,8 @@ namespace mytown.Services.Implementations
 
     public class AdsService : IAdsService
     {
-        private const decimal FeeRate = 0.05m;
-        private const decimal GstRate = 0.18m;
+        private const decimal FeeRate = 0m;   // platform fee removed
+        private const decimal GstRate = 0m;   // GST removed
         private const decimal PricePerDay = 500m;
         private static readonly HashSet<string> ValidTypes = new() { "offer", "product", "video", "store" };
 
@@ -167,6 +168,26 @@ namespace mytown.Services.Implementations
 
             if (isDraft)
             {
+                if (dto.Id.HasValue)
+                {
+                    var existing = await _db.AdPromotions.FirstOrDefaultAsync(p =>
+                        p.PromotionId == dto.Id && p.BusRegId == dto.BusRegId && p.Status == "Draft");
+                    if (existing == null) throw new AdsException("Draft not found.");
+
+                    existing.Type = type;
+                    existing.Title = title;
+                    existing.ContentJson = contentJson;
+                    existing.AudienceJson = audienceJson;
+                    existing.Thumbnail = promo.Thumbnail;
+                    existing.MediaUrl = promo.MediaUrl;
+                    existing.Placement = placement;
+                    existing.DurationDays = days;
+                    existing.StartDate = start;
+                    existing.EndDate = end;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    await _db.SaveChangesAsync();
+                    return ToDto(existing);
+                }
                 promo.Status = "Draft";
             }
             else
@@ -187,9 +208,10 @@ namespace mytown.Services.Implementations
                 if ((end - start).TotalDays > days + 1)
                     throw new AdsException("Promotion dates are longer than the paid duration.");
 
-                promo.Status = "Pending";
+                promo.Status = "Active";
+                promo.ApprovedAt = DateTime.UtcNow;
                 promo.PaymentOrderId = order.AdPaymentOrderId;
-                promo.TransactionId = order.RazorpayPaymentId;
+                promo.TransactionId = order.RazorpayPaymentId ?? order.StripePaymentIntentId;
                 promo.Budget = order.Budget;
                 promo.Fee = order.Fee;
                 promo.Gst = order.Gst;
@@ -364,6 +386,34 @@ namespace mytown.Services.Implementations
         }
 
         // ---------------- lookups for the wizard ----------------
+                public async Task<object?> DeletePromotionAsync(int busRegId, int promotionId)
+        {
+            var p = await _db.AdPromotions.FirstOrDefaultAsync(x =>
+                x.PromotionId == promotionId && x.BusRegId == busRegId);
+            if (p == null) throw new AdsException("Promotion not found.");
+            if (p.Status != "Draft")
+                throw new AdsException("Only drafts can be deleted. Paid promotions cannot be removed.");
+
+            _db.AdPromotions.Remove(p);
+            await _db.SaveChangesAsync();
+            return new { deleted = true };
+        }
+
+        public async Task<object?> GetStoreAdsAsync(int busRegId)
+        {
+            var now = DateTime.UtcNow;
+            var list = await _db.AdPromotions
+                .AsNoTracking()
+                .Where(p => p.BusRegId == busRegId
+                         && p.Status == "Active"
+                         && p.StartDate <= now
+                         && p.EndDate >= now)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            return list.Select(ToDto).ToList();
+        }
 
         public async Task<object?> GetProductsAsync(int busRegId)
         {
@@ -418,6 +468,90 @@ namespace mytown.Services.Implementations
                     image
                 };
             }).ToList();
+        }
+
+                public async Task<object?> CreateStripeOrderAsync(AdsPaymentOrderRequestDto dto)
+        {
+            await EnsureBusinessAsync(dto.BusRegId);
+            if (dto.DurationDays < 1 || dto.DurationDays > 365)
+                throw new AdsException("Duration must be between 1 and 365 days.");
+
+            var secret = _config["Stripe:SecretKey"]?.Trim();
+            if (string.IsNullOrEmpty(secret))
+                throw new AdsException("Card payments are not configured on the server.");
+
+            var price = Price(dto.DurationDays * PricePerDay);
+            var amountPaise = Convert.ToInt64(Math.Round(price.Total * 100m));
+
+            var entity = new AdPaymentOrder
+            {
+                BusRegId = dto.BusRegId, Budget = price.Budget, Fee = price.Fee,
+                Gst = price.Gst, Total = price.Total, Status = "Created",
+                Provider = "Stripe", CreatedAt = DateTime.UtcNow
+            };
+            _db.AdPaymentOrders.Add(entity);
+            await _db.SaveChangesAsync();
+
+            PaymentIntent pi;
+            try
+            {
+                StripeConfiguration.ApiKey = secret;
+                pi = await new PaymentIntentService().CreateAsync(new PaymentIntentCreateOptions
+                {
+                    Amount = amountPaise,
+                    Currency = "inr",
+                    PaymentMethodTypes = new List<string> { "card" },
+                    Description = $"Ad promotion order {entity.AdPaymentOrderId}",
+                    Metadata = new Dictionary<string, string>
+                    {
+                        ["adOrderId"] = entity.AdPaymentOrderId.ToString(),
+                        ["busRegId"] = dto.BusRegId.ToString()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Stripe intent failed for business {BusRegId}", dto.BusRegId);
+                throw new AdsException("Could not start the card payment. Please try again.");
+            }
+
+            entity.StripePaymentIntentId = pi.Id;
+            await _db.SaveChangesAsync();
+
+            return new
+            {
+                orderId = entity.AdPaymentOrderId,
+                clientSecret = pi.ClientSecret,
+                budget = price.Budget, fee = price.Fee, gst = price.Gst, total = price.Total
+            };
+        }
+
+        public async Task<object?> ConfirmStripePaymentAsync(AdsStripeConfirmDto dto)
+        {
+            var order = await _db.AdPaymentOrders.FirstOrDefaultAsync(o =>
+                o.AdPaymentOrderId == dto.OrderId && o.BusRegId == dto.BusRegId && o.Provider == "Stripe");
+            if (order == null) throw new AdsException("Payment order not found.");
+
+            if (order.Status == "Paid")
+            {
+                if (order.StripePaymentIntentId == dto.PaymentIntentId)
+                    return new { transactionId = order.StripePaymentIntentId, status = "SUCCESS" };
+                throw new AdsException("This order is already paid.");
+            }
+            if (order.StripePaymentIntentId != dto.PaymentIntentId)
+                throw new AdsException("Payment order mismatch.");
+
+            StripeConfiguration.ApiKey = _config["Stripe:SecretKey"]?.Trim();
+            var pi = await new PaymentIntentService().GetAsync(dto.PaymentIntentId);
+
+            if (pi.Status != "succeeded") throw new AdsException("Payment was not completed.");
+            if (pi.AmountReceived != Convert.ToInt64(Math.Round(order.Total * 100m)))
+                throw new AdsException("Paid amount does not match the order.");
+
+            order.Status = "Paid";
+            order.PaidAt = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+            return new { transactionId = pi.Id, status = "SUCCESS" };
         }
 
         public async Task<object?> GetStoreInfoAsync(int busRegId)

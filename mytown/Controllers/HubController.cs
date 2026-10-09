@@ -19,14 +19,16 @@ namespace mytown.Controllers
         private readonly ILogger<HubController> _logger;
         private readonly IEmailService _emailService;
         private readonly ITransporterDashboardService _service;
+        private readonly IStorePayoutService _storePayoutService;
 
         public HubController(IHubService hubService,
-                             ILogger<HubController> logger, IEmailService emailService, ITransporterDashboardService service)
+                             ILogger<HubController> logger, IEmailService emailService, ITransporterDashboardService service, IStorePayoutService storePayoutService)
         {
             _hubService = hubService ?? throw new ArgumentNullException(nameof(hubService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _service = service ?? throw new ArgumentNullException(nameof(service));
+            _storePayoutService = storePayoutService ?? throw new ArgumentNullException(nameof(storePayoutService));
         }
 
         // GET: api/hub/locations
@@ -75,8 +77,9 @@ namespace mytown.Controllers
         // PUT: api/hub/store-orders/490/verification
         [HttpPut("save-store-orders_verification")]
         public async Task<IActionResult> SaveVerification(
-            int storeOrderId, [FromBody] SaveHubVerificationDto dto)
+    int storeOrderId, [FromBody] SaveHubVerificationDto dto)
         {
+            // 1. Save all verification checks first
             var result = await _hubService.SaveVerificationAsync(storeOrderId, dto);
 
             if (!result.Success)
@@ -84,7 +87,32 @@ namespace mytown.Controllers
                     ? NotFound(new { message = result.Error })
                     : BadRequest(new { message = result.Error });
 
-            return Ok(result.Data);
+            // 2. Package not verified: nothing more to do
+            if (!dto.PackageVerified)
+                return Ok(result.Data);
+
+            // 3. Package verified: trigger payout
+            try
+            {
+                var payoutResult = await _storePayoutService.CreatePayoutAsync(storeOrderId);
+
+                return Ok(new
+                {
+                    verification = result.Data,
+                    payoutTriggered = payoutResult.Success,
+                    payoutError = payoutResult.Message
+                });
+            }
+            catch (Exception ex)
+            {
+                // Verification is already saved, so don't fail the whole request
+                return Ok(new
+                {
+                    verification = result.Data,
+                    payoutTriggered = false,
+                    payoutError = ex.Message
+                });
+            }
         }
 
         // GET: api/hub/sender-orders/12/verification

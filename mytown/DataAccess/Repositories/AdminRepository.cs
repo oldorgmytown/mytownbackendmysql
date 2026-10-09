@@ -141,40 +141,36 @@ namespace mytown.DataAccess.Repositories
         {
             var allStatuses = new[] { "incomplete", "submitted", "approved", "rejected", "blocked" };
 
-            var businessProfiles = await _context.BusinessProfiles
-                .Select(bp => new
-                {
-                    bp.ProfileStatus,
-                    bp.BusCatId,
-                    bp.BusServId
-                })
+            // Stores: business profiles that have a category
+            var storeGroups = await _context.BusinessProfiles
+                .Where(bp => bp.BusCatId >= 1)
+                .GroupBy(bp => (bp.ProfileStatus ?? "").ToLower())
+                .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var storeCounts = allStatuses.ToDictionary(
-                status => status,
-                status => businessProfiles.Count(bp =>
-                    bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
-                    bp.BusCatId >= 1
-                )
-            );
+            // Services: from the service_profiles table
+            var serviceGroups = await _context.ServiceProfiles
+                .GroupBy(sp => (sp.Status ?? "").ToLower())
+                .Select(g => new { Status = g.Key, Count = g.Count() })
+                .ToListAsync();
 
-            var serviceCounts = allStatuses.ToDictionary(
-                status => status,
-                status => businessProfiles.Count(bp =>
-                    bp.ProfileStatus.Equals(status, StringComparison.OrdinalIgnoreCase) &&
-                    bp.BusServId >= 1
-                )
-            );
+            Dictionary<string, int> BuildCounts<T>(IEnumerable<T> groups,
+                Func<T, string> statusSelector, Func<T, int> countSelector)
+            {
+                var lookup = groups.ToDictionary(statusSelector, countSelector);
 
-            var result = new Dictionary<string, Dictionary<string, int>>
+                // Make sure every status is present, even with 0
+                return allStatuses.ToDictionary(
+                    status => status,
+                    status => lookup.TryGetValue(status, out var c) ? c : 0);
+            }
+
+            return new Dictionary<string, Dictionary<string, int>>
     {
-        { "stores", storeCounts },
-        { "services", serviceCounts }
+        { "stores",   BuildCounts(storeGroups,   x => x.Status, x => x.Count) },
+        { "services", BuildCounts(serviceGroups, x => x.Status, x => x.Count) }
     };
-
-            return result;
         }
-
 
         public async Task<bool> UpdateProfileStatusbyAdminAsync(
     int busRegId,
