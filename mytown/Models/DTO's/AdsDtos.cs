@@ -17,6 +17,7 @@ namespace mytown.Models.DTO_s
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int? OrderId { get; set; }
+        public int? Id { get; set; }   // set when re-saving an existing draft
     }
 
     public class AdsPaymentOrderRequestDto

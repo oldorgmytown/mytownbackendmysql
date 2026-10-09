@@ -13,5 +13,6 @@ namespace mytown.Services.Interfaces
         Task<object?> ConfirmStripePaymentAsync(AdsStripeConfirmDto dto);
         Task<object?> GetProductsAsync(int busRegId);
         Task<object?> GetStoreInfoAsync(int busRegId);
+        Task<object?> DeletePromotionAsync(int busRegId, int promotionId);
     }
 }
