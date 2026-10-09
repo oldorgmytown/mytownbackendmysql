@@ -512,9 +512,10 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 {
 
                     if (dto.NewStatus == "PickedUp" &&
-           shipping.ShippingStatus != "Handed Over")
+     shipping.ShippingStatus != "Handed Over")
                     {
-                        return false;
+                        throw new InvalidOperationException(
+                            "You can mark the package as picked up only after the hub has handed it over.");
                     }
 
                     shipping.ShippingStatus = dto.NewStatus switch
@@ -888,6 +889,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             // Prevent duplicate update
             if (order.DeliveryStatus == deliveryStatus)
                 throw new Exception("Status already updated");
+
+            // PickedUp is allowed only after the hub has handed the package over
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(order.DeliveryStatus, "Handed Over", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("You can mark the package as picked up only after the hub has handed it over.");
+            }
 
             // Allow only after pickup date & time
             var pickupTime = DateTime.Parse(order.PickupTime).TimeOfDay;

@@ -358,7 +358,7 @@ namespace mytown.Controllers
                     message = "Delivery status updated successfully"
                 });
             }
-            catch (Exception ex)
+            catch (InvalidOperationException ex)
             {
                 return BadRequest(new
                 {
