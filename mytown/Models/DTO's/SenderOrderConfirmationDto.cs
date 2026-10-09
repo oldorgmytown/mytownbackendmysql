@@ -44,5 +44,7 @@
         // Sender info (needed for transporter email)
         public string SenderName { get; set; }
         public string SenderPhone { get; set; }
+
+        public HubAddressDto? HubAddress { get; set; }
     }
 }

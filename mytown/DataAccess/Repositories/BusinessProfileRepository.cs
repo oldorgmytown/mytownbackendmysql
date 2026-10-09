@@ -62,6 +62,8 @@ namespace mytown.DataAccess.Repositories
                     Businessusername = br.BusinessUsername,
 
                     business_location = bp.BusinessLocation,
+                    BusinessAddress = br.Address1,
+                    PinCode = br.PostalCode,
                     business_tagline = bp.BusinessTagline,
                     business_about = bp.BusinessAbout,
 
