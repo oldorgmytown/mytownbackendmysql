@@ -168,6 +168,26 @@ namespace mytown.Services.Implementations
 
             if (isDraft)
             {
+                if (dto.Id.HasValue)
+                {
+                    var existing = await _db.AdPromotions.FirstOrDefaultAsync(p =>
+                        p.PromotionId == dto.Id && p.BusRegId == dto.BusRegId && p.Status == "Draft");
+                    if (existing == null) throw new AdsException("Draft not found.");
+
+                    existing.Type = type;
+                    existing.Title = title;
+                    existing.ContentJson = contentJson;
+                    existing.AudienceJson = audienceJson;
+                    existing.Thumbnail = promo.Thumbnail;
+                    existing.MediaUrl = promo.MediaUrl;
+                    existing.Placement = placement;
+                    existing.DurationDays = days;
+                    existing.StartDate = start;
+                    existing.EndDate = end;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    await _db.SaveChangesAsync();
+                    return ToDto(existing);
+                }
                 promo.Status = "Draft";
             }
             else
@@ -365,6 +385,18 @@ namespace mytown.Services.Implementations
         }
 
         // ---------------- lookups for the wizard ----------------
+                public async Task<object?> DeletePromotionAsync(int busRegId, int promotionId)
+        {
+            var p = await _db.AdPromotions.FirstOrDefaultAsync(x =>
+                x.PromotionId == promotionId && x.BusRegId == busRegId);
+            if (p == null) throw new AdsException("Promotion not found.");
+            if (p.Status != "Draft")
+                throw new AdsException("Only drafts can be deleted. Paid promotions cannot be removed.");
+
+            _db.AdPromotions.Remove(p);
+            await _db.SaveChangesAsync();
+            return new { deleted = true };
+        }
 
         public async Task<object?> GetProductsAsync(int busRegId)
         {
