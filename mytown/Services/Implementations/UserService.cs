@@ -48,10 +48,13 @@ namespace mytown.Services
             // match EXACT repo return keys
             AddIfExists("user");
             AddIfExists("businessProfile");
+            AddIfExists("serviceProfile");
             AddIfExists("shopper");
             AddIfExists("courier");
             AddIfExists("hasBranches");
             AddIfExists("transporter");
+            AddIfExists("sender");
+            AddIfExists("hub");
 
             return (response, token!, sessionId!);
         }

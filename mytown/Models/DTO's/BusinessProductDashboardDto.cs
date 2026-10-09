@@ -4,7 +4,7 @@
     {
         public int ProductId { get; set; }
         public string ProductName { get; set; }
-
+         public int SkuId { get; set; }
         public string CategoryName { get; set; }
         public string ProductType { get; set; }
         public string Fabric { get; set; }
@@ -20,5 +20,7 @@
         public int NoOfPurchased { get; set; }
 
         public string ProductImage { get; set; }
+        public decimal AverageRating { get; set; }   // 0 when there are no reviews
+        public int TotalReviews { get; set; }
     }
 }
