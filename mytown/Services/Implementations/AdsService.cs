@@ -399,6 +399,22 @@ namespace mytown.Services.Implementations
             return new { deleted = true };
         }
 
+        public async Task<object?> GetStoreAdsAsync(int busRegId)
+        {
+            var now = DateTime.UtcNow;
+            var list = await _db.AdPromotions
+                .AsNoTracking()
+                .Where(p => p.BusRegId == busRegId
+                         && p.Status == "Active"
+                         && p.StartDate <= now
+                         && p.EndDate >= now)
+                .OrderByDescending(p => p.CreatedAt)
+                .Take(50)
+                .ToListAsync();
+
+            return list.Select(ToDto).ToList();
+        }
+
         public async Task<object?> GetProductsAsync(int busRegId)
         {
             var products = await _db.ProductsNew
