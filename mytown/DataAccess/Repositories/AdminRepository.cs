@@ -136,7 +136,7 @@ namespace mytown.DataAccess.Repositories
         }
 
 
-        //Business summary count for profile status
+        //Business summary count for profile status - latest 12 oct
         public async Task<Dictionary<string, Dictionary<string, int>>> Businessprofilestatuscounts()
         {
             var allStatuses = new[] { "incomplete", "submitted", "approved", "rejected", "blocked" };
