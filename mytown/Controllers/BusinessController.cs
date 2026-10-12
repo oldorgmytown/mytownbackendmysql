@@ -144,7 +144,7 @@ namespace mytown.Controllers
                 await _businessService.SaveBusinessAccountDetails(bankDetails);
 
                 //// --- Cashfree beneficiary creation (non-blocking) ---
-                //bool beneficiaryCreated = false;
+                bool beneficiaryCreated = false;
                 //try
                 //{
                 //    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequest
