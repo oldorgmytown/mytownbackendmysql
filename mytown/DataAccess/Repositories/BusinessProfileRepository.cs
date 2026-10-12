@@ -128,25 +128,25 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.BusinessName))
                     existingProfile.BusinessName = businessProfile.BusinessName;
 
-                //if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
-                //    existingProfile.BusinessLocation = businessProfile.BusinessLocation;
+                if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
+                    existingProfile.BusinessLocation = businessProfile.BusinessLocation;
 
                 // ---- LOCATION: update profile + split into register ----
-                if (!string.IsNullOrWhiteSpace(businessProfile.BusinessLocation))
-                {
-                    var newLocation = businessProfile.BusinessLocation.Trim();
+                //if (!string.IsNullOrWhiteSpace(businessProfile.BusinessLocation))
+                //{
+                //    var newLocation = businessProfile.BusinessLocation.Trim();
 
-                    if (newLocation != existingProfile.BusinessLocation)
-                    {
-                        existingProfile.BusinessLocation = newLocation;
+                //    if (newLocation != existingProfile.BusinessLocation)
+                //    {
+                //        existingProfile.BusinessLocation = newLocation;
 
-                        var register = await _context.BusinessRegisters
-                            .FirstOrDefaultAsync(r => r.BusRegId == businessProfile.BusRegId);
+                //        var register = await _context.BusinessRegisters
+                //            .FirstOrDefaultAsync(r => r.BusRegId == businessProfile.BusRegId);
 
-                        if (register != null)
-                            ApplyLocationToRegister(register, newLocation);
-                    }
-                }
+                //        if (register != null)
+                //            ApplyLocationToRegister(register, newLocation);
+                //    }
+                //}
 
                 if (!string.IsNullOrEmpty(businessProfile.BusinessTagline))
                     existingProfile.BusinessTagline = businessProfile.BusinessTagline;
