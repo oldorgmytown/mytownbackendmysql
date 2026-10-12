@@ -1572,7 +1572,49 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             })
             .ToListAsync();
     }
-}
+
+    // Update business address
+    public async Task<bool> UpdateDefaultAddressAsync(UpdateDefaultAddressDto dto)
+    {
+        var register = await _context.BusinessRegisters
+            .FirstOrDefaultAsync(r => r.BusRegId == dto.BusRegId);
+        if (register == null) return false;
+
+        // ---- register table ----
+        if (!string.IsNullOrWhiteSpace(dto.Town)) register.Town = dto.Town.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.Address1)) register.Address1 = dto.Address1.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.BusinessCity)) register.BusinessCity = dto.BusinessCity.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.BusinessState)) register.BusinessState = dto.BusinessState.Trim();
+        if (!string.IsNullOrWhiteSpace(dto.BusinessCountry)) register.BusinessCountry = dto.BusinessCountry.Trim();
+        if (dto.PostalCode != null) register.PostalCode = dto.PostalCode.Trim();
+
+        // ---- profile table: location = "Town, City, State, Country" ----
+        var profile = await _context.BusinessProfiles
+            .FirstOrDefaultAsync(p => p.BusRegId == dto.BusRegId);
+
+        if (profile != null)
+        {
+            var parts = new[]
+            {
+            register.Town,
+            register.BusinessCity,
+            register.BusinessState,
+            register.BusinessCountry
+        }.Where(s => !string.IsNullOrWhiteSpace(s));
+
+            var location = string.Join(", ", parts);
+
+            // column is StringLength(255)
+            profile.BusinessLocation = location.Length > 255 ? location[..255] : location;
+        }
+
+        // one save = both tables in one transaction
+        await _context.SaveChangesAsync();
+        return true;
+    }
+    }
+
+
 
 
 

@@ -129,5 +129,8 @@ namespace mytown.DataAccess.Interfaces
         Task<UpdateBusinessAccountDetailDto?> GetBusinessAccountDetailsByBusRegIdAsync(int busRegId);
         Task<List<StorePayoutDashboardDto>> GetStorePayoutsByBusRegIdAsync(int busRegId);
         Task<List<RecentOrderDTO>> GetPendingStoreOrders(int busRegId);
+
+        //update business address
+        Task<bool> UpdateDefaultAddressAsync(UpdateDefaultAddressDto dto);
     }
 }
