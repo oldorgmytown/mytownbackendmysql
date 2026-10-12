@@ -294,7 +294,7 @@ namespace mytown.Controllers
 
         // mark package as delivered
 
-        [HttpPost("mark-delivered/{storeOrderId}")]
+        [HttpPut("mark-delivered/{storeOrderId}")]
         public async Task<IActionResult> MarkAsDelivered(int storeOrderId)
         {
             try
