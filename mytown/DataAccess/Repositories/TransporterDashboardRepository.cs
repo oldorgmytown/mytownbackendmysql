@@ -515,11 +515,22 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 if (shipping != null)
                 {
 
-                    if (dto.NewStatus == "PickedUp" &&
-     shipping.ShippingStatus != "Handed Over")
+                    var current = shipping.ShippingStatus;
+
+                    if (dto.NewStatus == "ReachedPickup" &&
+                        current != "Package Reached Hub" &&
+                        current != "Handed Over")
                     {
                         throw new InvalidOperationException(
-                            "You can mark the package as picked up only after the hub has handed it over.");
+                            "You can mark reached pickup only after the package has reached the hub.");
+                    }
+
+                    if (dto.NewStatus == "PickedUp" &&
+                        current != "Handed Over" &&
+                        current != "ReachedPickup")
+                    {
+                        throw new InvalidOperationException(
+                            "You can mark the package as picked up only after the hub has handed it over or the transporter has reached pickup.");
                     }
 
                     shipping.ShippingStatus = dto.NewStatus switch
