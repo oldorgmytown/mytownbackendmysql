@@ -294,5 +294,11 @@ namespace mytown.Services.Implementations
         {
             return await _repository.GetCourierPayoutsByCourierIdAsync(courierId);
         }
+
+        public Task<bool> UpdatePhoneAsync(int courierId, string phone)
+        => _repository.UpdatePhoneAsync(courierId, phone);
+
+        public Task<bool> UpdateBranchPhoneAsync(int branchId, string phone)
+        => _repository.UpdateBranchPhoneAsync(branchId, phone);
     }
 }

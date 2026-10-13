@@ -677,5 +677,25 @@ namespace mytown.DataAccess.Repositories
             .OrderByDescending(x => x.CreatedDate)
             .ToListAsync();
         }
+
+        public async Task<bool> UpdatePhoneAsync(int courierId, string phone)
+        {
+            var courier = await _context.CourierService.FindAsync(courierId);
+            if (courier == null) return false;
+
+            courier.CourierPhone = phone;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateBranchPhoneAsync(int branchId, string phone)
+        {
+            var branch = await _context.CourierBranches.FindAsync(branchId);
+            if (branch == null) return false;
+
+            branch.BranchPhoneNumber = phone;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }
