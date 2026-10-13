@@ -863,7 +863,7 @@ namespace mytown.DataAccess.Repositories
 
     var products = await (
         from od in _context.OrderDetails
-        join p in _context.products on od.ProductId equals p.ProductId
+        join p in _context.ProductsNew on od.ProductId equals p.ProductId
 
         join sku in _context.ProductVariantsNew
             on od.SkuId equals sku.SkuId into skuGroup
@@ -880,12 +880,16 @@ namespace mytown.DataAccess.Repositories
 
         select new TrackingProductDto
         {
-            ProductId = p.ProductId,
+            ProductId = (int)p.ProductId,
             SkuId = od.SkuId,
             ProductName = p.ProductName,
             Quantity = od.Quantity,
             ProductCost = od.Price,
-            ProductImage = img != null ? img.FileName : p.ProductImage
+            ProductImage = _context.ProductVariantImagesNew
+            .Where(i => i.SkuId == od.SkuId)
+            .OrderBy(i => i.SortOrder)
+            .Select(i => i.FileName)
+            .FirstOrDefault()
         }
     ).ToListAsync();
 
