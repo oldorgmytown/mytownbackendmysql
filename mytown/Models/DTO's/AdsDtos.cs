@@ -14,7 +14,7 @@ namespace mytown.Models.DTO_s
         public string? MediaUrl { get; set; }
         public string? Placement { get; set; }
         public int DurationDays { get; set; }
-        public DateTime? StartDate { get; set; }
+        public DateTime? StartDate { get; set; }a
         public DateTime? EndDate { get; set; }
         public int? OrderId { get; set; }
         public int? Id { get; set; }   // set when re-saving an existing draft
