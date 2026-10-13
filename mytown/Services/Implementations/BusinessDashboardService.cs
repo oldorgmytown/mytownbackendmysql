@@ -13,11 +13,13 @@ namespace mytown.Services.Implementations
     {
         private readonly IBusinessDashboardRepository _repository;
         private readonly IEmailService _emailService;
+        private readonly ILogger<BusinessDashboardService> _logger;
 
-        public BusinessDashboardService(IBusinessDashboardRepository repository,IEmailService emailService)
+        public BusinessDashboardService(IBusinessDashboardRepository repository,IEmailService emailService, ILogger<BusinessDashboardService> logger)
         {
             _repository = repository;
             _emailService = emailService; // Consider using DI for better testability
+            _logger = logger;
         }
 
         public Task<List<BusinessOrderListDto>> GetNewOrdersAsync(int storeId, string? search, int pageNumber, int pageSize)
@@ -337,6 +339,28 @@ namespace mytown.Services.Implementations
         public async Task<List<RecentOrderDTO>> GetPendingStoreOrders(int busRegId)
         {
             return await _repository.GetPendingStoreOrders(busRegId);
+        }
+
+        public async Task<bool> UpdateDefaultAddressAsync(UpdateDefaultAddressDto dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            // normalize input before it reaches the repo
+            dto.Town = dto.Town?.Trim();
+            dto.Address1 = dto.Address1?.Trim();
+            dto.BusinessCity = dto.BusinessCity?.Trim();
+            dto.BusinessState = dto.BusinessState?.Trim();
+            dto.BusinessCountry = dto.BusinessCountry?.Trim();
+            dto.PostalCode = string.IsNullOrWhiteSpace(dto.PostalCode)
+                                    ? null
+                                    : dto.PostalCode.Trim();
+
+            var updated = await _repository.UpdateDefaultAddressAsync(dto);
+
+            if (!updated)
+                _logger.LogWarning("Default address update failed: business {BusRegId} not found", dto.BusRegId);
+
+            return updated;
         }
     }
 

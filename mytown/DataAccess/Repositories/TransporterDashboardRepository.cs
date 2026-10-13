@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
+using Serilog.Core;
 using Stripe;
 
 namespace mytown.DataAccess.Repositories
@@ -16,14 +17,17 @@ namespace mytown.DataAccess.Repositories
         private readonly IEmailService _emailService;
         private readonly IStorePayoutRepository _storePayoutRepository;
         private readonly ISenderTransporterPayoutService _payoutService;
+        private readonly ILogger<TransporterDashboardRepository> _logger;
 
-        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService, ILogger<TransporterDashboardRepository> logger)
+            
         {
             _context = context;
             _orderRepository = orderRepo;
             _emailService = emailService;
             _storePayoutRepository = storePayoutRepository;
             _payoutService = payoutService;
+            _logger = logger; 
         }
 
         // -------------------------------------------------------------------------
@@ -511,10 +515,22 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 if (shipping != null)
                 {
 
-                    if (dto.NewStatus == "PickedUp" &&
-           shipping.ShippingStatus != "Handed Over")
+                    var current = shipping.ShippingStatus;
+
+                    if (dto.NewStatus == "ReachedPickup" &&
+                        current != "Package Reached Hub" &&
+                        current != "Handed Over")
                     {
-                        return false;
+                        throw new InvalidOperationException(
+                            "You can mark reached pickup only after the package has reached the hub.");
+                    }
+
+                    if (dto.NewStatus == "PickedUp" &&
+                        current != "Handed Over" &&
+                        current != "ReachedPickup")
+                    {
+                        throw new InvalidOperationException(
+                            "You can mark the package as picked up only after the hub has handed it over or the transporter has reached pickup.");
                     }
 
                     shipping.ShippingStatus = dto.NewStatus switch
@@ -537,6 +553,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     if (dto.NewStatus == "Delivered")
                     {
                         shipping.DeliveredDate = DateTime.UtcNow;
+                        
                     }
                 }
             }
@@ -889,6 +906,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             if (order.DeliveryStatus == deliveryStatus)
                 throw new Exception("Status already updated");
 
+            // PickedUp is allowed only after the hub has handed the package over
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(order.DeliveryStatus, "Handed Over", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("You can mark the package as picked up only after the hub has handed it over.");
+            }
+
             // Allow only after pickup date & time
             var pickupTime = DateTime.Parse(order.PickupTime).TimeOfDay;
 
@@ -953,7 +977,26 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             // Trigger payout AFTER the status update is successfully saved
             if (deliveryStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase))
             {
-                await _payoutService.CreatePayoutAsync(senderOrderId);
+                string? payoutWarning = null;
+                try
+                {
+                    var payoutResult = await _payoutService.CreatePayoutAsync(senderOrderId);
+
+                    if (payoutResult == null || !payoutResult.Success)
+                    {
+                        _logger.LogWarning(
+                            "Transporter payout failed for SenderOrderId {SenderOrderId}: {Message}",
+                            senderOrderId, payoutResult?.Message ?? "No result returned");
+                    }
+                }
+               
+
+               
+                catch (Exception payoutEx)
+                {
+                    _logger.LogError(payoutEx, "Payout threw for SenderOrderId {Id}", senderOrderId);
+                    payoutWarning = payoutEx.Message + " | " + payoutEx.InnerException?.Message;
+                }
             }
 
             return true;

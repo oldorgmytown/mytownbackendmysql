@@ -4,6 +4,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 using System.Globalization;
 using static mytown.Models.busprofilepreview;
 
@@ -130,6 +131,23 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
                     existingProfile.BusinessLocation = businessProfile.BusinessLocation;
 
+                // ---- LOCATION: update profile + split into register ----
+                //if (!string.IsNullOrWhiteSpace(businessProfile.BusinessLocation))
+                //{
+                //    var newLocation = businessProfile.BusinessLocation.Trim();
+
+                //    if (newLocation != existingProfile.BusinessLocation)
+                //    {
+                //        existingProfile.BusinessLocation = newLocation;
+
+                //        var register = await _context.BusinessRegisters
+                //            .FirstOrDefaultAsync(r => r.BusRegId == businessProfile.BusRegId);
+
+                //        if (register != null)
+                //            ApplyLocationToRegister(register, newLocation);
+                //    }
+                //}
+
                 if (!string.IsNullOrEmpty(businessProfile.BusinessTagline))
                     existingProfile.BusinessTagline = businessProfile.BusinessTagline;
 
@@ -174,6 +192,21 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
             return existingProfile ?? businessProfile;
+        }
+
+        // "Town, City, State, Country" -> register columns
+        private static void ApplyLocationToRegister(BusinessRegister register, string location)
+        {
+            var parts = location
+                .Split(',', StringSplitOptions.TrimEntries);
+
+            if (parts.Length != 4 || parts.Any(string.IsNullOrWhiteSpace))
+                throw new ArgumentException("Location must be in the format: Town, City, State, Country");
+
+            register.Town = parts[0];
+            register.BusinessCity = parts[1];
+            register.BusinessState = parts[2];
+            register.BusinessCountry = parts[3];
         }
 
         public async Task DeleteFromBlobAsync(string fileName)

@@ -108,28 +108,28 @@ namespace mytown.Services.Implementations
 
             await _repo.AddTransporterAccountDetails(accountDetails);
 
-            // --- Cashfree beneficiary creation (non-blocking) ---
-            bool payoutReady = false;
-            try
-            {
-                var beneficiaryRequest = new CreateCashfreeBeneficiaryRequestTrans
-                {
-                    TransRegId = transporter.TransporterRegId,
-                    BeneficiaryName = accountDetails.AccountHolderName,
-                    BankAccountNumber = accountDetails.AccountNumber,
-                    BankIfsc = accountDetails.IFSCCode
-                };
+            //// --- Cashfree beneficiary creation (non-blocking) ---
+            //bool payoutReady = false;
+            //try
+            //{
+            //    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequestTrans
+            //    {
+            //        TransRegId = transporter.TransporterRegId,
+            //        BeneficiaryName = accountDetails.AccountHolderName,
+            //        BankAccountNumber = accountDetails.AccountNumber,
+            //        BankIfsc = accountDetails.IFSCCode
+            //    };
 
-                await CreateBeneficiaryAsync(beneficiaryRequest);
-                payoutReady = true;
-            }
-            catch (Exception cfEx)
-            {
-                _logger.LogError(cfEx,
-                    "Cashfree beneficiary creation failed for TransporterRegId {TransporterRegId}. Will retry later.",
-                    transporter.TransporterRegId);
-            }
-            // --- end beneficiary block ---
+            //    await CreateBeneficiaryAsync(beneficiaryRequest);
+            //    payoutReady = true;
+            //}
+            //catch (Exception cfEx)
+            //{
+            //    _logger.LogError(cfEx,
+            //        "Cashfree beneficiary creation failed for TransporterRegId {TransporterRegId}. Will retry later.",
+            //        transporter.TransporterRegId);
+            //}
+            //// --- end beneficiary block ---
 
             await _repo.DeletePendingVerification(token);
 

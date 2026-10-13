@@ -97,7 +97,7 @@ public class SenderTransporterPayoutService : ISenderTransporterPayoutService
             var clientSecret = _configuration["CashfreePayout:ClientSecret"];
             var baseUrl = _configuration["CashfreePayout:BaseUrl"];
             var apiVersion = _configuration["CashfreePayout:ApiVersion"];
-            var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
+         //   var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
             var payload = new
             {
@@ -119,7 +119,7 @@ public class SenderTransporterPayoutService : ISenderTransporterPayoutService
             request.Headers.Add("x-client-secret", clientSecret);
             request.Headers.Add("x-api-version", apiVersion);
             request.Headers.Add("x-cf-signature",
-                CashfreeSignatureHelper.GenerateSignature(signatureClientId, _configuration["CashfreePayoutPublicKey"]));
+                CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
 
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
 

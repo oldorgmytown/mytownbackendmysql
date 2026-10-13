@@ -368,6 +368,19 @@ namespace mytown.Controllers
             var result = await _dasboardservice.GetPendingStoreOrders(busRegId);
             return Ok(result);
         }
+
+        //update business address
+        [HttpPut("update-bus-default-address")]
+        public async Task<IActionResult> UpdateDefaultAddress([FromBody] UpdateDefaultAddressDto dto)
+        {
+            // [ApiController] already returns 400 automatically if validation fails
+            var updated = await _dasboardservice.UpdateDefaultAddressAsync(dto);
+
+            return updated
+                ? Ok(new { message = "Address updated successfully" })
+                : NotFound(new { message = "Business not found" });
+        }
+
     }
 
 

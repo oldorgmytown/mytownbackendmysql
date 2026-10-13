@@ -165,15 +165,24 @@ namespace mytown.Controllers
         [HttpPut("deliveries/update-status")]
         public async Task<IActionResult> UpdateDeliveryStatus([FromBody] UpdateDeliveryStatusDto dto)
         {
-            var result = await _service.UpdateDeliveryStatusAsync(dto);
-            if (!result)
-                return BadRequest(new
-                {
-                    error = "Status update failed. Check delivery ID or status transition. " +
-                            "Allowed flow: Assigned → ReachedPickup → PickedUp → InTransit → Delivered"
-                });
+            try
+            {
+                var result = await _service.UpdateDeliveryStatusAsync(dto);
 
-            return Ok(new { message = $"Delivery status updated to '{dto.NewStatus}'." });
+                if (!result)
+                    return BadRequest(new
+                    {
+                        error = "Status update failed. Check delivery ID or status transition. " +
+                                "Allowed flow: Assigned → ReachedPickup → PickedUp → InTransit → Delivered"
+                    });
+
+                return Ok(new { message = $"Delivery status updated to '{dto.NewStatus}'." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Business-rule failure, e.g. hub has not handed over the package yet
+                return BadRequest(new { error = ex.Message });
+            }
         }
 
         // =========================================================
@@ -285,7 +294,7 @@ namespace mytown.Controllers
 
         // mark package as delivered
 
-        [HttpPost("mark-delivered/{storeOrderId}")]
+        [HttpPut("mark-delivered/{storeOrderId}")]
         public async Task<IActionResult> MarkAsDelivered(int storeOrderId)
         {
             try
@@ -358,12 +367,14 @@ namespace mytown.Controllers
                     message = "Delivery status updated successfully"
                 });
             }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
+                _logger.LogError(ex, "Error updating sender order {Id} status", senderOrderId);
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
