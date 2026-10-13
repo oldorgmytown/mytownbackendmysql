@@ -69,8 +69,8 @@ namespace mytown.Controllers
             => Run(() => _service.ConfirmStripePaymentAsync(dto));
 
         [HttpDelete("deletePromotion")]
-public Task<IActionResult> DeletePromotion([FromQuery] int busRegId, [FromQuery] int id)
-    => Run(() => _service.DeletePromotionAsync(busRegId, id));
+        public Task<IActionResult> DeletePromotion([FromQuery] int busRegId, [FromQuery] int id)
+            => Run(() => _service.DeletePromotionAsync(busRegId, id));
 
         [AllowAnonymous]
         [HttpGet("getStoreAds")]
@@ -84,5 +84,20 @@ public Task<IActionResult> DeletePromotion([FromQuery] int busRegId, [FromQuery]
         [HttpGet("getStoreProfile")]
         public Task<IActionResult> GetStoreProfile([FromQuery] int busRegId)
             => Run(() => _service.GetStoreInfoAsync(busRegId));
+
+        // ---------------- admin ----------------
+        // TODO: restrict to admins, e.g. [Authorize(Roles = "Admin")] (tell me your role name)
+
+        [HttpGet("adminBusinessList")]
+        public Task<IActionResult> AdminBusinessList(
+            [FromQuery] string? status, [FromQuery] string? search,
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+            => Run(() => _service.GetAdminBusinessAdsAsync(status, search, page, pageSize));
+
+        [HttpGet("adminBusinessDetails")]
+        public Task<IActionResult> AdminBusinessDetails(
+            [FromQuery] int busRegId, [FromQuery] string? promoId, [FromQuery] string? status,
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+            => Run(() => _service.GetAdminBusinessAdDetailsAsync(busRegId, promoId, status, page, pageSize));
     }
 }

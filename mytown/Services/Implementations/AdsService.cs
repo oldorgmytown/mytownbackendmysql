@@ -526,6 +526,224 @@ namespace mytown.Services.Implementations
             };
         }
 
+                // ---------------- admin: business-wise ads overview ----------------
+
+        private static string EffectiveStatus(string? status, DateTime start, DateTime end)
+        {
+            var now = DateTime.UtcNow;
+            if (string.Equals(status, "Draft", StringComparison.OrdinalIgnoreCase)) return "Draft";
+            if (string.Equals(status, "Active", StringComparison.OrdinalIgnoreCase))
+            {
+                if (end < now) return "Completed";
+                if (start > now) return "Scheduled";
+                return "Active";
+            }
+            return status ?? "Unknown";
+        }
+
+        // API 1: all businesses with their ad counts
+        public async Task<object?> GetAdminBusinessAdsAsync(string? status, string? search, int page, int pageSize)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
+            var raw = await _db.AdPromotions
+                .AsNoTracking()
+                .Select(p => new { p.BusRegId, p.Type, p.Status, p.StartDate, p.EndDate, p.PaymentOrderId })
+                .ToListAsync();
+
+            var rows = raw.Select(p => new
+            {
+                p.BusRegId,
+                Type = (p.Type ?? "").ToLowerInvariant(),
+                Status = EffectiveStatus(p.Status, p.StartDate, p.EndDate),
+                Paid = p.PaymentOrderId != null
+            }).ToList();
+
+            var tabs = new
+            {
+                all = rows.Count,
+                active = rows.Count(r => r.Status == "Active"),
+                scheduled = rows.Count(r => r.Status == "Scheduled"),
+                completed = rows.Count(r => r.Status == "Completed")
+            };
+
+            var groups = rows.GroupBy(r => r.BusRegId).Select(g => new
+            {
+                BusRegId = g.Key,
+                TotalAds = g.Count(),
+                Paid = g.Count(x => x.Paid),
+                Pending = g.Count(x => !x.Paid),
+                Active = g.Count(x => x.Status == "Active"),
+                Scheduled = g.Count(x => x.Status == "Scheduled"),
+                Completed = g.Count(x => x.Status == "Completed"),
+                Offer = g.Count(x => x.Type == "offer"),
+                Product = g.Count(x => x.Type == "product"),
+                Video = g.Count(x => x.Type == "video"),
+                Store = g.Count(x => x.Type == "store")
+            }).ToList();
+
+            var ids = groups.Select(g => g.BusRegId).ToList();
+            var businesses = await _db.BusinessRegisters
+                .AsNoTracking()
+                .Where(b => ids.Contains(b.BusRegId))
+                .Select(b => new
+                {
+                    b.BusRegId,
+                    b.BusinessName,
+                    b.Town,
+                    b.BusinessCity,
+                    b.BusEmail,
+                    b.BusMobileNo,
+                    Owner = b.BusinessAccountDetail != null ? b.BusinessAccountDetail.AccountHolderName : null
+                })
+                .ToListAsync();
+
+            var joined = (from g in groups
+                          join b in businesses on g.BusRegId equals b.BusRegId
+                          select new
+                          {
+                              busRegId = g.BusRegId,
+                              businessCode = "BI" + g.BusRegId.ToString("D7"),
+                              businessName = b.BusinessName,
+                              location = b.Town + ", " + b.BusinessCity,
+                              ownerName = b.Owner,
+                              email = b.BusEmail,
+                              phone = b.BusMobileNo,
+                              totalAds = g.TotalAds,
+                              paidCount = g.Paid,
+                              pendingCount = g.Pending,
+                              activeCount = g.Active,
+                              scheduledCount = g.Scheduled,
+                              completedCount = g.Completed,
+                              types = new { offer = g.Offer, product = g.Product, video = g.Video, store = g.Store }
+                          }).ToList();
+
+            var st = (status ?? "").Trim().ToLowerInvariant();
+            if (st == "active") joined = joined.Where(x => x.activeCount > 0).ToList();
+            else if (st == "scheduled") joined = joined.Where(x => x.scheduledCount > 0).ToList();
+            else if (st == "completed") joined = joined.Where(x => x.completedCount > 0).ToList();
+
+            var s = (search ?? "").Trim();
+            if (s.Length > 0)
+            {
+                var sid = s.TrimStart('#');
+                joined = joined.Where(x =>
+                    (x.businessName ?? "").Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    x.businessCode.Contains(sid, StringComparison.OrdinalIgnoreCase) ||
+                    x.busRegId.ToString() == sid).ToList();
+            }
+
+            var totalItems = joined.Count;
+            var items = joined.OrderByDescending(x => x.totalAds)
+                              .Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return new
+            {
+                tabs,
+                items,
+                page,
+                pageSize,
+                totalItems,
+                totalPages = (int)Math.Ceiling(totalItems / (double)pageSize)
+            };
+        }
+
+        // API 2: all ads of one business + remaining (pending) amount
+        public async Task<object?> GetAdminBusinessAdDetailsAsync(int busRegId, string? promoId, string? status, int page, int pageSize)
+        {
+            await EnsureBusinessAsync(busRegId);
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 100);
+
+            var biz = await _db.BusinessRegisters
+                .AsNoTracking()
+                .Where(b => b.BusRegId == busRegId)
+                .Select(b => new
+                {
+                    b.BusinessName,
+                    b.BusEmail,
+                    b.BusMobileNo,
+                    Owner = b.BusinessAccountDetail != null ? b.BusinessAccountDetail.AccountHolderName : null
+                })
+                .FirstAsync();
+
+            var raw = await _db.AdPromotions
+                .AsNoTracking()
+                .Where(p => p.BusRegId == busRegId)
+                .OrderByDescending(p => p.CreatedAt)
+                .Select(p => new
+                {
+                    p.PromotionId, p.Type, p.Title, p.Placement, p.Status,
+                    p.StartDate, p.EndDate, p.DurationDays, p.PaymentOrderId, p.Total
+                })
+                .ToListAsync();
+
+            var all = raw.Select(p =>
+            {
+                var paid = p.PaymentOrderId != null;
+                decimal amount = paid ? p.Total : p.DurationDays * PricePerDay;
+
+                return new
+                {
+                    id = p.PromotionId,
+                    promoCode = "PR-" + p.PromotionId,
+                    type = (p.Type ?? "").ToLowerInvariant(),
+                    title = p.Title,
+                    area = string.Equals(p.Placement, "profile", StringComparison.OrdinalIgnoreCase)
+                            ? "On Store Profile" : p.Placement,
+                    startDate = p.StartDate,
+                    endDate = p.EndDate,
+                    status = EffectiveStatus(p.Status, p.StartDate, p.EndDate),
+                    paymentStatus = paid ? "Paid" : "Pending",
+                    amount
+                };
+            }).ToList();
+
+            var summary = new
+            {
+                totalAds = all.Count,
+                active = all.Count(a => a.status == "Active"),
+                scheduled = all.Count(a => a.status == "Scheduled"),
+                completed = all.Count(a => a.status == "Completed"),
+                paidCount = all.Count(a => a.paymentStatus == "Paid"),
+                pendingCount = all.Count(a => a.paymentStatus == "Pending"),
+                paidAmount = all.Where(a => a.paymentStatus == "Paid").Sum(a => a.amount),
+                remainingAmount = all.Where(a => a.paymentStatus == "Pending").Sum(a => a.amount)
+            };
+
+            var filtered = all.AsEnumerable();
+
+            var pid = (promoId ?? "").Trim().TrimStart('#');
+            if (pid.Length > 0)
+                filtered = filtered.Where(a => a.promoCode.Contains(pid, StringComparison.OrdinalIgnoreCase));
+
+            var st = (status ?? "").Trim();
+            if (st.Length > 0)
+                filtered = filtered.Where(a => string.Equals(a.status, st, StringComparison.OrdinalIgnoreCase));
+
+            var list = filtered.ToList();
+
+            return new
+            {
+                business = new
+                {
+                    busRegId,
+                    businessCode = "BI" + busRegId.ToString("D7"),
+                    businessName = biz.BusinessName,
+                    ownerName = biz.Owner,
+                    email = biz.BusEmail,
+                    phone = biz.BusMobileNo
+                },
+                summary,
+                items = list.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                page,
+                pageSize,
+                totalItems = list.Count,
+                totalPages = (int)Math.Ceiling(list.Count / (double)pageSize)
+            };
+        }
+
         public async Task<object?> ConfirmStripePaymentAsync(AdsStripeConfirmDto dto)
         {
             var order = await _db.AdPaymentOrders.FirstOrDefaultAsync(o =>

@@ -14,6 +14,10 @@ namespace mytown.Services.Interfaces
         Task<object?> GetProductsAsync(int busRegId);
         Task<object?> GetStoreInfoAsync(int busRegId);
         Task<object?> DeletePromotionAsync(int busRegId, int promotionId);
-Task<object?> GetStoreAdsAsync(int busRegId);
+        Task<object?> GetStoreAdsAsync(int busRegId);
+
+        // admin
+        Task<object?> GetAdminBusinessAdsAsync(string? status, string? search, int page, int pageSize);
+        Task<object?> GetAdminBusinessAdDetailsAsync(int busRegId, string? promoId, string? status, int page, int pageSize);
     }
 }
