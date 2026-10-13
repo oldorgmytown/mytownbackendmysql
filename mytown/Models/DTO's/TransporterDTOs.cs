@@ -125,6 +125,10 @@ namespace mytown.Models.DTO_s
         public string DeliveryStatus { get; set; }
         public DateTime? AcceptedAt { get; set; }
         public string EtaInfo { get; set; }
+
+        public string? HubName { get; set; }
+        public string? HubAddress { get; set; }
+        public string? HubPhone { get; set; }
     }
 }
 

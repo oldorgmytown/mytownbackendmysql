@@ -426,6 +426,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     on d.StoreOrderId equals p.StoreOrderId into packageGroup
                 from p in packageGroup.DefaultIfEmpty()
 
+                    // Hub matched by the travel plan's start pin (one hub max)
+                let hub = _context.HubDetails
+                    .Where(h => h.Pin == d.TravelPlan.StartLocationPin.Trim())
+                    .OrderBy(h => h.HubId)
+                    .FirstOrDefault()
+
+
                 where d.TransporterRegId == transporterRegId
                    && activeStatuses.Contains(d.DeliveryStatus)
 
@@ -458,7 +465,14 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                         ? "Incomplete"
                         : d.DeliveryStatus,
                     AcceptedAt = d.AssignedAt,
-                    EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
+                    EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy"),
+
+                    // ✅ Hub details
+            HubName = hub != null ? hub.HubName : null,
+                    HubAddress = hub != null
+                ? hub.AddressLine + ", " + hub.Town + ", " + hub.City + ", " + hub.State + " - " + hub.Pin
+                : null,
+                    HubPhone = hub != null ? hub.Phone : null,
                 }
             ).ToListAsync();
 
