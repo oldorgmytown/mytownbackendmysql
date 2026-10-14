@@ -4295,4 +4295,241 @@ private string BuildHubPackageReadyTemplate(string transporterName, string packa
 </body>
 </html>";
 }
+    // ============================================================
+    // CONTACT ENQUIRY EMAIL (to ITISMYTOWN operations team)
+    // ============================================================
+    public async Task SendContactEnquiryEmailAsync(string toEmail, ContactEnquiryDto dto)
+    {
+        if (!await DomainHasMX(toEmail))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"New Contact Enquiry - {dto.FullName}",
+                    Body = BuildContactEnquiryTemplate(dto),
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(toEmail);
+
+                    // So "Reply" goes straight to the person who enquired
+                    try { mailMessage.ReplyToList.Add(new MailAddress(dto.Email, dto.FullName)); }
+                    catch { /* invalid sender email: skip Reply-To */ }
+
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending contact enquiry email: {ex.Message}");
+            throw new Exception("Failed to send contact enquiry email.");
+        }
+    }
+
+    private string BuildContactEnquiryTemplate(ContactEnquiryDto dto)
+    {
+        var font = "font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var logoUrl = "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png";
+
+        // Everything coming from the website form is untrusted -> encode it
+        var name = WebUtility.HtmlEncode(dto.FullName ?? string.Empty);
+        var role = WebUtility.HtmlEncode(dto.UserRole ?? string.Empty);
+        var email = WebUtility.HtmlEncode(dto.Email ?? string.Empty);
+        var phone = WebUtility.HtmlEncode(dto.Phone ?? string.Empty);
+        var message = WebUtility.HtmlEncode(dto.Message ?? string.Empty)
+                        .Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+
+        var phoneDigits = new string((dto.Phone ?? string.Empty).Where(c => char.IsDigit(c) || c == '+').ToArray());
+        var replySubject = Uri.EscapeDataString("Re: Your enquiry to ITISMYTOWN");
+        var mailtoHref = $"mailto:{WebUtility.HtmlEncode(dto.Email)}?subject={replySubject}";
+        var telHref = $"tel:{phoneDigits}";
+
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>New Contact Enquiry - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;{font}"">
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0""
+         style=""max-width:600px;width:100%;background:#FFFFFF;"">
+
+    <!-- ===== LOGO ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#FFFFFF;"">
+        <img src=""{logoUrl}"" alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+
+    <!-- ===== DARK BLUE HEADER ===== -->
+    <tr>
+      <td bgcolor=""#00386C"" style=""background:#00386C;padding:28px 32px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td style=""padding-bottom:14px;border-bottom:1px solid #808080;"">
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td style=""background:#4a4a3a;border:1px solid #8a7a30;border-radius:99px;
+                             padding:4px 12px;color:#FCD34D;font-size:11px;font-weight:700;
+                             letter-spacing:0.55px;text-transform:uppercase;{font}"">
+                    &#9679;&nbsp; New Enquiry
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding-top:16px;color:#FFFFFF;font-size:24px;font-weight:700;line-height:32px;{font}"">
+              New Contact Enquiry
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding-top:6px;color:#CBD5E1;font-size:14px;font-weight:400;line-height:22px;{font}"">
+              A new message has been submitted through the ITISMYTOWN website.
+              Please review the details below and follow up with the sender.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== CONTACT INFORMATION ===== -->
+    <tr>
+      <td style=""padding:28px 32px 8px 32px;background:#FFFFFF;"">
+        <div style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                     text-transform:uppercase;margin-bottom:14px;{font}"">Contact Information</div>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;"">
+          <tr>
+            <td style=""padding:24px;"">
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Full Name</div>
+              <div style=""color:#0F172A;font-size:16px;font-weight:700;line-height:24px;margin-bottom:18px;{font}"">{name}</div>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:6px;{font}"">User Role</div>
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:18px;"">
+                <tr>
+                  <td style=""background:#ECFDF5;border:1px solid #A7F3D0;border-radius:99px;
+                             padding:4px 12px;color:#065F46;font-size:12px;font-weight:700;{font}"">{role}</td>
+                  <td style=""padding-left:10px;color:#94A3B8;font-size:11px;{font}"">Selected from form dropdown</td>
+                </tr>
+              </table>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Email Address</div>
+              <div style=""font-size:14px;font-weight:600;line-height:20px;margin-bottom:18px;{font}"">
+                <a href=""{mailtoHref}"" style=""color:#2563EB;text-decoration:none;"">{email}</a>
+              </div>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Phone Number</div>
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td style=""font-size:14px;font-weight:600;line-height:20px;{font}"">
+                    <a href=""{telHref}"" style=""color:#0F172A;text-decoration:none;"">{phone}</a>
+                  </td>
+                  <td style=""padding-left:8px;"">
+                    <span style=""background:#D1FAE5;border-radius:4px;padding:2px 6px;color:#065F46;
+                                 font-size:10px;font-weight:600;{font}"">Primary</span>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== MESSAGE ===== -->
+    <tr>
+      <td style=""padding:20px 32px 8px 32px;background:#FFFFFF;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:14px;"">
+          <tr>
+            <td style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                        text-transform:uppercase;{font}"">Message From The Sender</td>
+            <td align=""right"" style=""color:#94A3B8;font-size:11px;font-weight:500;{font}"">Unmodified text payload</td>
+          </tr>
+        </table>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;"">
+          <tr>
+            <td style=""padding:24px;color:#1E293B;font-size:15px;font-weight:400;line-height:24px;{font}"">
+              {message}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== QUICK ACTIONS ===== -->
+    <tr>
+      <td style=""padding:20px 32px 32px 32px;background:#FFFFFF;"">
+        <div style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                     text-transform:uppercase;margin-bottom:12px;{font}"">Quick Actions For Operations Staff</div>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td width=""50%"" style=""padding-right:6px;"">
+              <a href=""{mailtoHref}""
+                 style=""display:block;background:#0B192C;color:#FFFFFF;text-align:center;
+                        border-radius:12px;padding:14px 12px;font-size:14px;font-weight:600;
+                        text-decoration:none;{font}"">&#9993;&nbsp; Reply</a>
+            </td>
+            <td width=""50%"" style=""padding-left:6px;"">
+              <a href=""{telHref}""
+                 style=""display:block;background:#FFFFFF;color:#1E293B;text-align:center;
+                        border:1px solid #CBD5E1;border-radius:12px;padding:13px 12px;
+                        font-size:14px;font-weight:600;text-decoration:none;{font}"">&#128222;&nbsp; Call ({phone})</a>
+            </td>
+          </tr>
+        </table>
+
+        <div style=""color:#64748B;font-size:11px;line-height:16px;margin-top:12px;{font}"">
+          * Clicking will open your local email client or device telephone dialler with pre-filled enquiry context.
+        </div>
+      </td>
+    </tr>
+
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td align=""center"" style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <div style=""color:#585858;font-size:12px;line-height:1.5;margin-bottom:6px;{font}"">
+          You&#39;re receiving this email because you&#39;re part of the ITISMYTOWN operations team.
+        </div>
+        <div style=""color:#585858;font-size:12px;line-height:1.5;{font}"">
+          &copy; 2026 itismytown. All rights reserved.
+        </div>
+      </td>
+    </tr>
+
+  </table>
+  </td>
+</tr>
+</table>
+
+</body>
+</html>";
+    }
 }

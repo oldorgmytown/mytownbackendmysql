@@ -17,12 +17,17 @@ namespace mytown.Controllers
 
         private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
 
         public AdminController(IAdminService adminService,
-                               ILogger<AdminController> logger)
+                               ILogger<AdminController> logger, IEmailService emailService,
+        IConfiguration config)
         {
             _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService;
+            _config = config;
         }
 
         [Authorize]
@@ -542,6 +547,41 @@ public async Task<IActionResult> GetBusinessLocationCounts()
         {
             var result = await _adminService.GetAdminSenderOrderDetailAsync(senderOrderId);
             return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpPost("send-enquiry")]
+        public async Task<IActionResult> SendEnquiry([FromBody] ContactEnquiryDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Operations team inbox (kept in config, never sent from the frontend)
+            var opsEmail = _config["ContactSettings:OperationsEmail"];
+            if (string.IsNullOrWhiteSpace(opsEmail))
+            {
+                _logger.LogError("ContactSettings:OperationsEmail is not configured.");
+                return StatusCode(500, new { success = false, message = "Server configuration error." });
+            }
+
+            try
+            {
+                await _emailService.SendContactEnquiryEmailAsync(opsEmail, dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Your message has been sent. Our team will get back to you soon."
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send contact enquiry from {Email}", dto.Email);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "We couldn't send your message right now. Please try again later."
+                });
+            }
         }
     }
 }

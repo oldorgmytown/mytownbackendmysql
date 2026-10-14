@@ -49,5 +49,7 @@ namespace mytown.Services.Interfaces
        string transporterName, string packageSummary,
 
       HubLoginDto dto);
+
+        Task SendContactEnquiryEmailAsync(string toEmail, ContactEnquiryDto dto);
     }
 }
