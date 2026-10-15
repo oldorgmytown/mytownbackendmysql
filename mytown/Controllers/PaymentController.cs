@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using mytown.Models;
+using mytown.Models.DTO_s;
+using mytown.Models.DTOs;
 using mytown.Services.Interfaces;
 using Stripe;
 
@@ -123,6 +125,21 @@ namespace mytown.Controllers
             return Ok(new { message = "Payment successful!", paymentId = payment.PaymentId });
         }
 
+
+        [HttpPost("create-razorpay-order")]
+        public async Task<IActionResult> CreateRazorpayOrder([FromBody] int orderId)
+        {
+            var result = await _paymentService.CreateRazorpayOrderAsync(orderId);
+            return Ok(result);
+        }
+
+        [HttpPost("verify-razorpay-payment")]
+        public async Task<IActionResult> VerifyRazorpayPayment([FromBody] RazorpayVerifyDto dto)
+        {
+            var result = await _paymentService.AddRazorpayPaymentAsync(
+                dto.OrderId, dto.RazorpayOrderId, dto.RazorpayPaymentId, dto.RazorpaySignature);
+            return Ok(result);
+        }
         [HttpGet("stripe-test")]
         public async Task<IActionResult> TestStripe()
         {
