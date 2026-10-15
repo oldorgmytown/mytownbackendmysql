@@ -586,7 +586,7 @@ namespace mytown.DataAccess.Repositories
             var view = new ShopperProductRecentView
             {
                 ShopperId = shopperId,
-                ProductId = productId,
+                ProductId = (long)productId,
                 LastViewedAt = DateTime.UtcNow
             };
 
