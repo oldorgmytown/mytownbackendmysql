@@ -384,7 +384,7 @@ return created;
                         ?? fastestAir?.Cost
                         ?? 333m;
 
-                    decimal p2pCost = Math.Round(basePrice * 0.30m, 2);
+                    decimal p2pCost = Math.Round(basePrice * 0.50m, 2);
                     p2pCost = Math.Max(p2pCost, 50m);
 
                     matchingTransporter.Cost = p2pCost;

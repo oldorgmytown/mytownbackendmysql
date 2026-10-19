@@ -605,7 +605,6 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
         {
             if (string.IsNullOrEmpty(location))
