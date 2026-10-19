@@ -15,14 +15,18 @@ namespace mytown.Services.Implementations
         private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
 
+        private readonly ICourierPayoutService _courierPayoutService;
+
+
         private static readonly HashSet<string> ValidStatuses =
        new() { "Pending","New Order", "Ready to Ship", "In Progress", "Delivered" };
-        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService
+        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService, ICourierPayoutService courierPayoutService
             )
         {
             _repository = repository;
             _orderRepository = orderRepository;
             _emailService = emailService;
+            _courierPayoutService = courierPayoutService;
         }
 
         public async Task<List<CourierOrderDto>> GetOrdersAsync(
