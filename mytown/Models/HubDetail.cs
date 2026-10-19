@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
+    //latestonprod
  
     [Table("hubdetails")]
     public class HubDetail
