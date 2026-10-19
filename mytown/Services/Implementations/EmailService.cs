@@ -280,6 +280,8 @@ public class EmailService : IEmailService
                 // =============================
                 // FULL EMAIL BODY
                 // =============================
+                var hubHtml = BuildHubDetailsHtml(storedto.HubAddress);
+
                 var body = $@"<!DOCTYPE html>
 <html lang=""en"">
 <head>
@@ -495,6 +497,8 @@ public class EmailService : IEmailService
     </td>
   </tr>
 </table>
+
+        {hubHtml}
 
         <!-- ===== DELIVERY ADDRESS ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -1062,6 +1066,49 @@ public class EmailService : IEmailService
             return false;
         }
     }
+
+    private string BuildHubDetailsHtml(HubAddressDto? hub)
+{
+    if (hub == null) return string.Empty;
+
+    var fullAddress = string.Join(", ",
+        new[] { hub.AddressLine, hub.Town, hub.City, hub.State, hub.Country, hub.Pin }
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p)));
+
+    return $@"
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+       style=""background:#fff;border:1px solid rgba(139,139,139,0.10);
+              border-radius:8px;padding:24px;margin-bottom:16px;"">
+  <tr>
+    <td>
+      <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:16px;
+                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Hub Details</div>
+      <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+             style=""border:1px solid #E5E7EB;border-radius:12px;padding:16px;"">
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Hub Name</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.HubName ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td style=""color:#585858;font-size:14px;font-weight:500;padding-bottom:12px;"">Phone</td>
+          <td align=""right"" style=""color:#000;font-size:14px;font-weight:600;padding-bottom:12px;"">
+            {WebUtility.HtmlEncode(hub.Phone ?? string.Empty)}
+          </td>
+        </tr>
+        <tr>
+          <td colspan=""2"">
+            <div style=""color:#585858;font-size:13px;font-weight:500;margin-bottom:4px;"">Address</div>
+            <div style=""color:#000;font-size:14px;font-weight:600;line-height:1.5;"">{fullAddress}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>";
+}
     public async Task SendEmailToCourierAsync(
       string email,
       string courierName,
@@ -2040,6 +2087,7 @@ public class EmailService : IEmailService
       StoreOrderConfirmationDto storedto)
     {
         var imageBaseUrl = "https://mytownblobstore.blob.core.windows.net/uploadedfiles";
+        var hubHtml = BuildHubDetailsHtml(storedto.HubAddress);
 
         // ===== BUILD PRODUCT ROWS =====
         var productsBuilder = new StringBuilder();
@@ -2276,6 +2324,8 @@ public class EmailService : IEmailService
             </td>
           </tr>
         </table>
+
+        {hubHtml}
 
         <!-- ===== CUSTOMER INFORMATION ===== -->
         <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
@@ -2684,6 +2734,17 @@ public class EmailService : IEmailService
         }
     }
 
+    private static string BuildPickupFullAddress(SenderOrderConfirmationDto dto)
+{
+    string?[] parts = dto.HubAddress != null
+        ? new[] { dto.HubAddress.HubName, dto.HubAddress.AddressLine, dto.HubAddress.Town, dto.HubAddress.City, dto.HubAddress.State, dto.HubAddress.Country, dto.HubAddress.Pin }
+        : new[] { dto.PickupAddress, dto.PickupTown, dto.PickupCity, dto.PickupState, dto.PickupCountry };
+
+    return string.Join(", ", parts
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p!)));
+}
+
     private string BuildSenderOrderConfirmationTemplate(
         string senderName,
         SenderOrderConfirmationDto dto)
@@ -2829,7 +2890,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
               <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {WebUtility.HtmlEncode(dto.PickupAddress)}
+                {BuildPickupFullAddress(dto)}
               </div>
             </td>
           </tr>
@@ -2838,7 +2899,7 @@ public class EmailService : IEmailService
                         font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Contact:</td>
             <td align=""right"" style=""color:#0A0A0A;font-size:14px;font-weight:500;padding-bottom:8px;
                                        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-              {WebUtility.HtmlEncode(dto.ReceiverPhone)}
+              {WebUtility.HtmlEncode(dto.SenderPhone)}
             </td>
           </tr>
           <tr>
@@ -3282,7 +3343,7 @@ public class EmailService : IEmailService
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">Address:</div>
               <div style=""color:#0A0A0A;font-size:14px;font-weight:500;line-height:1.5;
                            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;"">
-                {WebUtility.HtmlEncode(dto.PickupAddress)}
+                {BuildPickupFullAddress(dto)}
               </div>
             </td>
           </tr>
@@ -3991,24 +4052,24 @@ public class EmailService : IEmailService
 
 }  // closes BuildGuestTrackingTemplate
 
-public async Task SendOtpEmailAsync(string email, string name, string otp)
-{
-    if (!await DomainHasMX(email))
-        throw new Exception("The email domain is not valid (no MX records found).");
-
-    using (var smtpClient = new SmtpClient(_smtpServer))
+    public async Task SendOtpEmailAsync(string email, string name, string otp)
     {
-        smtpClient.Port = _smtpPort;
-        smtpClient.UseDefaultCredentials = false;
-        smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
-        smtpClient.EnableSsl = true;
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
 
-        var mailMessage = new MailMessage
+        using (var smtpClient = new SmtpClient(_smtpServer))
         {
-            From = new MailAddress(_senderEmail),
-            Subject = "Your OTP - MyTown",
-            IsBodyHtml = true,
-            Body = $@"
+            smtpClient.Port = _smtpPort;
+            smtpClient.UseDefaultCredentials = false;
+            smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+            smtpClient.EnableSsl = true;
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_senderEmail),
+                Subject = "Your OTP - MyTown",
+                IsBodyHtml = true,
+                Body = $@"
 <div style='font-family:Arial,sans-serif;background:#fff;padding:40px;text-align:center;'>
   <div style='max-width:500px;margin:auto;background:#fff;padding:30px;border-radius:10px;
               box-shadow:0px 4px 10px rgba(0,0,0,0.2);border:2px solid #004481;'>
@@ -4025,15 +4086,448 @@ public async Task SendOtpEmailAsync(string email, string name, string otp)
     <p style='font-size:10px;color:#777;'>© 2025 MyTown. All rights reserved.</p>
   </div>
 </div>"
-        };
-        mailMessage.To.Add(email);
-        await smtpClient.SendMailAsync(mailMessage);
+            };
+            mailMessage.To.Add(email);
+            await smtpClient.SendMailAsync(mailMessage);
+        }
+    }
+        //------------------------Package Ready email from Hub------------------------------------
+    public async Task SendTransporterHubEmailAsync(
+        string email,
+        string transporterName,
+        string packageSummary,
+        HubLoginDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("Invalid email domain.");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail),
+                    Subject = "Package Ready for Pickup at Hub",
+                    Body = BuildHubPackageReadyTemplate(transporterName, packageSummary, dto),
+                    IsBodyHtml = true
+                };
+
+                mailMessage.To.Add(email);
+                await smtpClient.SendMailAsync(mailMessage);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending hub package-ready email: {ex.Message}");
+            throw new Exception("Failed to send transporter email.");
+        }
+    }
+
+// File: EmailService.cs
+private string BuildHubPackageReadyTemplate(string transporterName, string packageSummary, HubLoginDto dto)
+{
+    var fullAddress = string.Join(", ",
+        new[] { dto.AddressLine, dto.Town, dto.City, dto.State, dto.Country, dto.Pin }
+        .Where(p => !string.IsNullOrWhiteSpace(p))
+        .Select(p => WebUtility.HtmlEncode(p)));
+
+    var font = "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;";
+
+    var safeTransporter = WebUtility.HtmlEncode(transporterName ?? string.Empty);
+    var safeHubName = WebUtility.HtmlEncode(dto.HubName ?? string.Empty);
+    var safePhone = WebUtility.HtmlEncode(dto.Phone ?? string.Empty);
+    var safeEmail = WebUtility.HtmlEncode(dto.HubEmail ?? string.Empty);
+    var safePackage = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(packageSummary) ? "-" : packageSummary);
+
+    return $@"<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>Package Ready for Pickup - ITISMYTOWN</title>
+</head>
+<body style='margin:0;padding:0;background:#F3F5F8;{font}'>
+<table width='100%' cellpadding='0' cellspacing='0' border='0' bgcolor='#F3F5F8'>
+<tr><td align='center' style='padding:24px 12px;'>
+
+<table width='600' cellpadding='0' cellspacing='0' border='0'
+       style='max-width:600px;width:100%;background:#FFFFFF;border-radius:12px;overflow:hidden;border:1px solid #E5E7EB;'>
+
+  <!-- ===== HEADER (LOGO) ===== -->
+  <tr>
+    <td align='center' style='padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#FFFFFF;'>
+      <img src='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png'
+           alt='ITISMYTOWN' height='55' style='height:55px;width:auto;display:block;margin:0 auto;' />
+    </td>
+  </tr>
+
+  <!-- ===== BANNER ===== -->
+  <tr>
+    <td align='center' style='padding:0;background:#FAFBFC;'>
+      <img src='https://mytownblobstore.blob.core.windows.net/uploadedfiles/ready_to_deliver.jpeg'
+           alt='Package Ready for Pickup' width='600'
+           style='width:100%;max-width:600px;height:auto;display:block;margin:0 auto;pointer-events:none;' />
+    </td>
+  </tr>
+
+  <!-- ===== GREETING ===== -->
+  <tr>
+    <td style='padding:28px 30px 8px 30px;background:#FFFFFF;'>
+      <table cellpadding='0' cellspacing='0' border='0' style='margin-bottom:16px;'>
+        <tr>
+          <td style='background:#DCFCE7;color:#166534;font-size:12px;font-weight:600;
+                     padding:6px 14px;border-radius:99px;letter-spacing:0.04em;text-transform:uppercase;{font}'>
+            &#10003;&nbsp; Ready for Pickup
+          </td>
+        </tr>
+      </table>
+      <p style='color:#000000;font-size:20px;font-weight:700;line-height:1.4;margin:0 0 8px 0;{font}'>
+        Hello {safeTransporter},
+      </p>
+      <p style='color:#585858;font-size:15px;font-weight:400;line-height:1.6;margin:0;{font}'>
+        Your package has reached the hub and is ready to be picked up.
+        Please collect it from the hub details given below.
+      </p>
+    </td>
+  </tr>
+
+  <!-- ===== PACKAGE DETAILS ===== -->
+  <tr>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <div style='color:#000000;font-size:17px;font-weight:600;margin-bottom:12px;{font}'>&#128230;&nbsp; Package Details</div>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='background:#F9FAFB;border:1px solid #E5E7EB;border-radius:12px;'>
+        <tr>
+          <td style='padding:16px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Dimensions</td>
+          <td align='right' style='padding:16px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safePackage}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ===== PICKUP FROM HUB ===== -->
+  <tr>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <div style='color:#000000;font-size:17px;font-weight:600;margin-bottom:12px;{font}'>&#128205;&nbsp; Pickup From Hub</div>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;'>
+        <tr>
+          <td colspan='2' style='padding:18px 20px 6px 20px;'>
+            <div style='color:#14532D;font-size:18px;font-weight:700;line-height:1.4;{font}'>{safeHubName}</div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan='2' style='padding:0 20px 14px 20px;'>
+            <div style='color:#374151;font-size:14px;font-weight:400;line-height:1.6;{font}'>{fullAddress}</div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan='2' style='padding:0 20px;'>
+            <div style='height:1px;background:#BBF7D0;'></div>
+          </td>
+        </tr>
+        <tr>
+          <td style='padding:14px 20px 8px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Phone</td>
+          <td align='right' style='padding:14px 20px 8px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safePhone}
+          </td>
+        </tr>
+        <tr>
+          <td style='padding:8px 20px 16px 20px;color:#6B7280;font-size:14px;font-weight:500;{font}'>Email</td>
+          <td align='right' style='padding:8px 20px 16px 20px;color:#111827;font-size:14px;font-weight:600;{font}'>
+            {safeEmail}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ===== NOTE ===== -->
+  <tr>
+    <td style='padding:20px 30px 8px 30px;background:#FFFFFF;'>
+      <table width='100%' cellpadding='0' cellspacing='0' border='0'
+             style='background:#FEFCE8;border:1px solid #FDE68A;border-radius:10px;'>
+        <tr>
+          <td style='padding:14px 16px;color:#713F12;font-size:13px;line-height:1.6;{font}'>
+            <strong>Please note:</strong> Carry a valid ID and verify the package before pickup.
+            Contact the hub if you need directions.
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ===== BUTTON ===== -->
+  <tr>
+    <td align='center' style='padding:24px 30px 32px 30px;background:#FFFFFF;'>
+      <a href='https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/transporter/my-plans'
+         style='display:inline-block;background:#004481;color:#FFFFFF;border:1px solid #004481;border-radius:8px;
+                padding:14px 44px;font-size:16px;font-weight:600;text-decoration:none;text-align:center;{font}'>
+        View Order
+      </a>
+    </td>
+  </tr>
+
+  <!-- ===== FOOTER ===== -->
+  <tr>
+    <td align='center' style='background:#F3F4F6;padding:20px 30px 24px 30px;'>
+      <div style='color:#6B7280;font-size:12px;line-height:1.6;margin-bottom:6px;{font}'>
+        You&#39;re receiving this email because you&#39;re a transporter on our platform.
+      </div>
+      <div style='color:#6B7280;font-size:12px;{font}'>&copy; 2026 itismytown. All rights reserved.</div>
+    </td>
+  </tr>
+
+</table>
+
+</td></tr>
+</table>
+</body>
+</html>";
+}
+    // ============================================================
+    // CONTACT ENQUIRY EMAIL (to ITISMYTOWN operations team)
+    // ============================================================
+    public async Task SendContactEnquiryEmailAsync(string toEmail, ContactEnquiryDto dto)
+    {
+        if (!await DomainHasMX(toEmail))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"New Contact Enquiry - {dto.FullName}",
+                    Body = BuildContactEnquiryTemplate(dto),
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(toEmail);
+
+                    // So "Reply" goes straight to the person who enquired
+                    try { mailMessage.ReplyToList.Add(new MailAddress(dto.Email, dto.FullName)); }
+                    catch { /* invalid sender email: skip Reply-To */ }
+
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending contact enquiry email: {ex.Message}");
+            throw new Exception("Failed to send contact enquiry email.");
+        }
+    }
+
+    private string BuildContactEnquiryTemplate(ContactEnquiryDto dto)
+    {
+        var font = "font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var logoUrl = "https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png";
+
+        // Everything coming from the website form is untrusted -> encode it
+        var name = WebUtility.HtmlEncode(dto.FullName ?? string.Empty);
+        var role = WebUtility.HtmlEncode(dto.UserRole ?? string.Empty);
+        var email = WebUtility.HtmlEncode(dto.Email ?? string.Empty);
+        var phone = WebUtility.HtmlEncode(dto.Phone ?? string.Empty);
+        var message = WebUtility.HtmlEncode(dto.Message ?? string.Empty)
+                        .Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+
+        var phoneDigits = new string((dto.Phone ?? string.Empty).Where(c => char.IsDigit(c) || c == '+').ToArray());
+        var replySubject = Uri.EscapeDataString("Re: Your enquiry to ITISMYTOWN");
+        var mailtoHref = $"mailto:{WebUtility.HtmlEncode(dto.Email)}?subject={replySubject}";
+        var telHref = $"tel:{phoneDigits}";
+
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>New Contact Enquiry - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;{font}"">
+
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0""
+         style=""max-width:600px;width:100%;background:#FFFFFF;"">
+
+    <!-- ===== LOGO ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px;border-bottom:1px solid #F1F1F3;background:#FFFFFF;"">
+        <img src=""{logoUrl}"" alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+
+    <!-- ===== DARK BLUE HEADER ===== -->
+    <tr>
+      <td bgcolor=""#00386C"" style=""background:#00386C;padding:28px 32px;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td style=""padding-bottom:14px;border-bottom:1px solid #808080;"">
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td style=""background:#4a4a3a;border:1px solid #8a7a30;border-radius:99px;
+                             padding:4px 12px;color:#FCD34D;font-size:11px;font-weight:700;
+                             letter-spacing:0.55px;text-transform:uppercase;{font}"">
+                    &#9679;&nbsp; New Enquiry
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding-top:16px;color:#FFFFFF;font-size:24px;font-weight:700;line-height:32px;{font}"">
+              New Contact Enquiry
+            </td>
+          </tr>
+          <tr>
+            <td style=""padding-top:6px;color:#CBD5E1;font-size:14px;font-weight:400;line-height:22px;{font}"">
+              A new message has been submitted through the ITISMYTOWN website.
+              Please review the details below and follow up with the sender.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== CONTACT INFORMATION ===== -->
+    <tr>
+      <td style=""padding:28px 32px 8px 32px;background:#FFFFFF;"">
+        <div style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                     text-transform:uppercase;margin-bottom:14px;{font}"">Contact Information</div>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;"">
+          <tr>
+            <td style=""padding:24px;"">
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Full Name</div>
+              <div style=""color:#0F172A;font-size:16px;font-weight:700;line-height:24px;margin-bottom:18px;{font}"">{name}</div>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:6px;{font}"">User Role</div>
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:18px;"">
+                <tr>
+                  <td style=""background:#ECFDF5;border:1px solid #A7F3D0;border-radius:99px;
+                             padding:4px 12px;color:#065F46;font-size:12px;font-weight:700;{font}"">{role}</td>
+                  <td style=""padding-left:10px;color:#94A3B8;font-size:11px;{font}"">Selected from form dropdown</td>
+                </tr>
+              </table>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Email Address</div>
+              <div style=""font-size:14px;font-weight:600;line-height:20px;margin-bottom:18px;{font}"">
+                <a href=""{mailtoHref}"" style=""color:#2563EB;text-decoration:none;"">{email}</a>
+              </div>
+
+              <div style=""color:#64748B;font-size:12px;font-weight:600;letter-spacing:0.6px;
+                           text-transform:uppercase;margin-bottom:4px;{font}"">Phone Number</div>
+              <table cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td style=""font-size:14px;font-weight:600;line-height:20px;{font}"">
+                    <a href=""{telHref}"" style=""color:#0F172A;text-decoration:none;"">{phone}</a>
+                  </td>
+                  <td style=""padding-left:8px;"">
+                    <span style=""background:#D1FAE5;border-radius:4px;padding:2px 6px;color:#065F46;
+                                 font-size:10px;font-weight:600;{font}"">Primary</span>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== MESSAGE ===== -->
+    <tr>
+      <td style=""padding:20px 32px 8px 32px;background:#FFFFFF;"">
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:14px;"">
+          <tr>
+            <td style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                        text-transform:uppercase;{font}"">Message From The Sender</td>
+            <td align=""right"" style=""color:#94A3B8;font-size:11px;font-weight:500;{font}"">Unmodified text payload</td>
+          </tr>
+        </table>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;"">
+          <tr>
+            <td style=""padding:24px;color:#1E293B;font-size:15px;font-weight:400;line-height:24px;{font}"">
+              {message}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- ===== QUICK ACTIONS ===== -->
+    <tr>
+      <td style=""padding:20px 32px 32px 32px;background:#FFFFFF;"">
+        <div style=""color:#64748B;font-size:12px;font-weight:700;letter-spacing:0.6px;
+                     text-transform:uppercase;margin-bottom:12px;{font}"">Quick Actions For Operations Staff</div>
+
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td width=""50%"" style=""padding-right:6px;"">
+              <a href=""{mailtoHref}""
+                 style=""display:block;background:#0B192C;color:#FFFFFF;text-align:center;
+                        border-radius:12px;padding:14px 12px;font-size:14px;font-weight:600;
+                        text-decoration:none;{font}"">&#9993;&nbsp; Reply</a>
+            </td>
+            <td width=""50%"" style=""padding-left:6px;"">
+              <a href=""{telHref}""
+                 style=""display:block;background:#FFFFFF;color:#1E293B;text-align:center;
+                        border:1px solid #CBD5E1;border-radius:12px;padding:13px 12px;
+                        font-size:14px;font-weight:600;text-decoration:none;{font}"">&#128222;&nbsp; Call ({phone})</a>
+            </td>
+          </tr>
+        </table>
+
+        <div style=""color:#64748B;font-size:11px;line-height:16px;margin-top:12px;{font}"">
+          * Clicking will open your local email client or device telephone dialler with pre-filled enquiry context.
+        </div>
+      </td>
+    </tr>
+
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td align=""center"" style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <div style=""color:#585858;font-size:12px;line-height:1.5;margin-bottom:6px;{font}"">
+          You&#39;re receiving this email because you&#39;re part of the ITISMYTOWN operations team.
+        </div>
+        <div style=""color:#585858;font-size:12px;line-height:1.5;{font}"">
+          &copy; 2026 itismytown. All rights reserved.
+        </div>
+      </td>
+    </tr>
+
+  </table>
+  </td>
+</tr>
+</table>
+
+</body>
+</html>";
     }
 }
-
-} // closes EmailService class
-
-
-
-
-

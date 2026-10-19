@@ -65,6 +65,8 @@
 
         // Items must belong to store
         public List<OrderItemDto> Items { get; set; } = new();
+
+        public HubAddressDto? HubAddress { get; set; }
     }
 
 
@@ -84,5 +86,18 @@
         public decimal ItemTotal => Quantity * FinalPrice;
     }
 
-  
+    public class HubAddressDto
+    {
+        public int HubId { get; set; }
+        public int HubAddressId { get; set; }
+        public string HubName { get; set; }
+        public string? AddressLine { get; set; }
+        public string? Town { get; set; }
+        public string? City { get; set; }
+        public string? State { get; set; }
+        public string? Country { get; set; }
+        public string? Pin { get; set; }
+        public string? Phone { get; set; }
+    }
+
 }

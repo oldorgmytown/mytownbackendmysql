@@ -929,7 +929,79 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
+        //using pincode
+        public async Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+            string storePincode,
+            string shopperPincode,
+            decimal packageWeight)
+        {
+            DateTime bookingDateTime =
+                TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow,
+                    "India Standard Time");
 
+            var matchingPlan = await (
+                from plan in _context.TransporterTravelPlans
+
+                join transporter in _context.TransporterRegisters
+                    on plan.TransporterRegId equals transporter.TransporterRegId
+
+                where
+                    plan.IsActive
+                    && plan.PlanStatus == "Available"
+                    && plan.StartDate > bookingDateTime
+
+                    // Exact pickup/destination pincode match
+                    && plan.StartLocationPin == storePincode
+                    && plan.DestinationPin == shopperPincode
+
+                    // Weight check
+                    && plan.MaxWeightKg >= packageWeight
+
+                orderby plan.CreatedAt ascending
+
+                select new
+                {
+                    plan.PlanId,
+                    plan.TransporterRegId,
+                    transporter.TransporterName,
+                    plan.VehicleType,
+                    plan.StartDate,
+                    plan.ArrivalDate
+                }
+            )
+            .AsNoTracking()
+            .FirstOrDefaultAsync();
+
+            if (matchingPlan == null)
+                return null;
+
+            int estimatedDays =
+                Math.Max(1, (matchingPlan.ArrivalDate.Date - matchingPlan.StartDate.Date).Days);
+
+            string deliveryRange =
+                estimatedDays <= 1
+                ? "Same day / Next day"
+                : $"{estimatedDays} days";
+
+            string estimatedDeliveryDate =
+                matchingPlan.ArrivalDate
+                .ToString("MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+            return new BestcourierinfoDto
+            {
+                BranchId = 0,
+                ShippingMode = "P2P",
+                Cost = 0,
+                MaxDeliveryDays = estimatedDays,
+                DeliveryDaysRange = deliveryRange,
+                EstimatedDeliveryDate = estimatedDeliveryDate,
+                TransporterRegId = matchingPlan.TransporterRegId,
+                TransporterPlanId = matchingPlan.PlanId,
+                TransporterName = matchingPlan.TransporterName,
+                VehicleType = matchingPlan.VehicleType
+            };
+        }
 
         public async Task<List<BestcourierinfoDto>> GetCourierPricingByLocation(
             string storeTown,

@@ -72,6 +72,9 @@ namespace mytown.Services.Interfaces
 
         Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
 
+        Task AddTransporterNotificationAsync(
+   TransporterDBNotifications notification);
+
 
     }
 }

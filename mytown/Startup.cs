@@ -91,11 +91,15 @@ public class Startup
         services.AddScoped<IProductsNewRepository, ProductsNewRepository>(); 
 
         services.AddScoped<IProductsNewService, ProductsNewService>();
+        services.AddScoped<IAdsService, AdsService>();
         services.AddScoped<IStorePayoutRepository, StorePayoutRepository>();
         services.AddScoped<IStorePayoutService, StorePayoutService>();
         services.AddScoped<ICourierPayoutRepository, CourierPayoutRepository>();
         services.AddScoped<ICourierPayoutService, CourierPayoutService>();
         services.AddScoped<ITransporterPayoutRepository, TransporterPayoutRepository>();
+
+        services.AddScoped<ISenderTransporterPayoutRepository, SenderTransporterPayoutRepository>();
+        services.AddScoped<ISenderTransporterPayoutService, SenderTransporterPayoutService>();
 
 
 
@@ -131,7 +135,8 @@ public class Startup
         services.AddScoped<IMobileAppService, MobileAppService>();
         services.AddScoped<ITransporterPayoutService, TransporterPayoutService>();
 
-
+        services.AddScoped<IHubRepository, HubRepository>();
+        services.AddScoped<IHubService, HubService>();
         services.AddSingleton<ConnectionManager>();
         services.AddHostedService<mytown.Services.Implementations.ChatCleanupBackgroundService>();
 

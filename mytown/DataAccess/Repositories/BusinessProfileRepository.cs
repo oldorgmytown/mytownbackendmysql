@@ -4,6 +4,7 @@ using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
 using System.Globalization;
 using static mytown.Models.busprofilepreview;
 
@@ -62,6 +63,8 @@ namespace mytown.DataAccess.Repositories
                     Businessusername = br.BusinessUsername,
 
                     business_location = bp.BusinessLocation,
+                    BusinessAddress = br.Address1,
+                    PinCode = br.PostalCode,
                     business_tagline = bp.BusinessTagline,
                     business_about = bp.BusinessAbout,
 
@@ -128,6 +131,23 @@ namespace mytown.DataAccess.Repositories
                 if (!string.IsNullOrEmpty(businessProfile.BusinessLocation))
                     existingProfile.BusinessLocation = businessProfile.BusinessLocation;
 
+                // ---- LOCATION: update profile + split into register ----
+                //if (!string.IsNullOrWhiteSpace(businessProfile.BusinessLocation))
+                //{
+                //    var newLocation = businessProfile.BusinessLocation.Trim();
+
+                //    if (newLocation != existingProfile.BusinessLocation)
+                //    {
+                //        existingProfile.BusinessLocation = newLocation;
+
+                //        var register = await _context.BusinessRegisters
+                //            .FirstOrDefaultAsync(r => r.BusRegId == businessProfile.BusRegId);
+
+                //        if (register != null)
+                //            ApplyLocationToRegister(register, newLocation);
+                //    }
+                //}
+
                 if (!string.IsNullOrEmpty(businessProfile.BusinessTagline))
                     existingProfile.BusinessTagline = businessProfile.BusinessTagline;
 
@@ -150,7 +170,11 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.LogoPath = businessProfile.LogoPath;
                 }
 
-                if (!string.IsNullOrEmpty(businessProfile.ProfileStatus))
+                var isAlreadyApproved = string.Equals(
+    existingProfile.ProfileStatus, "approved", StringComparison.OrdinalIgnoreCase);
+
+                // Keep "approved" as is; otherwise take the incoming status
+                if (!isAlreadyApproved && !string.IsNullOrEmpty(businessProfile.ProfileStatus))
                     existingProfile.ProfileStatus = businessProfile.ProfileStatus;
 
                 if (businessProfile.BusCatId != 0)
@@ -168,6 +192,21 @@ namespace mytown.DataAccess.Repositories
 
             await _context.SaveChangesAsync();
             return existingProfile ?? businessProfile;
+        }
+
+        // "Town, City, State, Country" -> register columns
+        private static void ApplyLocationToRegister(BusinessRegister register, string location)
+        {
+            var parts = location
+                .Split(',', StringSplitOptions.TrimEntries);
+
+            if (parts.Length != 4 || parts.Any(string.IsNullOrWhiteSpace))
+                throw new ArgumentException("Location must be in the format: Town, City, State, Country");
+
+            register.Town = parts[0];
+            register.BusinessCity = parts[1];
+            register.BusinessState = parts[2];
+            register.BusinessCountry = parts[3];
         }
 
         public async Task DeleteFromBlobAsync(string fileName)
@@ -238,9 +277,12 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<IEnumerable<ProductSubCategory>> GetAllSubCategoriesAsync()
         {
-            return await _context.product_sub_categories.ToListAsync();
+            return await _context.product_sub_categories
+                .OrderByDescending(sc => _context.ProductsNew
+                    .Count(p => p.ProdSubcatId == sc.ProdSubcatId && p.IsActive))
+                .ThenBy(sc => sc.ProdSubcatName)
+                .ToListAsync();
         }
-
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
         {
             var result = (from product in _context.ProductsNew

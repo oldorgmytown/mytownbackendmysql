@@ -332,6 +332,28 @@ namespace mytown.Controllers
             return Ok(payouts);
         }
 
+        // edit courier head phone
+        [HttpPut("edit-courierhead-phone")]
+        public async Task<IActionResult> UpdatePhone(int courierId, [FromQuery] string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone) || phone.Length > 15)
+                return BadRequest("Invalid phone number.");
+
+            var updated = await _courierService.UpdatePhoneAsync(courierId, phone);
+            return updated ? Ok("Phone updated.") : NotFound("Courier not found.");
+        }
+
+        //edit branch phone
+        [HttpPut("edit-branch-phone")]
+        public async Task<IActionResult> UpdateBranchPhone(int branchId, [FromQuery] string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone) || phone.Length > 20)
+                return BadRequest("Invalid phone number.");
+
+            var updated = await _courierService.UpdateBranchPhoneAsync(branchId, phone);
+            return updated ? Ok("Branch phone updated.") : NotFound("Branch not found.");
+        }
+
     }
 
 }

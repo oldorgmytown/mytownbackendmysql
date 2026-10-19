@@ -148,6 +148,30 @@ namespace mytown.Controllers
                 data = products
             });
         }
+        [HttpPost("add-product-reviews")]
+        public async Task<IActionResult> AddProductReview([FromBody] AddProductReviewDto dto)
+        {
+            try
+            {
+                var review = await _service.AddProductReviewAsync(dto);
+                return Ok(new { message = "Review submitted.", reviewId = review.ProductReviewId });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });   // already reviewed
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("get-product-reviews/{productId}")]
+        public async Task<IActionResult> GetProductReviews(long productId)
+        {
+            var result = await _service.GetProductReviewsAsync(productId);
+            return Ok(result);
+        }
     }
     }
 

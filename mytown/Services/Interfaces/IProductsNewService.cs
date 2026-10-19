@@ -1,5 +1,6 @@
 ﻿using mytown.DTOs.ProductsNew;
 using mytown.Models.DTO_s;
+using MyTown.Models;
 
 namespace mytown.Services.Interfaces
 {
@@ -13,5 +14,8 @@ namespace mytown.Services.Interfaces
         Task<ProductMasterNamesDto> GetProductMasterNamesByBusinessAsync(int busRegId);
         Task<List<ProductSearchResultDto>> SearchProductsAsync(
      ProductSearchRequestDto request);
+
+        Task<ProductReview> AddProductReviewAsync(AddProductReviewDto dto);
+        Task<ProductReviewSummaryDto> GetProductReviewsAsync(long productId);
     }
 }

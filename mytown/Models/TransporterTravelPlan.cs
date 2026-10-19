@@ -57,13 +57,13 @@ namespace mytown.Models
         [Column("destination_country", TypeName = "varchar(100)")]
         public string DestinationCountry { get; set; }
 
-        //[Required]
-        //[Column("start_location", TypeName = "varchar(300)")]
-        //public string StartLocation { get; set; }
+        [Required]
+        [Column("start_location_pin", TypeName = "varchar(300)")]
+        public string StartLocationPin { get; set; }
 
-        //[Required]
-        //[Column("destination", TypeName = "varchar(300)")]
-        //public string Destination { get; set; }
+        [Required]
+        [Column("destination_pin", TypeName = "varchar(300)")]
+        public string DestinationPin { get; set; }
 
         [Column("preferred_route", TypeName = "varchar(200)")]
         public string PreferredRoute { get; set; }

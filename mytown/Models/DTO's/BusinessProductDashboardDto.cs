@@ -20,5 +20,7 @@
         public int NoOfPurchased { get; set; }
 
         public string ProductImage { get; set; }
+        public decimal AverageRating { get; set; }   // 0 when there are no reviews
+        public int TotalReviews { get; set; }
     }
 }

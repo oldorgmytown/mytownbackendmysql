@@ -308,7 +308,7 @@ namespace mytown.DataAccess.Repositories
                         destinationCity = shopper?.City ?? "";
                     }
 
-                    decimal p2pCost = 100m; // default fallback
+                    decimal p2pCost = 50m; // default fallback
 
                     if (store != null && !string.IsNullOrEmpty(destinationCity))
                     {
@@ -659,9 +659,28 @@ namespace mytown.DataAccess.Repositories
            EstimatedDays = sd.EstimatedDays,
            EstimatedDeliveryDate = order.OrderDate.AddDays(sd.EstimatedDays),
            ShippingStatus = sd.ShippingStatus,
-           TrackingId = sd.TrackingId
+           TrackingId = sd.TrackingId,
+
+              // ✅ Hub matched by store pincode
+        HubAddress = _context.HubDetails
+            .Where(h => h.Pin == b.PostalCode)
+            .Select(h => new HubAddressDto
+            {
+                HubId = h.HubId,
+                HubAddressId = h.HubAddressId,
+                HubName = h.HubName,
+                AddressLine = h.AddressLine,
+                Town = h.Town,
+                City = h.City,
+                State = h.State,
+                Country = h.Country,
+                Pin = h.Pin,
+                Phone = h.Phone
+            })
+            .FirstOrDefault()
        }
-   ).ToListAsync();
+).ToListAsync();
+       
 
             // ✅ Get DeliveryAddress from ShippingDetails (any one store is enough)
             var deliveryAddress = await _context.ShippingDetails
@@ -721,6 +740,28 @@ namespace mytown.DataAccess.Repositories
 
                 Stores = stores
             };
+        }
+
+        //reduce stock qty after order is placed
+        public async Task ReduceStockAsync(int orderId)
+        {
+            var skuIds = await (
+                from so in _context.StoreOrders
+                join oi in _context.OrderDetails on so.StoreOrderId equals oi.StoreOrderId
+                where so.OrderId == orderId
+                select oi.SkuId
+            ).ToListAsync();
+
+            var variants = await _context.ProductVariantsNew
+                .Where(v => skuIds.Contains(v.SkuId))
+                .ToListAsync();
+
+            foreach (var variant in variants)
+            {
+                variant.StockQuantity -= 1;
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         public async Task AddShopperNotificationAsync(ShopperDBNotifications notification)

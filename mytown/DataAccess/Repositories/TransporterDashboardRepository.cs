@@ -5,6 +5,8 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Interfaces;
+using Serilog.Core;
+using Stripe;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -13,12 +15,19 @@ namespace mytown.DataAccess.Repositories
         private readonly AppDbContext _context;
         private readonly IOrderRepository _orderRepository;
         private readonly IEmailService _emailService;
+        private readonly IStorePayoutRepository _storePayoutRepository;
+        private readonly ISenderTransporterPayoutService _payoutService;
+        private readonly ILogger<TransporterDashboardRepository> _logger;
 
-        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService)
+        public TransporterDashboardRepository(AppDbContext context, IOrderRepository orderRepo, IEmailService emailService, IStorePayoutRepository storePayoutRepository, ISenderTransporterPayoutService payoutService, ILogger<TransporterDashboardRepository> logger)
+            
         {
             _context = context;
             _orderRepository = orderRepo;
             _emailService = emailService;
+            _storePayoutRepository = storePayoutRepository;
+            _payoutService = payoutService;
+            _logger = logger; 
         }
 
         // -------------------------------------------------------------------------
@@ -146,6 +155,7 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         StartCity = p.StartCity,
         StartState = p.StartState,
         StartCountry = p.StartCountry,
+        StartLocationPin = p.StartLocationPin,
 
         // =========================================================
         // DESTINATION LOCATION
@@ -155,6 +165,7 @@ private static TravelPlanDto MapPlanToDto(TransporterTravelPlan p)
         DestinationCity = p.DestinationCity,
         DestinationState = p.DestinationState,
         DestinationCountry = p.DestinationCountry,
+        DestinationPin = p.DestinationPin,
 
         PreferredRoute = p.PreferredRoute,
         DistanceKm          = p.DistanceKm,
@@ -212,6 +223,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         StartCity = dto.StartCity,
         StartState = dto.StartState,
         StartCountry = dto.StartCountry,
+        StartLocationPin = dto.StartLocationPin,
 
         // =========================================================
         // DESTINATION LOCATION
@@ -221,6 +233,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         DestinationCity = dto.DestinationCity,
         DestinationState = dto.DestinationState,
         DestinationCountry = dto.DestinationCountry,
+        DestinationPin = dto.DestinationPin,
         PreferredRoute      = dto.PreferredRoute,
         DistanceKm          = dto.DistanceKm,
         StartDate           = dto.StartDate,
@@ -413,6 +426,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     on d.StoreOrderId equals p.StoreOrderId into packageGroup
                 from p in packageGroup.DefaultIfEmpty()
 
+                    // Hub matched by the travel plan's start pin (one hub max)
+                let hub = _context.HubDetails
+                    .Where(h => h.Pin == d.TravelPlan.StartLocationPin.Trim())
+                    .OrderBy(h => h.HubId)
+                    .FirstOrDefault()
+
+
                 where d.TransporterRegId == transporterRegId
                    && activeStatuses.Contains(d.DeliveryStatus)
 
@@ -445,7 +465,14 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                         ? "Incomplete"
                         : d.DeliveryStatus,
                     AcceptedAt = d.AssignedAt,
-                    EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy")
+                    EtaInfo = d.TravelPlan.ArrivalDate.ToString("dd MMM yyyy"),
+
+                    // ✅ Hub details
+            HubName = hub != null ? hub.HubName : null,
+                    HubAddress = hub != null
+                ? hub.AddressLine + ", " + hub.Town + ", " + hub.City + ", " + hub.State + " - " + hub.Pin
+                : null,
+                    HubPhone = hub != null ? hub.Phone : null,
                 }
             ).ToListAsync();
 
@@ -502,10 +529,22 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 if (shipping != null)
                 {
 
-                    if (dto.NewStatus == "PickedUp" &&
-           shipping.ShippingStatus != "Ready to Ship")
+                    var current = shipping.ShippingStatus;
+
+                    if (dto.NewStatus == "ReachedPickup" &&
+                        current != "Package Reached Hub" &&
+                        current != "Handed Over")
                     {
-                        return false;
+                        throw new InvalidOperationException(
+                            "You can mark reached pickup only after the package has reached the hub.");
+                    }
+
+                    if (dto.NewStatus == "PickedUp" &&
+                        current != "Handed Over" &&
+                        current != "ReachedPickup")
+                    {
+                        throw new InvalidOperationException(
+                            "You can mark the package as picked up only after the hub has handed it over or the transporter has reached pickup.");
                     }
 
                     shipping.ShippingStatus = dto.NewStatus switch
@@ -528,6 +567,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     if (dto.NewStatus == "Delivered")
                     {
                         shipping.DeliveredDate = DateTime.UtcNow;
+                        
                     }
                 }
             }
@@ -876,6 +916,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             if (order.DeliveryStatus == deliveryStatus)
                 throw new Exception("Status already updated");
 
+            // PickedUp is allowed only after the hub has handed the package over
+            if (deliveryStatus.Equals("PickedUp", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(order.DeliveryStatus, "Handed Over", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("You can mark the package as picked up only after the hub has handed it over.");
+            }
+
             // Allow only after pickup date & time
             var pickupTime = DateTime.Parse(order.PickupTime).TimeOfDay;
 
@@ -937,6 +984,31 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             await _context.SaveChangesAsync();
 
+            // Trigger payout AFTER the status update is successfully saved
+            if (deliveryStatus.Equals("Delivered", StringComparison.OrdinalIgnoreCase))
+            {
+                string? payoutWarning = null;
+                try
+                {
+                    var payoutResult = await _payoutService.CreatePayoutAsync(senderOrderId);
+
+                    if (payoutResult == null || !payoutResult.Success)
+                    {
+                        _logger.LogWarning(
+                            "Transporter payout failed for SenderOrderId {SenderOrderId}: {Message}",
+                            senderOrderId, payoutResult?.Message ?? "No result returned");
+                    }
+                }
+               
+
+               
+                catch (Exception payoutEx)
+                {
+                    _logger.LogError(payoutEx, "Payout threw for SenderOrderId {Id}", senderOrderId);
+                    payoutWarning = payoutEx.Message + " | " + payoutEx.InnerException?.Message;
+                }
+            }
+
             return true;
         }
 
@@ -989,6 +1061,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 select new TransporterPayoutDashboardDto
                 {
                     StoreOrderId = tp.StoreOrderId,
+                    SenderOrderId = tp.SenderOrderId,
+                    OrderType = tp.OrderType,
                     Amount = tp.Amount,
                     Status = tp.Status,
                     Bankname = tad.BankName,

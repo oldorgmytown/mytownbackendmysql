@@ -91,6 +91,10 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<CourierPayoutDashboardDto>> GetCourierPayoutsByCourierIdAsync(int courierId);
 
+        Task<bool> UpdatePhoneAsync(int courierId, string phone);
+        Task<bool> UpdateBranchPhoneAsync(int branchId, string phone);
+
+
 
 
     }

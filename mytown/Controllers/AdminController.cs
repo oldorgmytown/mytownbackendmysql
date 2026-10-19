@@ -4,6 +4,7 @@ using MySqlConnector;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Diagnostics;
 
 namespace mytown.Controllers
@@ -16,12 +17,17 @@ namespace mytown.Controllers
 
         private readonly IAdminService _adminService;
         private readonly ILogger<AdminController> _logger;
+        private readonly IEmailService _emailService;
+        private readonly IConfiguration _config;
 
         public AdminController(IAdminService adminService,
-                               ILogger<AdminController> logger)
+                               ILogger<AdminController> logger, IEmailService emailService,
+        IConfiguration config)
         {
             _adminService = adminService ?? throw new ArgumentNullException(nameof(adminService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _emailService = emailService;
+            _config = config;
         }
 
         [Authorize]
@@ -500,16 +506,97 @@ namespace mytown.Controllers
             });
         }
         [HttpGet("getBusinessLocationCounts")]
-        public async Task<IActionResult> GetBusinessLocationCounts()
+public async Task<IActionResult> GetBusinessLocationCounts()
+{
+    try
+    {
+        var result = await _adminService.GetBusinessLocationCountsAsync();
+        return Ok(result);
+    }
+    catch (Exception ex)
+    {
+        return StatusCode(500, new { message = "Error retrieving business location counts", error = ex.Message });
+    }
+}
+        //payouts
+
+        [HttpGet("admin-payout-summary")]
+        public async Task<IActionResult> GetAdminSummary([FromQuery] int month, [FromQuery] int year)
         {
+            var result = await _adminService.GetAdminSummaryAsync(month, year);
+            return Ok(result);
+        }
+
+        [HttpGet("admin-payout-orders")]
+        public async Task<IActionResult> GetAdminOrders(
+    [FromQuery] int month, [FromQuery] int year,
+    [FromQuery] int? storeOrderId, [FromQuery] int? orderId,
+    [FromQuery] string? shippingStatus,
+    [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _adminService.GetAdminOrderDetailsAsync(
+                month, year, storeOrderId, orderId, shippingStatus, pageNumber, pageSize);
+            return Ok(result);
+        }
+
+        [HttpGet("admin-payout-orders-details/{storeOrderId}")]
+        public async Task<IActionResult> GetAdminOrderDetail(int storeOrderId)
+        {
+            var result = await _adminService.GetAdminOrderDetailAsync(storeOrderId);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpGet("admin-sender-orders")]
+        public async Task<IActionResult> GetAdminSenderOrders(
+    [FromQuery] int month, [FromQuery] int year,
+    [FromQuery] int? senderOrderId, [FromQuery] DateTime? pickupDate,
+    [FromQuery] string? deliveryStatus,
+    [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        {
+            var result = await _adminService.GetAdminSenderOrdersAsync(
+                month, year, senderOrderId, pickupDate, deliveryStatus, pageNumber, pageSize);
+            return Ok(result);
+        }
+
+        [HttpGet("admin-sender-orders-details/{senderOrderId}")]
+        public async Task<IActionResult> GetAdminSenderOrderDetail(int senderOrderId)
+        {
+            var result = await _adminService.GetAdminSenderOrderDetailAsync(senderOrderId);
+            return result == null ? NotFound() : Ok(result);
+        }
+
+        [HttpPost("send-enquiry")]
+        public async Task<IActionResult> SendEnquiry([FromBody] ContactEnquiryDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Operations team inbox (kept in config, never sent from the frontend)
+            var opsEmail = _config["ContactSettings:OperationsEmail"];
+            if (string.IsNullOrWhiteSpace(opsEmail))
+            {
+                _logger.LogError("ContactSettings:OperationsEmail is not configured.");
+                return StatusCode(500, new { success = false, message = "Server configuration error." });
+            }
+
             try
             {
-                var result = await _adminService.GetBusinessLocationCountsAsync();
-                return Ok(result);
+                await _emailService.SendContactEnquiryEmailAsync(opsEmail, dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Your message has been sent. Our team will get back to you soon."
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Error retrieving business location counts", error = ex.Message });
+                _logger.LogError(ex, "Failed to send contact enquiry from {Email}", dto.Email);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "We couldn't send your message right now. Please try again later."
+                });
             }
         }
     }

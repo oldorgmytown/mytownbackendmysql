@@ -75,6 +75,11 @@ public interface ICourierServiceRepository
         string shopperState,
         string shopperCountry);
 
+    Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+            string storePincode,
+            string shopperPincode,
+            decimal packageWeight);
+
     Task<CourierAccountDetail?> GetCourierAccountDetailByCourierId(int courierId);
     Task UpdateCourierAccountDetails(CourierAccountDetail accountDetail);
 

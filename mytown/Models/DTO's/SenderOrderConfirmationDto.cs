@@ -15,6 +15,12 @@
 
         // Pickup
         public string PickupAddress { get; set; }
+
+        public string PickupTown { get; set; }
+        public string PickupCity { get; set; }
+        public string PickupState { get; set; }
+        public string PickupCountry { get; set; }
+
         public DateTime PickupDate { get; set; }
         public string PickupTime { get; set; }
 
@@ -38,5 +44,7 @@
         // Sender info (needed for transporter email)
         public string SenderName { get; set; }
         public string SenderPhone { get; set; }
+
+        public HubAddressDto? HubAddress { get; set; }
     }
 }

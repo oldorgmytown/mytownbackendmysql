@@ -1,4 +1,6 @@
 // ===== TravelPlanDto.cs =====
+using System.Text.Json.Serialization;
+
 namespace mytown.Models.DTO_s
 {
     public class TravelPlanDto
@@ -28,8 +30,11 @@ namespace mytown.Models.DTO_s
         public string DestinationCity { get; set; }
         public string DestinationState { get; set; }
         public string DestinationCountry { get; set; }
-        //public string StartLocation { get; set; }
-        //public string Destination { get; set; }
+        [JsonPropertyName("startPincode")]
+        public string StartLocationPin { get; set; }
+
+        [JsonPropertyName("destinationPincode")]
+        public string DestinationPin { get; set; }
         public string PreferredRoute { get; set; }
         public decimal? DistanceKm { get; set; }
 
@@ -120,6 +125,10 @@ namespace mytown.Models.DTO_s
         public string DeliveryStatus { get; set; }
         public DateTime? AcceptedAt { get; set; }
         public string EtaInfo { get; set; }
+
+        public string? HubName { get; set; }
+        public string? HubAddress { get; set; }
+        public string? HubPhone { get; set; }
     }
 }
 

@@ -101,6 +101,7 @@ namespace mytown.Models
             public DbSet<SenderAlternateAddress> SenderAlternateAddresses { get; set; }
 
             // shopper experience
+
             public DbSet<ShopperExperience> ShopperExperiences { get; set; }
             public DbSet<ShopperExperiencePhoto> ShopperExperiencePhotos { get; set; }
 
@@ -110,6 +111,10 @@ namespace mytown.Models
             public DbSet<BusinessProfileViewer> BusinessProfileViewers { get; set; }
             public DbSet<BusinessConnection> BusinessConnections { get; set; }
             public DbSet<ChatMessage> ChatMessages { get; set; }
+
+            //product review
+            public DbSet<ProductReview> ProductReviews { get; set; }
+            public DbSet<ProductReviewPhoto> ProductReviewPhotos { get; set; }
 
             // location images
             public DbSet<LocationImage> LocationImages { get; set; }
@@ -130,6 +135,14 @@ namespace mytown.Models
             public DbSet<TransporterAccountDetail> TransporterAccountDetails { get; set; }
 
             public DbSet<TransporterPayout> TransporterPayouts { get; set; }
+
+            //Hub login - 5oct 2026
+            public DbSet<HubDetail> HubDetails { get; set; }
+            public DbSet<HubStoreOrderVerification> HubStoreOrderVerifications { get; set; }
+            public DbSet<HubSenderOrderVerification> HubSenderOrderVerifications { get; set; }
+                        // Ads / promotions
+            public DbSet<AdPromotion> AdPromotions { get; set; }
+            public DbSet<AdPaymentOrder> AdPaymentOrders { get; set; }
 
 
 
@@ -160,6 +173,11 @@ namespace mytown.Models
 
                 modelBuilder.Entity<ChatMessage>()
                     .HasIndex(m => m.SentTime);
+
+                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.RazorpayOrderId).IsUnique();
+                modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.StripePaymentIntentId).IsUnique();
+                modelBuilder.Entity<AdPromotion>().HasIndex(p => p.PaymentOrderId).IsUnique();
+                modelBuilder.Entity<AdPromotion>().HasIndex(p => p.BusRegId);
 
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {

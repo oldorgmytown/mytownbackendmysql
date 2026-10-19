@@ -277,5 +277,36 @@ GetSenderRegistersPaginatedAsync(
             return await _adminRepo.GetAllOrdersFullDetailsPaginatedAsync(page, pageSize, status, search);
         }
 
+        //payouts
+        public async Task<AdminPayoutsSummaryDto> GetAdminSummaryAsync(int month, int year)
+        {
+            return await _adminRepo.GetAdminSummaryAsync(month, year);
+        }
+
+        public async Task<PagedResultDto<AdminOrderRowDto>> GetAdminOrderDetailsAsync(
+    int month, int year, int? storeOrderId, int? orderId, string? shippingStatus,
+    int pageNumber, int pageSize)
+        {
+            return await _adminRepo.GetAdminOrderDetailsAsync(
+                month, year, storeOrderId, orderId, shippingStatus, pageNumber, pageSize);
+        }
+
+        public async Task<AdminOrderDetailDto?> GetAdminOrderDetailAsync(int storeOrderId)
+        {
+            return await _adminRepo.GetAdminOrderDetailAsync(storeOrderId);
+        }
+
+        public async Task<PagedResultDto<AdminSenderOrderRowDto>> GetAdminSenderOrdersAsync(
+    int month, int year, int? senderOrderId, DateTime? pickupDate, string? deliveryStatus,
+    int pageNumber, int pageSize)
+        {
+            return await _adminRepo.GetAdminSenderOrdersAsync(
+                month, year, senderOrderId, pickupDate, deliveryStatus, pageNumber, pageSize);
+        }
+
+        public async Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId)
+        {
+            return await _adminRepo.GetAdminSenderOrderDetailAsync(senderOrderId);
+        }
     }
 }

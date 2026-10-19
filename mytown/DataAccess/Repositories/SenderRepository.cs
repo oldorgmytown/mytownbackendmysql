@@ -137,7 +137,8 @@ namespace mytown.DataAccess.Implementations
                 ReceiverCity = dto.ReceiverCity,
                 ReceiverState = dto.ReceiverState,
                 ReceiverCountry = dto.ReceiverCountry,
-                ReceiverPincode = dto.ReceiverPincode
+                ReceiverPincode = dto.ReceiverPincode,
+                TransporterCharges = 50m, // Default transporter charges
             };
 
             _context.SenderOrders.Add(order);
@@ -184,13 +185,15 @@ namespace mytown.DataAccess.Implementations
                 .OrderBy(x => x.Cost)
                 .FirstOrDefault();
 
-            decimal transporterCharges = 0;
+            decimal transporterCharges;
 
             if (courierOption != null)
             {
-                transporterCharges = Math.Round(
-                    courierOption.Cost / 2m,
-                    2);
+                transporterCharges = Math.Round(courierOption.Cost / 2m, 2);
+            }
+            else
+            {
+                transporterCharges = 50m;
             }
 
             // Common matching query
@@ -199,18 +202,19 @@ namespace mytown.DataAccess.Implementations
     .Where(x =>
         x.IsActive &&
         x.PlanStatus == "Available" &&
-        x.StartDate <= pickupDateTime &&
+        x.StartDate >= pickupDateTime &&
         x.ArrivalDate >= pickupDateTime &&
+         x.StartLocationPin == order.PickupPincode &&
+            x.DestinationPin == order.ReceiverPincode &&
+        //x.StartTown.ToLower() == order.PickupTown.ToLower() &&
+        //x.StartCity.ToLower() == order.PickupCity.ToLower() &&
+        //x.StartState.ToLower() == order.PickupState.ToLower() &&
+        //x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
 
-        x.StartTown.ToLower() == order.PickupTown.ToLower() &&
-        x.StartCity.ToLower() == order.PickupCity.ToLower() &&
-        x.StartState.ToLower() == order.PickupState.ToLower() &&
-        x.StartCountry.ToLower() == order.PickupCountry.ToLower() &&
-
-        x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
-        x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
-        x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
-        x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
+        //x.DestinationTown.ToLower() == order.ReceiverTown.ToLower() &&
+        //x.DestinationCity.ToLower() == order.ReceiverCity.ToLower() &&
+        //x.DestinationState.ToLower() == order.ReceiverState.ToLower() &&
+        //x.DestinationCountry.ToLower() == order.ReceiverCountry.ToLower() &&
 
         (!order.IsFragile || x.AcceptsFragile) &&
         (!order.IsPerishable || x.AcceptsPerishable)
@@ -232,13 +236,16 @@ namespace mytown.DataAccess.Implementations
                     StartDate = x.StartDate,
                     ArrivalDate = x.ArrivalDate,
                     PreferredContact = x.PreferredContact,
-                    transporterCharge = transporterCharges,
+                   // transporterCharge = transporterCharges,
                     Message = "Matching transporter found"
                 })
                 .FirstOrDefaultAsync();
 
             if (exactWeightMatch != null)
+            {
+                exactWeightMatch.transporterCharge = transporterCharges;
                 return exactWeightMatch;
+            }
 
             // Second priority -> all matched except weight
             var overweightTransporter = await matchingQuery
@@ -257,10 +264,15 @@ namespace mytown.DataAccess.Implementations
                  StartDate = x.StartDate,
                  ArrivalDate = x.ArrivalDate,
                  PreferredContact = x.PreferredContact,
-                 transporterCharge = transporterCharges,
+               //  transporterCharge = transporterCharges,
                  Message = "Package weight exceeds transporter maximum weight limit"
              })
              .FirstOrDefaultAsync();
+
+            if (overweightTransporter != null)
+            {
+                overweightTransporter.transporterCharge = transporterCharges;
+            }
 
             return overweightTransporter;
         }
@@ -285,7 +297,7 @@ namespace mytown.DataAccess.Implementations
                 .FirstOrDefaultAsync(x => x.PlanId == dto.TransporterPlanId);
 
             decimal transportCharge = order.TransporterCharges ??  0m;
-            decimal gstAmount = transportCharge * 0.18m;
+            decimal gstAmount = transportCharge * 0m; // changed to 0% GST as per new requirement
             decimal totalAmount = transportCharge + gstAmount;
 
             string startLocation =
@@ -428,6 +440,10 @@ var plan =
                 DeclaredValue = order.ProductCost,
 
                 PickupAddress = order.PickupAddress,
+                PickupTown = order.PickupTown,
+                PickupCity = order.PickupCity,
+                PickupState = order.PickupState,
+                PickupCountry = order.PickupCountry,
                 PickupDate = order.PickupDate,
                 PickupTime = order.PickupTime,
 
@@ -550,77 +566,58 @@ GetTransporterByIdAsync(int transporterId)
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<List<SenderOrdersTabDto>>
- GetSenderOrdersAsync(int senderId, string orderStatus)
+        public async Task<List<SenderOrdersTabDto>> GetSenderOrdersAsync(int senderId, string orderStatus)
         {
             var today = DateTime.UtcNow.Date;
 
             var query =
                 from o in _context.SenderOrders
-
                 where o.SenderRegId == senderId
-               && o.TransporterRegId != null
+                      && o.TransporterRegId != null
 
                 join t in _context.TransporterRegisters
-                on o.TransporterRegId equals t.TransporterRegId
-                into transporterGroup
-
+                    on o.TransporterRegId equals t.TransporterRegId
+                    into transporterGroup
                 from transporter in transporterGroup.DefaultIfEmpty()
 
-                where o.SenderRegId == senderId
+                   
 
                 select new SenderOrdersTabDto
                 {
                     SenderOrderId = o.SenderOrderId,
-
                     ProductName = o.ProductName,
-
                     BookingDate = o.CreatedAt,
-
                     PickupLocation = o.PickupAddress,
-
                     DeliveryLocation = o.ReceiverAddress,
-
                     DeliveryStatus = o.DeliveryStatus,
 
                     OrderType =
                         o.DeliveryStatus == "Delivered"
                             ? "Delivered"
                             : o.DeliveryStatus == "Pending"
-                                ? (o.CreatedAt.Date == today
-                                    ? "New"
-                                    : "Pending")
-                                : "InProgress",
+                                ? (o.CreatedAt.Date == today ? "New" : "Pending")
+                                : "InProgress",   // includes Package Reached Hub / Handed Over
 
-                    TransporterName =
-                        transporter != null
-                            ? transporter.TransporterName
-                            : null,
+                    TransporterName = transporter != null ? transporter.TransporterName : null,
+                    TransporterPhone = transporter != null ? transporter.PhoneNumber : null,
+                    TrackingId = o.TrackingId,
 
-                    TransporterPhone =
-                        transporter != null
-                            ? transporter.PhoneNumber
-                            : null,
-                    TrackingId = o.TrackingId
+                    EstDeliveryDate = _context.TransporterTravelPlans
+        .Where(tp => tp.PlanId == o.TransporterPlanId)
+        .Select(tp => (DateTime?)tp.ArrivalDate)
+        .FirstOrDefault()
                 };
 
-            // NEW = Today's pending orders
             if (orderStatus == "New")
             {
                 query = query.Where(x =>
                     x.DeliveryStatus == "Pending" &&
                     x.BookingDate.Date == today);
             }
-
-            // PENDING = Previous pending orders
             else if (orderStatus == "Pending")
             {
-                query = query.Where(x =>
-                    x.DeliveryStatus == "Pending");
+                query = query.Where(x => x.DeliveryStatus == "Pending");
             }
-
-            //sender In Progress status error fixed - changed to In Progress from InProgress
-
             else if (orderStatus == "In Progress")
             {
                 query = query.Where(x =>
@@ -628,14 +625,13 @@ GetTransporterByIdAsync(int transporterId)
                     x.DeliveryStatus.ToLower() == "inprogress" ||
                     x.DeliveryStatus.ToLower() == "in progress" ||
                     x.DeliveryStatus.ToLower() == "intransit" ||
-                    x.DeliveryStatus.ToLower() == "in transit");
+                    x.DeliveryStatus.ToLower() == "in transit" ||
+                    x.DeliveryStatus.ToLower() == "package reached hub" ||
+                    x.DeliveryStatus.ToLower() == "handed over");
             }
-
-            // DELIVERED
             else if (orderStatus == "Delivered")
             {
-                query = query.Where(x =>
-                    x.DeliveryStatus == "Delivered");
+                query = query.Where(x => x.DeliveryStatus == "Delivered");
             }
 
             return await query

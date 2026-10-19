@@ -583,17 +583,27 @@ namespace mytown.DataAccess.Repositories
         // save shopper recently viewd products
         public async Task SaveProductViewAsync(int shopperId, int productId)
         {
-            var view = new ShopperProductRecentView
-            {
-                ShopperId = shopperId,
-                ProductId = productId,
-                LastViewedAt = DateTime.UtcNow
-            };
+            long pid = productId;
 
-            _context.ShopperProductRecentViews.Add(view);
+            var existing = await _context.ShopperProductRecentViews
+                .FirstOrDefaultAsync(v => v.ShopperId == shopperId && v.ProductId == pid);
+
+            if (existing != null)
+            {
+                existing.LastViewedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                _context.ShopperProductRecentViews.Add(new ShopperProductRecentView
+                {
+                    ShopperId = shopperId,
+                    ProductId = pid,
+                    LastViewedAt = DateTime.UtcNow
+                });
+            }
+
             await _context.SaveChangesAsync();
         }
-
 
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetTopPurchasedProductsByLocation(string location, int minOrders = 5)
         {

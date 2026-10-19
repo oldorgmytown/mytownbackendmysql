@@ -147,36 +147,36 @@ namespace mytown.Controllers
 
                 await _businessService.SaveBusinessAccountDetails(bankDetails);
 
-                // --- Cashfree beneficiary creation (non-blocking) ---
+                //// --- Cashfree beneficiary creation (non-blocking) ---
                 bool beneficiaryCreated = false;
-                try
-                {
-                    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequest
-                    {
-                        BeneficiaryId = $"BEN_{newBusiness.BusRegId}",
-                        BeneficiaryName = bankDetails.AccountHolderName,
-                        BankAccountNumber = bankDetails.AccountNumber,
-                        BankIfsc = bankDetails.IFSCCode
-                    };
+                //try
+                //{
+                //    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequest
+                //    {
+                //        BeneficiaryId = $"BEN_{newBusiness.BusRegId}",
+                //        BeneficiaryName = bankDetails.AccountHolderName,
+                //        BankAccountNumber = bankDetails.AccountNumber,
+                //        BankIfsc = bankDetails.IFSCCode
+                //    };
 
-                    var cfResponse = await _businessService.CreateBeneficiaryAsync(beneficiaryRequest);
+                //    var cfResponse = await _businessService.CreateBeneficiaryAsync(beneficiaryRequest);
 
-                    bankDetails.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
-                    bankDetails.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
-                    bankDetails.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+                //    bankDetails.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                //    bankDetails.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                //    bankDetails.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
 
-                    await _businessService.SaveBusinessAccountDetails(bankDetails);
+                //    await _businessService.SaveBusinessAccountDetails(bankDetails);
 
-                    beneficiaryCreated = true;
-                }
-                catch (Exception cfEx)
-                {
-                    _logger.LogError(cfEx,
-                        "Cashfree beneficiary creation failed for BusRegId {BusRegId}. Will retry at payout time.",
-                        newBusiness.BusRegId);
-                    // swallow — registration must still succeed
-                }
-                // --- end beneficiary block ---
+                //    beneficiaryCreated = true;
+                //}
+                //catch (Exception cfEx)
+                //{
+                //    _logger.LogError(cfEx,
+                //        "Cashfree beneficiary creation failed for BusRegId {BusRegId}. Will retry at payout time.",
+                //        newBusiness.BusRegId);
+                //    // swallow — registration must still succeed
+                //}
+                //// --- end beneficiary block ---
 
                 var newProfile = new BusinessProfile
                 {

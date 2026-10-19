@@ -7,6 +7,7 @@
         public string ProductName { get; set; }
 
         public DateTime BookingDate { get; set; }
+        public DateTime? EstDeliveryDate { get; set; }
 
         public string PickupLocation { get; set; }
 

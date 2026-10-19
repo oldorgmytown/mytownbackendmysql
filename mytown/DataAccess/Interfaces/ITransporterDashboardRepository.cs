@@ -76,5 +76,7 @@ namespace mytown.DataAccess.Interfaces
         Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId);
         Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail);
         Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
+        Task AddTransporterNotificationAsync(
+    TransporterDBNotifications notification);
     }
 }

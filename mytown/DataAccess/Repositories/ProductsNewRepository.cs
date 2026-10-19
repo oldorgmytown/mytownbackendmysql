@@ -4,6 +4,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Repositories.Interfaces;
+using MyTown.Models;
 
 
 namespace mytown.Repositories
@@ -618,6 +619,73 @@ namespace mytown.Repositories
                     };
                 })
                 .ToList();
+        }
+
+        public async Task<ProductReview> AddProductReviewAsync(AddProductReviewDto dto)
+        {
+            // One review per shopper per product
+            var alreadyReviewed = await _context.ProductReviews
+                .AnyAsync(r => r.ShopperRegId == dto.ShopperRegId && r.ProductId == dto.ProductId);
+
+            if (alreadyReviewed)
+                throw new InvalidOperationException("You have already reviewed this product.");
+
+            // Verified purchase: this shopper has an order containing this product
+            var verified = await (
+                from od in _context.OrderDetails
+                join o in _context.Orders on od.OrderId equals o.OrderId
+                join v in _context.ProductVariantsNew on od.SkuId equals v.SkuId
+                where o.ShopperRegId == dto.ShopperRegId && v.ProductId == dto.ProductId
+                select od.OrderId
+            ).AnyAsync();
+
+            var review = new ProductReview
+            {
+                ShopperRegId = dto.ShopperRegId,
+                ProductId = dto.ProductId,
+                PostType = dto.PostType,
+                Rating = dto.Rating,
+                Title = dto.Title,
+                Review = dto.Review,
+                IsAnonymous = dto.IsAnonymous,
+                VerifiedPurchase = verified,
+                CreatedDate = DateTime.UtcNow,
+                Photos = (dto.PhotoPaths ?? new List<string>())
+                    .Select(p => new ProductReviewPhoto { PhotoPath = p })
+                    .ToList()
+            };
+
+            await _context.ProductReviews.AddAsync(review);
+            await _context.SaveChangesAsync();
+            return review;
+        }
+
+        public async Task<ProductReviewSummaryDto> GetProductReviewsAsync(long productId)
+        {
+            var reviews = await _context.ProductReviews
+                .Where(r => r.ProductId == productId && r.Status == "Approved")
+                .OrderByDescending(r => r.CreatedDate)
+                .Select(r => new ProductReviewDto
+                {
+                    ProductReviewId = r.ProductReviewId,
+                    ShopperName = r.IsAnonymous ? "Anonymous" : r.ShopperRegister.Username,
+                    Rating = r.Rating,
+                    Title = r.Title,
+                    Review = r.Review,
+                    VerifiedPurchase = r.VerifiedPurchase,
+                    CreatedDate = r.CreatedDate,
+                    Photos = r.Photos.Select(p => p.PhotoPath).ToList()
+                })
+                .ToListAsync();
+
+            var rated = reviews.Where(r => r.Rating != null).ToList();
+
+            return new ProductReviewSummaryDto
+            {
+                TotalReviews = reviews.Count,
+                AverageRating = rated.Count == 0 ? 0 : Math.Round(rated.Average(r => r.Rating!.Value), 1),
+                Reviews = reviews
+            };
         }
     }
 }

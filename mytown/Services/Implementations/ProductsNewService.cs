@@ -4,6 +4,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Repositories.Interfaces;
 using mytown.Services.Interfaces;
+using MyTown.Models;
 
 public class ProductsNewService : IProductsNewService
 {
@@ -151,5 +152,18 @@ public class ProductsNewService : IProductsNewService
             request.PageSize = 100;
 
         return await _repository.SearchProductsAsync(request);
+    }
+
+    public async Task<ProductReview> AddProductReviewAsync(AddProductReviewDto dto)
+    {
+        if (dto.Rating is < 1 or > 5)
+            throw new ArgumentException("Rating must be between 1 and 5.");
+
+        return await _repository.AddProductReviewAsync(dto);
+    }
+
+    public async Task<ProductReviewSummaryDto> GetProductReviewsAsync(long productId)
+    {
+        return await _repository.GetProductReviewsAsync(productId);
     }
 }
