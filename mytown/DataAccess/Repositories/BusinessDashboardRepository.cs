@@ -1543,7 +1543,8 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
             join o in _context.Orders on so.OrderId equals o.OrderId
             join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
             where so.StoreId == busRegId
-                  && sd.ShippingStatus == "Pending"
+                  && sd.ShippingStatus == "Pending" &&
+                   o.OrderStatus == "Paid" 
             orderby o.OrderDate descending
             select new RecentOrderDTO
             {
