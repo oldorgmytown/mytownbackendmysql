@@ -32,6 +32,9 @@
         public string? ProductDescription { get; set; }
         public string? SupplierName { get; set; }
 
+        public decimal? AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+
         // Variants
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
     }

@@ -25,6 +25,8 @@
         public string Location { get; set; } = string.Empty;
         public string Country { get; set; } = string.Empty;
 
+        public decimal? AverageRating { get; set; }   // null = no reviews yet
+        public int ReviewCount { get; set; }
 
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
     }

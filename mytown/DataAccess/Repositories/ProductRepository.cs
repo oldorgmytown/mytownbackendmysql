@@ -399,6 +399,16 @@ namespace mytown.DataAccess.Repositories
 
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetDiscountedProductsAsync()
         {
+
+            // one row per product: average rating + review count
+            var ratingStats = _context.ProductReviews
+                .GroupBy(r => r.ProductId)
+                .Select(g => new
+                {
+                    ProductId = g.Key,
+                    AvgRating = g.Average(x => x.Rating),   // decimal?, ignores null ratings
+                    ReviewCount = g.Count()
+                });
             return await (
                 from v in _context.ProductVariantsNew
 
@@ -412,7 +422,9 @@ namespace mytown.DataAccess.Repositories
                     on p.ProdTypeId equals(long?) pt.ProdTypeId into ptJoin
                 from pt in ptJoin.DefaultIfEmpty()
 
-      
+                join rs in ratingStats
+        on p.ProductId equals rs.ProductId into rsJoin
+                from rs in rsJoin.DefaultIfEmpty()
 
                 where v.Discount != null
                       && v.Discount > 0
@@ -444,6 +456,14 @@ namespace mytown.DataAccess.Repositories
                     ProductDescription = p.ProductDescription,
 
                     SupplierName = bp.BusinessName,
+
+                    // NEW
+                    AverageRating = _context.ProductReviews
+    .Where(r => r.ProductId == p.ProductId && r.Rating != null)
+    .Average(r => (decimal?)r.Rating),          // null when there are no rows
+
+                    ReviewCount = _context.ProductReviews
+    .Count(r => r.ProductId == p.ProductId),
 
                     Variants = new List<Sku_ProductVariantDto>
                     {
@@ -813,6 +833,17 @@ namespace mytown.DataAccess.Repositories
                     .Where(s => !string.IsNullOrWhiteSpace(s)))
                 : "";
 
+            // one query: average rating + review count (null if no reviews)
+            var stats = _context.ProductReviews
+                .Where(r => r.ProductId == p.ProductId)
+                .GroupBy(r => r.ProductId)
+                .Select(g => new
+                {
+                    Avg = g.Average(x => x.Rating),   // ignores null ratings
+                    Count = g.Count()
+                })
+                .FirstOrDefault();
+
             return new ProdVariantdetailsDto
             {
                 ProductId = (int)p.ProductId,
@@ -827,6 +858,9 @@ namespace mytown.DataAccess.Repositories
                 IsProductAvailable = p.ProductStatus == "ACTIVE" && p.IsActive,
                 Location = location,
                 Country = biz?.BusinessCountry ?? "",
+
+                AverageRating = stats?.Avg != null ? Math.Round(stats.Avg.Value, 1) : (decimal?)null,
+                ReviewCount = stats?.Count ?? 0,
 
                 Variants = p.Variants.Select(v => new Sku_ProductVariantDto
                 {
