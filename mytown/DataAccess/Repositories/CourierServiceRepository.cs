@@ -701,7 +701,6 @@ namespace mytown.DataAccess.Repositories
 
 
 
-
         private decimal ExtractMaxWeight(string weightRange)
         {
             if (string.IsNullOrEmpty(weightRange)) return 0;

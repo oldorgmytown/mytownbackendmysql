@@ -141,34 +141,36 @@ namespace mytown.DataAccess.Repositories
         {
             var allStatuses = new[] { "incomplete", "submitted", "approved", "rejected", "blocked" };
 
-            // Stores: business profiles that have a category
+            // Stores: all business profiles, grouped by status
             var storeGroups = await _context.BusinessProfiles
-                .Where(bp => bp.BusCatId >= 1)
-                .GroupBy(bp => (bp.ProfileStatus ?? "").ToLower())
+                .GroupBy(bp => bp.ProfileStatus)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            // Services: from the service_profiles table
+            // Services: all service profiles, grouped by status
             var serviceGroups = await _context.ServiceProfiles
-                .GroupBy(sp => (sp.Status ?? "").ToLower())
+                .GroupBy(sp => sp.Status)
                 .Select(g => new { Status = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            Dictionary<string, int> BuildCounts<T>(IEnumerable<T> groups,
-                Func<T, string> statusSelector, Func<T, int> countSelector)
+            Dictionary<string, int> BuildCounts(IEnumerable<(string? Status, int Count)> source)
             {
-                var lookup = groups.ToDictionary(statusSelector, countSelector);
+                // Case-insensitive, so "Incomplete" matches "incomplete"
+                var lookup = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-                // Make sure every status is present, even with 0
-                return allStatuses.ToDictionary(
-                    status => status,
-                    status => lookup.TryGetValue(status, out var c) ? c : 0);
+                foreach (var (status, count) in source)
+                {
+                    var key = (status ?? "").Trim();
+                    lookup[key] = lookup.GetValueOrDefault(key) + count;
+                }
+
+                return allStatuses.ToDictionary(s => s, s => lookup.GetValueOrDefault(s));
             }
 
             return new Dictionary<string, Dictionary<string, int>>
     {
-        { "stores",   BuildCounts(storeGroups,   x => x.Status, x => x.Count) },
-        { "services", BuildCounts(serviceGroups, x => x.Status, x => x.Count) }
+        { "stores",   BuildCounts(storeGroups.Select(x => (x.Status, x.Count))) },
+        { "services", BuildCounts(serviceGroups.Select(x => ((string?)x.Status, x.Count))) }
     };
         }
 
