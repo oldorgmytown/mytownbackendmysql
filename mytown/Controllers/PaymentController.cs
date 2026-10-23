@@ -138,6 +138,7 @@ namespace mytown.Controllers
         {
             var result = await _paymentService.AddRazorpayPaymentAsync(
                 dto.OrderId, dto.RazorpayOrderId, dto.RazorpayPaymentId, dto.RazorpaySignature);
+            await _paymentService.ProcessPostPaymentAsync(dto.OrderId);
             return Ok(result);
         }
         [HttpGet("stripe-test")]
