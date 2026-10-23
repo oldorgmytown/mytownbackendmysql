@@ -858,6 +858,8 @@ namespace mytown.DataAccess.Repositories
                 BusRegId = p.BusRegId,
                 BuscatId = (int)(p.BusCatId ?? 0),
               //  ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+
+                //showing category name
                 ProdSubcatId = subcatId,
                 ProdSubcatName = subcatName,
                 ProductGroupId = p.ProductGroupId.HasValue ? (int)p.ProductGroupId.Value : (int?)null,
