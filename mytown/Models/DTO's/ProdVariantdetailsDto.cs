@@ -7,6 +7,7 @@
         // public string? BusinessName { get; set; }
         public int BuscatId { get; set; }
         public int ProdSubcatId { get; set; }
+        public string? ProdSubcatName { get; set; }
         public int? ProductTypeId { get; set; }
         public int? ProductGroupId { get; set; }
         public string ProdTypename { get; set; }
