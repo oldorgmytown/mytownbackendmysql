@@ -1,0 +1,19 @@
+  Determining projects to restore...
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MailKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-9j88-vvj5-vhgr
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MimeKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g7hc-96xr-gvvx
+  All projects are up-to-date for restore.
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MailKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-9j88-vvj5-vhgr
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MimeKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g7hc-96xr-gvvx
+e:\projects\Itismytown\mytownbackendmysql\mytown\Models\DTO's\AdsDtos.cs(37,5): error CS0116: A namespace cannot directly contain members such as fields, methods or statements [e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj]
+
+Build FAILED.
+
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MailKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-9j88-vvj5-vhgr
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MimeKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g7hc-96xr-gvvx
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MailKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-9j88-vvj5-vhgr
+e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj : warning NU1902: Package 'MimeKit' 4.11.0 has a known moderate severity vulnerability, https://github.com/advisories/GHSA-g7hc-96xr-gvvx
+e:\projects\Itismytown\mytownbackendmysql\mytown\Models\DTO's\AdsDtos.cs(37,5): error CS0116: A namespace cannot directly contain members such as fields, methods or statements [e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj]
+    4 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.77

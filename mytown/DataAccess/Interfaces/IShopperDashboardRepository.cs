@@ -14,10 +14,10 @@ namespace mytown.DataAccess.Interfaces
       int pageSize);
 
         Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
-            int storeOrderId,
-            string? search,
-            int pageNumber,
-            int pageSize);
+           int storeOrderId,
+           string? search,
+           int pageNumber,
+           int pageSize);
         Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
       int shopperRegId,
       string? search,
@@ -43,7 +43,14 @@ namespace mytown.DataAccess.Interfaces
         Task<ShopperDetailsDto?> GetShopperDetailsAsync(int shopperRegId);
 
         Task<bool> UpdateShopperDetailsAsync(UpdateShopperDetailsDto dto);
-      //  Task<bool> UpdatePasswordAsync(ShopperRegister shopper);
+        //  Task<bool> UpdatePasswordAsync(ShopperRegister shopper);
+
+       Task<List<ShopperDBNotifications>> GetShopperNotificationsAsync(int shopperId, bool onlyUnread);
+
+            Task MarkAllShopperAsReadAsync(int shopperId);
+
+            Task MarkEachShopperNotificationAsReadAsync(int notificationId);
+      
     }
 
 }

@@ -1,12 +1,14 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
+using MyTown.Models;
+using System;
+using System.Diagnostics.Metrics;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace mytown.DataAccess.Repositories
 {
@@ -19,7 +21,6 @@ namespace mytown.DataAccess.Repositories
             _context = context;
         }
 
-        
         public async Task SavePendingVerification(PendingVerification pending)
         {
             _context.PendingVerifications.Add(pending);
@@ -31,7 +32,6 @@ namespace mytown.DataAccess.Repositories
             return await _context.PendingVerifications
                 .FirstOrDefaultAsync(p => p.Token == token);
         }
-       
 
         public async Task DeletePendingVerification(string token)
         {
@@ -45,19 +45,18 @@ namespace mytown.DataAccess.Repositories
             }
         }
 
-        // Other existing shopper methods like:
         public async Task<(bool isTaken, string message)> IsEmailTaken(string email)
         {
             var shopper = await _context.ShopperRegisters
-        .FirstOrDefaultAsync(s => s.Email.ToLower() == email.ToLower());
+                .FirstOrDefaultAsync(s => s.Email.ToLower() == email.ToLower());
 
             if (shopper == null || shopper.Status == "Deactivated")
-                return (false, null); // Treat as new
+                return (false, null);
 
             if (shopper.Status == "Blocked")
                 return (true, "This email is blocked. Please contact support.");
 
-            return (true, null); 
+            return (true, null);
         }
 
         public async Task<ShopperRegister> RegisterShopper(ShopperRegister shopper)
@@ -70,7 +69,6 @@ namespace mytown.DataAccess.Repositories
             }
             catch (DbUpdateException ex)
             {
-                // Database update-related issues (e.g., constraint violations)
                 Console.WriteLine("Database Update Exception: " + ex.Message);
                 if (ex.InnerException != null)
                     Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
@@ -79,21 +77,17 @@ namespace mytown.DataAccess.Repositories
             }
             catch (Exception ex)
             {
-                // General fallback
                 Console.WriteLine("General Exception: " + ex.Message);
                 throw new Exception("An unexpected error occurred during shopper registration.");
             }
         }
 
-
-        // resend email verfication
         public async Task<PendingVerification> FindPendingVerificationByEmail(string email)
         {
             return await _context.PendingVerifications
                 .FirstOrDefaultAsync(p => p.Email.ToLower() == email.ToLower()
                                         && p.ExpiryDate > DateTime.UtcNow);
         }
-
 
         public async Task RemoveVerification(ShopperVerification verification)
         {
@@ -104,14 +98,14 @@ namespace mytown.DataAccess.Repositories
         public async Task<ShopperRegister> GetShopperByIdAsync(int shopperRegId)
         {
             return await _context.ShopperRegisters
-                                .FirstOrDefaultAsync(b => b.ShopperRegId == shopperRegId);
+                .FirstOrDefaultAsync(b => b.ShopperRegId == shopperRegId);
         }
 
         public async Task<IEnumerable<object>> GetTownsWithStoreCountByCountryAsync(string country)
         {
             return await _context.BusinessRegisters
-                .Where(br => br.BusinessProfile != null && br.BusinessCountry == country) 
-                .GroupBy(br => br.Town)                                                  
+                .Where(br => br.BusinessProfile != null && br.BusinessCountry == country)
+                .GroupBy(br => br.Town)
                 .Select(g => new
                 {
                     Town = g.Key,
@@ -119,84 +113,111 @@ namespace mytown.DataAccess.Repositories
                 })
                 .ToListAsync();
         }
-        // get recently viewed products for that shopper
+
         public async Task<IEnumerable<ProdcVariantforShopperDto>> GetRecentlyViewedProductsAsync(
       int shopperId, int days = 7, int limit = 10)
         {
             var sinceDate = DateTime.UtcNow.AddDays(-days);
 
-            var productDtos = await _context.ShopperProductRecentViews
-                .Where(v => v.ShopperId == shopperId && v.LastViewedAt >= sinceDate && v.Product.IsActive
-                    && v.Product.ProductStatus == "Approved")
-                .OrderByDescending(v => v.LastViewedAt)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.BusinessRegister)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Sku_ProductVariants)
-                        .ThenInclude(s => s.Images)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.ProductType)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Fabric)
-                .Include(v => v.Product)
-                    .ThenInclude(p => p.Design)
-                .Select(v => new ProdcVariantforShopperDto
-                {
-                    ProductId = v.Product.ProductId,
-                    BusRegId = v.Product.BusRegId,
-                    BusinessName = v.Product.BusinessRegister.BusinessName,
-                    BuscatId = v.Product.BuscatId,
-                  //  BuscatName = v.Product.BusinessRegister.BusinessCategoryName, // if you have it
-                    ProdcatId = v.Product.ProdSubcatId,
-                    //   ProdcatName = v.Product.ProductSubCategoryName, // if you have it
-                    ProductTypeId = v.Product.ProductTypeId,
-                    ProductTypeName = v.Product.ProductType != null ? v.Product.ProductType.ProdTypeName : null,
-                    FabricId = v.Product.FabricId,
-                    FabricName = v.Product.Fabric != null ? v.Product.Fabric.FabricName : null,
-                    DesignId = v.Product.DesignId,
-                    DesignName = v.Product.Design != null ? v.Product.Design.DesignName : null,
-                    ProductName = v.Product.ProductName,
-                    ProductDescription = v.Product.ProductDescription,
-                    SupplierName = v.Product.SupplierName,
+            var productDtos = await (
+                from rv in _context.ShopperProductRecentViews
 
-                    Variants = v.Product.Sku_ProductVariants.Select(s => new Sku_ProductVariantDto
-                    {
-                        SkuId_Productvariant = s.SkuId,
-                        ProductId = s.ProductId,
-                        Color = s.Color,
-                        SizeId = s.SizeId,
-                        SizeName = s.Size != null ? s.Size.SizeName : null,
-                        Sku_Cost = s.Sku_Cost,
-                        DiscountPrice = s.DiscountPrice,
-                        Quantity = s.Quantity,
-                        Length = s.Length,
-                        Width = s.Width,
-                        Height = s.Height,
-                        Weight = s.Weight,
-                        Discount = s.Discount,
-                        Images = s.Images
-                            .OrderBy(i => i.SortOrder)
-                            .Select(img => new ProductImageDto
-                            {
-                                FileName = img.FileName,
-                                SortOrder = img.SortOrder
-                            })
-                            .ToList()
-                    }).ToList()
-                })
-                .Take(limit)
-                .ToListAsync();
+                join p in _context.ProductsNew
+                    on rv.ProductId equals p.ProductId
+
+                join bp in _context.BusinessRegisters
+                    on p.BusRegId equals bp.BusRegId
+
+                join pt in _context.Product_Types
+                    on p.ProdTypeId equals (long?)pt.ProdTypeId into ptJoin
+                from pt in ptJoin.DefaultIfEmpty()
+
+                where rv.ShopperId == shopperId
+                      && rv.LastViewedAt >= sinceDate
+                      && p.IsActive
+                      && p.ProductStatus == "ACTIVE"
+
+                orderby rv.LastViewedAt descending
+
+                select new ProdcVariantforShopperDto
+                {
+                    ProductId = (int)p.ProductId,
+
+                    BusRegId = p.BusRegId,
+                    BusinessName = bp.BusinessName,
+
+                    BuscatId = (int)(p.BusCatId ?? 0),
+
+                    Location = $"{bp.BusinessCity}, {bp.BusinessState}",
+                    Country = bp.BusinessCountry,
+
+                    ProdcatId = (int)(p.ProdSubcatId ?? 0),
+
+                    ProductTypeId = (int?)p.ProdTypeId,
+                    ProductTypeName = pt != null
+                        ? pt.ProdTypeName
+                        : null,
+
+                    ProductName = p.ProductName,
+                    ProductDescription = p.ProductDescription,
+
+                    SupplierName = bp.BusinessName,
+
+                    Variants = _context.ProductVariantsNew
+                        .Where(v => v.ProductId == p.ProductId)
+                        .Select(v => new Sku_ProductVariantDto
+                        {
+                            SkuId_Productvariant = (int)v.SkuId,
+                            ProductId = (int)v.ProductId,
+
+                            Sku_Cost = v.Price,
+                            DiscountPrice = v.DiscountPrice,
+                            Quantity = v.StockQuantity,
+                            Weight = v.Weight,
+                            Discount = v.Discount,
+
+                            Images = _context.ProductVariantImagesNew
+                                .Where(i => i.SkuId == v.SkuId)
+                                .OrderBy(i => i.SortOrder)
+                                .Select(i => new ProductImageDto
+                                {
+                                    FileName = i.FileName,
+                                    SortOrder = i.SortOrder
+                                })
+                                .ToList(),
+
+                            Attributes = v.Attributes
+                                .Select(a => new VariantAttributeDto
+                                {
+                                    AttributeId = (int)a.AttributeId,
+
+                                    AttributeValueId = a.AttributeValueId.HasValue
+                                        ? (int?)a.AttributeValueId.Value
+                                        : null,
+
+                                    AttributeValue = a.AttributeValue
+                                        ?? _context.ProductAttributeValues
+                                            .Where(av =>
+                                                a.AttributeValueId.HasValue &&
+                                                av.AttributeValueId ==
+                                                (int)a.AttributeValueId.Value)
+                                            .Select(av => av.AttributeValue)
+                                            .FirstOrDefault()
+                                })
+                                .ToList()
+                        })
+                        .ToList()
+                }
+            )
+            .Take(limit)
+            .ToListAsync();
 
             return productDtos;
         }
-
-
-        // Shopper Alternate Address
-
         public async Task<IEnumerable<ShopperAlternateAddressDto>> GetAddressesByShopperIdAsync(int shopperRegId)
         {
             return await _context.ShopperAlternateAddresses
-                .Where(a => a.ShopperRegId == shopperRegId)
+                .Where(a => a.ShopperRegId == shopperRegId && !a.IsDeleted)
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
@@ -217,8 +238,7 @@ namespace mytown.DataAccess.Repositories
         public async Task<ShopperAlternateAddressDto?> GetAddressByIdAsync(int id)
         {
             return await _context.ShopperAlternateAddresses
-                .Where(a => a.AltAddressId == id)
-
+                .Where(a => a.AltAddressId == id && !a.IsDeleted) // return only not deleted addresses
                 .Select(a => new ShopperAlternateAddressDto
                 {
                     AltAddressId = a.AltAddressId,
@@ -241,7 +261,6 @@ namespace mytown.DataAccess.Repositories
 
             if (address.AltAddressId > 0)
             {
-                // ✅ Edit existing address (with ownership check)
                 entity = await _context.ShopperAlternateAddresses
                     .FirstOrDefaultAsync(a =>
                         a.AltAddressId == address.AltAddressId &&
@@ -260,7 +279,6 @@ namespace mytown.DataAccess.Repositories
             }
             else
             {
-                // ✅ Add new address
                 entity = address;
                 _context.ShopperAlternateAddresses.Add(entity);
             }
@@ -269,7 +287,7 @@ namespace mytown.DataAccess.Repositories
 
             return new ShopperAlternateAddressDto
             {
-                AltAddressId = entity.AltAddressId,   // ✅ always correct
+                AltAddressId = entity.AltAddressId,
                 ShopperRegId = entity.ShopperRegId,
                 AltName = entity.AltName,
                 AltPhoneNumber = entity.AltPhoneNumber,
@@ -283,29 +301,55 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
-
         public async Task<bool> DeleteAddressAsync(int id)
         {
             var address = await _context.ShopperAlternateAddresses
-      .FirstOrDefaultAsync(a => a.AltAddressId == id &&!a.IsDeleted);
-           // var address = await _context.ShopperAlternateAddresses.FindAsync(id);
+                .FirstOrDefaultAsync(a => a.AltAddressId == id && !a.IsDeleted);
             if (address == null) return false;
 
-           // _context.ShopperAlternateAddresses.Remove(address);
-            address.IsDeleted = true; //soft delete
+            address.IsDeleted = true;
             await _context.SaveChangesAsync();
             return true;
         }
 
+        //  New method - Check if email exists
+        public async Task<bool> IsEmailExistsAsync(string email)
+        {
+            return await _context.ShopperRegisters
+                .AnyAsync(s => s.Email.ToLower() == email.ToLower());
+        }
 
+        // Shopper Experiences
+
+        public async Task<ShopperExperience> CreateExperienceAsync(ShopperExperience experience)
+        {
+            _context.ShopperExperiences.Add(experience);
+            await _context.SaveChangesAsync();
+            return experience;
+        }
+
+        public async Task<List<ShopperExperienceDto>> GetExperiencesByBusinessAsync(int busRegId)
+        {
+            return await (from e in _context.ShopperExperiences
+                          join s in _context.ShopperRegisters on e.ShopperRegId equals s.ShopperRegId
+                          join b in _context.BusinessRegisters on e.BusRegId equals b.BusRegId
+                          where e.BusRegId == busRegId && e.Status == "Approved"
+                          orderby e.CreatedDate descending
+                          select new ShopperExperienceDto
+                          {
+                              ShopperExperienceId = e.ShopperExperienceId,
+                              ShopperRegId = e.ShopperRegId,
+                              ShopperName = e.IsAnonymous ? "Anonymous" : s.Username,
+                              BusRegId = e.BusRegId,
+                              BusinessName = b.BusinessName,
+                              PostType = e.PostType,
+                              Rating = e.Rating,
+                              Title = e.Title,
+                              Experience = e.Experience,
+                              IsAnonymous = e.IsAnonymous,
+                              Status = e.Status,
+                              CreatedDate = e.CreatedDate
+                          }).ToListAsync();
+        }
     }
-
-
-
 }
-
-
-
-
-
-

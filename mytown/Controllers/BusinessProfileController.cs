@@ -110,6 +110,17 @@ namespace mytown.Controllers
             return Ok(subCategories);
         }
 
+        [HttpGet("Productsubcategory-by-buscatid/{busCatId}")]
+        public IActionResult GetProductSubCategoriesByBusCatId(int busCatId)
+        {
+            var result = _service.GetProductSubCategoriesByBusCatId(busCatId);
+
+            if (!result.Any())
+                return NotFound("No subcategories found.");
+
+            return Ok(result);
+        }
+
         // ------------------- GET ALL BUSINESS PROFILES -------------------
         [HttpGet("getBusinessProfiles")]
         public async Task<IActionResult> GetBusinessProfiles()
