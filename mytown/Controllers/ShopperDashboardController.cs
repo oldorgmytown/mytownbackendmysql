@@ -33,21 +33,21 @@ namespace mytown.Controllers
         }
 
 
-        [HttpGet("storeorderid_details")]
-        public async Task<IActionResult> GetShopperOrderDetails(
-            [FromQuery] int storeOrderId,
-            [FromQuery] string? search,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 100)
-        {
-            var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(
-                storeOrderId, search, pageNumber, pageSize);
+[HttpGet("storeorderid_details")]
+public async Task<IActionResult> GetShopperOrderDetails(
+    [FromQuery] int storeOrderId,
+    [FromQuery] string? search,
+    [FromQuery] int pageNumber = 1,
+    [FromQuery] int pageSize = 100)
+{
+    var result = await _shopperdashboardService.GetShopperOrderDetailsAsync(
+        storeOrderId, search, pageNumber, pageSize);
 
-            if (result == null)
-                return NotFound();
+    if (result == null)
+        return NotFound();
 
-            return Ok(result);
-        }
+    return Ok(result);
+}
 
         [HttpGet("shopperDBbuy-again")]
         public async Task<IActionResult> GetBuyAgainProducts(
@@ -169,5 +169,29 @@ namespace mytown.Controllers
         //    }
         //}
 
+
+        //Notifications
+        [HttpGet("shopper-notifications")]
+        public async Task<IActionResult> GetShopperNotifications(
+    int shopperId,
+    [FromQuery] bool onlyUnread = false)
+        {
+            var result = await _shopperdashboardService.GetShopperNotificationsAsync(shopperId, onlyUnread);
+            return Ok(result);
+        }
+
+        [HttpPut("shopper-notifications_mark-read")]
+        public async Task<IActionResult> MarkShopperNotificationsAsRead(int shopperId)
+        {
+            await _shopperdashboardService.MarkAllShopperAsReadAsync(shopperId);
+            return Ok(new { message = "All Notifications marked as read" });
+        }
+
+        [HttpPut("shopper-each-notification-read")]
+        public async Task<IActionResult> MarkEachShopperNotificationAsRead(int notificationId)
+        {
+            await _shopperdashboardService.MarkEachShopperNotificationAsReadAsync(notificationId);
+            return Ok(new { message = "Notification marked as read" });
+        }
     }
 }

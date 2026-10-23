@@ -4,7 +4,11 @@ namespace mytown.Models.DTO_s
     {
         public int PlanId { get; set; }
         public int TransporterRegId { get; set; }
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+
+        public int? GuestRegId { get; set; }
+
+        public bool IsGuestOrder { get; set; }
         public int OrderId { get; set; }
         public int StoreOrderId { get; set; }
         public string PickupLocation { get; set; }
