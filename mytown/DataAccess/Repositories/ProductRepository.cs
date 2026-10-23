@@ -844,12 +844,22 @@ namespace mytown.DataAccess.Repositories
                 })
                 .FirstOrDefault();
 
+            var subcatId = (int)(p.ProdSubcatId ?? 0);
+
+            var subcatName = _context.product_sub_categories   
+            .AsNoTracking()
+            .Where(sc => sc.ProdSubcatId == subcatId)
+            .Select(sc => sc.ProdSubcatName)
+            .FirstOrDefault();
+
             return new ProdVariantdetailsDto
             {
                 ProductId = (int)p.ProductId,
                 BusRegId = p.BusRegId,
                 BuscatId = (int)(p.BusCatId ?? 0),
-                ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+              //  ProdSubcatId = (int)(p.ProdSubcatId ?? 0),
+                ProdSubcatId = subcatId,
+                ProdSubcatName = subcatName,
                 ProductGroupId = p.ProductGroupId.HasValue ? (int)p.ProductGroupId.Value : (int?)null,
                 ProductTypeId = p.ProdTypeId.HasValue ? (int)p.ProdTypeId.Value : (int?)null,
                 ProductName = p.ProductName,
