@@ -80,6 +80,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.TransporterRegId != null
+                && o.OrderStatus == "Paid"
                       && (hubPin == null || b.PostalCode == hubPin)
                       && (!year.HasValue || o.OrderDate.Year == year.Value)
                       && (!month.HasValue || o.OrderDate.Month == month.Value)
@@ -155,6 +156,7 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where so.TransporterRegId != null
+                      && so.OrderStatus == "Booked"
                       && (hubPin == null || so.PickupPincode == hubPin)
                       && (!year.HasValue || so.CreatedAt.Year == year.Value)
                       && (!month.HasValue || so.CreatedAt.Month == month.Value)
@@ -679,7 +681,7 @@ namespace mytown.DataAccess.Repositories
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
                 join o in _context.Orders on so.OrderId equals o.OrderId
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
-                where sd.TransporterRegId != null
+                where sd.TransporterRegId != null && o.OrderStatus == "Paid"
                       && o.OrderDate >= start && o.OrderDate < end
                       && (hubPin == null || b.PostalCode == hubPin)
                 select new
@@ -728,7 +730,7 @@ namespace mytown.DataAccess.Repositories
 
             var rows = await (
                 from so in _context.SenderOrders
-                where so.TransporterRegId != null
+                where so.TransporterRegId != null && so.OrderStatus == "Booked"
                       && so.CreatedAt >= start && so.CreatedAt < end
                       && (hubPin == null || so.PickupPincode == hubPin)
                 select new
