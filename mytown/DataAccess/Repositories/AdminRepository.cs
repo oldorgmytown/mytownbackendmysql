@@ -1414,7 +1414,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.OrderDate >= start && o.OrderDate < end
-                 && o.OrderStatus == "Paid"
+                 && o.OrderStatus == "Paid" //latest
                 select new { so, o, b, sd };
 
             // Optional filters
