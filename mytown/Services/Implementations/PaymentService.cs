@@ -215,10 +215,41 @@ public async Task<Payments> AddRazorpayPaymentAsync(
         decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
             decimal finalAmount = subTotal + gstAmount;
 
-        var payment = await _paymentRepo.AddPaymentAsync(
+            // ---- NEW: fetch payment from Razorpay (works for card, UPI, etc.) ----
+            var client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(razorpayPaymentId);
+
+            string status = rzpPayment["status"]?.ToString();
+
+            // Cards can still be "authorized" at this point, so capture explicitly
+            if (status == "authorized")
+            {
+                var captureOptions = new Dictionary<string, object>
+        {
+            { "amount", Convert.ToInt64(rzpPayment["amount"]) },
+            { "currency", "INR" }
+        };
+                rzpPayment = rzpPayment.Capture(captureOptions);
+                status = rzpPayment["status"]?.ToString();
+            }
+
+            if (status != "captured")
+                throw new Exception($"Payment not captured. Status: {status}");
+
+            string method = rzpPayment["method"]?.ToString() switch
+            {
+                "card" => "Card",
+                "upi" => "UPI",
+                "netbanking" => "NetBanking",
+                "wallet" => "Wallet",
+                _ => "Other"
+            };
+            // ---------------------------------------------------------------------
+
+            var payment = await _paymentRepo.AddPaymentAsync(
             orderId,
             finalAmount,
-            "UPI", // or pass actual method from Razorpay response
+            method, // passing from razor pay
             razorpayPaymentId
         );
 

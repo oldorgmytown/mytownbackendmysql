@@ -66,6 +66,11 @@ namespace mytown.Services.Interfaces
 
         Task<bool>
             DeleteAddressAsync(int id);
+
+
+        // NEW: Razorpay
+        Task<SenderRazorpayOrderResponseDto> CreateRazorpayOrderAsync(int senderOrderId);
+        Task<bool> ConfirmRazorpayPaymentAsync(ConfirmSenderPaymentDto dto);
     } 
 
 }
