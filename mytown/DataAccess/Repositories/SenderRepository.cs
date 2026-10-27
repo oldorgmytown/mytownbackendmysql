@@ -831,5 +831,13 @@ GetAddressesBySenderIdAsync(int senderRegId)
 
             return true;
         }
+
+        public async Task<SenderOrderPayment> GetSenderPaymentByGatewayPaymentIdAsync(string paymentId)
+        {
+            return await _context.SenderOrderPayments
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentId);
+        }
     }
-}
+
+    
+    }

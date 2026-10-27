@@ -82,7 +82,7 @@ namespace mytown.DataAccess.Repositories
                     product_id = product.ProductId,
                     product_name = product.ProductName,
                     product_subject = null,
-                   // product_description = product.ProductDescription,
+                    product_description = product.ProductDescription,
 
                     product_image = _context.ProductVariantImagesNew
                         .Where(i =>
@@ -93,16 +93,16 @@ namespace mytown.DataAccess.Repositories
 
                     Sku_Id = variant.SkuId,
                     product_cost = variant.Price,
-                   // Weight = variant.Weight,
-                   // MeasurementUnit = variant.MeasurementUnit,
-                   // Brand = variant.Brand,
+                    Weight = variant.Weight,
+                    MeasurementUnit = variant.MeasurementUnit,
+                    Brand = variant.Brand,
                     Discount = variant.Discount,
                     DiscountPrice = variant.DiscountPrice,
 
-                  //  StoreId = storeProfile.BusRegId,
-                   // StoreName = storeProfile.BusinessName,
-                  //  StoreLocation = storeProfile.BusinessLocation,
-                  //  StoreLogo = storeProfile.LogoPath,
+                    StoreId = storeProfile.BusRegId,
+                    StoreName = storeProfile.BusinessName,
+                    StoreLocation = storeProfile.BusinessLocation,
+                    StoreLogo = storeProfile.LogoPath,
 
                     IsProductAvailable =
                         product.ProductStatus == "ACTIVE"

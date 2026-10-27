@@ -140,6 +140,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        //-----------Stripe-------------//
         [HttpPost("create-payment-intent/{senderOrderId}")]
         public async Task<IActionResult>
     CreatePaymentIntent(int senderOrderId)
@@ -166,6 +167,29 @@ namespace mytown.Controllers
                 Message = "Payment successful"
             });
         }
+
+        //-----------Stripe end-----------------//
+
+
+        //-----------Razorpay start-------------//
+        [HttpPost("create-razorpay-order/{senderOrderId}")]
+        public async Task<IActionResult> CreateRazorpayOrder(int senderOrderId)
+        {
+            var result = await _senderService.CreateRazorpayOrderAsync(senderOrderId);
+            return Ok(result);
+        }
+
+        [HttpPost("confirm-razorpay-payment")]
+        public async Task<IActionResult> ConfirmRazorpayPayment([FromBody] ConfirmSenderPaymentDto dto)
+        {
+            await _senderService.ConfirmRazorpayPaymentAsync(dto);
+
+            return Ok(new
+            {
+                Message = "Payment successful"
+            });
+        }
+        //-----------Razorpay-----------------//
 
         [HttpGet("senderorderconfirmation/{senderOrderId}")]
         public async Task<IActionResult>
