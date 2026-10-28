@@ -485,7 +485,7 @@ GetUnreadNotificationsAsync(int senderId)
         private (decimal amount, decimal gstAmount, decimal totalAmount) CalculateSenderAmount()
         {
             decimal amount = 50;
-            decimal gstAmount = amount * 0.18m;
+            decimal gstAmount = amount * 0m;
             return (amount, gstAmount, amount + gstAmount);
         }
 
@@ -538,7 +538,7 @@ GetUnreadNotificationsAsync(int senderId)
                 throw new Exception("Order already paid");
 
             // Replay protection (add this repo method, see note below)
-            var existing = await _repo.GetSenderPaymentByGatewayPaymentIdAsync(dto.RazorpayOrderId);
+            var existing = await _repo.GetSenderPaymentByGatewayPaymentIdAsync(dto.RazorPayPaymentIntentId);
             if (existing != null)
                 throw new Exception("Payment has already been processed.");
 
