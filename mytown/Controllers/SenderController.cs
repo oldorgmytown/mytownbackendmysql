@@ -141,32 +141,32 @@ namespace mytown.Controllers
         }
 
         //-----------Stripe-------------//
-        [HttpPost("create-payment-intent/{senderOrderId}")]
-        public async Task<IActionResult>
-    CreatePaymentIntent(int senderOrderId)
-        {
-            var result =
-                await _senderService
-                .CreatePaymentIntentAsync(
-                    senderOrderId);
+    //    [HttpPost("create-payment-intent/{senderOrderId}")]
+    //    public async Task<IActionResult>
+    //CreatePaymentIntent(int senderOrderId)
+    //    {
+    //        var result =
+    //            await _senderService
+    //            .CreatePaymentIntentAsync(
+    //                senderOrderId);
 
-            return Ok(result);
-        }
+    //        return Ok(result);
+    //    }
 
-        [HttpPost("confirm-payment")]
-        public async Task<IActionResult>
-    ConfirmPayment(
-        [FromBody]
-        ConfirmSenderPaymentDto dto)
-        {
-            await _senderService
-                .ConfirmPaymentAsync(dto);
+    //    [HttpPost("confirm-payment")]
+    //    public async Task<IActionResult>
+    //ConfirmPayment(
+    //    [FromBody]
+    //    ConfirmSenderPaymentDto dto)
+    //    {
+    //        await _senderService
+    //            .ConfirmPaymentAsync(dto);
 
-            return Ok(new
-            {
-                Message = "Payment successful"
-            });
-        }
+    //        return Ok(new
+    //        {
+    //            Message = "Payment successful"
+    //        });
+    //    }
 
         //-----------Stripe end-----------------//
 

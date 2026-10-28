@@ -144,6 +144,10 @@ namespace mytown.Models
             public DbSet<AdPromotion> AdPromotions { get; set; }
             public DbSet<AdPaymentOrder> AdPaymentOrders { get; set; }
 
+            //shopper connections
+
+            public DbSet<ShopperConnection> ShopperConnections { get; set; }
+
 
 
 

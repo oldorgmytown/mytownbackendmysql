@@ -165,136 +165,136 @@ namespace mytown.Services.Implementations
 
         // sender payment
 
-        public async Task
-           <SenderPaymentIntentResponseDto>
-           CreatePaymentIntentAsync(
-               int senderOrderId)
-        {
-            var order =
-                await _repo
-                .GetSenderOrderAsync(
-                    senderOrderId);
+        //public async Task
+        //   <SenderPaymentIntentResponseDto>
+        //   CreatePaymentIntentAsync(
+        //       int senderOrderId)
+        //{
+        //    var order =
+        //        await _repo
+        //        .GetSenderOrderAsync(
+        //            senderOrderId);
 
-            if (order == null)
-                throw new Exception(
-                    "Order not found");
+        //    if (order == null)
+        //        throw new Exception(
+        //            "Order not found");
 
-            decimal amount = 50;
+        //    decimal amount = 50;
 
-            decimal gstAmount =
-                amount * 0.18m;
+        //    decimal gstAmount =
+        //        amount * 0.18m;
 
-            decimal totalAmount =
-                amount + gstAmount;
+        //    decimal totalAmount =
+        //        amount + gstAmount;
 
-            long stripeAmount =
-                (long)(totalAmount * 100);
+        //    long stripeAmount =
+        //        (long)(totalAmount * 100);
 
-            var options =
-                new PaymentIntentCreateOptions
-                {
-                    Amount = stripeAmount,
+        //    var options =
+        //        new PaymentIntentCreateOptions
+        //        {
+        //            Amount = stripeAmount,
 
-                    Currency = "inr",
+        //            Currency = "inr",
 
-                    AutomaticPaymentMethods =
-                        new PaymentIntentAutomaticPaymentMethodsOptions
-                        {
-                            Enabled = true
-                        },
+        //            AutomaticPaymentMethods =
+        //                new PaymentIntentAutomaticPaymentMethodsOptions
+        //                {
+        //                    Enabled = true
+        //                },
 
-                    Metadata =
-                        new Dictionary<string, string>
-                        {
-                            {
-                                "senderOrderId",
-                                senderOrderId
-                                .ToString()
-                            }
-                        }
-                };
+        //            Metadata =
+        //                new Dictionary<string, string>
+        //                {
+        //                    {
+        //                        "senderOrderId",
+        //                        senderOrderId
+        //                        .ToString()
+        //                    }
+        //                }
+        //        };
 
-            var stripeSecretKey = _configuration["Stripe:SecretKey"];
-            var stripeClient = new StripeClient(stripeSecretKey);
-            var service = new PaymentIntentService(stripeClient);
+        //    var stripeSecretKey = _configuration["Stripe:SecretKey"];
+        //    var stripeClient = new StripeClient(stripeSecretKey);
+        //    var service = new PaymentIntentService(stripeClient);
 
-            var paymentIntent =
-                await service
-                .CreateAsync(options);
+        //    var paymentIntent =
+        //        await service
+        //        .CreateAsync(options);
 
-            return new
-                SenderPaymentIntentResponseDto
-            {
-                ClientSecret =
-                    paymentIntent.ClientSecret,
+        //    return new
+        //        SenderPaymentIntentResponseDto
+        //    {
+        //        ClientSecret =
+        //            paymentIntent.ClientSecret,
 
-                PaymentIntentId =
-                    paymentIntent.Id
-            };
-        }
+        //        PaymentIntentId =
+        //            paymentIntent.Id
+        //    };
+        //}
 
-        public async Task<bool>
-            ConfirmPaymentAsync(
-                ConfirmSenderPaymentDto dto)
-        {
-            var order =
-                await _repo
-                .GetSenderOrderAsync(
-                    dto.SenderOrderId);
+        //public async Task<bool>
+        //    ConfirmPaymentAsync(
+        //        ConfirmSenderPaymentDto dto)
+        //{
+        //    var order =
+        //        await _repo
+        //        .GetSenderOrderAsync(
+        //            dto.SenderOrderId);
 
-            if (order == null)
-                throw new Exception(
-                    "Order not found");
+        //    if (order == null)
+        //        throw new Exception(
+        //            "Order not found");
 
-            decimal amount = 50;
+        //    decimal amount = 50;
 
-            decimal gstAmount =
-                amount * 0.18m;
+        //    decimal gstAmount =
+        //        amount * 0.18m;
 
-            decimal totalAmount =
-                amount + gstAmount;
+        //    decimal totalAmount =
+        //        amount + gstAmount;
 
-            var payment =
-                new SenderOrderPayment
-                {
-                    SenderOrderId =
-                        dto.SenderOrderId,
+        //    var payment =
+        //        new SenderOrderPayment
+        //        {
+        //            SenderOrderId =
+        //                dto.SenderOrderId,
 
-                    StripePaymentIntentId =
-                        dto.StripePaymentIntentId,
+        //            StripePaymentIntentId =
+        //                dto.StripePaymentIntentId,
 
-                    Amount =
-                        amount,
+        //            Amount =
+        //                amount,
 
-                    GstAmount =
-                        gstAmount,
+        //            GstAmount =
+        //                gstAmount,
 
-                    TotalAmount =
-                        totalAmount,
+        //            TotalAmount =
+        //                totalAmount,
 
-                    PaymentMethod =
-                        dto.PaymentMethod,
+        //            PaymentMethod =
+        //                dto.PaymentMethod,
 
-                    PaymentStatus =
-                        "Paid",
+        //            PaymentStatus =
+        //                "Paid",
 
-                    PaidAt =
-                        DateTime.UtcNow
-                };
+        //            PaidAt =
+        //                DateTime.UtcNow
+        //        };
 
-            await _repo
-                            .AddSenderOrderPaymentAsync(
-                                payment);
+        //    await _repo
+        //                    .AddSenderOrderPaymentAsync(
+        //                        payment);
 
-            order.TransporterRegId = dto.TransporterRegId;
-            order.TransporterPlanId = dto.TransporterPlanId;
-            order.OrderStatus = "Booked";
+        //    order.TransporterRegId = dto.TransporterRegId;
+        //    order.TransporterPlanId = dto.TransporterPlanId;
+        //    order.OrderStatus = "Booked";
 
-            await _repo
-                .SaveChangesAsync();
+        //    await _repo
+        //        .SaveChangesAsync();
 
-            return true;
-        }
+        //    return true;
+        //}
 
         // sender order confirmation
 
@@ -538,12 +538,12 @@ GetUnreadNotificationsAsync(int senderId)
                 throw new Exception("Order already paid");
 
             // Replay protection (add this repo method, see note below)
-            var existing = await _repo.GetSenderPaymentByGatewayPaymentIdAsync(dto.StripePaymentIntentId);
+            var existing = await _repo.GetSenderPaymentByGatewayPaymentIdAsync(dto.RazorpayOrderId);
             if (existing != null)
                 throw new Exception("Payment has already been processed.");
 
             // 1. Verify signature: HMAC-SHA256 of "razorpay_order_id|razorpay_payment_id"
-            string payload = $"{dto.RazorpayOrderId}|{dto.StripePaymentIntentId}";
+            string payload = $"{dto.RazorpayOrderId}|{dto.RazorpayOrderId}";
             string generatedSignature;
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
             {
@@ -564,7 +564,7 @@ GetUnreadNotificationsAsync(int senderId)
                 throw new Exception("Razorpay order does not belong to this sender order.");
 
             // 3. Fetch payment (works for card, UPI, etc.)
-            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(dto.StripePaymentIntentId);
+            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(dto.RazorpayOrderId);
 
             if (rzpPayment["order_id"]?.ToString() != dto.RazorpayOrderId)
                 throw new Exception("Payment does not belong to this Razorpay order.");
@@ -606,7 +606,7 @@ GetUnreadNotificationsAsync(int senderId)
             var payment = new SenderOrderPayment
             {
                 SenderOrderId = dto.SenderOrderId,
-                StripePaymentIntentId = dto.StripePaymentIntentId,   // razorpay_payment_id
+                StripePaymentIntentId = dto.RazorpayOrderId,   // razorpay_payment_id
                 Amount = amount,
                 GstAmount = gstAmount,
                 TotalAmount = totalAmount,
