@@ -4,7 +4,7 @@
     {
         public int SenderOrderId { get; set; }
 
-       // public string StripePaymentIntentId { get; set; } //Will storeRazor pay Id
+       public string RazorPayPaymentIntentId { get; set; } //Will storeRazor pay Id
 
       //  public string PaymentMethod { get; set; }
 public int TransporterRegId { get; set; }
