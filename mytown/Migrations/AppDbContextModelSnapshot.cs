@@ -397,6 +397,200 @@ namespace mytown.Migrations
                     b.ToTable("shopper_experience_likes");
                 });
 
+            modelBuilder.Entity("mytown.Models.AdPaymentOrder", b =>
+                {
+                    b.Property<int>("AdPaymentOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("ad_payment_order_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("AdPaymentOrderId"));
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("budget");
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("Fee")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("fee");
+
+                    b.Property<decimal>("Gst")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("gst");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("paid_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("RazorpayOrderId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("razorpay_order_id");
+
+                    b.Property<string>("RazorpayPaymentId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("razorpay_payment_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StripePaymentIntentId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("stripe_payment_intent_id");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("total");
+
+                    b.HasKey("AdPaymentOrderId");
+
+                    b.HasIndex("RazorpayOrderId")
+                        .IsUnique();
+
+                    b.HasIndex("StripePaymentIntentId")
+                        .IsUnique();
+
+                    b.ToTable("ad_payment_orders");
+                });
+
+            modelBuilder.Entity("mytown.Models.AdPromotion", b =>
+                {
+                    b.Property<int>("PromotionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("promotion_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PromotionId"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("AudienceJson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("audience_json");
+
+                    b.Property<decimal>("Budget")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("budget");
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<string>("ContentJson")
+                        .HasColumnType("longtext")
+                        .HasColumnName("content_json");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("int")
+                        .HasColumnName("duration_days");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("end_date");
+
+                    b.Property<decimal>("Fee")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("fee");
+
+                    b.Property<decimal>("Gst")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("gst");
+
+                    b.Property<string>("MediaUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("media_url");
+
+                    b.Property<int?>("PaymentOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("payment_order_id");
+
+                    b.Property<string>("Placement")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("placement");
+
+                    b.Property<string>("ReviewNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("review_note");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Thumbnail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)")
+                        .HasColumnName("thumbnail");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("title");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("total");
+
+                    b.Property<string>("TransactionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("transaction_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("PromotionId");
+
+                    b.HasIndex("BusRegId");
+
+                    b.HasIndex("PaymentOrderId")
+                        .IsUnique();
+
+                    b.ToTable("ad_promotions");
+                });
+
             modelBuilder.Entity("mytown.Models.AddToCart", b =>
                 {
                     b.Property<int>("CartId")
@@ -766,49 +960,6 @@ namespace mytown.Migrations
                     b.HasIndex("BusRegId");
 
                     b.ToTable("business_verifications");
-                });
-
-            modelBuilder.Entity("mytown.Models.ChatMessage", b =>
-                {
-                    b.Property<int>("ChatMessageId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("chat_message_id");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ChatMessageId"));
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("longtext")
-                        .HasColumnName("message");
-
-                    b.Property<int>("ReceiverType")
-                        .HasColumnType("int")
-                        .HasColumnName("receiver_type");
-
-                    b.Property<int>("ReceiverUserId")
-                        .HasColumnType("int")
-                        .HasColumnName("receiver_user_id");
-
-                    b.Property<int>("SenderType")
-                        .HasColumnType("int")
-                        .HasColumnName("sender_type");
-
-                    b.Property<int>("SenderUserId")
-                        .HasColumnType("int")
-                        .HasColumnName("sender_user_id");
-
-                    b.Property<DateTime>("SentTime")
-                        .HasColumnType("datetime(6)")
-                        .HasColumnName("sent_time");
-
-                    b.HasKey("ChatMessageId");
-
-                    b.HasIndex("SentTime");
-
-                    b.HasIndex("SenderUserId", "SenderType", "ReceiverUserId", "ReceiverType");
-
-                    b.ToTable("chat_messages");
                 });
 
             modelBuilder.Entity("mytown.Models.ChatMessage", b =>
@@ -1315,6 +1466,65 @@ namespace mytown.Migrations
                     b.ToTable("courier_verifications");
                 });
 
+            modelBuilder.Entity("mytown.Models.DTO_s.HubStoreOrderVerification", b =>
+                {
+                    b.Property<int>("VerificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("verification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VerificationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("HubId")
+                        .HasColumnType("int")
+                        .HasColumnName("hubid");
+
+                    b.Property<string>("HubStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hub_status");
+
+                    b.Property<bool>("PackageHandedOver")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("package_handed_over");
+
+                    b.Property<bool>("PackageVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("package_verified");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("longtext")
+                        .HasColumnName("remarks");
+
+                    b.Property<bool>("SecurityCheck")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("security_check");
+
+                    b.Property<int>("StoreOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("store_order_id");
+
+                    b.Property<bool>("TransporterVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("transporter_verified");
+
+                    b.Property<bool>("TravelPlanVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("travel_plan_verified");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("VerificationId");
+
+                    b.ToTable("hub_store_order_verification");
+                });
+
             modelBuilder.Entity("mytown.Models.DTO_s.ShopperAlternateAddress", b =>
                 {
                     b.Property<int>("AltAddressId")
@@ -1632,6 +1842,65 @@ namespace mytown.Migrations
                     b.HasKey("HubId");
 
                     b.ToTable("hubdetails");
+                });
+
+            modelBuilder.Entity("mytown.Models.HubSenderOrderVerification", b =>
+                {
+                    b.Property<int>("VerificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("verification_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VerificationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("HubId")
+                        .HasColumnType("int")
+                        .HasColumnName("hubid");
+
+                    b.Property<string>("HubStatus")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("hub_status");
+
+                    b.Property<bool>("PackageHandedOver")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("package_handed_over");
+
+                    b.Property<bool>("PackageVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("package_verified");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("longtext")
+                        .HasColumnName("remarks");
+
+                    b.Property<bool>("SecurityCheck")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("security_check");
+
+                    b.Property<int>("SenderOrderId")
+                        .HasColumnType("int")
+                        .HasColumnName("sender_order_id");
+
+                    b.Property<bool>("TransporterVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("transporter_verified");
+
+                    b.Property<bool>("TravelPlanVerified")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("travel_plan_verified");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("VerificationId");
+
+                    b.ToTable("hub_sender_order_verification");
                 });
 
             modelBuilder.Entity("mytown.Models.LocationImage", b =>

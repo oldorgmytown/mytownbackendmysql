@@ -22,13 +22,13 @@ namespace mytown.Services.Interfaces
 
         // sender payments
 
-        Task<SenderPaymentIntentResponseDto>
-            CreatePaymentIntentAsync(
-                int senderOrderId);
+        //Task<SenderPaymentIntentResponseDto>
+        //    CreatePaymentIntentAsync(
+        //        int senderOrderId);
 
-        Task<bool>
-            ConfirmPaymentAsync(
-                ConfirmSenderPaymentDto dto);
+        //Task<bool>
+        //    ConfirmPaymentAsync(
+        //        ConfirmSenderPaymentDto dto);
 
         //sender order confirmation
 
