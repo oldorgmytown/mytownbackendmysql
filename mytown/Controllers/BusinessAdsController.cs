@@ -86,14 +86,15 @@ namespace mytown.Controllers
             => Run(() => _service.GetStoreInfoAsync(busRegId));
 
         // ---------------- admin ----------------
-        // TODO: restrict to admins, e.g. [Authorize(Roles = "Admin")] (e)
 
+        [AllowAnonymous]
         [HttpGet("adminBusinessList")]
         public Task<IActionResult> AdminBusinessList(
             [FromQuery] string? status, [FromQuery] string? search,
             [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
             => Run(() => _service.GetAdminBusinessAdsAsync(status, search, page, pageSize));
 
+        [AllowAnonymous]
         [HttpGet("adminBusinessDetails")]
         public Task<IActionResult> AdminBusinessDetails(
             [FromQuery] int busRegId, [FromQuery] string? promoId, [FromQuery] string? status,

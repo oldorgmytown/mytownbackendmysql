@@ -179,16 +179,20 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        [HttpPost("confirm-razorpay-payment")]
-        public async Task<IActionResult> ConfirmRazorpayPayment([FromBody] ConfirmSenderPaymentDto dto)
-        {
-            await _senderService.ConfirmRazorpayPaymentAsync(dto);
-
-            return Ok(new
-            {
-                Message = "Payment successful"
-            });
-        }
+[HttpPost("confirm-razorpay-payment")]
+public async Task<IActionResult> ConfirmRazorpayPayment([FromBody] ConfirmSenderPaymentDto dto)
+{
+    try
+    {
+        await _senderService.ConfirmRazorpayPaymentAsync(dto);
+        return Ok(new { Message = "Payment successful" });
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Razorpay confirm failed for order {Id}", dto.SenderOrderId);
+        return BadRequest(new { message = ex.Message });
+    }
+}
         //-----------Razorpay-----------------//
 
         [HttpGet("senderorderconfirmation/{senderOrderId}")]
