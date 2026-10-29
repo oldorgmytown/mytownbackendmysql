@@ -548,7 +548,7 @@ GetUnreadNotificationsAsync(int senderId)
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
             {
                 var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-                generatedSignature = Convert.ToHexString(hash).ToLowerInvariant();
+                generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
 
             if (generatedSignature != dto.RazorpaySignature)
