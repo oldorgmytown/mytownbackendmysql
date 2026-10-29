@@ -528,6 +528,7 @@ GetUnreadNotificationsAsync(int senderId)
             };
         }
 
+
         public async Task<bool> ConfirmRazorpayPaymentAsync(ConfirmSenderPaymentDto dto)
         {
             var order = await _repo.GetSenderOrderAsync(dto.SenderOrderId);
@@ -543,12 +544,12 @@ GetUnreadNotificationsAsync(int senderId)
                 throw new Exception("Payment has already been processed.");
 
             // 1. Verify signature: HMAC-SHA256 of "razorpay_order_id|razorpay_payment_id"
-            string payload = $"{dto.RazorpayOrderId}|{dto.RazorpayOrderId}";
+            string payload = $"{dto.RazorpayOrderId}|{dto.RazorPayPaymentIntentId}";
             string generatedSignature;
             using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
             {
                 var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-                generatedSignature = Convert.ToHexString(hash).ToLowerInvariant();
+                generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
             }
 
             if (generatedSignature != dto.RazorpaySignature)
@@ -567,7 +568,7 @@ GetUnreadNotificationsAsync(int senderId)
                 throw new Exception("Razorpay order does not belong to this sender order.");
 
             // 3. Fetch payment (works for card, UPI, etc.)
-            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(dto.RazorpayOrderId);
+            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(dto.RazorPayPaymentIntentId);
 
             if (rzpPayment["order_id"]?.ToString() != dto.RazorpayOrderId)
                 throw new Exception("Payment does not belong to this Razorpay order.");
@@ -579,10 +580,10 @@ GetUnreadNotificationsAsync(int senderId)
             if (status == "authorized")
             {
                 var captureOptions = new Dictionary<string, object>
-        {
-            { "amount", paidAmount },
-            { "currency", "INR" }
-        };
+{
+    { "amount", paidAmount },
+    { "currency", "INR" }
+};
                 rzpPayment = rzpPayment.Capture(captureOptions);
                 status = rzpPayment["status"]?.ToString();
             }
@@ -609,7 +610,7 @@ GetUnreadNotificationsAsync(int senderId)
             var payment = new SenderOrderPayment
             {
                 SenderOrderId = dto.SenderOrderId,
-                StripePaymentIntentId = dto.RazorpayOrderId,   // razorpay_payment_id
+                StripePaymentIntentId = dto.RazorPayPaymentIntentId,   // razorpay_payment_id
                 Amount = amount,
                 GstAmount = gstAmount,
                 TotalAmount = totalAmount,
@@ -628,5 +629,6 @@ GetUnreadNotificationsAsync(int senderId)
 
             return true;
         }
+
     }
 }
