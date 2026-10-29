@@ -7,6 +7,8 @@ namespace mytown.Interfaces
     public interface IShopperConnectionRepository
     {
         Task<ShopperHeaderDto?> GetShopperHeaderAsync(int shopperId);
+
+        Task<int> GetBusinessConnectedCountAsync(int shopperId);
         Task<int> GetConnectedCountAsync(int shopperId);
 
         Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetReceivedRequestsAsync(
@@ -21,11 +23,18 @@ namespace mytown.Interfaces
         Task<(List<NotConnectedShopperDto> Items, int TotalCount)> GetNotConnectedShoppersAsync(
     int shopperId, string? search, int page, int pageSize);
 
+     
         Task<(List<SentRequestDto> Items, int TotalCount)> GetSentRequestsAsync(
     int shopperId, string? search, int page, int pageSize);
         void Remove(ShopperConnection connection);
 
         Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetConnectedShoppersAsync(
     int shopperId, string? search, int page, int pageSize);
+
+        Task<(List<ShopperBusinessConnectionDto> Items, int TotalCount)> GetBusinessConnectionsAsync(
+    int shopperId, string? search, int page, int pageSize);
+
+        Task<(List<AllConnectionDto> Items, int TotalCount)> GetAllConnectionsAsync(
+     int shopperId, string? search, int page, int pageSize);
     }
 }

@@ -147,5 +147,31 @@ namespace mytown.Controllers
             var result = await _service.GetConnectedShoppersAsync(shopperId, search, page, pageSize);
             return Ok(result);
         }
+
+        // All businesses this shopper is connected to, with search and paging
+        // GET api/shopper-connections/business-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("business-connections")]
+        public async Task<IActionResult> GetBusinessConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetBusinessConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // Shopper connections and business connections together, with search and paging
+        // GET api/shopper-connections/all-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("all-connections")]
+        public async Task<IActionResult> GetAllConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetAllConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
     }
 }

@@ -20,6 +20,7 @@ namespace mytown.Services
                 ?? throw new KeyNotFoundException("Shopper not found.");
 
             header.ConnectedShoppers = await _repo.GetConnectedCountAsync(shopperId);
+            header.ConnectedBusiness = await _repo.GetBusinessConnectedCountAsync(shopperId);   
             return header;
         }
 
@@ -195,6 +196,42 @@ namespace mytown.Services
             var (items, total) = await _repo.GetConnectedShoppersAsync(shopperId, search, page, pageSize);
 
             return new mytown.DTOs.PagedResultDto<ReceivedRequestDto>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<mytown.DTOs.PagedResultDto<ShopperBusinessConnectionDto>> GetBusinessConnectionsAsync(
+    int shopperId, string? search, int page, int pageSize)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var (items, total) = await _repo.GetBusinessConnectionsAsync(shopperId, search, page, pageSize);
+
+            return new mytown.DTOs.PagedResultDto<ShopperBusinessConnectionDto>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<mytown.DTOs.PagedResultDto<AllConnectionDto>> GetAllConnectionsAsync(
+    int shopperId, string? search, int page, int pageSize)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var result = await _repo.GetAllConnectionsAsync(shopperId, search, page, pageSize);
+            var items = result.Items;
+            var total = result.TotalCount;
+
+            return new mytown.DTOs.PagedResultDto<AllConnectionDto>
             {
                 Items = items,
                 TotalCount = total,

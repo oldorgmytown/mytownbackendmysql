@@ -22,6 +22,10 @@ namespace mytown.Interfaces
 
         Task<mytown.DTOs.PagedResultDto<ReceivedRequestDto>> GetConnectedShoppersAsync(
     int shopperId, string? search, int page, int pageSize);
+        Task<mytown.DTOs.PagedResultDto<ShopperBusinessConnectionDto>> GetBusinessConnectionsAsync(
+    int shopperId, string? search, int page, int pageSize);
 
+        Task<mytown.DTOs.PagedResultDto<AllConnectionDto>> GetAllConnectionsAsync(
+    int shopperId, string? search, int page, int pageSize);
     }
 }
