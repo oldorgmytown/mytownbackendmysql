@@ -36,5 +36,10 @@ namespace mytown.Interfaces
 
         Task<(List<AllConnectionDto> Items, int TotalCount)> GetAllConnectionsAsync(
      int shopperId, string? search, int page, int pageSize);
+
+        Task<List<BusinessNameDto>> GetBusinessNamesAsync();
+
+        Task AddAsync(ShopperPost post);
+      //  Task SaveAsync();
     }
 }

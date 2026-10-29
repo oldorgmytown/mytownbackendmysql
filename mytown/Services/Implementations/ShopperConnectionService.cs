@@ -239,5 +239,37 @@ namespace mytown.Services
                 PageSize = pageSize
             };
         }
+
+        public Task<List<BusinessNameDto>> GetBusinessNamesAsync()
+        {
+            return _repo.GetBusinessNamesAsync();
+        }
+
+
+        public async Task<int> CreatePostAsync(CreatePostDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.Caption))
+                throw new ArgumentException("Caption is required.");
+
+            if (dto.ImageUrls.Count > 2)
+                throw new ArgumentException("You can add at most 2 photos.");
+
+            var post = new ShopperPost
+            {
+                ShopperRegId = dto.ShopperId,
+                Caption = dto.Caption,
+                BusRegId = dto.BusRegId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            byte order = 1;
+            foreach (var url in dto.ImageUrls)
+                post.Images.Add(new ShopperPostImage { ImageUrl = url, SortOrder = order++ });
+
+            await _repo.AddAsync(post);
+            await _repo.SaveAsync();     // saves the post and its images together
+
+            return post.PostId;
+        }
     }
 }

@@ -147,6 +147,9 @@ namespace mytown.Models
             //shopper connections
 
             public DbSet<ShopperConnection> ShopperConnections { get; set; }
+            public DbSet<ShopperPost> ShopperPosts { get; set; }
+            public DbSet<ShopperPostImage> ShopperPostImages { get; set; }
+            public DbSet<ShopperPostLike> ShopperPostLikes { get; set; }
 
 
 

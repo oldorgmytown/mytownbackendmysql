@@ -27,5 +27,8 @@ namespace mytown.Interfaces
 
         Task<mytown.DTOs.PagedResultDto<AllConnectionDto>> GetAllConnectionsAsync(
     int shopperId, string? search, int page, int pageSize);
+        Task<List<BusinessNameDto>> GetBusinessNamesAsync();
+
+        Task<int> CreatePostAsync(CreatePostDto dto);
     }
 }

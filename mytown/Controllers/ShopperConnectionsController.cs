@@ -173,5 +173,29 @@ namespace mytown.Controllers
             var result = await _service.GetAllConnectionsAsync(shopperId, search, page, pageSize);
             return Ok(result);
         }
+
+
+        // Tag Local Store dropdown: all business names with their ids
+        // GET api/shopper-connections/business-names
+        [HttpGet("business-names")]
+        public async Task<IActionResult> GetBusinessNames()
+        {
+            var result = await _service.GetBusinessNamesAsync();
+            return Ok(result);
+        }
+
+        // Publish Post button
+        // POST api/shopper-posts/create
+        [HttpPost("create")]
+        public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
+        {
+            try
+            {
+                var postId = await _service.CreatePostAsync(dto);
+                return Ok(new { postId });
+            }
+            catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+        }
     }
 }
+

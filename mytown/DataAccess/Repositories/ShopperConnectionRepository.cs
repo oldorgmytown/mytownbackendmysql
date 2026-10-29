@@ -489,5 +489,27 @@ namespace mytown.Repositories
 
             return (items, total);
         }
+
+        //get businessnames
+
+        public async Task<List<BusinessNameDto>> GetBusinessNamesAsync()
+        {
+            return await _db.BusinessRegisters
+                .AsNoTracking()
+                .OrderBy(b => b.BusinessName)
+                .Select(b => new BusinessNameDto
+                {
+                    BusRegId = b.BusRegId,
+                    BusinessName = b.BusinessName
+                })
+                .ToListAsync();
+        }
+
+        public async Task AddAsync(ShopperPost post) =>
+            await _db.ShopperPosts.AddAsync(post);
+
+       // public Task SaveAsync() => _db.SaveChangesAsync();
+
+       
     }
 }

@@ -3720,6 +3720,44 @@ namespace mytown.Migrations
                     b.ToTable("shipping_package_details");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperConnection", b =>
+                {
+                    b.Property<int>("ConnectionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("connection_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ConnectionId"));
+
+                    b.Property<int>("ReceiverShopperId")
+                        .HasColumnType("int")
+                        .HasColumnName("receiver_shopper_id");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("requested_at");
+
+                    b.Property<int>("RequesterShopperId")
+                        .HasColumnType("int")
+                        .HasColumnName("requester_shopper_id");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("responded_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int")
+                        .HasColumnName("status");
+
+                    b.HasKey("ConnectionId");
+
+                    b.HasIndex("ReceiverShopperId");
+
+                    b.HasIndex("RequesterShopperId");
+
+                    b.ToTable("shopper_connections");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperDBNotifications", b =>
                 {
                     b.Property<int>("NotificationId")
@@ -3785,6 +3823,94 @@ namespace mytown.Migrations
                     b.HasIndex("ShopperExperienceId");
 
                     b.ToTable("shopper_experience_photos");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperPost", b =>
+                {
+                    b.Property<int>("PostId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("post_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PostId"));
+
+                    b.Property<int?>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<string>("Caption")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("caption");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("PostId");
+
+                    b.ToTable("shopper_posts");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperPostImage", b =>
+                {
+                    b.Property<int>("ImageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("image_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ImageId"));
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("image_url");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int")
+                        .HasColumnName("post_id");
+
+                    b.Property<int?>("ShopperPostPostId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_post_post_id");
+
+                    b.Property<byte>("SortOrder")
+                        .HasColumnType("tinyint unsigned")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("ImageId");
+
+                    b.HasIndex("ShopperPostPostId");
+
+                    b.ToTable("shopper_post_images");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperPostLike", b =>
+                {
+                    b.Property<int>("PostId")
+                        .HasColumnType("int")
+                        .HasColumnName("post_id");
+
+                    b.Property<int>("LikedByShopperId")
+                        .HasColumnType("int")
+                        .HasColumnName("liked_by_shopper_id");
+
+                    b.Property<DateTime>("LikedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("liked_at");
+
+                    b.HasKey("PostId", "LikedByShopperId");
+
+                    b.ToTable("shopper_post_likes");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
@@ -5458,6 +5584,25 @@ namespace mytown.Migrations
                     b.Navigation("TransporterRegister");
                 });
 
+            modelBuilder.Entity("mytown.Models.ShopperConnection", b =>
+                {
+                    b.HasOne("mytown.Models.ShopperRegister", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverShopperId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("mytown.Models.ShopperRegister", "Requester")
+                        .WithMany()
+                        .HasForeignKey("RequesterShopperId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Requester");
+                });
+
             modelBuilder.Entity("mytown.Models.ShopperDBNotifications", b =>
                 {
                     b.HasOne("mytown.Models.ShopperRegister", "ShopperRegister")
@@ -5478,6 +5623,13 @@ namespace mytown.Migrations
                         .IsRequired();
 
                     b.Navigation("ShopperExperience");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperPostImage", b =>
+                {
+                    b.HasOne("mytown.Models.ShopperPost", null)
+                        .WithMany("Images")
+                        .HasForeignKey("ShopperPostPostId");
                 });
 
             modelBuilder.Entity("mytown.Models.ShopperProductRecentView", b =>
@@ -5762,6 +5914,11 @@ namespace mytown.Migrations
             modelBuilder.Entity("mytown.Models.ProductsNew", b =>
                 {
                     b.Navigation("Variants");
+                });
+
+            modelBuilder.Entity("mytown.Models.ShopperPost", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("mytown.Models.Sku_ProductVariant", b =>
