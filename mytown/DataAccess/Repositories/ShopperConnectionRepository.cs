@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using mytown.Controllers.Helpers;
+
 //using mytown.Data;
 using mytown.DTOs;
 using mytown.Interfaces;
@@ -45,12 +47,13 @@ namespace mytown.Repositories
         }
 
         public async Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetReceivedRequestsAsync(
-    int shopperId, int page, int pageSize)
+      int shopperId, string? search, int page, int pageSize)
         {
             var query =
                 from c in _db.ShopperConnections.AsNoTracking()
                 where c.ReceiverShopperId == shopperId && c.Status == ConnectionStatus.Pending
-                join s in _db.ShopperRegisters.AsNoTracking() on c.RequesterShopperId equals s.ShopperRegId
+                join s in _db.ShopperRegisters.AsNoTracking().ApplyShopperSearch(search)
+                    on c.RequesterShopperId equals s.ShopperRegId
                 select new
                 {
                     c.ConnectionId,
@@ -58,7 +61,9 @@ namespace mytown.Repositories
                     s.ShopperRegId,
                     s.Username,
                     s.PhotoName,
-                    s.Town
+                    s.Town,
+                    s.City,
+                    s.State
                 };
 
             var total = await query.CountAsync();
@@ -69,6 +74,7 @@ namespace mytown.Repositories
                 .Take(pageSize)
                 .ToListAsync();
 
+            // Mutual count only for the shoppers on this page
             var mutuals = await GetMutualCountsAsync(shopperId, rows.Select(r => r.ShopperRegId).ToList());
 
             var items = rows.Select(r => new ReceivedRequestDto
@@ -78,6 +84,8 @@ namespace mytown.Repositories
                 Username = r.Username,
                 PhotoName = r.PhotoName,
                 Town = r.Town,
+                City = r.City,
+                State = r.State,
                 MutualCount = mutuals.GetValueOrDefault(r.ShopperRegId),
                 RequestedAt = r.RequestedAt
             }).ToList();
@@ -152,71 +160,14 @@ namespace mytown.Repositories
             }
         }
 
-        public async Task<(List<NotConnectedShopperDto> Items, int TotalCount)> GetNotConnectedShoppersAsync(
-    int shopperId, string? search, int page, int pageSize)
-        {
-            // Every shopper except me, joined with the (at most one) row between us
-            var query =
-                from s in _db.ShopperRegisters.AsNoTracking()
-                where s.ShopperRegId != shopperId
-                from c in _db.ShopperConnections.AsNoTracking()
-                    .Where(c => (c.RequesterShopperId == shopperId && c.ReceiverShopperId == s.ShopperRegId) ||
-                                (c.ReceiverShopperId == shopperId && c.RequesterShopperId == s.ShopperRegId))
-                    .DefaultIfEmpty()
-                    // Only: no relation at all, or a previously rejected request
-                where c == null || c.Status == ConnectionStatus.Rejected
-                select new
-                {
-                    s.ShopperRegId,
-                    s.Username,
-                    s.PhotoName,
-                    s.Town,
-                    s.City,
-                    s.State
-                };
-
-            // Search by name, town or city
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var term = search.Trim();
-                query = query.Where(x => x.Username.Contains(term) ||
-                                         x.Town.Contains(term) ||
-                                         x.City.Contains(term));
-            }
-
-            var total = await query.CountAsync();
-
-            var rows = await query
-                .OrderBy(x => x.Username)
-                .ThenBy(x => x.ShopperRegId)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            // Mutual count only for the shoppers on this page
-            var mutuals = await GetMutualCountsAsync(shopperId, rows.Select(r => r.ShopperRegId).ToList());
-
-            var items = rows.Select(r => new NotConnectedShopperDto
-            {
-                ShopperId = r.ShopperRegId,
-                Username = r.Username,
-                PhotoName = r.PhotoName,
-                Town = r.Town,
-                City = r.City,
-                State = r.State,
-                MutualCount = mutuals.GetValueOrDefault(r.ShopperRegId)
-            }).ToList();
-
-            return (items, total);
-        }
-
         public async Task<(List<SentRequestDto> Items, int TotalCount)> GetSentRequestsAsync(
-    int shopperId, string? search, int page, int pageSize)
+      int shopperId, string? search, int page, int pageSize)
         {
             var query =
                 from c in _db.ShopperConnections.AsNoTracking()
                 where c.RequesterShopperId == shopperId && c.Status == ConnectionStatus.Pending
-                join s in _db.ShopperRegisters.AsNoTracking() on c.ReceiverShopperId equals s.ShopperRegId
+                join s in _db.ShopperRegisters.AsNoTracking().ApplyShopperSearch(search)
+                    on c.ReceiverShopperId equals s.ShopperRegId
                 select new
                 {
                     c.ConnectionId,
@@ -228,15 +179,6 @@ namespace mytown.Repositories
                     s.City,
                     s.State
                 };
-
-            // Search by name, town or city
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var term = search.Trim();
-                query = query.Where(x => x.Username.Contains(term) ||
-                                         x.Town.Contains(term) ||
-                                         x.City.Contains(term));
-            }
 
             var total = await query.CountAsync();
 
@@ -271,21 +213,29 @@ namespace mytown.Repositories
         }
 
         public async Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetConnectedShoppersAsync(
-    int shopperId, string? search, int page, int pageSize)
+       int shopperId, string? search, int page, int pageSize)
         {
-            // Accepted rows where I am on either side; the "other" shopper is the one we show
-            var query =
-                from c in _db.ShopperConnections.AsNoTracking()
-                where c.Status == ConnectionStatus.Accepted &&
-                      (c.RequesterShopperId == shopperId || c.ReceiverShopperId == shopperId)
-                join s in _db.ShopperRegisters.AsNoTracking()
-                    on (c.RequesterShopperId == shopperId ? c.ReceiverShopperId : c.RequesterShopperId)
-                    equals s.ShopperRegId
-                select new
+            // Accepted rows where I am on either side; OtherId is the shopper we show
+            var mine = _db.ShopperConnections.AsNoTracking()
+                .Where(c => c.Status == ConnectionStatus.Accepted &&
+                           (c.RequesterShopperId == shopperId || c.ReceiverShopperId == shopperId))
+                .Select(c => new
                 {
                     c.ConnectionId,
                     c.RequestedAt,
                     ConnectedAt = c.RespondedAt ?? c.RequestedAt,
+                    OtherId = c.RequesterShopperId == shopperId ? c.ReceiverShopperId : c.RequesterShopperId
+                });
+
+            var query =
+                from m in mine
+                join s in _db.ShopperRegisters.AsNoTracking().ApplyShopperSearch(search)
+                    on m.OtherId equals s.ShopperRegId
+                select new
+                {
+                    m.ConnectionId,
+                    m.RequestedAt,
+                    m.ConnectedAt,
                     s.ShopperRegId,
                     s.Username,
                     s.PhotoName,
@@ -293,15 +243,6 @@ namespace mytown.Repositories
                     s.City,
                     s.State
                 };
-
-            // Search by name, town or city
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var term = search.Trim();
-                query = query.Where(x => x.Username.Contains(term) ||
-                                         x.Town.Contains(term) ||
-                                         x.City.Contains(term));
-            }
 
             var total = await query.CountAsync();
 
@@ -323,8 +264,8 @@ namespace mytown.Repositories
                 Username = r.Username,
                 PhotoName = r.PhotoName,
                 Town = r.Town,
-               // City = r.City,
-              //  State = r.State,
+                City = r.City,
+                State = r.State,
                 MutualCount = mutuals.GetValueOrDefault(r.ShopperRegId),
                 RequestedAt = r.RequestedAt
             }).ToList();

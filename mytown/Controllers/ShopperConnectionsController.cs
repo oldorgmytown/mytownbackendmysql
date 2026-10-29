@@ -37,12 +37,15 @@ namespace mytown.Controllers
         }
 
         // Right panel: requests sent to me (panel uses pageSize=3)
-        // GET api/shopper-connections/received-requests?shopperId=1&page=1&pageSize=3
+        // GET api/shopper-connections/received-requests?shopperId=1&search=&page=1&pageSize=3
         [HttpGet("received-requests")]
         public async Task<IActionResult> GetReceivedRequests(
-            [FromQuery] int shopperId, [FromQuery] int page = 1, [FromQuery] int pageSize = 3)
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 3)
         {
-            var result = await _service.GetReceivedRequestsAsync(shopperId, page, pageSize);
+            var result = await _service.GetReceivedRequestsAsync(shopperId, search, page, pageSize);
             return Ok(result);
         }
 

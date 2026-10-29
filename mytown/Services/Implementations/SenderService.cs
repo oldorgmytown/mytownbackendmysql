@@ -528,6 +528,7 @@ GetUnreadNotificationsAsync(int senderId)
             };
         }
 
+
         public async Task<bool> ConfirmRazorpayPaymentAsync(ConfirmSenderPaymentDto dto)
         {
             var order = await _repo.GetSenderOrderAsync(dto.SenderOrderId);
@@ -579,10 +580,10 @@ GetUnreadNotificationsAsync(int senderId)
             if (status == "authorized")
             {
                 var captureOptions = new Dictionary<string, object>
-        {
-            { "amount", paidAmount },
-            { "currency", "INR" }
-        };
+{
+    { "amount", paidAmount },
+    { "currency", "INR" }
+};
                 rzpPayment = rzpPayment.Capture(captureOptions);
                 status = rzpPayment["status"]?.ToString();
             }
@@ -628,5 +629,6 @@ GetUnreadNotificationsAsync(int senderId)
 
             return true;
         }
+
     }
 }

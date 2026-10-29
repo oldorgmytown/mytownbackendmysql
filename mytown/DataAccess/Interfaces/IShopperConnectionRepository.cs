@@ -10,7 +10,7 @@ namespace mytown.Interfaces
         Task<int> GetConnectedCountAsync(int shopperId);
 
         Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetReceivedRequestsAsync(
-    int shopperId, int page, int pageSize);
+       int shopperId, string? search, int page, int pageSize);
         Task<ShopperConnection?> GetByIdAsync(int connectionId);
 
         Task<bool> ShopperExistsAsync(int shopperId);
