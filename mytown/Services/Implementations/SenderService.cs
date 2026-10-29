@@ -551,10 +551,13 @@ GetUnreadNotificationsAsync(int senderId)
                 generatedSignature = Convert.ToHexString(hash).ToLowerInvariant();
             }
 
-            if (!CryptographicOperations.FixedTimeEquals(
-                    Encoding.UTF8.GetBytes(generatedSignature),
-                    Encoding.UTF8.GetBytes(dto.RazorpaySignature ?? "")))
+            if (generatedSignature != dto.RazorpaySignature)
                 throw new Exception("Payment signature verification failed.");
+
+            //if (!CryptographicOperations.FixedTimeEquals(
+            //        Encoding.UTF8.GetBytes(generatedSignature),
+            //        Encoding.UTF8.GetBytes(dto.RazorpaySignature ?? "")))
+            //    throw new Exception("Payment signature verification failed.");
 
             var client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
 
