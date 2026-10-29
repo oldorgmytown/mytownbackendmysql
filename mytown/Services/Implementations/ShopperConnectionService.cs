@@ -24,12 +24,12 @@ namespace mytown.Services
         }
 
         public async Task<mytown.DTOs.PagedResultDto<ReceivedRequestDto>> GetReceivedRequestsAsync(
-    int shopperId, int page, int pageSize)
+     int shopperId, string? search, int page, int pageSize)
         {
             page = Math.Max(page, 1);
             pageSize = Math.Clamp(pageSize, 1, 50);
 
-            var (items, total) = await _repo.GetReceivedRequestsAsync(shopperId, page, pageSize);
+            var (items, total) = await _repo.GetReceivedRequestsAsync(shopperId, search, page, pageSize);
 
             return new mytown.DTOs.PagedResultDto<ReceivedRequestDto>
             {
