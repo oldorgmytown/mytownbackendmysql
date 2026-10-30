@@ -147,5 +147,118 @@ namespace mytown.Controllers
             var result = await _service.GetConnectedShoppersAsync(shopperId, search, page, pageSize);
             return Ok(result);
         }
+
+        // All businesses this shopper is connected to, with search and paging
+        // GET api/shopper-connections/business-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("business-connections")]
+        public async Task<IActionResult> GetBusinessConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetBusinessConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // Shopper connections and business connections together, with search and paging
+        // GET api/shopper-connections/all-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("all-connections")]
+        public async Task<IActionResult> GetAllConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetAllConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+
+        // Tag Local Store dropdown: all business names with their ids
+        // GET api/shopper-connections/business-names
+        [HttpGet("business-names")]
+        public async Task<IActionResult> GetBusinessNames()
+        {
+            var result = await _service.GetBusinessNamesAsync();
+            return Ok(result);
+        }
+
+        // Publish Post button
+        // POST api/shopper-posts/create
+        [HttpPost("createpost")]
+        public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
+        {
+            try
+            {
+                var postId = await _service.CreatePostAsync(dto);
+                return Ok(new { postId });
+            }
+            catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+        }
+
+        // Delete button on my post
+        // DELETE api/shopper-connections/delete-post?shopperId=17&postId=5
+        [HttpDelete("delete-post")]
+        public async Task<IActionResult> DeletePost([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                await _service.DeletePostAsync(shopperId, postId);
+                return Ok(new { message = "Post deleted." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+        }
+
+        // Heart button: add a like
+        // POST api/shopper-connections/add-like?shopperId=17&postId=5
+        [HttpPost("add-like")]
+        public async Task<IActionResult> AddLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.AddLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Like count, and whether this shopper liked the post
+        // GET api/shopper-connections/like-info?shopperId=17&postId=5
+        [HttpGet("like-info")]
+        public async Task<IActionResult> GetLikeInfo([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.GetLikeInfoAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Heart button: remove a like
+        // DELETE api/shopper-connections/remove-like?shopperId=17&postId=5
+        [HttpDelete("remove-like")]
+        public async Task<IActionResult> RemoveLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.RemoveLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Shopper feed: filter = all | connections | mine
+        // GET api/shopper-connections/feed?shopperId=17&filter=all&search=&page=1&pageSize=10
+        [HttpGet("feed")]
+        public async Task<IActionResult> GetFeed(
+            [FromQuery] int shopperId,
+            [FromQuery] string? filter = "all",
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            return Ok(await _service.GetFeedAsync(shopperId, filter, search, page, pageSize));
+        }
     }
 }
+

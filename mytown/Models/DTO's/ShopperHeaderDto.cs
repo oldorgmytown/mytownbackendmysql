@@ -10,5 +10,8 @@
         public string State { get; set; } = "";
         public string Country { get; set; } = "";
         public int ConnectedShoppers { get; set; }
+        public int ConnectedBusiness{ get; set; }
+        public int PostsCount { get; set; }
+
     }
 }
