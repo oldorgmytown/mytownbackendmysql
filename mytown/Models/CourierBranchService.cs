@@ -29,6 +29,8 @@ namespace mytown.Models
 
         [Column("weight_range", TypeName = "varchar(100)")]
         public string WeightRange { get; set; }
+        [Column("base_charges", TypeName = "decimal(10,2)")]
+        public decimal BaseCharges { get; set; }
 
         [Column("charges", TypeName = "decimal(10,2)")]
         public decimal Charges { get; set; }

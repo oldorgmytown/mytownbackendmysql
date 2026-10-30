@@ -1,0 +1,264 @@
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using mytown.Interfaces;
+using mytown.Models;
+using mytown.Models.DTO_s;
+using mytown.DTOs;
+
+namespace mytown.Controllers
+{
+    [ApiController]
+  //  [Authorize]
+    [Route("api/shopper-connections")]
+    public class ShopperConnectionsController : ControllerBase
+    {
+        private readonly IShopperConnectionService _service;
+
+        public ShopperConnectionsController(IShopperConnectionService service)
+        {
+            _service = service;
+        }
+
+        // Top banner: profile details + connected shoppers count
+        // GET api/shopper-connections/header?shopperId=1
+        [HttpGet("header")]
+        public async Task<IActionResult> GetHeader([FromQuery] int shopperId)
+        {
+            try
+            {
+                var result = await _service.GetHeaderAsync(shopperId);
+                return Ok(result);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
+        // Right panel: requests sent to me (panel uses pageSize=3)
+        // GET api/shopper-connections/received-requests?shopperId=1&search=&page=1&pageSize=3
+        [HttpGet("received-requests")]
+        public async Task<IActionResult> GetReceivedRequests(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 3)
+        {
+            var result = await _service.GetReceivedRequestsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // "+ Connect" button in the right panel
+        // PATCH api/shopper-connections/approve-request?shopperId=1&connectionId=5
+        [HttpPut("approve-request")]
+        public async Task<IActionResult> Approve([FromQuery] int shopperId, [FromQuery] int connectionId)
+        {
+            try
+            {
+                await _service.ApproveAsync(shopperId, connectionId);
+                return Ok(new { message = "Connection approved." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        }
+
+        // "Connect" button in View All: send a new request
+        // POST api/shopper-connections/send-request   body: { "shopperId": 1, "receiverShopperId": 7 }
+        [HttpPost("send-request")]
+        public async Task<IActionResult> SendRequest([FromBody] SendConnectionRequestDto dto)
+        {
+            try
+            {
+                var result = await _service.SendRequestAsync(dto.ShopperId, dto.ReceiverShopperId);
+                return Ok(result);
+            }
+            catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        }
+
+        // View All, Tab 1: shoppers not yet connected, with search and paging
+        // GET api/shopper-connections/not-connected?shopperId=1&search=pune&page=1&pageSize=5
+        [HttpGet("not-connected")]
+        public async Task<IActionResult> GetNotConnected(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetNotConnectedShoppersAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // View All, Tab 3: requests I sent, with search and paging
+        // GET api/shopper-connections/sent-requests?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("sent-requests")]
+        public async Task<IActionResult> GetSentRequests(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetSentRequestsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // Withdraw button
+        // DELETE api/shopper-connections/withdraw-request?shopperId=17&connectionId=5
+        [HttpDelete("withdraw-request")]
+        public async Task<IActionResult> Withdraw([FromQuery] int shopperId, [FromQuery] int connectionId)
+        {
+            try
+            {
+                await _service.WithdrawAsync(shopperId, connectionId);
+                return Ok(new { message = "Request withdrawn." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        }
+
+        // Disconnect button (left panel and All Connections)
+        // DELETE api/shopper-connections/disconnect?shopperId=17&connectionId=5
+        [HttpDelete("disconnect")]
+        public async Task<IActionResult> Disconnect([FromQuery] int shopperId, [FromQuery] int connectionId)
+        {
+            try
+            {
+                await _service.DisconnectAsync(shopperId, connectionId);
+                return Ok(new { message = "Disconnected." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+            catch (InvalidOperationException ex) { return Conflict(new { message = ex.Message }); }
+        }
+
+        // Left panel (pageSize=4) and View All "All Connections" tab (search + paging)
+        // GET api/shopper-connections/connected-shoppers?shopperId=17&search=&page=1&pageSize=4
+        [HttpGet("connected-shoppers")]
+        public async Task<IActionResult> GetConnectedShoppers(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 4)
+        {
+            var result = await _service.GetConnectedShoppersAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // All businesses this shopper is connected to, with search and paging
+        // GET api/shopper-connections/business-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("business-connections")]
+        public async Task<IActionResult> GetBusinessConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetBusinessConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+        // Shopper connections and business connections together, with search and paging
+        // GET api/shopper-connections/all-connections?shopperId=17&search=&page=1&pageSize=5
+        [HttpGet("all-connections")]
+        public async Task<IActionResult> GetAllConnections(
+            [FromQuery] int shopperId,
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            var result = await _service.GetAllConnectionsAsync(shopperId, search, page, pageSize);
+            return Ok(result);
+        }
+
+
+        // Tag Local Store dropdown: all business names with their ids
+        // GET api/shopper-connections/business-names
+        [HttpGet("business-names")]
+        public async Task<IActionResult> GetBusinessNames()
+        {
+            var result = await _service.GetBusinessNamesAsync();
+            return Ok(result);
+        }
+
+        // Publish Post button
+        // POST api/shopper-posts/create
+        [HttpPost("createpost")]
+        public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
+        {
+            try
+            {
+                var postId = await _service.CreatePostAsync(dto);
+                return Ok(new { postId });
+            }
+            catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+        }
+
+        // Delete button on my post
+        // DELETE api/shopper-connections/delete-post?shopperId=17&postId=5
+        [HttpDelete("delete-post")]
+        public async Task<IActionResult> DeletePost([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                await _service.DeletePostAsync(shopperId, postId);
+                return Ok(new { message = "Post deleted." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+        }
+
+        // Heart button: add a like
+        // POST api/shopper-connections/add-like?shopperId=17&postId=5
+        [HttpPost("add-like")]
+        public async Task<IActionResult> AddLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.AddLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Like count, and whether this shopper liked the post
+        // GET api/shopper-connections/like-info?shopperId=17&postId=5
+        [HttpGet("like-info")]
+        public async Task<IActionResult> GetLikeInfo([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.GetLikeInfoAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Heart button: remove a like
+        // DELETE api/shopper-connections/remove-like?shopperId=17&postId=5
+        [HttpDelete("remove-like")]
+        public async Task<IActionResult> RemoveLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.RemoveLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Shopper feed: filter = all | connections | mine
+        // GET api/shopper-connections/feed?shopperId=17&filter=all&search=&page=1&pageSize=10
+        [HttpGet("feed")]
+        public async Task<IActionResult> GetFeed(
+            [FromQuery] int shopperId,
+            [FromQuery] string? filter = "all",
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            return Ok(await _service.GetFeedAsync(shopperId, filter, search, page, pageSize));
+        }
+    }
+}
+

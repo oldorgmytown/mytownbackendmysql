@@ -11,6 +11,8 @@
        
         public int BuscatId { get; set; }
         public string? BuscatName { get; set; }
+         public string Location { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
 
         public int ProdcatId { get; set; }
         public string? ProdcatName { get; set; }
@@ -29,6 +31,9 @@
         public string? ProductName { get; set; }
         public string? ProductDescription { get; set; }
         public string? SupplierName { get; set; }
+
+        public decimal? AverageRating { get; set; }
+        public int ReviewCount { get; set; }
 
         // Variants
         public List<Sku_ProductVariantDto> Variants { get; set; } = new();
