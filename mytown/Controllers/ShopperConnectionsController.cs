@@ -186,7 +186,7 @@ namespace mytown.Controllers
 
         // Publish Post button
         // POST api/shopper-posts/create
-        [HttpPost("create")]
+        [HttpPost("createpost")]
         public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
         {
             try
@@ -195,6 +195,56 @@ namespace mytown.Controllers
                 return Ok(new { postId });
             }
             catch (ArgumentException ex) { return BadRequest(new { message = ex.Message }); }
+        }
+
+        // Delete button on my post
+        // DELETE api/shopper-connections/delete-post?shopperId=17&postId=5
+        [HttpDelete("delete-post")]
+        public async Task<IActionResult> DeletePost([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                await _service.DeletePostAsync(shopperId, postId);
+                return Ok(new { message = "Post deleted." });
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+            catch (UnauthorizedAccessException ex) { return StatusCode(403, new { message = ex.Message }); }
+        }
+
+        // Heart button: add a like
+        // POST api/shopper-connections/add-like?shopperId=17&postId=5
+        [HttpPost("add-like")]
+        public async Task<IActionResult> AddLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.AddLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Like count, and whether this shopper liked the post
+        // GET api/shopper-connections/like-info?shopperId=17&postId=5
+        [HttpGet("like-info")]
+        public async Task<IActionResult> GetLikeInfo([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.GetLikeInfoAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        }
+
+        // Heart button: remove a like
+        // DELETE api/shopper-connections/remove-like?shopperId=17&postId=5
+        [HttpDelete("remove-like")]
+        public async Task<IActionResult> RemoveLike([FromQuery] int shopperId, [FromQuery] int postId)
+        {
+            try
+            {
+                return Ok(await _service.RemoveLikeAsync(shopperId, postId));
+            }
+            catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         }
     }
 }

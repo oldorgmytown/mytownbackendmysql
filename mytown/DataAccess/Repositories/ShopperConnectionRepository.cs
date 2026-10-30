@@ -53,6 +53,11 @@ namespace mytown.Repositories
                 .CountAsync(c => c.ShopperRegId == shopperId && c.Status);
         }
 
+        public async Task<int> GetPostsCountAsync(int shopperId)
+        {
+            return await _db.ShopperPosts.CountAsync(p => p.ShopperRegId == shopperId);
+        }
+
         public async Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetReceivedRequestsAsync(
       int shopperId, string? search, int page, int pageSize)
         {
@@ -508,8 +513,27 @@ namespace mytown.Repositories
         public async Task AddAsync(ShopperPost post) =>
             await _db.ShopperPosts.AddAsync(post);
 
-       // public Task SaveAsync() => _db.SaveChangesAsync();
+        // public Task SaveAsync() => _db.SaveChangesAsync();
 
-       
+        public async Task<ShopperPost?> GetByPostIdAsync(int postId) =>
+    await _db.ShopperPosts.FirstOrDefaultAsync(p => p.PostId == postId);
+
+        public void Remove(ShopperPost post) =>
+            _db.ShopperPosts.Remove(post);
+        public Task<bool> PostExistsAsync(int postId) =>
+    _db.ShopperPosts.AnyAsync(p => p.PostId == postId);
+
+        public Task<ShopperPostLike?> GetLikeAsync(int postId, int shopperId) =>
+            _db.ShopperPostLikes.FirstOrDefaultAsync(l => l.PostId == postId && l.LikedByShopperId == shopperId);
+
+        public async Task AddLikeAsync(ShopperPostLike like) =>
+            await _db.ShopperPostLikes.AddAsync(like);
+
+        public void RemoveLike(ShopperPostLike like) =>
+            _db.ShopperPostLikes.Remove(like);
+
+        public Task<int> CountLikesAsync(int postId) =>
+            _db.ShopperPostLikes.CountAsync(l => l.PostId == postId);
+
     }
 }

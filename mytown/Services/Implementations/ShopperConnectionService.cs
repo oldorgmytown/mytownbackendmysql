@@ -1,4 +1,5 @@
-﻿using mytown.DTOs;
+﻿using Microsoft.EntityFrameworkCore;
+using mytown.DTOs;
 using mytown.Interfaces;
 using mytown.Models;
 using mytown.Models.DTO_s;
@@ -20,7 +21,8 @@ namespace mytown.Services
                 ?? throw new KeyNotFoundException("Shopper not found.");
 
             header.ConnectedShoppers = await _repo.GetConnectedCountAsync(shopperId);
-            header.ConnectedBusiness = await _repo.GetBusinessConnectedCountAsync(shopperId);   
+            header.ConnectedBusiness = await _repo.GetBusinessConnectedCountAsync(shopperId);
+            header.PostsCount = await _repo.GetPostsCountAsync(shopperId);
             return header;
         }
 
@@ -270,6 +272,87 @@ namespace mytown.Services
             await _repo.SaveAsync();     // saves the post and its images together
 
             return post.PostId;
+        }
+
+        public async Task DeletePostAsync(int shopperId, int postId)
+        {
+            var post = await _repo.GetByPostIdAsync(postId)
+                ?? throw new KeyNotFoundException("Post not found.");
+
+            // Only the author can delete
+            if (post.ShopperRegId != shopperId)
+                throw new UnauthorizedAccessException("You can delete only your own posts.");
+
+            _repo.Remove(post);
+            await _repo.SaveAsync();   // images and likes are removed by the database cascade
+        }
+
+        // Add a like. If the shopper already liked it, nothing changes.
+        public async Task<LikeResultDto> AddLikeAsync(int shopperId, int postId)
+        {
+            if (!await _repo.PostExistsAsync(postId))
+                throw new KeyNotFoundException("Post not found.");
+
+            var existing = await _repo.GetLikeAsync(postId, shopperId);
+
+            if (existing == null)
+            {
+                await _repo.AddLikeAsync(new ShopperPostLike
+                {
+                    PostId = postId,
+                    LikedByShopperId = shopperId,
+                    LikedAt = DateTime.UtcNow
+                });
+
+                try
+                {
+                    await _repo.SaveAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    // Two taps at the same moment: the other one already saved the like
+                }
+            }
+
+            return new LikeResultDto
+            {
+                Liked = true,
+                LikeCount = await _repo.CountLikesAsync(postId)
+            };
+        }
+
+        // Like count, and whether this shopper has liked the post
+        public async Task<LikeResultDto> GetLikeInfoAsync(int shopperId, int postId)
+        {
+            if (!await _repo.PostExistsAsync(postId))
+                throw new KeyNotFoundException("Post not found.");
+
+            return new LikeResultDto
+            {
+                Liked = await _repo.GetLikeAsync(postId, shopperId) != null,
+                LikeCount = await _repo.CountLikesAsync(postId)
+            };
+        }
+
+        // Remove a like. If the shopper hadn't liked the post, nothing changes.
+        public async Task<LikeResultDto> RemoveLikeAsync(int shopperId, int postId)
+        {
+            if (!await _repo.PostExistsAsync(postId))
+                throw new KeyNotFoundException("Post not found.");
+
+            var existing = await _repo.GetLikeAsync(postId, shopperId);
+
+            if (existing != null)
+            {
+                _repo.RemoveLike(existing);
+                await _repo.SaveAsync();
+            }
+
+            return new LikeResultDto
+            {
+                Liked = false,
+                LikeCount = await _repo.CountLikesAsync(postId)
+            };
         }
     }
 }

@@ -10,6 +10,7 @@ namespace mytown.Interfaces
 
         Task<int> GetBusinessConnectedCountAsync(int shopperId);
         Task<int> GetConnectedCountAsync(int shopperId);
+        Task<int> GetPostsCountAsync(int shopperId);
 
         Task<(List<ReceivedRequestDto> Items, int TotalCount)> GetReceivedRequestsAsync(
        int shopperId, string? search, int page, int pageSize);
@@ -40,6 +41,15 @@ namespace mytown.Interfaces
         Task<List<BusinessNameDto>> GetBusinessNamesAsync();
 
         Task AddAsync(ShopperPost post);
-      //  Task SaveAsync();
+        //  Task SaveAsync();
+
+        Task<ShopperPost?> GetByPostIdAsync(int postId);
+        void Remove(ShopperPost post);
+
+        Task<bool> PostExistsAsync(int postId);
+        Task<ShopperPostLike?> GetLikeAsync(int postId, int shopperId);
+        Task AddLikeAsync(ShopperPostLike like);
+        void RemoveLike(ShopperPostLike like);
+        Task<int> CountLikesAsync(int postId);
     }
 }

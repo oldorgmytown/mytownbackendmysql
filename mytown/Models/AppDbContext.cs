@@ -185,6 +185,7 @@ namespace mytown.Models
                 modelBuilder.Entity<AdPaymentOrder>().HasIndex(o => o.StripePaymentIntentId).IsUnique();
                 modelBuilder.Entity<AdPromotion>().HasIndex(p => p.PaymentOrderId).IsUnique();
                 modelBuilder.Entity<AdPromotion>().HasIndex(p => p.BusRegId);
+                modelBuilder.Entity<ShopperPostLike>().HasKey(l => new { l.PostId, l.LikedByShopperId });
 
                 foreach (var entity in modelBuilder.Model.GetEntityTypes())
                 {

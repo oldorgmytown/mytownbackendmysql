@@ -30,5 +30,12 @@ namespace mytown.Interfaces
         Task<List<BusinessNameDto>> GetBusinessNamesAsync();
 
         Task<int> CreatePostAsync(CreatePostDto dto);
+
+        Task DeletePostAsync(int shopperId, int postId);
+
+        Task<LikeResultDto> AddLikeAsync(int shopperId, int postId);
+        Task<LikeResultDto> GetLikeInfoAsync(int shopperId, int postId);
+
+        Task<LikeResultDto> RemoveLikeAsync(int shopperId, int postId);
     }
 }
