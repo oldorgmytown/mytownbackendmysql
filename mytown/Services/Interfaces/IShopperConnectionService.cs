@@ -37,5 +37,8 @@ namespace mytown.Interfaces
         Task<LikeResultDto> GetLikeInfoAsync(int shopperId, int postId);
 
         Task<LikeResultDto> RemoveLikeAsync(int shopperId, int postId);
+
+        Task<mytown.DTOs.PagedResultDto<FeedPostDto>> GetFeedAsync(
+    int shopperId, string? filter, string? search, int page, int pageSize);
     }
 }

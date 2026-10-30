@@ -354,5 +354,25 @@ namespace mytown.Services
                 LikeCount = await _repo.CountLikesAsync(postId)
             };
         }
+
+        public async Task<mytown.DTOs.PagedResultDto<FeedPostDto>> GetFeedAsync(
+    int shopperId, string? filter, string? search, int page, int pageSize)
+        {
+            page = Math.Max(page, 1);
+            pageSize = Math.Clamp(pageSize, 1, 50);
+
+            var tab = (filter ?? "all").Trim().ToLowerInvariant();
+            if (tab != "mine" && tab != "connections") tab = "all";
+
+            var (items, total) = await _repo.GetFeedAsync(shopperId, tab, search, page, pageSize);
+
+            return new mytown.DTOs.PagedResultDto<FeedPostDto>
+            {
+                Items = items,
+                TotalCount = total,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
     }
 }

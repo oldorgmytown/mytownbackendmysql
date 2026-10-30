@@ -51,5 +51,8 @@ namespace mytown.Interfaces
         Task AddLikeAsync(ShopperPostLike like);
         void RemoveLike(ShopperPostLike like);
         Task<int> CountLikesAsync(int postId);
+
+        Task<(List<FeedPostDto> Items, int TotalCount)> GetFeedAsync(
+    int shopperId, string filter, string? search, int page, int pageSize);
     }
 }

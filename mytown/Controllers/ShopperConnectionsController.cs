@@ -246,6 +246,19 @@ namespace mytown.Controllers
             }
             catch (KeyNotFoundException ex) { return NotFound(new { message = ex.Message }); }
         }
+
+        // Shopper feed: filter = all | connections | mine
+        // GET api/shopper-connections/feed?shopperId=17&filter=all&search=&page=1&pageSize=10
+        [HttpGet("feed")]
+        public async Task<IActionResult> GetFeed(
+            [FromQuery] int shopperId,
+            [FromQuery] string? filter = "all",
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            return Ok(await _service.GetFeedAsync(shopperId, filter, search, page, pageSize));
+        }
     }
 }
 

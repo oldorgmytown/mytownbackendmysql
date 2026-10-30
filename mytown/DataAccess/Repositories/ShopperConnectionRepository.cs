@@ -535,5 +535,101 @@ namespace mytown.Repositories
         public Task<int> CountLikesAsync(int postId) =>
             _db.ShopperPostLikes.CountAsync(l => l.PostId == postId);
 
+        public async Task<(List<FeedPostDto> Items, int TotalCount)> GetFeedAsync(
+    int shopperId, string filter, string? search, int page, int pageSize)
+        {
+            // My accepted connections
+            var friendIds = await _db.ShopperConnections.AsNoTracking()
+                .Where(c => c.Status == ConnectionStatus.Accepted &&
+                           (c.RequesterShopperId == shopperId || c.ReceiverShopperId == shopperId))
+                .Select(c => c.RequesterShopperId == shopperId ? c.ReceiverShopperId : c.RequesterShopperId)
+                .ToListAsync();
+
+            // Which posts can I see for this tab
+            var posts = _db.ShopperPosts.AsNoTracking();
+            posts = filter switch
+            {
+                "mine" => posts.Where(p => p.ShopperRegId == shopperId),
+                "connections" => posts.Where(p => friendIds.Contains(p.ShopperRegId)),
+                _ => posts.Where(p => p.ShopperRegId == shopperId || friendIds.Contains(p.ShopperRegId))
+            };
+
+            var query =
+                from p in posts
+                join s in _db.ShopperRegisters.AsNoTracking().ApplyShopperSearch(search)
+                    on p.ShopperRegId equals s.ShopperRegId
+                select new
+                {
+                    p.PostId,
+                    p.Caption,
+                    p.BusRegId,
+                    p.CreatedAt,
+                    s.ShopperRegId,
+                    s.Username,
+                    s.PhotoName,
+                    s.Town,
+                    s.City,
+                    s.State,
+                    s.IsEmailVerified
+                };
+
+            var total = await query.CountAsync();
+
+            var rows = await query
+                .OrderByDescending(x => x.CreatedAt)
+                .ThenByDescending(x => x.PostId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Images, likes and business names for the posts on this page only
+            var postIds = rows.Select(r => r.PostId).ToList();
+            var busIds = rows.Where(r => r.BusRegId.HasValue).Select(r => r.BusRegId!.Value).Distinct().ToList();
+
+            var images = await _db.ShopperPostImages.AsNoTracking()
+                .Where(i => postIds.Contains(i.PostId))
+                .OrderBy(i => i.SortOrder)
+                .Select(i => new { i.PostId, i.ImageUrl })
+                .ToListAsync();
+
+            var likeCounts = await _db.ShopperPostLikes.AsNoTracking()
+                .Where(l => postIds.Contains(l.PostId))
+                .GroupBy(l => l.PostId)
+                .Select(g => new { PostId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var myLikes = await _db.ShopperPostLikes.AsNoTracking()
+                .Where(l => l.LikedByShopperId == shopperId && postIds.Contains(l.PostId))
+                .Select(l => l.PostId)
+                .ToListAsync();
+
+            var businessNames = await _db.BusinessRegisters.AsNoTracking()
+                .Where(b => busIds.Contains(b.BusRegId))
+                .Select(b => new { b.BusRegId, b.BusinessName })
+                .ToListAsync();
+
+            var items = rows.Select(r => new FeedPostDto
+            {
+                PostId = r.PostId,
+                Caption = r.Caption,
+                CreatedAt = r.CreatedAt,
+                ShopperId = r.ShopperRegId,
+                Username = r.Username,
+                PhotoName = r.PhotoName ?? "",
+                Town = r.Town ?? "",
+                City = r.City ?? "",
+                State = r.State ?? "",
+                IsVerified = r.IsEmailVerified,
+                IsMine = r.ShopperRegId == shopperId,
+                BusRegId = r.BusRegId,
+                BusinessName = businessNames.FirstOrDefault(b => b.BusRegId == r.BusRegId)?.BusinessName,
+                ImageUrls = images.Where(i => i.PostId == r.PostId).Select(i => i.ImageUrl).ToList(),
+                LikeCount = likeCounts.FirstOrDefault(l => l.PostId == r.PostId)?.Count ?? 0,
+                LikedByMe = myLikes.Contains(r.PostId)
+            }).ToList();
+
+            return (items, total);
+        }
+
     }
 }
