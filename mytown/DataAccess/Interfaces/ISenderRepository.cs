@@ -87,5 +87,8 @@ GetSenderOrdersAsync(int senderId, string orderStatus);
         Task<bool>
             DeleteAddressAsync(int id);
 
+        // NEW: replay protection for Razorpay payments
+        Task<SenderOrderPayment> GetSenderPaymentByGatewayPaymentIdAsync(string paymentId);
+
     }
 }

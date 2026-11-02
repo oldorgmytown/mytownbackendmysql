@@ -236,7 +236,7 @@ namespace mytown.DataAccess.Implementations
                     StartDate = x.StartDate,
                     ArrivalDate = x.ArrivalDate,
                     PreferredContact = x.PreferredContact,
-                   // transporterCharge = transporterCharges,
+                    // transporterCharge = transporterCharges,
                     Message = "Matching transporter found"
                 })
                 .FirstOrDefaultAsync();
@@ -264,7 +264,7 @@ namespace mytown.DataAccess.Implementations
                  StartDate = x.StartDate,
                  ArrivalDate = x.ArrivalDate,
                  PreferredContact = x.PreferredContact,
-               //  transporterCharge = transporterCharges,
+                 //  transporterCharge = transporterCharges,
                  Message = "Package weight exceeds transporter maximum weight limit"
              })
              .FirstOrDefaultAsync();
@@ -296,7 +296,7 @@ namespace mytown.DataAccess.Implementations
             var plan = await _context.TransporterTravelPlans
                 .FirstOrDefaultAsync(x => x.PlanId == dto.TransporterPlanId);
 
-            decimal transportCharge = order.TransporterCharges ??  0m;
+            decimal transportCharge = order.TransporterCharges ?? 0m;
             decimal gstAmount = transportCharge * 0m; // changed to 0% GST as per new requirement
             decimal totalAmount = transportCharge + gstAmount;
 
@@ -417,10 +417,10 @@ namespace mytown.DataAccess.Implementations
                 .FirstOrDefaultAsync(x =>
                     x.SenderRegId == order.SenderRegId);
 
-var plan =
-                await _context.TransporterTravelPlans
-                .FirstOrDefaultAsync(x =>
-                    x.PlanId == order.TransporterPlanId);
+            var plan =
+                            await _context.TransporterTravelPlans
+                            .FirstOrDefaultAsync(x =>
+                                x.PlanId == order.TransporterPlanId);
 
             if (transporter == null)
                 throw new Exception("Transporter record not found.");
@@ -580,7 +580,7 @@ GetTransporterByIdAsync(int transporterId)
                     into transporterGroup
                 from transporter in transporterGroup.DefaultIfEmpty()
 
-                   
+
 
                 select new SenderOrdersTabDto
                 {
@@ -831,5 +831,13 @@ GetAddressesBySenderIdAsync(int senderRegId)
 
             return true;
         }
+
+
+        public async Task<SenderOrderPayment> GetSenderPaymentByGatewayPaymentIdAsync(string paymentId)
+        {
+            return await _context.SenderOrderPayments
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == paymentId);
+        }
+
     }
 }
