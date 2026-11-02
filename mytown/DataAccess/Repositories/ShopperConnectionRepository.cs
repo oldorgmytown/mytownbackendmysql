@@ -631,5 +631,26 @@ namespace mytown.Repositories
             return (items, total);
         }
 
+        public async Task<List<LatestPostDto>> GetLatestPostsAsync(int count)
+        {
+            return await (
+                from p in _db.ShopperPosts.AsNoTracking()
+                join s in _db.ShopperRegisters.AsNoTracking() on p.ShopperRegId equals s.ShopperRegId
+                join b in _db.BusinessRegisters.AsNoTracking() on p.BusRegId equals b.BusRegId into bj
+                from b in bj.DefaultIfEmpty()
+                orderby p.CreatedAt descending, p.PostId descending
+                select new LatestPostDto
+                {
+                    ShopperId = s.ShopperRegId,
+                    Username = s.Username,
+                    PostId = p.PostId,
+                    Caption = p.Caption,
+                    BusRegId = p.BusRegId,
+                    BusinessName = b.BusinessName
+                })
+                .Take(count)
+                .ToListAsync();
+        }
+
     }
 }

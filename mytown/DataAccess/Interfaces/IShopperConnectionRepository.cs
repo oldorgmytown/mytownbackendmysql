@@ -54,5 +54,7 @@ namespace mytown.Interfaces
 
         Task<(List<FeedPostDto> Items, int TotalCount)> GetFeedAsync(
     int shopperId, string filter, string? search, int page, int pageSize);
+
+        Task<List<LatestPostDto>> GetLatestPostsAsync(int count);
     }
 }
