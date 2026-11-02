@@ -9,13 +9,14 @@ namespace mytown.Models.DTO_s
 
         [Required(ErrorMessage = "Business username is required.")]
         [StringLength(100, ErrorMessage = "Business username cannot exceed 100 characters.")]
-        public string? BusinessUsername { get; set; }
+        public string? Businessname { get; set; }
 
         [Required(ErrorMessage = "Business location is required.")]
         [StringLength(250, ErrorMessage = "Business location cannot exceed 250 characters.")]
         public string? BusinessLocation { get; set; }
 
-       
+        public string? BusinessTagline { get; set; }
+
         public string? BusinessAbout { get; set; }
 
         [Required(ErrorMessage = "Business category ID is required.")]

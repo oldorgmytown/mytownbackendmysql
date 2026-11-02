@@ -41,8 +41,9 @@ namespace mytown.Services.Implementations
             var entity = new BusinessProfile
             {
                 BusRegId = businessProfileDto.BusRegId,
-                BusinessName = businessProfileDto.BusinessUsername,
+                BusinessName = businessProfileDto.Businessname,
                 BusinessLocation = businessProfileDto.BusinessLocation,
+                BusinessTagline = businessProfileDto.BusinessTagline,
                 BusinessAbout = businessProfileDto.BusinessAbout,
                 ProfileStatus = businessProfileDto.ProfileStatus,
                 BusCatId = businessProfileDto.Buscatid ?? 0,
@@ -89,6 +90,10 @@ namespace mytown.Services.Implementations
         public List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId)
             => _repo.GetProductSubCategoriesByBusRegId(busRegId);
 
+        public List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId)
+        {
+            return _repo.GetProductSubCategoriesByBusCatId(busCatId);
+        }
         // ------------------- BUSINESS PROFILES -------------------
         public Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync()
             => _repo.GetAllBusinessProfilesAsync();

@@ -3,23 +3,22 @@ using System.ComponentModel.DataAnnotations;
 
 public class CreateOrderRequestddto
 {
-  
-        [Required]
-        public int ShopperRegId { get; set; }
+    public int? ShopperRegId { get; set; }
 
-        [Required]
-        public List<StoreShippingSelection> ShippingSelections { get; set; }
+    public int? GuestRegId { get; set; }
 
-        public int? SelectedAltAddressId { get; set; }
-    //null == default address
+    public bool IsGuestOrder { get; set; }
 
-        //  NEW
-        public bool UseCart { get; set; } = true;
+    public List<StoreShippingSelection> ShippingSelections { get; set; }
 
-        public List<BuyNowItem>? Items { get; set; }
-    }
+    public int? SelectedAltAddressId { get; set; } //null== dafult address
 
-    public class BuyNowItem
+    public bool UseCart { get; set; } = true;
+
+    public List<BuyNowItem>? Items { get; set; }
+}
+
+public class BuyNowItem
     {
         public int ProductId { get; set; }
         public int? SkuId { get; set; }
