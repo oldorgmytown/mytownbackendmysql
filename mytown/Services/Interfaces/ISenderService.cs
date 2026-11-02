@@ -22,13 +22,13 @@ namespace mytown.Services.Interfaces
 
         // sender payments
 
-        Task<SenderPaymentIntentResponseDto>
-            CreatePaymentIntentAsync(
-                int senderOrderId);
+        //Task<SenderPaymentIntentResponseDto>
+        //    CreatePaymentIntentAsync(
+        //        int senderOrderId);
 
-        Task<bool>
-            ConfirmPaymentAsync(
-                ConfirmSenderPaymentDto dto);
+        //Task<bool>
+        //    ConfirmPaymentAsync(
+        //        ConfirmSenderPaymentDto dto);
 
         //sender order confirmation
 
@@ -66,6 +66,12 @@ namespace mytown.Services.Interfaces
 
         Task<bool>
             DeleteAddressAsync(int id);
-    } 
+
+
+        // NEW: Razorpay
+        Task<SenderRazorpayOrderResponseDto> CreateRazorpayOrderAsync(int senderOrderId);
+        Task<bool> ConfirmRazorpayPaymentAsync(ConfirmSenderPaymentDto dto);
+    }
 
 }
+

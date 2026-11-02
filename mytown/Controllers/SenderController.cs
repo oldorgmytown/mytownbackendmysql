@@ -142,35 +142,61 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        [Authorize]
-        [HttpPost("create-payment-intent/{senderOrderId}")]
-        public async Task<IActionResult>
-    CreatePaymentIntent(int senderOrderId)
-        {
-            var result =
-                await _senderService
-                .CreatePaymentIntentAsync(
-                    senderOrderId);
+    //    [Authorize]
+    //    [HttpPost("create-payment-intent/{senderOrderId}")]
+    //    public async Task<IActionResult>
+    //CreatePaymentIntent(int senderOrderId)
+    //    {
+    //        var result =
+    //            await _senderService
+    //            .CreatePaymentIntentAsync(
+    //                senderOrderId);
 
+    //        return Ok(result);
+    //    }
+
+    //    [Authorize]
+    //    [HttpPost("confirm-payment")]
+    //    public async Task<IActionResult>
+    //ConfirmPayment(
+    //    [FromBody]
+    //    ConfirmSenderPaymentDto dto)
+    //    {
+    //        await _senderService
+    //            .ConfirmPaymentAsync(dto);
+
+    //        return Ok(new
+    //        {
+    //            Message = "Payment successful"
+    //        });
+    //    }
+
+
+        //-----------Razorpay start-------------//
+        [Authorize]
+        [HttpPost("create-razorpay-order/{senderOrderId}")]
+        public async Task<IActionResult> CreateRazorpayOrder(int senderOrderId)
+        {
+            var result = await _senderService.CreateRazorpayOrderAsync(senderOrderId);
             return Ok(result);
         }
 
         [Authorize]
-        [HttpPost("confirm-payment")]
-        public async Task<IActionResult>
-    ConfirmPayment(
-        [FromBody]
-        ConfirmSenderPaymentDto dto)
+        [HttpPost("confirm-razorpay-payment")]
+        public async Task<IActionResult> ConfirmRazorpayPayment([FromBody] ConfirmSenderPaymentDto dto)
         {
-            await _senderService
-                .ConfirmPaymentAsync(dto);
-
-            return Ok(new
+            try
             {
-                Message = "Payment successful"
-            });
+                await _senderService.ConfirmRazorpayPaymentAsync(dto);
+                return Ok(new { Message = "Payment successful" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Razorpay confirm failed for order {Id}", dto.SenderOrderId);
+                return BadRequest(new { message = ex.Message });
+            }
         }
-
+        //-----------Razorpay-----------------//
         [Authorize]
         [HttpGet("senderorderconfirmation/{senderOrderId}")]
         public async Task<IActionResult>

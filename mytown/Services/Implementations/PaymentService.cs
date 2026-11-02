@@ -141,31 +141,31 @@ namespace mytown.Services.Implementations
 
         //--------Razor Pay Payments--------------------//
 
-     
 
-    public async Task<RazorpayOrderResponseDto> CreateRazorpayOrderAsync(int orderId)
-    {
-        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
-        if (order == null)
-            throw new Exception("Order not found");
 
-        if (order.OrderStatus == "Paid")
-            throw new Exception("Order already paid");
+        public async Task<RazorpayOrderResponseDto> CreateRazorpayOrderAsync(int orderId)
+        {
+            var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+            if (order == null)
+                throw new Exception("Order not found");
 
-        decimal orderAmount = order.TotalAmount;
-        decimal shippingTotal = order.ShippingDetails != null
-            ? order.ShippingDetails.Sum(s => s.Cost)
-            : 0;
-        decimal subTotal = orderAmount + shippingTotal;
-        decimal gstAmount = orderAmount * 0;// now gst is 0% for testing purpose 0.18m;
+            if (order.OrderStatus == "Paid")
+                throw new Exception("Order already paid");
+
+            decimal orderAmount = order.TotalAmount;
+            decimal shippingTotal = order.ShippingDetails != null
+                ? order.ShippingDetails.Sum(s => s.Cost)
+                : 0;
+            decimal subTotal = orderAmount + shippingTotal;
+            decimal gstAmount = orderAmount * 0;// now gst is 0% for testing purpose 0.18m;
             decimal finalAmount = subTotal + gstAmount;
 
-        // Razorpay also expects amount in paise
-        int amountInPaise = (int)(finalAmount * 100);
+            // Razorpay also expects amount in paise
+            int amountInPaise = (int)(finalAmount * 100);
 
-        RazorpayClient client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+            RazorpayClient client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
 
-        Dictionary<string, object> options = new Dictionary<string, object>
+            Dictionary<string, object> options = new Dictionary<string, object>
     {
         { "amount", amountInPaise },
         { "currency", "INR" },
@@ -175,72 +175,106 @@ namespace mytown.Services.Implementations
 
             Razorpay.Api.Order razorpayOrder = client.Order.Create(options);
 
-        return new RazorpayOrderResponseDto
-        {
-            RazorpayOrderId = razorpayOrder["id"].ToString(),
-            Amount = amountInPaise,
-            Currency = "INR",
-            KeyId = _razorpayKeyId  // frontend needs this to open checkout
-        };
-    }
-
- 
-public async Task<Payments> AddRazorpayPaymentAsync(
-    int orderId,
-    string razorpayOrderId,
-    string razorpayPaymentId,
-    string razorpaySignature)
-    {
-        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
-        if (order == null)
-            throw new Exception("Order not found");
-
-        // Check for replay/double processing
-        var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(razorpayPaymentId);
-        if (existingPayment != null)
-            throw new Exception("Payment has already been processed.");
-
-        // Verify signature: HMAC-SHA256 of "order_id|payment_id" using your Key Secret
-        string payload = $"{razorpayOrderId}|{razorpayPaymentId}";
-        string generatedSignature;
-
-        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
-        {
-            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
+            return new RazorpayOrderResponseDto
+            {
+                RazorpayOrderId = razorpayOrder["id"].ToString(),
+                Amount = amountInPaise,
+                Currency = "INR",
+                KeyId = _razorpayKeyId  // frontend needs this to open checkout
+            };
         }
 
-        if (generatedSignature != razorpaySignature)
-            throw new Exception("Payment signature verification failed.");
 
-        decimal orderAmount = order.TotalAmount;
-        decimal shippingTotal = order.ShippingDetails != null
-            ? order.ShippingDetails.Sum(s => s.Cost)
-            : 0;
-        decimal subTotal = orderAmount + shippingTotal;
-        decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
+        public async Task<Payments> AddRazorpayPaymentAsync(
+            int orderId,
+            string razorpayOrderId,
+            string razorpayPaymentId,
+            string razorpaySignature)
+        {
+            var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+            if (order == null)
+                throw new Exception("Order not found");
+
+            // Check for replay/double processing
+            var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(razorpayPaymentId);
+            if (existingPayment != null)
+                throw new Exception("Payment has already been processed.");
+
+            // Verify signature: HMAC-SHA256 of "order_id|payment_id" using your Key Secret
+            string payload = $"{razorpayOrderId}|{razorpayPaymentId}";
+            string generatedSignature;
+
+            using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
+            {
+                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+                generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
+            }
+
+            if (generatedSignature != razorpaySignature)
+                throw new Exception("Payment signature verification failed.");
+
+            decimal orderAmount = order.TotalAmount;
+            decimal shippingTotal = order.ShippingDetails != null
+                ? order.ShippingDetails.Sum(s => s.Cost)
+                : 0;
+            decimal subTotal = orderAmount + shippingTotal;
+            decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
             decimal finalAmount = subTotal + gstAmount;
 
-        var payment = await _paymentRepo.AddPaymentAsync(
+            // ---- NEW: fetch payment from Razorpay (works for card, UPI, etc.) ----
+            var client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(razorpayPaymentId);
+
+            string status = rzpPayment["status"]?.ToString();
+
+            // Cards can still be "authorized" at this point, so capture explicitly
+            if (status == "authorized")
+            {
+                var captureOptions = new Dictionary<string, object>
+        {
+            { "amount", Convert.ToInt64(rzpPayment["amount"]) },
+            { "currency", "INR" }
+        };
+                rzpPayment = rzpPayment.Capture(captureOptions);
+                status = rzpPayment["status"]?.ToString();
+            }
+
+            if (status != "captured")
+                throw new Exception($"Payment not captured. Status: {status}");
+
+            string method = rzpPayment["method"]?.ToString() switch
+            {
+                "card" => "Card",
+                "upi" => "UPI",
+                "netbanking" => "NetBanking",
+                "wallet" => "Wallet",
+                _ => "Other"
+            };
+            // ---------------------------------------------------------------------
+
+            var payment = await _paymentRepo.AddPaymentAsync(
             orderId,
             finalAmount,
-            "UPI", // or pass actual method from Razorpay response
+            method, // passing from razor pay
             razorpayPaymentId
         );
 
-        order.OrderStatus = "Paid";
-        await _paymentRepo.UpdateCartStatusAsync(orderId);
+            order.OrderStatus = "Paid";
+            await _paymentRepo.UpdateCartStatusAsync(orderId);
 
-        return payment;
-    }
+            return payment;
+        }
 
 
-    //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
-    //{
-    //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
-    //}
 
-    public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
+
+
+        //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
+        //{
+        //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
+        //}
+
+        public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
             return _paymentRepo.GetStoreDetailsByOrderId(orderId);
         }
