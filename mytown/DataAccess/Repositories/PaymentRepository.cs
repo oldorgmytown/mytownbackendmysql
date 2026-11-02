@@ -43,7 +43,31 @@ namespace mytown.DataAccess.Repositories
 
             return payment;
         }
+        public async Task<Payments?> GetPaymentByStripePaymentIntentId(string stripePaymentIntentId)
+        {
+            return await _context.Payments
+                .FirstOrDefaultAsync(p => p.StripePaymentIntentId == stripePaymentIntentId);
+        }
 
+        public async Task<bool> UpdateCartStatusAsync(int orderId)
+        {
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null) return false;
+
+            var cartItems = await _context.addtocart
+                .Where(c => c.ShopperRegId == order.ShopperRegId && c.orderstatus == "cart")
+                .ToListAsync();
+
+            if (!cartItems.Any()) return false;
+
+            //  Remove cart items after order placed
+            _context.addtocart.RemoveRange(cartItems);
+
+            await _context.SaveChangesAsync();
+            return true;
+        }
         public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
             var storeDetails = _context.OrderDetails
@@ -100,58 +124,7 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //public async Task SendEmailToCourier(int branchId, int storeOrderId)
-        //{
-        //    // 1️⃣ Get courier info via branch
-        //    var courierInfo = await _context.CourierBranches
-        //        .Where(cb => cb.BranchId == branchId)
-        //        .Select(cb => new
-        //        {
-        //            cb.CourierServiceName,
-        //            CourierEmail = cb.CourierService.CourierEmail
-        //        })
-        //        .FirstOrDefaultAsync();
-
-        //    if (courierInfo == null || string.IsNullOrEmpty(courierInfo.CourierEmail))
-        //        return;
-
-        //    // 2️⃣ Get store order info
-        //    var storeOrderInfo = await _context.StoreOrders
-        //        .Where(so => so.StoreOrderId == storeOrderId)
-        //        .Select(so => new
-        //        {
-        //            so.StoreOrderId,
-        //            StoreName = so.Store.BusinessName
-        //        })
-        //        .FirstOrDefaultAsync();
-
-        //    if (storeOrderInfo == null)
-        //        return;
-
-        //    // 3️⃣ Get products for this store order
-        //    var products = await _context.OrderDetails
-        //        .Where(od => od.StoreOrderId == storeOrderId)
-        //        .Select(od => new
-        //        {
-        //            od.Product.ProductName,
-        //            od.Quantity
-        //        })
-        //        .ToListAsync();
-
-        //    var productList = products
-        //        .Select(p => (p.ProductName, p.Quantity))
-        //        .ToList();
-
-        //    // 4️⃣ Send email (ONE email per store order)
-        //    await _emailService.SendEmailToCourierAsync(
-        //        courierInfo.CourierEmail,
-        //        courierInfo.CourierServiceName,
-        //        storeOrderInfo.StoreOrderId,
-        //        storeOrderInfo.StoreName,
-        //        productList
-        //    );
-        //}
-
+      
         public async Task<int> GetCourierIdByBranchIdAsync(int branchId)
         {
             return await _context.CourierBranches
@@ -214,7 +187,10 @@ namespace mytown.DataAccess.Repositories
                 PlanId = dto.PlanId,
                 TransporterRegId = dto.TransporterRegId,
                 ShopperRegId = dto.ShopperRegId,
+                GuestRegId = dto.GuestRegId,
+                IsGuestOrder = dto.IsGuestOrder,
                 OrderId = dto.OrderId,
+                StoreOrderId     = dto.StoreOrderId,
                 PickupLocation = dto.PickupLocation,
                 DropoffLocation = dto.DropoffLocation,
                 PackageWeightKg = dto.PackageWeightKg,
