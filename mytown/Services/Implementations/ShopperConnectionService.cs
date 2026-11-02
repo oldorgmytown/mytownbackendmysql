@@ -374,5 +374,10 @@ namespace mytown.Services
                 PageSize = pageSize
             };
         }
+
+        public Task<List<LatestPostDto>> GetLatestPostsAsync(int count)
+        {
+            return _repo.GetLatestPostsAsync(Math.Clamp(count, 1, 20));
+        }
     }
 }

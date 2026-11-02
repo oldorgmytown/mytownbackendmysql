@@ -259,6 +259,14 @@ namespace mytown.Controllers
         {
             return Ok(await _service.GetFeedAsync(shopperId, filter, search, page, pageSize));
         }
+
+        // Latest posts from the posts table (default 3)
+        // GET api/shopper-connections/latest-posts
+        [HttpGet("latest-community-posts")]
+        public async Task<IActionResult> GetLatestPosts([FromQuery] int count = 3)
+        {
+            return Ok(await _service.GetLatestPostsAsync(count));
+        }
     }
 }
 
