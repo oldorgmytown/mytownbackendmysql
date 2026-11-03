@@ -105,6 +105,7 @@ namespace mytown.DataAccess.Repositories
             return result;
         }
 
+        //tobe changed from QA
         public async Task<List<PopularStoresDto>> GetPopularStoresAsync()
         {
             // Top stores by quantity sold
