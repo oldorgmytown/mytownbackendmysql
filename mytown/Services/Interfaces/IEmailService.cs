@@ -51,5 +51,12 @@ namespace mytown.Services.Interfaces
       HubLoginDto dto);
 
         Task SendContactEnquiryEmailAsync(string toEmail, ContactEnquiryDto dto);
+
+
+        Task SendReadyForPickupEmailToShopperAsync(
+    string email,
+    string customerName,
+    BusinessOrderDetailsDto dto,
+    string packageSummary);
     }
 }
