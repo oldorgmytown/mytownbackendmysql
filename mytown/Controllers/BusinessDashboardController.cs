@@ -369,7 +369,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //update business address
+        //update business address -prod
         [HttpPut("update-bus-default-address")]
         public async Task<IActionResult> UpdateDefaultAddress([FromBody] UpdateDefaultAddressDto dto)
         {
