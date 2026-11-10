@@ -3,5 +3,7 @@
     public class MarkDeliveredDto
     {
         public int StoreOrderId { get; set; }
-    }
+        public int busRegId { get; set; }
+    
+}
 }

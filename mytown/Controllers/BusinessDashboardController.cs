@@ -388,11 +388,9 @@ namespace mytown.Controllers
         [HttpPost("mark-delivered")]
         public async Task<IActionResult> MarkDelivered([FromBody] MarkDeliveredDto dto)
         {
-            var claim = User.FindFirst("BusRegId");
-            if (claim == null)
-                return Unauthorized();
 
-            int busRegId = int.Parse(claim.Value);
+
+            int busRegId = dto.busRegId;
 
             try
             {
