@@ -383,7 +383,9 @@ namespace mytown.Controllers
                 ? Ok(new { message = "Address updated successfully" })
                 : NotFound(new { message = "Business not found" });
         }
-       // [Authorize]   
+        // [Authorize]   
+
+        [HttpPost("mark-delivered")]
         public async Task<IActionResult> MarkDelivered([FromBody] MarkDeliveredDto dto)
         {
             var claim = User.FindFirst("BusRegId");
