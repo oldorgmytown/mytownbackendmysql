@@ -85,6 +85,7 @@ namespace mytown.Services.Interfaces
 
         //update address
         Task<bool> UpdateDefaultAddressAsync(UpdateDefaultAddressDto dto);
+        Task MarkPickupDeliveredAsync(int storeOrderId, int busRegId);
 
     }
 }
