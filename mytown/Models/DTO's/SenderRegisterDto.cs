@@ -2,6 +2,7 @@
 {
     public class SenderRegisterDto
     {
+        public int SenderId { get; set; }
         public string SenderName { get; set; }
         public string Email { get; set; }
         public string Password { get; set; }
@@ -12,5 +13,10 @@
         public string Country { get; set; }
         public string PostalCode { get; set; }
         public string PhoneNumber { get; set; }
+
+        public string? Status { get; set; }
+
+        public DateTime SenderRegDate { get; set; }
+        public bool IsEmailVerified { get; set; }
     }
     }

@@ -9,6 +9,10 @@ namespace mytown.Models
         public string Businessname { get; set; }
         public string Businessusername { get; set; }
         public string business_location { get; set; }
+
+        public string BusinessAddress { get; set; }
+        public string PinCode { get; set; }
+        public string business_tagline { get; set; }
         public string business_about { get; set; }
         public string banner_path { get; set; }
         public string logo_path { get; set; }
@@ -19,7 +23,13 @@ namespace mytown.Models
         public string Businessservice_name { get; set; }
         public string Businesscategory_name { get; set; }
 
+        public string ServiceBanner { get; set; } = string.Empty;
+        public string ServiceLogo { get; set; } = string.Empty;
+
         public string Currency { get; set; }  
+
+        public string BusEmail { get; set; } = string.Empty;
+         public string BusPhone { get; set; } = string.Empty;
 
         //// Pan object
         //public PanData Pan { get; set; }

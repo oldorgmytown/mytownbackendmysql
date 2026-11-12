@@ -28,19 +28,26 @@ namespace mytown.DataAccess.Repositories
                 join so in _context.StoreOrders on o.OrderId equals so.OrderId
                 join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
                 where o.ShopperRegId == shopperRegId
-                    //  && sd.ShippingStatus == "Pending"
+                    && o.OrderStatus == "Paid"
+                    && sd.ShippingStatus != "Delivered"
                 select new CurrentOrderDto
                 {
                     StoreOrderId = so.StoreOrderId,
+                    OrderId = o.OrderId,
                     ExpectedDeliveryDate = o.OrderDate.AddDays(sd.EstimatedDays),
-                    ShippingStatus = sd.ShippingStatus
+                    ShippingStatus = sd.ShippingStatus,
+                    TrackingId = sd.TrackingId
                 };
 
             if (!string.IsNullOrEmpty(search))
             {
                 query = query.Where(x =>
                     x.StoreOrderId.ToString().Contains(search) ||
-                    x.ShippingStatus.Contains(search));
+                    x.ShippingStatus.Contains(search) ||
+                    x.OrderId.ToString().Contains(search)||
+                    x.TrackingId.Contains(search));
+
+
             }
 
             return await query
@@ -50,7 +57,7 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
-
+        //------------------------Uncomment again --------------------------------//
         public async Task<ShopperOrderDetailsDto?> GetShopperOrderDetailsAsync(
        int storeOrderId,
        string? search,
@@ -58,29 +65,58 @@ namespace mytown.DataAccess.Repositories
        int pageSize)
         {
             var orderData = await (
-                from so in _context.StoreOrders
-                join o in _context.Orders on so.OrderId equals o.OrderId
-                join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
-                join p in _context.Payments on o.OrderId equals p.OrderId
-                join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
-                where so.StoreOrderId == storeOrderId
-                select new
-                {
-                    so.StoreOrderId,
-                    p.PaymentId,
-                    o.OrderDate,
-                    o.ShopperRegId,
-                    so.StoreId,
-                    StoreName = s.BusinessName,
-                    StoreTown = s.Town,
-                    o.ShippingType,
-                    sd.Cost,
-                    sd.EstimatedDays,
-                    sd.TrackingId,
-                    sd.DeliveryAddress
-                }
-            ).FirstOrDefaultAsync();
+     from so in _context.StoreOrders
+     join o in _context.Orders on so.OrderId equals o.OrderId
+     join sd in _context.ShippingDetails on so.StoreOrderId equals sd.StoreOrderId
 
+     // LEFT JOIN Courier
+     join cb in _context.CourierBranches
+         on sd.CourierBranch.BranchId equals cb.BranchId into cbGroup
+     from cb in cbGroup.DefaultIfEmpty()
+
+     join cs in _context.CourierService
+         on cb.CourierId equals cs.CourierId into csGroup
+     from cs in csGroup.DefaultIfEmpty()
+
+         // LEFT JOIN Transporter
+     join tp in _context.TransporterRegisters
+         on sd.TransporterRegId equals tp.TransporterRegId into tpGroup
+     from tp in tpGroup.DefaultIfEmpty()
+
+     join p in _context.Payments on o.OrderId equals p.OrderId
+     join s in _context.BusinessRegisters on so.StoreId equals s.BusRegId
+
+     where so.StoreOrderId == storeOrderId
+
+     select new
+     {
+         so.StoreOrderId,
+         o.OrderId,
+         p.PaymentId,
+         o.OrderDate,
+         o.ShopperRegId,
+         so.StoreId,
+
+         StoreName = s.BusinessName,
+         StoreTown = (s.Address1 ?? "") + ", " +
+                     (s.Town ?? "") + ", " +
+                     (s.BusinessCity ?? "") + ", " +
+                     (s.BusinessState ?? "") + ", " +
+                     (s.BusinessCountry ?? ""),
+
+         sd.ShippingType,
+         sd.Cost,
+         sd.EstimatedDays,
+         sd.TrackingId,
+         sd.ShippingStatus,
+         sd.DeliveryAddress,
+
+         CourierServiceName = cs != null ? cs.CourierServiceName : null,
+
+         TransporterName = tp != null ? tp.TransporterName : null,
+         TransporterPhone = tp != null ? tp.PhoneNumber : null
+     }
+ ).FirstOrDefaultAsync();
             if (orderData == null)
                 return null;
 
@@ -90,45 +126,45 @@ namespace mytown.DataAccess.Repositories
             // ===============================
             var productQuery =
                 from od in _context.OrderDetails
-                join pr in _context.products on od.ProductId equals pr.ProductId
+                join pr in _context.ProductsNew on od.ProductId equals pr.ProductId
 
                 // Variant
-                join v in _context.Sku_ProductVariants
+                join v in _context.ProductVariantsNew
                     on od.SkuId equals v.SkuId
 
                 // SKU image
-                join skuImg in _context.ProductImages
+                join skuImg in _context.ProductVariantImagesNew
                     .Where(i => i.SortOrder == 1)
                     on od.SkuId equals skuImg.SkuId into skuImages
                 from skuImg in skuImages.DefaultIfEmpty()
 
-                    // Product image fallback
-                join prodImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1)
-                    on pr.ProductId equals prodImg.ProductId into prodImages
-                from prodImg in prodImages.DefaultIfEmpty()
+
+
+                    //    // Product image fallback
+                    //join prodImg in _context.ProductImages
+                    //    .Where(i => i.SortOrder == 1)
+                    //    on pr.ProductId equals prodImg.ProductId into prodImages
+                    //from prodImg in prodImages.DefaultIfEmpty()
 
                 where od.StoreOrderId == storeOrderId
 
                 select new OrderProductItemDto
                 {
-                    ProductId = pr.ProductId,
+                    ProductId = (int)pr.ProductId,
                     ProductName = pr.ProductName!,
-                    SkuId = od.SkuId,
+                    SkuId = (int)od.SkuId,
 
                     UnitPrice = od.Price,
                     Quantity = od.Quantity,
 
-                    Length = v.Length,
-                    Width = v.Width,
-                    Height = v.Height,
+                    //Length = v.Length,
+                    //Width = v.Width,
+                    //Height = v.Height,
                     Weight = v.Weight,
 
                     ProductImage = skuImg != null
-                        ? skuImg.FileName
-                        : prodImg != null
-                            ? prodImg.FileName
-                            : null
+                    ? skuImg.FileName
+                    : null
                 };
 
 
@@ -153,6 +189,7 @@ namespace mytown.DataAccess.Repositories
             return new ShopperOrderDetailsDto
             {
                 StoreOrderId = orderData.StoreOrderId,
+                OrderId = orderData.OrderId,
                 TransactionId = orderData.PaymentId,
                 OrderDate = orderData.OrderDate,
                 ShopperId = orderData.ShopperRegId,
@@ -169,82 +206,93 @@ namespace mytown.DataAccess.Repositories
                 ShippingMethod = orderData.ShippingType,
                 ExpectedDeliveryDate = orderData.OrderDate.AddDays(orderData.EstimatedDays),
 
-                CourierService = orderData.ShippingType,
+                CourierService = orderData.CourierServiceName,
                 TrackingId = orderData.TrackingId,
 
-                ShippingAddress = orderData.DeliveryAddress
+                ShippingAddress = orderData.DeliveryAddress,
+                ShippingStatus = orderData.ShippingStatus,
+                TransporterName = orderData.TransporterName,
+                TransporterPhone = orderData.TransporterPhone
             };
         }
         public async Task<List<BuyAgainProductDto>> GetBuyAgainProductsAsync(
-     int shopperRegId,
-     string? search,
-     int pageNumber,
-     int pageSize)
+      int shopperRegId,
+      string? search,
+      int pageNumber,
+      int pageSize)
         {
             var query =
                 from o in _context.Orders
                 join pay in _context.Payments
                     on o.OrderId equals pay.OrderId
+
                 join od in _context.OrderDetails
                     on o.OrderId equals od.OrderId
-                join pr in _context.products
+
+                join pr in _context.ProductsNew
                     on od.ProductId equals pr.ProductId
-                join sku in _context.Sku_ProductVariants
+
+                join sku in _context.ProductVariantsNew
                     on od.SkuId equals sku.SkuId
+
                 join s in _context.BusinessRegisters
                     on od.StoreId equals s.BusRegId
+
                 where o.ShopperRegId == shopperRegId
                       && pay.PaymentStatus == "Paid"
-                      && pr.ProductStatus == "Approved"
-                      && pr.IsActive == true
+                      && pr.ProductStatus == "ACTIVE"
+                      && pr.IsActive
+
                 group new { o, od, pr, sku, s } by new
                 {
                     od.ProductId,
                     od.SkuId,
                     od.StoreId,
                     pr.ProductName,
-                    pr.ProductImage,
                     s.BusinessName
                 }
                 into g
+
                 select new BuyAgainProductDto
                 {
                     ProductId = g.Key.ProductId,
                     SkuId = g.Key.SkuId,
                     ProductName = g.Key.ProductName,
 
-                    VariantImage =
-                        g.SelectMany(x => x.sku.Images)
-                         .OrderBy(i => i.SortOrder)
-                         .ThenBy(i => i.ImageId)
-                         .Select(i => i.FileName)
-                         .FirstOrDefault()
-                        ?? g.Key.ProductImage,
+                    VariantImage = _context.ProductVariantImagesNew
+                        .Where(i => i.SkuId == g.Key.SkuId)
+                        .OrderBy(i => i.SortOrder)
+                        .ThenBy(i => i.ImageId)
+                        .Select(i => i.FileName)
+                        .FirstOrDefault(),
 
                     StoreId = g.Key.StoreId,
                     StoreName = g.Key.BusinessName,
 
                     LastOrderedOn = g.Max(x => x.o.OrderDate),
 
-                    Price = g.OrderByDescending(x => x.o.OrderDate)
-                             .Select(x => x.od.Price)
-                             .First(),
+                    Price = g
+                        .OrderByDescending(x => x.o.OrderDate)
+                        .Select(x => x.od.Price)
+                        .First(),
 
-                    Quantity = g.OrderByDescending(x => x.o.OrderDate)
-                                .Select(x => x.od.Quantity)
-                                .First()
+                    Quantity = g
+                        .OrderByDescending(x => x.o.OrderDate)
+                        .Select(x => x.od.Quantity)
+                        .First()
                 };
 
-
-            // 🔎 SEARCH
-            if (!string.IsNullOrEmpty(search))
+            //  SEARCH
+            if (!string.IsNullOrWhiteSpace(search))
             {
+                search = search.Trim();
+
                 query = query.Where(x =>
                     x.ProductName.Contains(search) ||
                     x.StoreName.Contains(search));
             }
 
-
+            //  PAGINATION
             return await query
                 .OrderByDescending(x => x.LastOrderedOn)
                 .Skip((pageNumber - 1) * pageSize)
@@ -260,45 +308,45 @@ namespace mytown.DataAccess.Repositories
             var query =
                 from w in _context.Wishlist
 
-                join p in _context.products
+                join p in _context.ProductsNew
                     on w.ProductId equals p.ProductId
 
                 join s in _context.BusinessRegisters
                     on w.BusRegId equals s.BusRegId
 
-                join sku in _context.Sku_ProductVariants
+                join sku in _context.ProductVariantsNew
                     on w.SkuId equals sku.SkuId
 
-                join skuImg in _context.ProductImages
+                join skuImg in _context.ProductVariantImagesNew
                     .Where(i => i.SortOrder == 1)
                     on w.SkuId equals skuImg.SkuId into skuImgJoin
                 from skuImg in skuImgJoin.DefaultIfEmpty()
 
-                join prodImg in _context.ProductImages
-                    .Where(i => i.SortOrder == 1 && i.SkuId == null)
-                    on p.ProductId equals prodImg.ProductId into prodImgJoin
-                from prodImg in prodImgJoin.DefaultIfEmpty()
+                join prodImg in _context.ProductVariantImagesNew
+                     .Where(i => i.SortOrder == 1)
+                     on w.SkuId equals prodImg.SkuId into prodImgJoin
+                                from prodImg in prodImgJoin.DefaultIfEmpty()
 
                 where w.ShopperRegId == shopperId
 
                 select new WishlistItemDto
                 {
                     WishlistId = w.WishlistId,
-                    ProductId = p.ProductId,
+                    ProductId = (int)p.ProductId,
                     ProductName = p.ProductName,
                     SkuId = w.SkuId,
-                    Buscatid = p.BuscatId,
-                    prod_sub_catid = p.ProdSubcatId,
+                    Buscatid = (int)p.BusCatId,
+                    prod_sub_catid = (int)p.ProdSubcatId,
 
                     VariantImageUrl = skuImg.FileName ?? prodImg.FileName,
 
-                    Price = sku.DiscountPrice ?? sku.Sku_Cost,
+                    Price = sku.DiscountPrice ?? sku.Price,
 
                     StoreId = s.BusRegId,
                     StoreName = s.BusinessName,
 
                     IsProductAvailable =
-                        p.ProductStatus == "Approved"
+                        p.ProductStatus == "ACTIVE"
                         && p.IsActive == true
                 };
 
@@ -457,6 +505,47 @@ namespace mytown.DataAccess.Repositories
             return true;
         }
 
+        // Get notifications
+        public async Task<List<ShopperDBNotifications>> GetShopperNotificationsAsync(
+            int shopperId, bool onlyUnread)
+        {
+            var query = _context.ShopperDBNotifications
+                .Where(n => n.ShopperRegId == shopperId);
 
+            if (onlyUnread)
+            {
+                query = query.Where(n => !n.IsRead);
+            }
+
+            return await query
+                .OrderByDescending(n => n.CreatedDate)
+                .ToListAsync();
+        }
+
+        // Mark all as read
+        public async Task MarkAllShopperAsReadAsync(int shopperId)
+        {
+            var unreadNotifications = await _context.ShopperDBNotifications
+                .Where(n => n.ShopperRegId == shopperId && !n.IsRead)
+                .ToListAsync();
+
+            foreach (var n in unreadNotifications)
+                n.IsRead = true;
+
+            await _context.SaveChangesAsync();
+        }
+
+        // Mark single as read
+        public async Task MarkEachShopperNotificationAsReadAsync(int notificationId)
+        {
+            var notification = await _context.ShopperDBNotifications
+                .FirstOrDefaultAsync(n => n.NotificationId == notificationId);
+
+            if (notification != null && !notification.IsRead)
+            {
+                notification.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
