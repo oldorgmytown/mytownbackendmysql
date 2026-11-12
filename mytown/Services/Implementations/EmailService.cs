@@ -4698,7 +4698,7 @@ private string BuildHubPackageReadyTemplate(string transporterName, string packa
     <!-- ===== VIEW ORDER BUTTON ===== -->
     <tr>
       <td align=""center"" style=""padding:24px 30px;"">
-        <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/orders/{dto.StoreOrderId}""
+        <a href=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/shopper/orders""
            style=""display:inline-block;background:#004481;color:#fff;border:1px solid #004481;
                   border-radius:8px;padding:14px 40px;font-size:16px;font-weight:400;
                   text-decoration:none;text-align:center;
