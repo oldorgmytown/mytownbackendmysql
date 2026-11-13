@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services;
@@ -20,11 +21,13 @@ namespace mytown.Controllers
     {
         private readonly IBusinessDashboardRepository _dashboardRepository;
         private readonly IBusinessDashboardService _dasboardservice;
+        private readonly IStorePayoutService _storePayoutService;
 
-        public BusinessDashboardController(IBusinessDashboardRepository dashboardRepository, IBusinessDashboardService dashboardService)
+        public BusinessDashboardController(IBusinessDashboardRepository dashboardRepository, IBusinessDashboardService dashboardService, IStorePayoutService storePayoutService)
         {
             _dashboardRepository = dashboardRepository;
             _dasboardservice = dashboardService;
+            _storePayoutService = storePayoutService;
         }
 
         //[HttpGet("orders/{storeId}")]
@@ -379,6 +382,49 @@ namespace mytown.Controllers
             return updated
                 ? Ok(new { message = "Address updated successfully" })
                 : NotFound(new { message = "Business not found" });
+        }
+        // [Authorize]   
+
+        [HttpPost("mark-delivered")]
+        public async Task<IActionResult> MarkDelivered([FromBody] MarkDeliveredDto dto)
+        {
+
+
+            int busRegId = dto.busRegId;
+
+            try
+            {
+                // 1️⃣ Mark delivered (saves to DB)
+                await _dasboardservice.MarkPickupDeliveredAsync(dto.StoreOrderId, busRegId);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
+            // 2️⃣ Payout AFTER delivery is committed
+            TriggerPayoutResponseDto? payout = null;
+            string? payoutError = null;
+
+            try
+            {
+                payout = await _storePayoutService.CreatePayoutAsync(dto.StoreOrderId);  
+            }
+            catch (Exception ex)
+            {
+                payoutError = ex.Message;   // log it too
+            }
+
+            return Ok(new
+            {
+                message = "Order marked as delivered.",
+                payout,
+                payoutError   // not null means delivery succeeded but the payout needs a retry
+            });
         }
 
     }

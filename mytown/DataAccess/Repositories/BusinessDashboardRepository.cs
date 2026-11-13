@@ -1613,7 +1613,83 @@ public class BusinessDashboardRepository : IBusinessDashboardRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<PickupNotificationInfo?> GetPickupNotificationInfoAsync(int storeOrderId)
+    {
+        var so = await _context.StoreOrders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
+        if (so == null) return null;
+
+        var order = await _context.Orders
+            .AsNoTracking()
+            .FirstOrDefaultAsync(o => o.OrderId == so.OrderId);
+        if (order == null) return null;
+
+        var store = await _context.BusinessRegisters
+            .AsNoTracking()
+            .FirstOrDefaultAsync(b => b.BusRegId == so.StoreId);
+        if (store == null) return null;
+
+        string? email, name;
+
+        if (!order.IsGuestOrder)
+        {
+            var shopper = await _context.ShopperRegisters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ShopperRegId == order.ShopperRegId);
+            email = shopper?.Email;
+            name = shopper?.Username;
+        }
+        else
+        {
+            var guest = await _context.GuestRegisters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(g => g.GuestRegId == order.GuestRegId);
+            email = guest?.Email;
+            name = guest?.Username;
+        }
+
+        var parts = new[]
+        {
+        store.Address1, store.Address2, store.Town,
+        store.BusinessCity, store.BusinessState, store.BusinessCountry
+    }.Where(p => !string.IsNullOrWhiteSpace(p));
+
+        string storeAddress = string.Join(", ", parts);
+        if (!string.IsNullOrWhiteSpace(store.PostalCode))
+            storeAddress += " - " + store.PostalCode;
+
+        return new PickupNotificationInfo
+        {
+            OrderId = order.OrderId,
+            StoreOrderId = storeOrderId,
+            ShopperRegId = order.IsGuestOrder ? null : order.ShopperRegId,
+            Email = email,
+            CustomerName = name,
+            StoreName = store.BusinessName,
+            StoreAddress = storeAddress,
+            StorePhone = store.BusMobileNo
+        };
     }
+
+    public async Task AddShopperNotificationAsync(ShopperDBNotifications notification)
+    {
+        await _context.ShopperDBNotifications.AddAsync(notification);
+    }
+
+    public async Task MarkShippingDeliveredAsync(int storeOrderId)
+    {
+        var shipping = await _context.ShippingDetails
+            .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
+
+        if (shipping == null)
+            throw new Exception("Shipping details not found.");
+
+        shipping.ShippingStatus = "Delivered";
+        shipping.DeliveredDate = DateTime.UtcNow;  
+    }
+}
 
 
 

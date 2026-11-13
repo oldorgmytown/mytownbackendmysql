@@ -9,10 +9,12 @@ using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
 using mytown.Helpers;
 using mytown.Hubs;
+using mytown.Interfaces;
 using mytown.Models;
 using mytown.Models.mytown.DataAccess;
 using mytown.Repositories;
 using mytown.Repositories.Interfaces;
+using mytown.Services;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
 using mytown.Services.Interfaces;
@@ -100,6 +102,9 @@ public class Startup
 
         services.AddScoped<ISenderTransporterPayoutRepository, SenderTransporterPayoutRepository>();
         services.AddScoped<ISenderTransporterPayoutService, SenderTransporterPayoutService>();
+
+        services.AddScoped<IShopperConnectionRepository, ShopperConnectionRepository>();
+        services.AddScoped<IShopperConnectionService, ShopperConnectionService>();
 
 
 

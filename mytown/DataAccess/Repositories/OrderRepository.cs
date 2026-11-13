@@ -263,6 +263,37 @@ namespace mytown.DataAccess.Repositories
                 if (shippingSelection == null)
                     throw new Exception($"Shipping missing for StoreId {storeOrder.StoreId}");
 
+                // ─── PICKUP PATH ───────────────────────────────────────────────
+                if (shippingSelection.ShippingType?.Trim().ToLower() == "pickup")
+                {
+                    var pickupStore = await _context.BusinessRegisters
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(b => b.BusRegId == storeOrder.StoreId);
+
+                    if (pickupStore == null)
+                        throw new Exception($"Store not found: {storeOrder.StoreId}");
+
+                    // TODO: if you add a flag like PickupEnabled on the store, validate it here
+                    // if (!pickupStore.PickupEnabled) throw new Exception("Pickup not available for this store.");
+
+                    shippingList.Add(new ShippingDetails
+                    {
+                        OrderId = newOrder.OrderId,
+                        StoreOrderId = storeOrder.StoreOrderId,
+                        BranchId = null,
+                        TransporterRegId = null,
+                        TransporterPlanId = null,
+                        ShippingType = "Pickup",
+                        EstimatedDays = 0,
+                        Cost = 0m,                      // forced on the backend, never from the request
+                        TrackingId = "",
+                        ShippingStatus = "Pending",
+                        DeliveryAddress = deliveryAddress
+                    });
+
+                    continue;   // skip P2P / courier logic
+                }
+
                 // ─── P2P PATH ──────────────────────────────────────────────────────────
                 if (shippingSelection.ShippingType?.Trim().ToLower() == "p2p")
                 {

@@ -108,32 +108,23 @@ namespace mytown.DataAccess.Repositories
         //tobe changed from QA
         public async Task<List<PopularStoresDto>> GetPopularStoresAsync()
         {
-            // Top stores by quantity sold
-            var topStores = await _context.OrderDetails
+            // Total quantity sold per store (no Take limit)
+            var orderTotals = await _context.OrderDetails
                 .GroupBy(x => x.StoreId)
                 .Select(g => new
                 {
                     StoreId = g.Key,
                     TotalOrders = g.Sum(x => x.Quantity)
                 })
-                .OrderByDescending(x => x.TotalOrders)
-                .Take(12)
-                .ToListAsync();
+                .ToDictionaryAsync(x => x.StoreId, x => x.TotalOrders);
 
-            if (!topStores.Any())
-                return new List<PopularStoresDto>();
-
-            var storeIds = topStores
-                .Select(x => x.StoreId)
-                .ToList();
-
+            // All stores
             var stores = await (
                 from br in _context.BusinessRegisters
                 join bp in _context.BusinessProfiles
                     on br.BusRegId equals bp.BusRegId
                 join bc in _context.BusinessCategories
                     on bp.BusCatId equals bc.BusCatId
-                where storeIds.Contains(br.BusRegId)
                 select new
                 {
                     br.BusRegId,
@@ -160,10 +151,12 @@ namespace mytown.DataAccess.Repositories
 
                     Location = x.BusinessLocation,
 
-                    TotalOrders = topStores
-                        .FirstOrDefault(t => t.StoreId == x.BusRegId)?.TotalOrders ?? 0
+                    TotalOrders = orderTotals.TryGetValue(x.BusRegId, out var total)
+                        ? total
+                        : 0
                 })
                 .OrderByDescending(x => x.TotalOrders)
+                .ThenBy(x => x.StoreName)   // stable ordering for ties / zero-order stores
                 .ToList();
 
             return result;

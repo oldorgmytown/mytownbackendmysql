@@ -196,7 +196,30 @@ namespace mytown.Services.Implementations
             if (shipping == null)
                 return;
 
-           
+            bool isPickup = string.Equals(shipping.ShippingType, "Pickup", StringComparison.OrdinalIgnoreCase);
+
+
+            // 4️⃣ NEW: Shopper in-app notification for pickup
+            PickupNotificationInfo? pickupInfo = null;
+            if (isPickup)
+            {
+                pickupInfo = await _repository.GetPickupNotificationInfoAsync(storeOrderId);
+
+                if (pickupInfo != null && pickupInfo.ShopperRegId.HasValue)
+                {
+                    var shopperNotification = new ShopperDBNotifications   // 
+                    {
+                        ShopperRegId = pickupInfo.ShopperRegId.Value,
+                        Title = "Your order is ready for pickup",
+                        Message = $"Order #{pickupInfo.OrderId} is ready for pickup at " +
+                                  $"{pickupInfo.StoreName}. Address: {pickupInfo.StoreAddress}",
+                        IsRead = false,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    await _repository.AddShopperNotificationAsync(shopperNotification); // 
+                }
+            }
 
             // 5️⃣ Courier notification
             if (shipping.BranchId.HasValue && shipping.CourierBranch != null)
@@ -251,6 +274,18 @@ namespace mytown.Services.Implementations
                 );
             }
 
+            // Shopper / guest email for pickup
+            if (isPickup && orderDetails != null && pickupInfo != null &&
+                !string.IsNullOrWhiteSpace(pickupInfo.Email))
+            {
+                await _emailService.SendReadyForPickupEmailToShopperAsync(
+                    pickupInfo.Email,
+                    pickupInfo.CustomerName ?? "Customer",
+                    orderDetails,
+                    packageSummary
+                );
+            }
+
             //if (orderDetails != null &&
             //    shipping.TransporterRegId.HasValue &&
             //    shipping.TransporterRegister != null)
@@ -262,40 +297,7 @@ namespace mytown.Services.Implementations
             //    );
             //}
         }
-        //public async Task MarkReadyToShipAsync(int storeOrderId)
-        //{
-        //    // 1️⃣ Update shipping status
-        //    await _repository.UpdateShippingStatusAsync(
-        //        storeOrderId,
-        //        "Ready to Ship"
-        //    );
-
-        //    // 2️⃣ Update store order status (recommended)
-        //    await _repository.UpdateStoreOrderStatusAsync(
-        //        storeOrderId,
-        //        "Ready to Ship"
-        //    );
-
-        //    // 3️⃣ Get shipping to notify courier
-        //    var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
-        //    if (shipping == null)
-        //        return;
-
-        //    // 4️⃣ Create courier notification
-        //    var notification = new CourierDBNotifications
-        //    {
-        //        CourierId = shipping.CourierBranch.CourierId,
-        //        BranchId = shipping.BranchId,
-        //        Title = "Order Ready to Ship",
-        //        Message = $"StoreOrder #{storeOrderId} is ready for pickup."
-        //    };
-
-        //    await _repository.AddCourierNotificationAsync(notification);
-
-        //    // 5️⃣ Persist everything
-        //    await _repository.SaveChangesAsync();
-        //}
-
+       
 
         // Get monthly Revenue for summary page
 
@@ -361,6 +363,47 @@ namespace mytown.Services.Implementations
                 _logger.LogWarning("Default address update failed: business {BusRegId} not found", dto.BusRegId);
 
             return updated;
+        }
+
+        public async Task MarkPickupDeliveredAsync(int storeOrderId, int busRegId)
+        {
+           
+            // 2️⃣ Load shipping
+            var shipping = await _repository.GetShippingByStoreOrderIdAsync(storeOrderId);
+            if (shipping == null)
+                throw new Exception("Shipping details not found.");
+
+            // 3️⃣ Pickup orders only (courier/P2P are marked delivered by their own flow)
+            if (!string.Equals(shipping.ShippingType, "Pickup", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Only pickup orders can be marked as delivered here.");
+
+            // 4️⃣ Idempotent: already delivered, do nothing
+            if (shipping.ShippingStatus == "Delivered")
+                return;
+
+            // 5️⃣ Must be "Ready to Ship" first
+            if (shipping.ShippingStatus != "Ready to Ship")
+                throw new Exception("Order must be marked Ready to Ship before it can be delivered.");
+
+            // 6️⃣ Update both tables
+            await _repository.MarkShippingDeliveredAsync(storeOrderId);
+            await _repository.UpdateStoreOrderStatusAsync(storeOrderId, "Delivered");
+
+            // 7️⃣ Optional: in-app notification to the shopper (skipped for guests)
+            var info = await _repository.GetPickupNotificationInfoAsync(storeOrderId);
+            if (info != null && info.ShopperRegId.HasValue)
+            {
+                await _repository.AddShopperNotificationAsync(new ShopperDBNotifications
+                {
+                    ShopperRegId = info.ShopperRegId.Value,
+                    Title = "Order collected",
+                    Message = $"Order #{info.OrderId} was collected from {info.StoreName}. Thank you!",
+                    IsRead = false,
+                    CreatedDate = DateTime.UtcNow
+                });
+            }
+
+            await _repository.SaveChangesAsync();
         }
     }
 

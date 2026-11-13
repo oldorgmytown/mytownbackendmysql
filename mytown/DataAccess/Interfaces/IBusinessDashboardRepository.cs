@@ -132,5 +132,9 @@ namespace mytown.DataAccess.Interfaces
 
         //update business address
         Task<bool> UpdateDefaultAddressAsync(UpdateDefaultAddressDto dto);
+
+        Task<PickupNotificationInfo?> GetPickupNotificationInfoAsync(int storeOrderId);
+        Task AddShopperNotificationAsync(ShopperDBNotifications notification);
+        Task MarkShippingDeliveredAsync(int storeOrderId);
     }
 }
