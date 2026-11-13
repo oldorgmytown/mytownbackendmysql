@@ -1,16 +1,22 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace mytown.Models
 {
-    public class services_sub_categories
+    [Table("services_sub_categories")]
+    public class ServiceSubCategory
     {
         [Key]
-        public int serv_subcat_id { get; set; }
-        public int BusservId { get; set; }
-        [Required]
-        [StringLength(100)]
-        public string serv_subcat_name { get; set; }
-        public string serv_subcat_image { get; set; }
+        [Column("serv_subcat_id")]
+        public int ServSubcatId { get; set; }
 
+        [Required]
+        [Column("bus_serv_id")]
+        public int BusServId { get; set; }
+
+        [Required]
+        [StringLength(150)]
+        [Column("service_type_name")]
+        public string ServiceTypeName { get; set; }
     }
 }

@@ -19,12 +19,23 @@ namespace mytown.Models
         [Column("transporter_reg_id")]
         public int TransporterRegId { get; set; }
 
-        [Required]
         [Column("shopper_reg_id")]
-        public int ShopperRegId { get; set; }
+        public int? ShopperRegId { get; set; }
+
+        [Column("guest_reg_id")]
+        public int? GuestRegId { get; set; }
+
+        [Column("is_guest_order")]
+        public bool IsGuestOrder { get; set; }
 
         [Column("order_id")]
         public int? OrderId { get; set; }
+
+        [Column("store_order_id")]
+        public int? StoreOrderId { get; set; }
+
+        [ForeignKey(nameof(StoreOrderId))]
+        public StoreOrder? StoreOrder { get; set; }
 
         // ── NEW: human-readable code shown on both sides e.g. DEL-4821 ──
         [Column("delivery_code", TypeName = "varchar(20)")]
@@ -91,3 +102,4 @@ namespace mytown.Models
         public ICollection<TransporterExceptionReport> ExceptionReports { get; set; }
     }
 }
+

@@ -11,6 +11,12 @@ namespace mytown.Services.Interfaces
             Task<(bool success, string message, int? transporterRegId)> VerifyEmailAsync(string token);
 
             Task<(bool success, string message)> ResendVerificationEmailAsync(string email);
+
+        Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(
+     CreateCashfreeBeneficiaryRequestTrans request);
+       
         
+
+
     }
 }
