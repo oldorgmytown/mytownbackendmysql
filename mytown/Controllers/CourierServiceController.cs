@@ -195,6 +195,7 @@ namespace mytown.Controllers
             }
         }
 
+        //with pickup
     //    [Authorize]
         [HttpPost("GetBestCourier")]
         public async Task<IActionResult> GetBestCourier(
