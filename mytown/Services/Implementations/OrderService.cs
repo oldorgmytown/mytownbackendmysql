@@ -18,6 +18,8 @@ namespace mytown.Services.Implementations
             _EmailService = emailService;
         }
 
+        //fastorderneedto move
+
         //public Task<int> CreateOrderAsync(int shopperRegId, List<StoreShippingSelection> selections)
         //    => _repo.CreateOrderAsync(shopperRegId, selections);
 
