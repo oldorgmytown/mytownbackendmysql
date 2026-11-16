@@ -67,5 +67,9 @@ namespace mytown.Models
         [StringLength(10)]
         [Column("status")]
         public string Status { get; set; }
+
+        [NotMapped] public decimal AverageRating { get; set; }
+        [NotMapped] public int ReviewCount { get; set; }
+        [NotMapped] public int ConnectionCount { get; set; }
     }
 }

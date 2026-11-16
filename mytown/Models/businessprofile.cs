@@ -66,6 +66,18 @@ namespace mytown.Models
         [JsonPropertyName("approved_date")]
         public DateTime? ApprovedDate { get; set; }
 
+        [NotMapped]
+        [JsonPropertyName("average_rating")]
+        public decimal AverageRating { get; set; }
+
+        [NotMapped]
+        [JsonPropertyName("review_count")]
+        public int ReviewCount { get; set; }
+
+        [NotMapped]
+        [JsonPropertyName("connection_count")]
+        public int ConnectionCount { get; set; }
+
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }
     }
