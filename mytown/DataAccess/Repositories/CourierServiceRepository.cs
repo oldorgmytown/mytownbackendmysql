@@ -5,6 +5,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using MyTown.Models;
+using System.Numerics;
 using System.Text;
 
 namespace mytown.DataAccess.Repositories
@@ -1088,5 +1089,58 @@ namespace mytown.DataAccess.Repositories
             _context.CourierAccountDetails.Update(accountDetail);
             await _context.SaveChangesAsync();
         }
+
+        private IQueryable<PlanLeg> CandidatePlans(decimal packageWeight, DateTime now)
+        {
+            return from plan in _context.TransporterTravelPlans
+                   join t in _context.TransporterRegisters
+                       on plan.TransporterRegId equals t.TransporterRegId
+                   where plan.IsActive
+                      && plan.PlanStatus == "Available"
+                      && plan.StartDate > now
+                      && plan.MaxWeightKg >= packageWeight
+                   select new PlanLeg
+                   {
+                       PlanId = plan.PlanId,
+                       TransporterRegId = plan.TransporterRegId,
+                       TransporterName = t.TransporterName,
+                       VehicleType = plan.VehicleType,
+                       StartLocationPin = plan.StartLocationPin,
+                       DestinationPin = plan.DestinationPin,
+                       StartDate = plan.StartDate,
+                       ArrivalDate = plan.ArrivalDate,
+                       CreatedAt = plan.CreatedAt
+                   };
+        }
+
+        public async Task<PlanLeg?> GetDirectPlanAsync(
+            string storePincode, string shopperPincode, decimal packageWeight, DateTime now)
+        {
+            return await CandidatePlans(packageWeight, now)
+                .Where(p => p.StartLocationPin == storePincode
+                         && p.DestinationPin == shopperPincode)
+                .OrderBy(p => p.CreatedAt)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<PlanLeg>> GetPlansStartingAtAsync(
+            string startPincode, decimal packageWeight, DateTime now)
+        {
+            return await CandidatePlans(packageWeight, now)
+                .Where(p => p.StartLocationPin == startPincode)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+
+        public async Task<List<PlanLeg>> GetPlansEndingAtAsync(
+            string destinationPincode, decimal packageWeight, DateTime now)
+        {
+            return await CandidatePlans(packageWeight, now)
+                .Where(p => p.DestinationPin == destinationPincode)
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }
+

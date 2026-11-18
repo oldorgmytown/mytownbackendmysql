@@ -44,6 +44,14 @@ namespace mytown.Services.Interfaces
 
         Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(CreateCashfreeBeneficiaryRequestCourier request);
 
+
+        //multiple hops
+
+        Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+            string storePincode,
+            string shopperPincode,
+            decimal packageWeight);
+
     }
         
 

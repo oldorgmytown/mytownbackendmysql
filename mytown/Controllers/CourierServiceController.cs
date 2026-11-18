@@ -8,6 +8,7 @@ using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Text.Json;
 
 
@@ -270,6 +271,22 @@ namespace mytown.Controllers
                 _logger.LogError(ex, "Error creating Cashfree beneficiary for courier");
                 return BadRequest(new { success = false, message = ex.Message });
             }
+        }
+
+
+        [HttpGet("match")]
+        public async Task<IActionResult> Match(
+           [FromQuery] string storePincode,
+           [FromQuery] string shopperPincode,
+           [FromQuery] decimal packageWeight)
+        {
+            var result = await _courierService.FindMatchingTransporterByPincodeAsync(
+                storePincode, shopperPincode, packageWeight);
+
+            if (result == null)
+                return NotFound(new { message = "P2P delivery not available" });
+
+            return Ok(result);
         }
     }
 }

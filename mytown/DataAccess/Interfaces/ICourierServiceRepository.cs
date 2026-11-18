@@ -83,4 +83,18 @@ public interface ICourierServiceRepository
     Task<CourierAccountDetail?> GetCourierAccountDetailByCourierId(int courierId);
     Task UpdateCourierAccountDetails(CourierAccountDetail accountDetail);
 
+
+    //multiple hops
+
+    // One plan from store pincode to shopper pincode
+    Task<PlanLeg?> GetDirectPlanAsync(
+        string storePincode, string shopperPincode, decimal packageWeight, DateTime now);
+
+    // Plans that start at a pincode
+    Task<List<PlanLeg>> GetPlansStartingAtAsync(
+        string startPincode, decimal packageWeight, DateTime now);
+
+    // Plans that end at a pincode
+    Task<List<PlanLeg>> GetPlansEndingAtAsync(
+        string destinationPincode, decimal packageWeight, DateTime now);
 }

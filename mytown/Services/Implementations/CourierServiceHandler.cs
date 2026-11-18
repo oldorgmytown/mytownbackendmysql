@@ -8,8 +8,10 @@ using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Stripe;
 using System.Globalization;
+using System.Numerics;
 using System.Text;
 using System.Text.Json;
+using static mytown.Services.Implementations.CourierServiceHandler;
 
 namespace mytown.Services.Implementations
 {
@@ -528,5 +530,113 @@ return created;
 
             return cfResponse;
         }
+
+       
+
+            // Try one transporter, then two
+            public async Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+                string storePincode,
+                string shopperPincode,
+                decimal packageWeight)
+            {
+                DateTime now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                    DateTime.UtcNow, "India Standard Time");
+
+                // STEP 1: one transporter (existing logic)
+                var oneLeg = await _repo.GetDirectPlanAsync(
+                    storePincode, shopperPincode, packageWeight, now);
+
+                if (oneLeg != null)
+                    return BuildResult(new List<PlanLeg> { oneLeg }, now);
+
+                // STEP 2: two transporters
+                var twoLegs = await FindTwoTransportersAsync(
+                    storePincode, shopperPincode, packageWeight, now);
+
+                if (twoLegs != null)
+                    return BuildResult(twoLegs, now);
+
+                return null; // no P2P option
+            }
+
+            // Two plans that meet at a hub pincode
+            private async Task<List<PlanLeg>?> FindTwoTransportersAsync(
+                string storePincode, string shopperPincode, decimal packageWeight, DateTime now)
+            {
+                // List A: plans leaving from the store pincode (they end at some hub)
+                var fromStore = await _repo.GetPlansStartingAtAsync(storePincode, packageWeight, now);
+                if (fromStore.Count == 0) return null;
+
+                // List B: plans ending at the shopper pincode (they start at some hub)
+                var toShopper = await _repo.GetPlansEndingAtAsync(shopperPincode, packageWeight, now);
+                if (toShopper.Count == 0) return null;
+
+                // First plan ends where the second starts, and second starts after first arrives
+                var pairs = from first in fromStore
+                            from second in toShopper
+                            where first.DestinationPin == second.StartLocationPin
+                               && first.DestinationPin != storePincode
+                               && first.DestinationPin != shopperPincode
+                               && second.StartDate >= first.ArrivalDate
+                               && first.TransporterRegId != second.TransporterRegId
+                            orderby second.ArrivalDate, first.StartDate   // earliest delivery first
+                            select new List<PlanLeg> { first, second };
+
+                return pairs.FirstOrDefault();
+            }
+
+            // Build the response: hops list, total time, cost
+            private static BestcourierinfoDto BuildResult(List<PlanLeg> legs, DateTime now)
+            {
+                var first = legs.First();
+                var last = legs.Last();
+
+                // Total time the shopper waits: from booking to final arrival
+                TimeSpan total = last.ArrivalDate - now;
+                if (total < TimeSpan.Zero) total = TimeSpan.Zero;
+
+                int totalDays = (int)total.TotalDays;
+                string totalText = totalDays > 0
+                    ? $"{totalDays} day(s) {total.Hours} hr"
+                    : $"{total.Hours} hr";
+
+                int estimatedDays = Math.Max(1, (last.ArrivalDate.Date - now.Date).Days);
+            int CostPerLeg = 50;
+
+                return new BestcourierinfoDto
+                {
+                    BranchId = 0,
+                    ShippingMode = "P2P",
+                    Cost = CostPerLeg * legs.Count,                 // 50 or 100
+                    HopCount = legs.Count,
+                    MaxDeliveryDays = estimatedDays,
+                    DeliveryDaysRange = estimatedDays <= 1 ? "Same day / Next day" : $"{estimatedDays} days",
+                    EstimatedDeliveryDate = last.ArrivalDate.ToString(
+                        "MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture),
+                    TotalDurationHours = Math.Round(total.TotalHours, 1),
+                    TotalDurationText = totalText,
+
+                    // first transporter, so existing callers keep working
+                    TransporterRegId = first.TransporterRegId,
+                    TransporterPlanId = first.PlanId,
+                    TransporterName = first.TransporterName,
+                    VehicleType = first.VehicleType,
+
+                    Hops = legs.Select((l, i) => new TransportHopDto
+                    {
+                        LegNumber = i + 1,
+                        IsFinalLeg = i == legs.Count - 1,
+                        TransporterRegId = l.TransporterRegId,
+                        TransporterPlanId = l.PlanId,
+                        TransporterName = l.TransporterName,
+                        VehicleType = l.VehicleType,
+                        FromPin = l.StartLocationPin,
+                        ToPin = l.DestinationPin,
+                        StartDate = l.StartDate,
+                        ArrivalDate = l.ArrivalDate
+                    }).ToList()
+                };
+            }
+        }
     }
-}
+
