@@ -195,7 +195,7 @@ namespace mytown.Controllers
             }
         }
 
-        //with pickup
+        //with pickup - no multiple transporters yet
     //    [Authorize]
         [HttpPost("GetBestCourier")]
         public async Task<IActionResult> GetBestCourier(
