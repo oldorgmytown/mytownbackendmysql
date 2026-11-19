@@ -377,7 +377,7 @@ return created;
                 //);
 
 
-                var matchingTransporter = await FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
+                var matchingTransporter = await FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalweightkg);
 
 
                 if (matchingTransporter != null)
