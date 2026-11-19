@@ -9,5 +9,7 @@
         // ✅ NEW — only filled when ShippingType == "p2p"
         public int? TransporterRegId { get; set; }
         public int? TransporterPlanId { get; set; }
+
+        public List<SelectedHopRequestDto>? Hops { get; set; }
     }
 }

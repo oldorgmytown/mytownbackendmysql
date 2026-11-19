@@ -97,4 +97,7 @@ public interface ICourierServiceRepository
     // Plans that end at a pincode
     Task<List<PlanLeg>> GetPlansEndingAtAsync(
         string destinationPincode, decimal packageWeight, DateTime now);
+
+    Task<List<PlanLeg>> GetPlansBetweenAsync(
+            List<string> startPincodes, List<string> endPincodes, decimal packageWeight, DateTime now);
 }

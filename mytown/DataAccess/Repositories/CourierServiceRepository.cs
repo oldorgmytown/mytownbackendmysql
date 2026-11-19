@@ -1090,6 +1090,8 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
+        //multiple transporters for same route TO QA
+        // Open plans that start after booking time and can carry the weight
         private IQueryable<PlanLeg> CandidatePlans(decimal packageWeight, DateTime now)
         {
             return from plan in _context.TransporterTravelPlans
@@ -1141,6 +1143,17 @@ namespace mytown.DataAccess.Repositories
                 .AsNoTracking()
                 .ToListAsync();
         }
+
+        public async Task<List<PlanLeg>> GetPlansBetweenAsync(
+            List<string> startPincodes, List<string> endPincodes, decimal packageWeight, DateTime now)
+        {
+            return await CandidatePlans(packageWeight, now)
+                .Where(p => startPincodes.Contains(p.StartLocationPin)
+                         && endPincodes.Contains(p.DestinationPin))
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }
+
 

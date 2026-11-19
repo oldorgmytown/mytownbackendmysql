@@ -377,7 +377,7 @@ return created;
                 //);
 
 
-                var matchingTransporter = await _repo.FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
+                var matchingTransporter = await FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
 
 
                 if (matchingTransporter != null)
@@ -534,109 +534,146 @@ return created;
        
 
             // Try one transporter, then two
-            public async Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
-                string storePincode,
-                string shopperPincode,
-                decimal packageWeight)
-            {
-                DateTime now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-                    DateTime.UtcNow, "India Standard Time");
+           public async Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+            string storePincode,
+            string shopperPincode,
+            decimal packageWeight)
+        {
+            DateTime now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "India Standard Time");
 
-                // STEP 1: one transporter (existing logic)
-                var oneLeg = await _repo.GetDirectPlanAsync(
-                    storePincode, shopperPincode, packageWeight, now);
+            // STEP 1: one transporter (existing logic)
+            var oneLeg = await _repo.GetDirectPlanAsync(
+                storePincode, shopperPincode, packageWeight, now);
 
-                if (oneLeg != null)
-                    return BuildResult(new List<PlanLeg> { oneLeg }, now);
+            if (oneLeg != null)
+                return BuildResult(new List<PlanLeg> { oneLeg }, now);
 
-                // STEP 2: two transporters
-                var twoLegs = await FindTwoTransportersAsync(
-                    storePincode, shopperPincode, packageWeight, now);
+            // List A: plans leaving from the store pincode (they end at some hub)
+            var fromStore = await _repo.GetPlansStartingAtAsync(storePincode, packageWeight, now);
+            if (fromStore.Count == 0) return null;
 
-                if (twoLegs != null)
-                    return BuildResult(twoLegs, now);
+            // List B: plans ending at the shopper pincode (they start at some hub)
+            var toShopper = await _repo.GetPlansEndingAtAsync(shopperPincode, packageWeight, now);
+            if (toShopper.Count == 0) return null;
 
-                return null; // no P2P option
-            }
+            // STEP 2: two transporters
+            var twoLegs = FindTwoTransporters(fromStore, toShopper, storePincode, shopperPincode);
+            if (twoLegs != null)
+                return BuildResult(twoLegs, now);
 
-            // Two plans that meet at a hub pincode
-            private async Task<List<PlanLeg>?> FindTwoTransportersAsync(
-                string storePincode, string shopperPincode, decimal packageWeight, DateTime now)
-            {
-                // List A: plans leaving from the store pincode (they end at some hub)
-                var fromStore = await _repo.GetPlansStartingAtAsync(storePincode, packageWeight, now);
-                if (fromStore.Count == 0) return null;
+            // STEP 3: three transporters
+            var threeLegs = await FindThreeTransportersAsync(
+                fromStore, toShopper, storePincode, shopperPincode, packageWeight, now);
+            if (threeLegs != null)
+                return BuildResult(threeLegs, now);
 
-                // List B: plans ending at the shopper pincode (they start at some hub)
-                var toShopper = await _repo.GetPlansEndingAtAsync(shopperPincode, packageWeight, now);
-                if (toShopper.Count == 0) return null;
-
-                // First plan ends where the second starts, and second starts after first arrives
-                var pairs = from first in fromStore
-                            from second in toShopper
-                            where first.DestinationPin == second.StartLocationPin
-                               && first.DestinationPin != storePincode
-                               && first.DestinationPin != shopperPincode
-                               && second.StartDate >= first.ArrivalDate
-                               && first.TransporterRegId != second.TransporterRegId
-                            orderby second.ArrivalDate, first.StartDate   // earliest delivery first
-                            select new List<PlanLeg> { first, second };
-
-                return pairs.FirstOrDefault();
-            }
-
-            // Build the response: hops list, total time, cost
-            private static BestcourierinfoDto BuildResult(List<PlanLeg> legs, DateTime now)
-            {
-                var first = legs.First();
-                var last = legs.Last();
-
-                // Total time the shopper waits: from booking to final arrival
-                TimeSpan total = last.ArrivalDate - now;
-                if (total < TimeSpan.Zero) total = TimeSpan.Zero;
-
-                int totalDays = (int)total.TotalDays;
-                string totalText = totalDays > 0
-                    ? $"{totalDays} day(s) {total.Hours} hr"
-                    : $"{total.Hours} hr";
-
-                int estimatedDays = Math.Max(1, (last.ArrivalDate.Date - now.Date).Days);
-            int CostPerLeg = 50;
-
-                return new BestcourierinfoDto
-                {
-                    BranchId = 0,
-                    ShippingMode = "P2P",
-                    Cost = CostPerLeg * legs.Count,                 // 50 or 100
-                    HopCount = legs.Count,
-                    MaxDeliveryDays = estimatedDays,
-                    DeliveryDaysRange = estimatedDays <= 1 ? "Same day / Next day" : $"{estimatedDays} days",
-                    EstimatedDeliveryDate = last.ArrivalDate.ToString(
-                        "MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture),
-                    TotalDurationHours = Math.Round(total.TotalHours, 1),
-                    TotalDurationText = totalText,
-
-                    // first transporter, so existing callers keep working
-                    TransporterRegId = first.TransporterRegId,
-                    TransporterPlanId = first.PlanId,
-                    TransporterName = first.TransporterName,
-                    VehicleType = first.VehicleType,
-
-                    Hops = legs.Select((l, i) => new TransportHopDto
-                    {
-                        LegNumber = i + 1,
-                        IsFinalLeg = i == legs.Count - 1,
-                        TransporterRegId = l.TransporterRegId,
-                        TransporterPlanId = l.PlanId,
-                        TransporterName = l.TransporterName,
-                        VehicleType = l.VehicleType,
-                        FromPin = l.StartLocationPin,
-                        ToPin = l.DestinationPin,
-                        StartDate = l.StartDate,
-                        ArrivalDate = l.ArrivalDate
-                    }).ToList()
-                };
-            }
+            return null; // no P2P option
         }
+
+        // Two plans that meet at a hub pincode
+        private static List<PlanLeg>? FindTwoTransporters(
+            List<PlanLeg> fromStore, List<PlanLeg> toShopper,
+            string storePincode, string shopperPincode)
+        {
+            var pairs = from first in fromStore
+                        join second in toShopper
+                            on first.DestinationPin equals second.StartLocationPin   // meet at same hub
+                        where first.DestinationPin != storePincode
+                           && first.DestinationPin != shopperPincode
+                           && second.StartDate >= first.ArrivalDate                  // no buffer, no limit
+                           && first.TransporterRegId != second.TransporterRegId
+                        orderby second.ArrivalDate, first.StartDate                  // earliest delivery first
+                        select new List<PlanLeg> { first, second };
+
+            return pairs.FirstOrDefault();
+        }
+
+        // Three plans: first -> middle -> last, meeting at two hub pincodes to QA
+        private async Task<List<PlanLeg>?> FindThreeTransportersAsync(
+            List<PlanLeg> fromStore, List<PlanLeg> toShopper,
+            string storePincode, string shopperPincode,
+            decimal packageWeight, DateTime now)
+        {
+            // Hubs reached from the store, and hubs from where plans go to the shopper
+            var firstEndPins = fromStore.Select(p => p.DestinationPin).Distinct().ToList();
+            var lastStartPins = toShopper.Select(p => p.StartLocationPin).Distinct().ToList();
+
+            // Middle plans: start where a first plan ends, end where a last plan starts
+            var middle = await _repo.GetPlansBetweenAsync(firstEndPins, lastStartPins, packageWeight, now);
+            if (middle.Count == 0) return null;
+
+            var chains = from first in fromStore
+                         join mid in middle
+                             on first.DestinationPin equals mid.StartLocationPin
+                         join last in toShopper
+                             on mid.DestinationPin equals last.StartLocationPin
+                         where mid.StartDate >= first.ArrivalDate                    // second after first arrives
+                            && last.StartDate >= mid.ArrivalDate                     // third after second arrives
+                            // three different transporters
+                            && first.TransporterRegId != mid.TransporterRegId
+                            && mid.TransporterRegId != last.TransporterRegId
+                            && first.TransporterRegId != last.TransporterRegId
+                            // no pincode repeated: store, hub 1, hub 2, shopper
+                            && new[] { storePincode, first.DestinationPin, mid.DestinationPin, shopperPincode }
+                                   .Distinct().Count() == 4
+                         orderby last.ArrivalDate, first.StartDate                   // earliest delivery first
+                         select new List<PlanLeg> { first, mid, last };
+
+            return chains.FirstOrDefault();
+        }
+
+        // Build the response: hops list, total time, cost
+        private static BestcourierinfoDto BuildResult(List<PlanLeg> legs, DateTime now)
+        {
+            var first = legs.First();
+            var last = legs.Last();
+
+            // Total time the shopper waits: from booking to final arrival
+            TimeSpan total = last.ArrivalDate - now;
+            if (total < TimeSpan.Zero) total = TimeSpan.Zero;
+
+            int totalDays = (int)total.TotalDays;
+            string totalText = totalDays > 0
+                ? $"{totalDays} day(s) {total.Hours} hr"
+                : $"{total.Hours} hr";
+
+            int estimatedDays = Math.Max(1, (last.ArrivalDate.Date - now.Date).Days);
+            int CostPerLeg = 50; // Assuming a fixed cost per leg for demonstration purposes
+            return new BestcourierinfoDto
+            {
+                BranchId = 0,
+                ShippingMode = "P2P",
+                Cost = CostPerLeg * legs.Count,                 // 50, 100 or 150
+                HopCount = legs.Count,
+                MaxDeliveryDays = estimatedDays,
+                DeliveryDaysRange = estimatedDays <= 1 ? "Same day / Next day" : $"{estimatedDays} days",
+                EstimatedDeliveryDate = last.ArrivalDate.ToString(
+                    "MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture),
+                TotalDurationHours = Math.Round(total.TotalHours, 1),
+                TotalDurationText = totalText,
+
+                // first transporter, so existing callers keep working
+                TransporterRegId = first.TransporterRegId,
+                TransporterPlanId = first.PlanId,
+                TransporterName = first.TransporterName,
+                VehicleType = first.VehicleType,
+
+                Hops = legs.Select((l, i) => new TransportHopDto
+                {
+                    LegNumber = i + 1,
+                    IsFinalLeg = i == legs.Count - 1,
+                    TransporterRegId = l.TransporterRegId,
+                    TransporterPlanId = l.PlanId,
+                    TransporterName = l.TransporterName,
+                    VehicleType = l.VehicleType,
+                    FromPin = l.StartLocationPin,
+                    ToPin = l.DestinationPin,
+                    StartDate = l.StartDate,
+                    ArrivalDate = l.ArrivalDate
+                }).ToList()
+            };
+        }
+    }
     }
 
