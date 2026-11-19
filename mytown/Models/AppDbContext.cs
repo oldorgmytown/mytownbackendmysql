@@ -151,6 +151,9 @@ namespace mytown.Models
             public DbSet<ShopperPostImage> ShopperPostImages { get; set; }
             public DbSet<ShopperPostLike> ShopperPostLikes { get; set; }
 
+            //multiple hop
+            public DbSet<OrderTransportLeg> OrderTransportLegs { get; set; }
+
 
 
 
