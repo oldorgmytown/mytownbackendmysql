@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
 using mytown.DataAccess.Repositories;
+using mytown.DTOs;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services;
@@ -20,11 +21,13 @@ namespace mytown.Controllers
     {
         private readonly IBusinessDashboardRepository _dashboardRepository;
         private readonly IBusinessDashboardService _dasboardservice;
+        private readonly IStorePayoutService _storePayoutService;
 
-        public BusinessDashboardController(IBusinessDashboardRepository dashboardRepository, IBusinessDashboardService dashboardService)
+        public BusinessDashboardController(IBusinessDashboardRepository dashboardRepository, IBusinessDashboardService dashboardService, IStorePayoutService storePayoutService)
         {
             _dashboardRepository = dashboardRepository;
             _dasboardservice = dashboardService;
+            _storePayoutService = storePayoutService;
         }
 
         //[HttpGet("orders/{storeId}")]
@@ -85,18 +88,6 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //[HttpGet("dashboardproducts")]
-        //public async Task<IActionResult> GetProductsByStore(
-        //int busRegId,
-        //[FromQuery] string searchText = null,
-        //[FromQuery] string sortBy = "id",
-        //[FromQuery] string sortDirection = "asc",
-        //[FromQuery] int page = 1,
-        //[FromQuery] int pageSize = 10)
-        //{
-        //  //  var products = await _dashboardRepository.GetProductsWithPurchasedCountAsync(busRegId, searchText, sortBy, sortDirection, page, pageSize);
-        //   // return Ok(products);
-        //}
 
 
         [HttpGet("GetCustomerAnalytics")]
@@ -257,18 +248,49 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+        // Save package dimensions
+        [HttpPost("save-package-dimensions")]
+        public async Task<IActionResult> SavePackageDimensions([FromBody] ShippingPackageDetailsDto dto)
+        {
+            var result = await _dasboardservice.SavePackageDetailsAsync(dto);
+            return Ok(result);
+        }
+
+        // Get package details by StoreOrderId
+        [HttpGet("get-package-dimensions")]
+        public async Task<IActionResult> GetPackageDetails(int storeOrderId)
+        {
+            var result = await _dasboardservice.GetPackageDetailsAsync(storeOrderId);
+
+            if (result == null)
+                return NotFound("Package details not found");
+
+            return Ok(result);
+        }
 
         // Notificatio to courier - Ready to ship
 
+        // Controller
         [HttpPost("ready-to-ship_NotificationtoCourier")]
-        public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        public async Task<IActionResult> MarkReadyToShip([FromBody] ReadyToShipDto dto)
         {
-            await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+            await _dasboardservice.MarkReadyToShipAsync(dto);
+
             return Ok(new
             {
                 message = "Order marked as Ready to Ship"
             });
         }
+
+        //[HttpPost("ready-to-ship_NotificationtoCourier")]
+        //public async Task<IActionResult> MarkReadyToShip(int storeOrderId)
+        //{
+        //    await _dasboardservice.MarkReadyToShipAsync(storeOrderId);
+        //    return Ok(new
+        //    {
+        //        message = "Order marked as Ready to Ship"
+        //    });
+        //}
 
         //sales history
 
@@ -279,7 +301,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
-        //sales trend graph
+        //    //sales trend graph
         [HttpGet("sales-trend-graph")]
         public async Task<IActionResult> GetSalesTrend(
     int storeId,
@@ -289,6 +311,122 @@ namespace mytown.Controllers
             var result = await _dasboardservice.GetSalesTrendAsync(storeId, fromDate, toDate);
             return Ok(result);
         }
+
+        [HttpPut("update-business-account/{busRegId}")]
+        public async Task<IActionResult> UpdateBusinessAccount(
+    int busRegId,
+    [FromBody] UpdateBusinessAccountDetailDto dto)
+        {
+            try
+            {
+                var updated = await _dasboardservice.UpdateBusinessAccountDetailsAsync(busRegId, dto);
+
+                if (!updated)
+                {
+                    return NotFound(new
+                    {
+                        message = "Business account details not found."
+                    });
+                }
+
+                return Ok(new
+                {
+                    message = "Business account details updated successfully."
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    error = ex.Message
+                });
+            }
+        }
+
+        // get business account details by busRegId
+        [HttpGet("getbusiness-bankaccount/{busRegId}")]
+        public async Task<IActionResult> GetBusinessAccountDetails(int busRegId)
+        {
+            var account = await _dasboardservice.GetBusinessAccountDetailsByBusRegIdAsync(busRegId);
+
+            if (account == null)
+                return NotFound(new { message = "Business account details not found." });
+
+            return Ok(account);
+        }
+
+        
+
+        [HttpGet("business-payouts/{busRegId}")]
+        public async Task<IActionResult> GetBusinessPayouts(int busRegId)
+        {
+            var payouts = await _dasboardservice.GetStorePayoutsByBusRegIdAsync(busRegId);
+
+            return Ok(payouts); // empty list if none — that's a valid, expected state, not an error
+        }
+
+        [HttpGet("recent-pending-orders/{busRegId}")]
+        public async Task<IActionResult> GetPendingStoreOrders(int busRegId)
+        {
+            var result = await _dasboardservice.GetPendingStoreOrders(busRegId);
+            return Ok(result);
+        }
+
+        //update business address
+        [HttpPut("update-bus-default-address")]
+        public async Task<IActionResult> UpdateDefaultAddress([FromBody] UpdateDefaultAddressDto dto)
+        {
+            // [ApiController] already returns 400 automatically if validation fails
+            var updated = await _dasboardservice.UpdateDefaultAddressAsync(dto);
+
+            return updated
+                ? Ok(new { message = "Address updated successfully" })
+                : NotFound(new { message = "Business not found" });
+        }
+        // [Authorize]   
+
+        [HttpPost("mark-delivered")]
+        public async Task<IActionResult> MarkDelivered([FromBody] MarkDeliveredDto dto)
+        {
+
+
+            int busRegId = dto.busRegId;
+
+            try
+            {
+                // 1️⃣ Mark delivered (saves to DB)
+                await _dasboardservice.MarkPickupDeliveredAsync(dto.StoreOrderId, busRegId);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Forbid();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
+            // 2️⃣ Payout AFTER delivery is committed
+            TriggerPayoutResponseDto? payout = null;
+            string? payoutError = null;
+
+            try
+            {
+                payout = await _storePayoutService.CreatePayoutAsync(dto.StoreOrderId);  
+            }
+            catch (Exception ex)
+            {
+                payoutError = ex.Message;   // log it too
+            }
+
+            return Ok(new
+            {
+                message = "Order marked as delivered.",
+                payout,
+                payoutError   // not null means delivery succeeded but the payout needs a retry
+            });
+        }
+
     }
 
 

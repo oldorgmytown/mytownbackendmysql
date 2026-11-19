@@ -2,8 +2,8 @@
 {
     public class BuyAgainProductDto
     {
-        public int ProductId { get; set; }
-        public int SkuId { get; set; }
+        public long ProductId { get; set; }
+        public long SkuId { get; set; }
 
         public string ProductName { get; set; }
         public string VariantImage { get; set; }

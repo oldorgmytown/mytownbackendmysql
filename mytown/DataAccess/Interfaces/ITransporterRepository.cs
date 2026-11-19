@@ -13,5 +13,8 @@ namespace mytown.DataAccess.Interfaces
         Task<TransporterRegister> RegisterTransporter(TransporterRegister transporter);
 
         Task<PendingTransporterVerification> FindPendingVerificationByEmail(string email);
+        Task AddTransporterAccountDetails(TransporterAccountDetail accountDetails);
+        Task<TransporterAccountDetail?> GetTransporterAccountDetailByRegId(int transRegId);
+        Task UpdateTransporterAccountDetails(TransporterAccountDetail accountDetail);
     }
 }

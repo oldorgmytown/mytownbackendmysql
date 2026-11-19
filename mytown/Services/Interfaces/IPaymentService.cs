@@ -22,6 +22,16 @@ namespace mytown.Services.Interfaces
         // ================================
         Task ProcessPostPaymentAsync(int orderId);
 
+        //Razor pay
+
+        Task<RazorpayOrderResponseDto> CreateRazorpayOrderAsync(int orderId);
+
+        Task<Payments> AddRazorpayPaymentAsync(
+    int orderId,
+    string razorpayOrderId,
+    string razorpayPaymentId,
+    string razorpaySignature);
+
       //  Task SendCourierEmailAsync(int branchId, int storeOrderId);
 
         ShopperRegisterDto GetShopperDetailsByOrderId(int orderId);

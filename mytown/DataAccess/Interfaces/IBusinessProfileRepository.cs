@@ -23,6 +23,8 @@ namespace mytown.DataAccess.Interfaces
         Task<ProductDetailsDto> GetDetailsBySubCategoryAsync(int prodSubcatId);
 
         List<ProductSubCategory> GetProductSubCategoriesByBusRegId(int busRegId);
+
+        List<ProductSubCategory> GetProductSubCategoriesByBusCatId(int busCatId);
         Task<IEnumerable<BusinessProfile>> GetAllBusinessProfilesAsync();
         Task<IEnumerable<BusinessProfileWithDiscountDto>> GetBusinessProfilesWithDiscountedProductsAsync();
 

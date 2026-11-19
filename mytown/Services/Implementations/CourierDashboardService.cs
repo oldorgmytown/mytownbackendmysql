@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using mytown.DataAccess.Interfaces;
+using mytown.DataAccess.Repositories;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
@@ -11,12 +12,20 @@ namespace mytown.Services.Implementations
     public class CourierDashboardService : ICourierDashboardService
     {
         private readonly ICourierDashboardRepository _repository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IEmailService _emailService;
+        //push toprod
+        private readonly ICourierPayoutService _courierPayoutService;
 
         private static readonly HashSet<string> ValidStatuses =
-       new() { "Pending","New Order", "In Progress", "Delivered" };
-        public CourierDashboardService(ICourierDashboardRepository repository)
+       new() { "Pending","New Order", "Ready to Ship", "In Progress", "Delivered" };
+        public CourierDashboardService(ICourierDashboardRepository repository, IOrderRepository orderRepository, IEmailService emailService, ICourierPayoutService courierPayoutService
+            )
         {
             _repository = repository;
+            _orderRepository = orderRepository;
+            _emailService = emailService;
+            _courierPayoutService = courierPayoutService;
         }
 
         public async Task<List<CourierOrderDto>> GetOrdersAsync(
@@ -62,8 +71,9 @@ namespace mytown.Services.Implementations
         {
             var shipment = await _repository.GetByStoreOrderIdAsync(storeOrderId);
 
-            if (shipment.ShippingStatus != "Pending" && shipment.ShippingStatus != "Ready to Ship")
-                throw new Exception("Tracking can be added only for new orders");
+            // allow tracking id allotment only for ready to ship orders
+            if (shipment.ShippingStatus != "Ready to Ship")
+                throw new Exception("Tracking can be added only after Ready to Ship notification from Store");
 
             shipment.TrackingId = trackingId;
             shipment.ShippingStatus = "In Progress";
@@ -81,7 +91,19 @@ namespace mytown.Services.Implementations
             }
             await _repository.SaveAsync();
 
-           // await _repository.SaveAsync();
+            // we are using same order confirmation for shopper and guest
+
+            var orderConfirmation =
+                await _orderRepository.GetOrderConfirmationAsync(shipment.OrderId);
+            // here shopper and guest both deatils will come under shopper email and shopper name
+            await _emailService.SendGuestNotificationforTracking(
+                    orderConfirmation.ShopperEmail,
+                    orderConfirmation.ShopperName,
+                    orderConfirmation
+                
+                );
+
+            // await _repository.SaveAsync();
         }
 
         public async Task MarkAsDeliveredAsync(int storeOrderId)
@@ -95,6 +117,9 @@ namespace mytown.Services.Implementations
             shipment.DeliveredDate = DateTime.UtcNow;
 
             await _repository.SaveAsync();
+            // Trigger courier payout
+
+           
         }
 
         public async Task<CourierOrderDetailDto> GetCourierOrderDetailAsync(int storeOrderId)
@@ -247,7 +272,34 @@ namespace mytown.Services.Implementations
 
         public async Task<string> UploadDeliveryProofAsync(int storeOrderId, IFormFile file)
         {
-            return await _repository.UploadDeliveryProofAsync(storeOrderId, file);
+            var result = await _repository.UploadDeliveryProofAsync(storeOrderId, file);
+
+            // Trigger courier payout after proof is saved
+            await _courierPayoutService.CreatePayoutAsync(storeOrderId);
+
+            return result;
         }
+
+        public async Task<bool> UpdateCourierAccountDetailsAsync(
+    int courierId,
+    UpdateCourierAccountDetailDto dto)
+        {
+            return await _repository.UpdateCourierAccountDetailsAsync(courierId, dto);
+        }
+        public async Task<UpdateCourierAccountDetailDto?> GetCourierAccountDetailsByCourierIdAsync(int courierId)
+        {
+            return await _repository.GetCourierAccountDetailsByCourierIdAsync(courierId);
+        }
+
+        public async Task<List<CourierPayoutDashboardDto>> GetCourierPayoutsByCourierIdAsync(int courierId)
+        {
+            return await _repository.GetCourierPayoutsByCourierIdAsync(courierId);
+        }
+
+        public Task<bool> UpdatePhoneAsync(int courierId, string phone)
+        => _repository.UpdatePhoneAsync(courierId, phone);
+
+        public Task<bool> UpdateBranchPhoneAsync(int branchId, string phone)
+        => _repository.UpdateBranchPhoneAsync(branchId, phone);
     }
 }

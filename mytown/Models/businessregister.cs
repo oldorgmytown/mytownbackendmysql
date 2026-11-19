@@ -102,5 +102,6 @@ namespace MyTown.Models
 
         [ForeignKey(nameof(BusCatId))]
         public virtual BusinessCategory BusinessCategory { get; set; }
+        public virtual BusinessAccountDetail? BusinessAccountDetail { get; set; }
     }
 }
