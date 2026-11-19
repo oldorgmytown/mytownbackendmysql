@@ -374,7 +374,7 @@ return created;
                 //    totalWeight
                 //);
 
-
+                // need to pull from QA
                 var matchingTransporter = await _repo.FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
 
 
