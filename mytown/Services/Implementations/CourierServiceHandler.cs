@@ -382,16 +382,19 @@ return created;
 
                 if (matchingTransporter != null)
                 {
-                    decimal basePrice = cheapestSurface?.Cost
-                        ?? fastestAir?.Cost
-                        ?? 333m;
+                    // one transporter: keep your existing price rule
+                    if (matchingTransporter.HopCount <= 1)
+                    {
+                        decimal basePrice = cheapestSurface?.Cost
+                            ?? fastestAir?.Cost
+                            ?? 333m;
 
-                    decimal p2pCost = Math.Round(basePrice * 0.50m, 2);
-                    p2pCost = Math.Max(p2pCost, 50m);
+                        decimal p2pCost = Math.Round(basePrice * 0.50m, 2);
+                        matchingTransporter.Cost = Math.Max(p2pCost, 50m);
+                    }
+                    // two or three transporters: keep the cost from the matching (100 or 150)
 
-                    matchingTransporter.Cost = p2pCost;
                     matchingTransporter.ShippingMode = "P2P";
-
                     selectedCouriers.Add(matchingTransporter);
                 }
 
