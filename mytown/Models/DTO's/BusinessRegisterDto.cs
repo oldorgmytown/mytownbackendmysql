@@ -64,5 +64,26 @@ namespace mytown.Models
         public string Password { get; set; }
 
         public bool isEmailVerified { get; set; }
+
+        //Bank Details
+        [Required(ErrorMessage = "Account holder name is required.")]
+        [StringLength(150)]
+        public string AccountHolderName { get; set; }
+
+        [Required(ErrorMessage = "Bank name is required.")]
+        [StringLength(150)]
+        public string BankName { get; set; }
+
+        [Required(ErrorMessage = "Account number is required.")]
+        [StringLength(50)]
+        public string AccountNumber { get; set; }
+
+        [Required(ErrorMessage = "Confirm account number is required.")]
+        [Compare("AccountNumber", ErrorMessage = "Account numbers do not match.")]
+        public string ConfirmAccountNumber { get; set; }
+
+        [Required(ErrorMessage = "IFSC Code is required.")]
+        [StringLength(20)]
+        public string IFSCCode { get; set; }
     }
 }

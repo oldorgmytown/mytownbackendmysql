@@ -17,6 +17,10 @@ namespace mytown.Models
         [Required]
         [Column("token")]
         public string Token { get; set; }
+        [Required]
+        [Column("role")]
+        public string Role { get; set; }
+
 
         [Required]
         [Column("expiry")]

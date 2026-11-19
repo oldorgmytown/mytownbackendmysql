@@ -3,16 +3,24 @@
     public class BusinessOrderDetailsDto
 {
     public int StoreOrderId { get; set; }
+        public int OrderId { get; set; }
     public DateTime OrderDate { get; set; }
         public int TransactionId { get; set; }
 
-    // Shopper info
-    public int ShopperId { get; set; }
-    public string ShopperName { get; set; }
-    public string ShopperPhone { get; set; }
+        // Shopper info
+        //public int? ShopperId { get; set; }
+        //public string ShopperName { get; set; }
+        //public string ShopperPhone { get; set; }
 
-    // Store info
-    public int StoreId { get; set; }
+        public int? ShopperId { get; set; }
+        public int? GuestRegId { get; set; }
+        public bool IsGuestOrder { get; set; }
+
+        public string CustomerName { get; set; }
+        public string CustomerPhone { get; set; }
+
+        // Store info
+        public int StoreId { get; set; }
     public string StoreName { get; set; }
     public string StoreTown { get; set; }
 
@@ -24,13 +32,25 @@
     // Shipping info
     public string ShippingMethod { get; set; }
     public string ShippingAddress { get; set; }
-    public DateTime EstimatedDeliveryDate { get; set; }
+        public string ShippingStatus { get; set; }
+        public DateTime EstimatedDeliveryDate { get; set; }
     public string CourierService { get; set; }
     public string TrackingId { get; set; }
 
-    // Optional buttons for frontend
-    // Weight, Dimensions, Print Label, Print Invoice
-}
+        // Optional buttons for frontend
+        // Weight, Dimensions, Print Label, Print Invoice
+
+        // Courier details (if courier handles shipping)
+        public string CourierServiceName { get; set; }
+        public string CourierBranchPhone { get; set; }
+        public string CourierBranchContactname { get; set; }
+        public string CourierEmail { get; set; }
+
+        // Transporter details (if transporter handles shipping)
+        public string TransporterName { get; set; }
+        public string TransporterPhone { get; set; }
+        public string TransporterEmail { get; set; }
+    }
 
 public class BusinessOrderProductDto
 {
