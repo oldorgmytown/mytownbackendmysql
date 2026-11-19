@@ -479,6 +479,146 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             return result;
         }
 
+        //// -------------------------------------------------------------------------
+        //// UPDATE DELIVERY STATUS — Assigned → ReachedPickup → PickedUp → InTransit → Delivered
+        //// -------------------------------------------------------------------------
+        //public async Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto)
+        //{
+        //    var allowedStatuses = new List<string> { "ReachedPickup", "PickedUp", "InTransit", "Delivered" };
+
+        //    if (!allowedStatuses.Contains(dto.NewStatus))
+        //        return false;
+
+        //    var delivery = await _context.TransporterDeliveryRequests
+        //        .FirstOrDefaultAsync(d =>
+        //            d.DeliveryReqId == dto.DeliveryReqId &&
+        //            d.TransporterRegId == dto.TransporterRegId);
+
+        //    if (delivery == null) return false;
+
+        //    // Enforce forward-only transitions
+        //    var validTransitions = new Dictionary<string, string>
+        //    {
+        //        { "Assigned",      "ReachedPickup" },
+        //        { "ReachedPickup", "PickedUp"       },
+        //        { "PickedUp",      "InTransit"      },
+        //        { "InTransit",     "Delivered"      }
+        //    };
+
+        //    if (!validTransitions.TryGetValue(delivery.DeliveryStatus, out var expected)
+        //        || expected != dto.NewStatus)
+        //        return false;
+
+        //    delivery.DeliveryStatus = dto.NewStatus;
+
+        //    // Stamp the matching timestamp column
+        //    switch (dto.NewStatus)
+        //    {
+        //        case "ReachedPickup": delivery.ReachedPickupAt = DateTime.UtcNow; break;
+        //        case "PickedUp":      delivery.PickedUpAt      = DateTime.UtcNow; break;
+        //        case "InTransit":     delivery.InTransitAt     = DateTime.UtcNow; break;
+        //        case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
+        //    }
+
+        //    // ── SYNC ShippingDetails so shopper sees updated status ──
+        //    if (delivery.StoreOrderId.HasValue)
+        //    {
+        //        var shipping = await _context.ShippingDetails
+        //            .FirstOrDefaultAsync(s => s.StoreOrderId == delivery.StoreOrderId.Value);
+
+        //        if (shipping != null)
+        //        {
+
+        //            var current = shipping.ShippingStatus;
+
+        //            if (dto.NewStatus == "ReachedPickup" &&
+        //                current != "Package Reached Hub" &&
+        //                current != "Handed Over")
+        //            {
+        //                throw new InvalidOperationException(
+        //                    "You can mark reached pickup only after the package has reached the hub.");
+        //            }
+
+        //            if (dto.NewStatus == "PickedUp" &&
+        //                current != "Handed Over" &&
+        //                current != "ReachedPickup")
+        //            {
+        //                throw new InvalidOperationException(
+        //                    "You can mark the package as picked up only after the hub has handed it over or the transporter has reached pickup.");
+        //            }
+
+        //            shipping.ShippingStatus = dto.NewStatus switch
+        //            {
+        //                "ReachedPickup" => "ReachedPickup",
+        //                "PickedUp" => "PickedUp",
+        //                "InTransit" => "InTransit",
+        //                "Delivered" => "Delivered",
+        //                _ => shipping.ShippingStatus
+        //            };
+
+        //            // Generate tracking ID when transporter picks up the parcel
+        //            if (dto.NewStatus == "PickedUp" &&
+        //                string.IsNullOrEmpty(shipping.TrackingId))
+        //            {
+        //                shipping.TrackingId = GenerateTrackingId(shipping.StoreOrderId);
+        //            }
+
+        //            // Mark delivery completion date
+        //            if (dto.NewStatus == "Delivered")
+        //            {
+        //                shipping.DeliveredDate = DateTime.UtcNow;
+
+        //            }
+        //        }
+        //    }
+
+        //    // ── NOTIFY SHOPPER ONLY FOR REGISTERED SHOPPERS , Not for guest ──
+        //    if (!delivery.IsGuestOrder && delivery.ShopperRegId.HasValue)
+        //    {
+        //        _context.ShopperDBNotifications.Add(new ShopperDBNotifications
+        //        {
+        //            ShopperRegId = delivery.ShopperRegId.Value,
+        //            Title = "Delivery Update",
+        //            Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+        //            IsRead = false,
+        //            CreatedDate = DateTime.UtcNow
+        //        });
+        //    }
+
+        //    // ── NOTIFY TRANSPORTER ──
+        //    _context.TransporterDBNotifications.Add(new TransporterDBNotifications
+        //    {
+        //        TransporterRegId = delivery.TransporterRegId,
+        //        Title = "Delivery Status Updated",
+        //        Message = $"Delivery {delivery.DeliveryCode} status changed to {dto.NewStatus}.",
+        //        IsRead = false,
+        //        CreatedDate = DateTime.UtcNow
+        //    });
+
+        //    await _context.SaveChangesAsync();
+
+        //    // send tracking id email to guests only
+        //    if (dto.NewStatus == "PickedUp" &&
+        //      delivery.OrderId.HasValue)
+        //    {
+        //        var orderConfirmation =
+        //            await _orderRepository.GetOrderConfirmationAsync(delivery.OrderId.Value);
+
+        //        if (orderConfirmation != null &&
+        //            orderConfirmation.IsGuestOrder &&
+        //            !string.IsNullOrEmpty(orderConfirmation.ShopperEmail))
+        //        {
+        //            await _emailService.SendGuestNotificationforTracking(
+        //                orderConfirmation.ShopperEmail,
+        //                orderConfirmation.ShopperName,
+        //                orderConfirmation
+        //            );
+        //        }
+        //    }
+        //    return true;
+        //}
+
+
         // -------------------------------------------------------------------------
         // UPDATE DELIVERY STATUS — Assigned → ReachedPickup → PickedUp → InTransit → Delivered
         // -------------------------------------------------------------------------
@@ -515,9 +655,9 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             switch (dto.NewStatus)
             {
                 case "ReachedPickup": delivery.ReachedPickupAt = DateTime.UtcNow; break;
-                case "PickedUp":      delivery.PickedUpAt      = DateTime.UtcNow; break;
-                case "InTransit":     delivery.InTransitAt     = DateTime.UtcNow; break;
-                case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
+                case "PickedUp": delivery.PickedUpAt = DateTime.UtcNow; break;
+                case "InTransit": delivery.InTransitAt = DateTime.UtcNow; break;
+                case "Delivered": delivery.DeliveredAt = DateTime.UtcNow; break;
             }
 
             // ── SYNC ShippingDetails so shopper sees updated status ──
@@ -567,7 +707,7 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                     if (dto.NewStatus == "Delivered")
                     {
                         shipping.DeliveredDate = DateTime.UtcNow;
-                        
+
                     }
                 }
             }
@@ -617,7 +757,6 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             }
             return true;
         }
-
         //Generate tracking id based on storeorderid
         private string GenerateTrackingId(int storeOrderId)
         {
