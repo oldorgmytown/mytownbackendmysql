@@ -1090,7 +1090,7 @@ namespace mytown.DataAccess.Repositories
             await _context.SaveChangesAsync();
         }
 
-        //multiple transporters for same route
+        //multiple transporters for same route TO QA
         // Open plans that start after booking time and can carry the weight
         private IQueryable<PlanLeg> CandidatePlans(decimal packageWeight, DateTime now)
         {

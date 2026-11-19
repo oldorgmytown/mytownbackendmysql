@@ -377,7 +377,7 @@ return created;
                 //);
 
 
-                var matchingTransporter = await _repo.FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
+                var matchingTransporter = await FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalWeight);
 
 
                 if (matchingTransporter != null)
@@ -589,7 +589,7 @@ return created;
             return pairs.FirstOrDefault();
         }
 
-        // Three plans: first -> middle -> last, meeting at two hub pincodes
+        // Three plans: first -> middle -> last, meeting at two hub pincodes to QA
         private async Task<List<PlanLeg>?> FindThreeTransportersAsync(
             List<PlanLeg> fromStore, List<PlanLeg> toShopper,
             string storePincode, string shopperPincode,
