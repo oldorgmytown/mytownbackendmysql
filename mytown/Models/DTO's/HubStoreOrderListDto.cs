@@ -24,5 +24,8 @@
             
         public decimal? PackageWeight { get; set; }
         public string? WeightUnit { get; set; }
+        public int LegNumber { get; set; }          // 0 = origin hub, 1 or 2 = hub after that leg
+        public string? LegStatus { get; set; }      // status of the transporter delivering to this hub (null for origin hub)
+
     }
 }

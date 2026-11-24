@@ -285,56 +285,172 @@ public async Task<Payments> AddRazorpayPaymentAsync(
             return _paymentRepo.GetShopperDetailsByOrderId(orderId);
         }
 
-public async Task ProcessPostPaymentAsync(int orderId)
-{
-    var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
+        //public async Task ProcessPostPaymentAsync(int orderId)
+        //{
+        //    var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
 
-    var storeWiseShipments = shippingDetails
-        .GroupBy(s => s.StoreOrderId)
-        .Select(g => g.First())
-        .ToList();
+        //    var storeWiseShipments = shippingDetails
+        //        .GroupBy(s => s.StoreOrderId)
+        //        .Select(g => g.First())
+        //        .ToList();
 
-    foreach (var shipping in storeWiseShipments)
-    {
-        if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+        //    foreach (var shipping in storeWiseShipments)
+        //    {
+        //        if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+        //        {
+        //            // ✅ Read TransporterRegId directly from 
+        //            if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
+        //                continue;
+
+        //            int transporterRegId = shipping.TransporterRegId.Value;
+
+        //            var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
+        //            if (storeOrder == null) continue;
+
+        //            await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+        //            {
+        //                PlanId = shipping.TransporterPlanId ?? 0,
+        //                TransporterRegId = transporterRegId,
+        //                ShopperRegId = storeOrder.Order.ShopperRegId,
+        //                GuestRegId = storeOrder.Order.GuestRegId,
+        //                IsGuestOrder = storeOrder.Order.IsGuestOrder,
+        //                OrderId          = orderId,
+        //                StoreOrderId     = shipping.StoreOrderId,
+        //                PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
+        //                DropoffLocation  = shipping.DeliveryAddress,
+        //                PackageWeightKg  = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId),
+        //                NumberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId),
+        //                DeliveryFee      = shipping.Cost,
+        //                PackageTags      = "NA"
+        //            });
+
+        //            // ✅ Notify transporter
+        //            await CreateTransporterNotificationAsync(
+        //                transporterRegId: transporterRegId,
+        //                title: "New P2P Delivery Request",
+        //                message: $"A new delivery for Order #{orderId} has been assigned to you. Check your dashboard."
+        //            );
+
+        //            await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
+        //        }
+        //        else
+        //        {
+        //                    if (shipping.BranchId.HasValue)
+        //                    {
+        //                        var courierId = await _paymentRepo
+        //                            .GetCourierIdByBranchIdAsync(shipping.BranchId.Value);
+
+        //                        await AddCourierNotificationAsync(
+        //                            courierId: courierId,
+        //                            branchId: shipping.BranchId.Value,
+        //                            title: "New Order Assigned",
+        //                            message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+        //                        );
+        //                    }
+        //                }
+        //    }
+        //}
+
+
+        // ---------------------------------------------------------------------------
+        // 2. ProcessPostPaymentAsync: one delivery request for EACH transporter (leg)
+        //    Changes are marked  ✅ NEW. Old orders with no leg rows work as before.
+        // ---------------------------------------------------------------------------
+        public async Task ProcessPostPaymentAsync(int orderId)
         {
-            // ✅ Read TransporterRegId directly from 
-            if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
-                continue;
+            var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
 
-            int transporterRegId = shipping.TransporterRegId.Value;
+            var storeWiseShipments = shippingDetails
+                .GroupBy(s => s.StoreOrderId)
+                .Select(g => g.First())
+                .ToList();
 
-            var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
-            if (storeOrder == null) continue;
-
-            await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+            foreach (var shipping in storeWiseShipments)
             {
-                PlanId = shipping.TransporterPlanId ?? 0,
-                TransporterRegId = transporterRegId,
-                ShopperRegId = storeOrder.Order.ShopperRegId,
-                GuestRegId = storeOrder.Order.GuestRegId,
-                IsGuestOrder = storeOrder.Order.IsGuestOrder,
-                OrderId          = orderId,
-                StoreOrderId     = shipping.StoreOrderId,
-                PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
-                DropoffLocation  = shipping.DeliveryAddress,
-                PackageWeightKg  = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId),
-                NumberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId),
-                DeliveryFee      = shipping.Cost,
-                PackageTags      = "NA"
-            });
- 
-            // ✅ Notify transporter
-            await CreateTransporterNotificationAsync(
-                transporterRegId: transporterRegId,
-                title: "New P2P Delivery Request",
-                message: $"A new delivery for Order #{orderId} has been assigned to you. Check your dashboard."
-            );
+                if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+                {
+                    var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
+                    if (storeOrder == null) continue;
 
-            await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
-        }
-        else
-        {
+                    // ✅ NEW (P1) ------------------------------------------------------------
+                    // Legs saved when the order was created (1, 2 or 3 transporters)
+                    var legs = await _paymentRepo.GetLegsByStoreOrderIdAsync(shipping.StoreOrderId);
+
+                    var requests = new List<P2PLegRequestInfoDto>();
+
+                    if (legs.Count > 0)
+                    {
+                        // placeholder text until you have a hub address table
+                        string HubText(string pin) => $"Transfer hub (pincode {pin})";
+
+                        string storeAddressForLeg1 = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId);
+
+                        foreach (var leg in legs)
+                        {
+                            requests.Add(new P2PLegRequestInfoDto
+                            {
+                                PlanId = leg.TransporterPlanId,
+                                TransporterRegId = leg.TransporterRegId,
+                                PickupLocation = leg.LegNumber == 1 ? storeAddressForLeg1 : HubText(leg.FromPin),
+                                DropoffLocation = leg.IsFinalLeg ? shipping.DeliveryAddress : HubText(leg.ToPin),
+                                DeliveryFee = leg.LegCost,                       // each transporter's own fee
+                                LegText = legs.Count > 1 ? $" (leg {leg.LegNumber} of {legs.Count})" : ""
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // old order with no leg rows: one transporter from shipping_details, exactly as before
+                        if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
+                            continue;
+
+                        requests.Add(new P2PLegRequestInfoDto
+                        {
+                            PlanId = shipping.TransporterPlanId ?? 0,
+                            TransporterRegId = shipping.TransporterRegId.Value,
+                            PickupLocation = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
+                            DropoffLocation = shipping.DeliveryAddress,
+                            DeliveryFee = shipping.Cost,
+                            LegText = ""
+                        });
+                    }
+
+                    // weight and item count are the same for every transporter, so read them once
+                    var packageWeightKg = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId);
+                    var numberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId);
+
+                    foreach (var req in requests)
+                    {
+                        await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+                        {
+                            PlanId = req.PlanId,
+                            TransporterRegId = req.TransporterRegId,
+                            ShopperRegId = storeOrder.Order.ShopperRegId,
+                            GuestRegId = storeOrder.Order.GuestRegId,
+                            IsGuestOrder = storeOrder.Order.IsGuestOrder,
+                            OrderId = orderId,
+                            StoreOrderId = shipping.StoreOrderId,
+                            PickupLocation = req.PickupLocation,
+                            DropoffLocation = req.DropoffLocation,
+                            PackageWeightKg = packageWeightKg,
+                            NumberOfPackages = numberOfPackages,
+                            DeliveryFee = req.DeliveryFee,
+                            PackageTags = "NA"
+                        });
+
+                        // ✅ Notify each transporter
+                        await CreateTransporterNotificationAsync(
+                            transporterRegId: req.TransporterRegId,
+                            title: "New P2P Delivery Request",
+                            message: $"A new delivery for Order #{orderId}{req.LegText} has been assigned to you. Check your dashboard."
+                        );
+                    }
+                    // ✅ END NEW -------------------------------------------------------------
+
+                    await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
+                }
+                else
+                {
                     if (shipping.BranchId.HasValue)
                     {
                         var courierId = await _paymentRepo
@@ -348,8 +464,8 @@ public async Task ProcessPostPaymentAsync(int orderId)
                         );
                     }
                 }
-    }
-}
+            }
+        }
 
         public async Task AddCourierNotificationAsync(
     int courierId,

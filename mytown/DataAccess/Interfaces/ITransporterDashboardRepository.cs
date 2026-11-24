@@ -59,7 +59,7 @@ namespace mytown.DataAccess.Interfaces
         Task MarkEachNotificationReadAsync(int notificationId);
 
         // mark as delivered
-        Task<string> MarkAsDeliveredAsync(int storeOrderId);
+       // Task<string> MarkAsDeliveredAsync(int storeOrderId);
 
         //sender orders
         // Interface
@@ -78,5 +78,10 @@ namespace mytown.DataAccess.Interfaces
         Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId);
         Task AddTransporterNotificationAsync(
     TransporterDBNotifications notification);
+
+        Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId);
+        Task<TransporterContactDto?> GetTransporterContactAsync(int transporterRegId);
+
+        Task<(string Message, bool IsFinalDelivery)> MarkAsDeliveredAsync(int storeOrderId);
     }
 }

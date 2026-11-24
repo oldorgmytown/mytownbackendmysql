@@ -20,15 +20,17 @@ namespace mytown.Controllers
         private readonly IEmailService _emailService;
         private readonly ITransporterDashboardService _service;
         private readonly IStorePayoutService _storePayoutService;
+        private readonly ITransporterPayoutService _transporterPayoutService;
 
         public HubController(IHubService hubService,
-                             ILogger<HubController> logger, IEmailService emailService, ITransporterDashboardService service, IStorePayoutService storePayoutService)
+                             ILogger<HubController> logger, IEmailService emailService, ITransporterDashboardService service, IStorePayoutService storePayoutService, ITransporterPayoutService transporterPayoutService)
         {
             _hubService = hubService ?? throw new ArgumentNullException(nameof(hubService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _service = service ?? throw new ArgumentNullException(nameof(service));
             _storePayoutService = storePayoutService ?? throw new ArgumentNullException(nameof(storePayoutService));
+            _transporterPayoutService = transporterPayoutService;
         }
 
         // GET: api/hub/locations
@@ -75,6 +77,46 @@ namespace mytown.Controllers
         }
 
         // PUT: api/hub/store-orders/490/verification
+        //    [HttpPut("save-store-orders_verification")]
+        //    public async Task<IActionResult> SaveVerification(
+        //int storeOrderId, [FromBody] SaveHubVerificationDto dto)
+        //    {
+        //        // 1. Save all verification checks first
+        //        var result = await _hubService.SaveVerificationAsync(storeOrderId, dto);
+
+        //        if (!result.Success)
+        //            return result.Error == "Store order not found."
+        //                ? NotFound(new { message = result.Error })
+        //                : BadRequest(new { message = result.Error });
+
+        //        // 2. Package not verified: nothing more to do
+        //        if (!dto.TransporterVerified)
+        //            return Ok(result.Data);
+
+        //        // 3. Package verified: trigger payout
+        //        try
+        //        {
+        //            var payoutResult = await _storePayoutService.CreatePayoutAsync(storeOrderId);
+
+        //            return Ok(new
+        //            {
+        //                verification = result.Data,
+        //                payoutTriggered = payoutResult.Success,
+        //                payoutError = payoutResult.Message
+        //            });
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            // Verification is already saved, so don't fail the whole request
+        //            return Ok(new
+        //            {
+        //                verification = result.Data,
+        //                payoutTriggered = false,
+        //                payoutError = ex.Message
+        //            });
+        //        }
+        //    }
+
         [HttpPut("save-store-orders_verification")]
         public async Task<IActionResult> SaveVerification(
     int storeOrderId, [FromBody] SaveHubVerificationDto dto)
@@ -91,10 +133,19 @@ namespace mytown.Controllers
             if (!dto.TransporterVerified)
                 return Ok(result.Data);
 
+            bool isOriginHub = result.Data!.LegNumber == 0;
+
+            // a middle hub that is not verified yet has nothing to pay
+            if (!isOriginHub && result.Data.HubStatus == "New")
+                return Ok(result.Data);
+
             // 3. Package verified: trigger payout
             try
             {
-                var payoutResult = await _storePayoutService.CreatePayoutAsync(storeOrderId);
+                // origin hub = business payout (as today); middle hub = transporter payout
+                var payoutResult = isOriginHub
+                    ? await _storePayoutService.CreatePayoutAsync(storeOrderId)
+                    : await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
 
                 return Ok(new
                 {
@@ -114,7 +165,6 @@ namespace mytown.Controllers
                 });
             }
         }
-
         // GET: api/hub/sender-orders/12/verification
         [HttpGet("get-sender-orders-verified")]
         public async Task<IActionResult> GetSenderVerification(int senderOrderId)
@@ -202,6 +252,56 @@ namespace mytown.Controllers
 
         // POST: api/hub/send-pckrdy-transporter-email
 
+        //    [HttpPost("send-pckrdy-transporter-email")]
+        //    public async Task<IActionResult> SendTransporterEmail(
+        //[FromQuery] string? transporteremail,
+        //[FromQuery] string? transportername,
+        //[FromQuery] string? packagedimensions,
+        //[FromQuery] int transporterRegId,
+        //[FromQuery] int storeOrderId,
+        //[FromBody] HubLoginDto dto)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(transporteremail))
+        //            return BadRequest(new { message = "Transporter email is required." });
+        //        if (transporterRegId <= 0 || storeOrderId <= 0)
+        //            return BadRequest(new { message = "transporterRegId and storeOrderId are required." });
+
+        //        try
+        //        {
+        //            await _emailService.SendTransporterHubEmailAsync(
+        //                transporteremail,
+        //                string.IsNullOrWhiteSpace(transportername) ? "Transporter" : transportername,
+        //                packagedimensions ?? string.Empty,
+        //                dto);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            _logger.LogError(ex, "Failed to send package-ready email to transporter {Email}", transporteremail);
+        //            return StatusCode(500, new { message = "Failed to send email to transporter." });
+        //        }
+
+        //        // Email succeeded. A notification failure should not fail the request.
+        //        try
+        //        {
+        //            var transporterNotification = new TransporterDBNotifications
+        //            {
+        //                TransporterRegId = transporterRegId,
+        //                Title = "Package Ready at Hub",
+        //                Message = $"Order #{storeOrderId} package has reached the hub and is ready for pickup."
+        //            };
+
+        //            await _service.AddTransporterNotificationAsync(transporterNotification);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            _logger.LogError(ex, "Email sent but notification failed for transporter {Id}, store order {storeOrderId}",
+        //                transporterRegId, storeOrderId);
+        //            return Ok(new { message = "Email sent to transporter. Notification could not be saved." });
+        //        }
+
+        //        return Ok(new { message = "Email sent and notification added for transporter." });
+        //    }
+
         [HttpPost("send-pckrdy-transporter-email")]
         public async Task<IActionResult> SendTransporterEmail(
     [FromQuery] string? transporteremail,
@@ -211,6 +311,22 @@ namespace mytown.Controllers
     [FromQuery] int storeOrderId,
     [FromBody] HubLoginDto dto)
         {
+            // ✅ NEW: with several transporters, the recipient is the transporter who picks up from THIS hub
+            try
+            {
+                var pickup = await _service.GetPickupTransporterAsync(storeOrderId, dto.Pin);
+                if (pickup != null)
+                {
+                    transporterRegId = pickup.TransporterRegId;
+                    transportername = pickup.Name;
+                    transporteremail = pickup.Email;
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
             if (string.IsNullOrWhiteSpace(transporteremail))
                 return BadRequest(new { message = "Transporter email is required." });
             if (transporterRegId <= 0 || storeOrderId <= 0)
@@ -237,7 +353,8 @@ namespace mytown.Controllers
                 {
                     TransporterRegId = transporterRegId,
                     Title = "Package Ready at Hub",
-                    Message = $"Order #{storeOrderId} package has reached the hub and is ready for pickup."
+                    // ✅ changed: includes the hub name, so transporter 2 knows which hub
+                    Message = $"Order #{storeOrderId} package has reached {dto.HubName} and is ready for pickup."
                 };
 
                 await _service.AddTransporterNotificationAsync(transporterNotification);
