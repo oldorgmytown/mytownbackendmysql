@@ -68,7 +68,8 @@ namespace mytown.DataAccess.Repositories
                 hubPin = hubPin.Trim();
             }
 
-            var rows = await (
+            // ── A. ORIGIN HUB rows (as today) ──
+            var originRows = await(
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
                 join o in _context.Orders on so.OrderId equals o.OrderId
@@ -80,10 +81,10 @@ namespace mytown.DataAccess.Repositories
                 from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.TransporterRegId != null
-                && o.OrderStatus == "Paid"
-                      && (hubPin == null || b.PostalCode == hubPin)
-                      && (!year.HasValue || o.OrderDate.Year == year.Value)
-                      && (!month.HasValue || o.OrderDate.Month == month.Value)
+                   && o.OrderStatus == "Paid"
+                   && (hubPin == null || b.PostalCode == hubPin)
+                   && (!year.HasValue || o.OrderDate.Year == year.Value)
+                   && (!month.HasValue || o.OrderDate.Month == month.Value)
                 orderby so.StoreOrderId descending
                 select new
                 {
@@ -100,35 +101,177 @@ namespace mytown.DataAccess.Repositories
                     b.Town,
                     b.BusinessCity,
 
+                    // ✅ changed: the origin hub's own verification row (LegNumber 0)
                     HubStatusDb = _context.HubStoreOrderVerifications
-                        .Where(v => v.StoreOrderId == so.StoreOrderId)
+                        .Where(v => v.StoreOrderId == so.StoreOrderId && v.LegNumber == 0)
                         .Select(v => v.HubStatus)
                         .FirstOrDefault()
                 }
             ).AsNoTracking().ToListAsync();
 
-            return rows.Select(r => new HubStoreOrderListDto
+            // ── B. MIDDLE HUB rows (✅ NEW): a non-final leg that ends at this hub ──
+            var middleRows = await(
+                from l in _context.OrderTransportLegs
+                join so in _context.StoreOrders on l.StoreOrderId equals so.StoreOrderId
+                join o in _context.Orders on so.OrderId equals o.OrderId
+                join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+                join t in _context.TransporterRegisters on l.TransporterRegId equals t.TransporterRegId
+
+                where !l.IsFinalLeg
+                   && o.OrderStatus == "Paid"
+                   && (hubPin == null || l.ToPin == hubPin)
+                   && (!year.HasValue || o.OrderDate.Year == year.Value)
+                   && (!month.HasValue || o.OrderDate.Month == month.Value)
+                orderby so.StoreOrderId descending
+                select new
+                {
+                    so.StoreOrderId,
+                    so.OrderId,
+                    OrderDate = o.OrderDate,
+                    so.Storeorder_Status,
+                    t.TransporterRegId,               // the transporter delivering to THIS hub
+                    t.TransporterName,
+                    PickupDate = (DateTime?)l.PlannedStart,
+                    EstimatedDeliveryDate = (DateTime?)l.PlannedArrival,
+                    StoreId = b.BusRegId,
+                    b.BusinessName,
+                    b.Town,
+                    b.BusinessCity,
+                    LegNumber = l.LegNumber,
+                    LegStatus = l.LegStatus,
+
+                    HubStatusDb = _context.HubStoreOrderVerifications
+                        .Where(v => v.StoreOrderId == so.StoreOrderId && v.LegNumber == l.LegNumber)
+                        .Select(v => v.HubStatus)
+                        .FirstOrDefault()
+                }
+            ).AsNoTracking().ToListAsync();
+
+            string MapStatus(string? s) =>
+                s == "Pending" ? "New" :
+                s == "Delivered" ? "Completed" :
+                "In Progress";
+
+            var originDtos = originRows.Select(r => new HubStoreOrderListDto
             {
                 StoreOrderId = r.StoreOrderId,
                 OrderId = r.OrderId,
                 OrderDate = r.OrderDate,
-                OrderStatus =
-                    r.Storeorder_Status == "Pending" ? "New" :
-                    r.Storeorder_Status == "Delivered" ? "Completed" :
-                    "In Progress",
-
+                OrderStatus = MapStatus(r.Storeorder_Status),
                 TransporterRegId = r.TransporterRegId,
                 TransporterName = r.TransporterName,
                 PickupDate = r.PickupDate,
                 EstimatedDeliveryDate = r.EstimatedDeliveryDate,
-
                 StoreId = r.StoreId,
                 StoreName = r.BusinessName,
                 StoreLocation = r.Town + ", " + r.BusinessCity,
+                HubStatus = r.HubStatusDb ?? "New",
+                LegNumber = 0,
+                LegStatus = null
+            });
 
-                HubStatus = r.HubStatusDb ?? "New"
-            }).ToList();
+            var middleDtos = middleRows.Select(r => new HubStoreOrderListDto
+            {
+                StoreOrderId = r.StoreOrderId,
+                OrderId = r.OrderId,
+                OrderDate = r.OrderDate,
+                OrderStatus = MapStatus(r.Storeorder_Status),
+                TransporterRegId = r.TransporterRegId,
+                TransporterName = r.TransporterName,
+                PickupDate = r.PickupDate,
+                EstimatedDeliveryDate = r.EstimatedDeliveryDate,
+                StoreId = r.StoreId,
+                StoreName = r.BusinessName,
+                StoreLocation = r.Town + ", " + r.BusinessCity,
+                HubStatus = r.HubStatusDb ?? "New",
+                LegNumber = r.LegNumber,
+                LegStatus = r.LegStatus
+            });
+
+            return originDtos.Concat(middleDtos)
+                .OrderByDescending(x => x.StoreOrderId)
+                .ThenBy(x => x.LegNumber)
+                .ToList();
         }
+
+
+        //public async Task<List<HubStoreOrderListDto>> GetTransporterStoreOrdersAsync(int? hubId, int? month, int? year)
+        //{
+        //    string? hubPin = null;
+        //    if (hubId.HasValue)
+        //    {
+        //        hubPin = await _context.HubDetails
+        //            .Where(h => h.HubId == hubId.Value)
+        //            .Select(h => h.Pin)
+        //            .FirstOrDefaultAsync();
+
+        //        if (string.IsNullOrWhiteSpace(hubPin))
+        //            return new List<HubStoreOrderListDto>();
+
+        //        hubPin = hubPin.Trim();
+        //    }
+
+        //    var rows = await (
+        //        from sd in _context.ShippingDetails
+        //        join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+        //        join o in _context.Orders on so.OrderId equals o.OrderId
+        //        join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+        //        join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
+
+        //        join tp in _context.TransporterTravelPlans
+        //            on sd.TransporterPlanId equals tp.PlanId into tpGroup
+        //        from tp in tpGroup.DefaultIfEmpty()
+
+        //        where sd.TransporterRegId != null
+        //        && o.OrderStatus == "Paid"
+        //              && (hubPin == null || b.PostalCode == hubPin)
+        //              && (!year.HasValue || o.OrderDate.Year == year.Value)
+        //              && (!month.HasValue || o.OrderDate.Month == month.Value)
+        //        orderby so.StoreOrderId descending
+        //        select new
+        //        {
+        //            so.StoreOrderId,
+        //            so.OrderId,
+        //            OrderDate = o.OrderDate,
+        //            so.Storeorder_Status,
+        //            t.TransporterRegId,
+        //            t.TransporterName,
+        //            PickupDate = tp != null ? tp.StartDate : (DateTime?)null,
+        //            EstimatedDeliveryDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+        //            StoreId = b.BusRegId,
+        //            b.BusinessName,
+        //            b.Town,
+        //            b.BusinessCity,
+
+        //            HubStatusDb = _context.HubStoreOrderVerifications
+        //                .Where(v => v.StoreOrderId == so.StoreOrderId)
+        //                .Select(v => v.HubStatus)
+        //                .FirstOrDefault()
+        //        }
+        //    ).AsNoTracking().ToListAsync();
+
+        //    return rows.Select(r => new HubStoreOrderListDto
+        //    {
+        //        StoreOrderId = r.StoreOrderId,
+        //        OrderId = r.OrderId,
+        //        OrderDate = r.OrderDate,
+        //        OrderStatus =
+        //            r.Storeorder_Status == "Pending" ? "New" :
+        //            r.Storeorder_Status == "Delivered" ? "Completed" :
+        //            "In Progress",
+
+        //        TransporterRegId = r.TransporterRegId,
+        //        TransporterName = r.TransporterName,
+        //        PickupDate = r.PickupDate,
+        //        EstimatedDeliveryDate = r.EstimatedDeliveryDate,
+
+        //        StoreId = r.StoreId,
+        //        StoreName = r.BusinessName,
+        //        StoreLocation = r.Town + ", " + r.BusinessCity,
+
+        //        HubStatus = r.HubStatusDb ?? "New"
+        //    }).ToList();
+        //}
 
         public async Task<List<HubSenderOrderListDto>> GetTransporterSenderOrdersAsync(int? hubId, int? month, int? year)
         {
@@ -239,14 +382,41 @@ namespace mytown.DataAccess.Repositories
             PackageHandedOver = v.PackageHandedOver,
             Remarks = v.Remarks,
             UpdatedAt = v.UpdatedAt,
-            HubStatus = v.HubStatus          // read from the column
+            HubStatus = v.HubStatus,
+            LegNumber = v.LegNumber
         };
 
+
         public async Task<HubStoreVerificationDto> SaveVerificationAsync(
-            int storeOrderId, SaveHubVerificationDto dto)
+      int storeOrderId, SaveHubVerificationDto dto)
         {
+            // which hub is this? 0 = origin hub, 1 or 2 = hub at the end of leg 1 or 2
+            var legs = await _context.OrderTransportLegs
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
+
+            var targetLeg = legs.LastOrDefault(l => !l.IsFinalLeg && l.LegStatus == "Delivered");
+            int stage = targetLeg?.LegNumber ?? 0;
+
+            // ✅ NEW: with several transporters, only the hub where the package really is may verify it.
+            // stage 0 = the store's hub (leg 1 starts there), stage k = the hub where leg k ended.
+            if (legs.Count > 1)
+            {
+                string expectedPin = stage == 0 ? legs.First().FromPin : targetLeg!.ToPin;
+
+                var thisHubPin = await _context.HubDetails
+                    .Where(h => h.HubId == dto.HubId)
+                    .Select(h => h.Pin)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrWhiteSpace(thisHubPin) || thisHubPin.Trim() != expectedPin.Trim())
+                    throw new InvalidOperationException("This package is not at your hub yet.");
+            }
+
+            // one verification row per hub (store order + stage)
             var v = await _context.HubStoreOrderVerifications
-                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId && x.LegNumber == stage);
 
             if (v == null)
             {
@@ -254,6 +424,7 @@ namespace mytown.DataAccess.Repositories
                 {
                     StoreOrderId = storeOrderId,
                     HubId = dto.HubId,
+                    LegNumber = stage,
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.HubStoreOrderVerifications.Add(v);
@@ -269,19 +440,71 @@ namespace mytown.DataAccess.Repositories
             v.HubStatus = GetHubStatus(v);       // stored in hub_status
             v.UpdatedAt = DateTime.UtcNow;
 
-            var shipping = await _context.ShippingDetails
-        .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
-
-            if (shipping != null && v.HubStatus != "New")
+            if (stage == 0)
             {
-                shipping.ShippingStatus = v.HubStatus;   // "Package Reached Hub" / "Handed Over"
-            }
+                // ORIGIN hub: exactly as today (the first transporter's checks read this status)
+                var shipping = await _context.ShippingDetails
+                    .FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
 
-            
+                if (shipping != null && v.HubStatus != "New")
+                {
+                    shipping.ShippingStatus = v.HubStatus;   // "Package Reached Hub" / "Handed Over"
+                }
+            }
+            else
+            {
+                // MIDDLE hub: shipping_details is NOT touched. The leg row records it.
+                targetLeg!.HubStatus = v.HubStatus switch
+                {
+                    "Package Reached Hub" => "Reached hub",
+                    "Handed Over" => "Handed over",
+                    _ => targetLeg.HubStatus
+                };
+            }
 
             await _context.SaveChangesAsync();
             return ToDto(v);
         }
+        //public async Task<HubStoreVerificationDto> SaveVerificationAsync(
+        //    int storeOrderId, SaveHubVerificationDto dto)
+        //{
+        //    var v = await _context.HubStoreOrderVerifications
+        //        .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+        //    if (v == null)
+        //    {
+        //        v = new HubStoreOrderVerification
+        //        {
+        //            StoreOrderId = storeOrderId,
+        //            HubId = dto.HubId,
+        //            CreatedAt = DateTime.UtcNow
+        //        };
+        //        _context.HubStoreOrderVerifications.Add(v);
+        //    }
+
+        //    v.PackageVerified = dto.PackageVerified;
+        //    v.SecurityCheck = dto.SecurityCheck;
+        //    v.TravelPlanVerified = dto.TravelPlanVerified;
+        //    v.TransporterVerified = dto.TransporterVerified;
+        //    v.PackageHandedOver = dto.PackageHandedOver;
+        //    v.Remarks = dto.Remarks;
+
+        //    v.HubStatus = GetHubStatus(v);       // stored in hub_status
+        //    v.UpdatedAt = DateTime.UtcNow;
+
+        //    var shipping = await _context.ShippingDetails
+        //.FirstOrDefaultAsync(s => s.StoreOrderId == storeOrderId);
+
+        //    if (shipping != null && v.HubStatus != "New")
+        //    {
+        //        shipping.ShippingStatus = v.HubStatus;   // "Package Reached Hub" / "Handed Over"
+        //    }
+
+
+
+        //    await _context.SaveChangesAsync();
+        //    return ToDto(v);
+        //}
 
         // ---------------- SENDER ORDER VERIFICATION ----------------
         public Task<bool> SenderOrderExistsAsync(int senderOrderId)
@@ -754,6 +977,29 @@ namespace mytown.DataAccess.Repositories
                 ReachedHub = rows.Count(x => x.HubStatus == "Package Reached Hub"),
                 HandedOver = rows.Count(x => x.HubStatus == "Handed Over")
             };
+        }
+
+        public async Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId)
+        {
+            return await _context.OrderTransportLegs
+                .AsNoTracking()
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
+        }
+
+        public async Task<TransporterContactDto?> GetTransporterContactAsync(int transporterRegId)
+        {
+            return await _context.TransporterRegisters
+                .AsNoTracking()
+                .Where(t => t.TransporterRegId == transporterRegId)
+                .Select(t => new TransporterContactDto
+                {
+                    TransporterRegId = t.TransporterRegId,
+                    Name = t.TransporterName,
+                    Email = t.Email                       // <-- your email column name
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }

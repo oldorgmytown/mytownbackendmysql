@@ -28,5 +28,7 @@ namespace mytown.Services.Interfaces
         Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int? hubId);
         Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int? hubId);
         // Task<(bool Success, string? Error)> SendTransporterHubEmailAsync(string transporteremail, string trasnporteremail, string packagedimensions, [FromBody] HubLoginDto dto);
+
+        Task<TransporterContactDto?> GetPickupTransporterAsync(int storeOrderId, string? hubPin);
     }
 }

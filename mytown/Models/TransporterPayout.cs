@@ -68,5 +68,8 @@ namespace mytown.Models
 
         [Column("updated_date")]
         public DateTime? UpdatedDate { get; set; }
+
+        [Column("order_transport_leg_id")]
+        public int? OrderTransportLegId { get; set; }
     }
 }

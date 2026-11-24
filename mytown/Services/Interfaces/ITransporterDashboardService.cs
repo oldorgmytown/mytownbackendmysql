@@ -50,7 +50,9 @@ namespace mytown.Services.Interfaces
 
         //package delivered
 
-        Task<string> MarkAsDeliveredAsync(int storeOrderId);
+     //   Task<string> MarkAsDeliveredAsync(int storeOrderId);
+
+        Task<(string Message, bool IsFinalDelivery)> MarkAsDeliveredAsync(int storeOrderId); 
 
         // sender ordres
         Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId);
@@ -74,6 +76,8 @@ namespace mytown.Services.Interfaces
 
         Task AddTransporterNotificationAsync(
    TransporterDBNotifications notification);
+
+        Task<TransporterContactDto?> GetPickupTransporterAsync(int storeOrderId, string? hubPin);
 
 
     }

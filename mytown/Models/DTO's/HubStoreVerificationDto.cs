@@ -13,5 +13,7 @@
         public string? Remarks { get; set; }
         public string HubStatus { get; set; }      // New Intake / Handed Over
         public DateTime UpdatedAt { get; set; }
+
+        public int LegNumber { get; set; }
     }
 }

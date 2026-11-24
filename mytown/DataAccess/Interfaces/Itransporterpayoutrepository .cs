@@ -7,4 +7,8 @@ public interface ITransporterPayoutRepository
     Task<TransporterPayout?> GetPayoutByStoreOrderIdAsync(int storeOrderId);
     Task AddPayoutAsync(TransporterPayout payout);
     Task SaveAsync();
+
+     Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId);
+     Task<TransporterPayout?> GetPayoutByLegIdAsync(int orderTransportLegId);
+     Task<string?> GetBeneficiaryIdAsync(int transporterRegId);
 }

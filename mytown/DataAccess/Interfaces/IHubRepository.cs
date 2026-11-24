@@ -1,4 +1,5 @@
-﻿using mytown.Models.DTO_s;
+﻿using mytown.Models;
+using mytown.Models.DTO_s;
 
 namespace mytown.DataAccess.Interfaces
 {
@@ -24,5 +25,12 @@ namespace mytown.DataAccess.Interfaces
         //summary counts
         Task<HubMonthlyCountsDto> GetStoreOrderCountsAsync(int month, int year, int? hubId);
         Task<HubMonthlyCountsDto> GetSenderOrderCountsAsync(int month, int year, int? hubId);
+
+      
+
+            // for the package-ready email: next transporter picks up from this hub
+            Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId);
+            Task<TransporterContactDto?> GetTransporterContactAsync(int transporterRegId);
+        
     }
 }

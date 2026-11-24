@@ -57,5 +57,7 @@ namespace mytown.DataAccess.Interfaces
         Task UpdateOrderStatusAsync(int orderId, string status);
 
         Task AddTransporterNotificationAsync(TransporterDBNotifications notification);
+
+        Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId);
     }
 }

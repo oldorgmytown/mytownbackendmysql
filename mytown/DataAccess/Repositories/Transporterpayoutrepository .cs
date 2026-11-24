@@ -50,4 +50,27 @@ public class TransporterPayoutRepository : ITransporterPayoutRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId)
+    {
+        // tracked on purpose: the service sets IsPaid and PaidAt on these rows
+        return await _context.OrderTransportLegs
+            .Where(l => l.StoreOrderId == storeOrderId)
+            .OrderBy(l => l.LegNumber)
+            .ToListAsync();
+    }
+
+    public async Task<TransporterPayout?> GetPayoutByLegIdAsync(int orderTransportLegId)
+    {
+        return await _context.TransporterPayouts
+            .FirstOrDefaultAsync(x => x.OrderTransportLegId == orderTransportLegId);
+    }
+
+    public async Task<string?> GetBeneficiaryIdAsync(int transporterRegId)
+    {
+        return await _context.TransporterAccountDetails
+            .Where(a => a.TransporterRegId == transporterRegId)
+            .Select(a => a.CashfreeBeneficiaryId)
+            .FirstOrDefaultAsync();
+    }
 }

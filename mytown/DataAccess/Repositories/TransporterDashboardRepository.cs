@@ -479,6 +479,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             return result;
         }
 
+
+
         //// -------------------------------------------------------------------------
         //// UPDATE DELIVERY STATUS — Assigned → ReachedPickup → PickedUp → InTransit → Delivered
         //// -------------------------------------------------------------------------
@@ -515,9 +517,9 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         //    switch (dto.NewStatus)
         //    {
         //        case "ReachedPickup": delivery.ReachedPickupAt = DateTime.UtcNow; break;
-        //        case "PickedUp":      delivery.PickedUpAt      = DateTime.UtcNow; break;
-        //        case "InTransit":     delivery.InTransitAt     = DateTime.UtcNow; break;
-        //        case "Delivered":     delivery.DeliveredAt     = DateTime.UtcNow; break;
+        //        case "PickedUp": delivery.PickedUpAt = DateTime.UtcNow; break;
+        //        case "InTransit": delivery.InTransitAt = DateTime.UtcNow; break;
+        //        case "Delivered": delivery.DeliveredAt = DateTime.UtcNow; break;
         //    }
 
         //    // ── SYNC ShippingDetails so shopper sees updated status ──
@@ -621,6 +623,11 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
         // -------------------------------------------------------------------------
         // UPDATE DELIVERY STATUS — Assigned → ReachedPickup → PickedUp → InTransit → Delivered
+        // Now leg aware. For a multi-transporter shipment, shipping_details is NOT touched
+        // during the middle legs: it is updated only when the FINAL leg is Delivered.
+        // Every other status is kept on the leg rows (order_transport_legs).
+        // Single transporter orders (and old orders with no leg row) behave exactly as before.
+        // Changes are marked  ✅ NEW.
         // -------------------------------------------------------------------------
         public async Task<bool> UpdateDeliveryStatusAsync(UpdateDeliveryStatusDto dto)
         {
@@ -638,16 +645,48 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             // Enforce forward-only transitions
             var validTransitions = new Dictionary<string, string>
-            {
-                { "Assigned",      "ReachedPickup" },
-                { "ReachedPickup", "PickedUp"       },
-                { "PickedUp",      "InTransit"      },
-                { "InTransit",     "Delivered"      }
-            };
+     {
+         { "Assigned",      "ReachedPickup" },
+         { "ReachedPickup", "PickedUp"       },
+         { "PickedUp",      "InTransit"      },
+         { "InTransit",     "Delivered"      }
+     };
 
             if (!validTransitions.TryGetValue(delivery.DeliveryStatus, out var expected)
                 || expected != dto.NewStatus)
                 return false;
+
+            // ✅ NEW (S1) ------------------------------------------------------------
+            // Find this transporter's leg. A transporter is used once per chain, so
+            // StoreOrderId + TransporterRegId is enough. null = old single transporter order.
+            OrderTransportLeg? leg = null;
+            if (delivery.StoreOrderId.HasValue)
+            {
+                leg = await _context.OrderTransportLegs.FirstOrDefaultAsync(l =>
+                    l.StoreOrderId == delivery.StoreOrderId.Value &&
+                    l.TransporterRegId == delivery.TransporterRegId);
+            }
+
+            bool isMiddleLeg = leg != null && !leg.IsFinalLeg;     // delivers to a hub, not to the shopper
+
+            // true when the shipment has more than one transporter (leg 1 of a chain is never final)
+            bool isMultiLeg = leg != null && (!leg.IsFinalLeg || leg.LegNumber > 1);
+
+            // 2nd and 3rd transporter can start only after the previous one delivered to the hub and the hub verified it
+            if (leg != null && leg.LegNumber > 1 &&
+                (dto.NewStatus == "ReachedPickup" || dto.NewStatus == "PickedUp"))
+            {
+                var previousLeg = await _context.OrderTransportLegs.FirstOrDefaultAsync(l =>
+                    l.ShippingDetailId == leg.ShippingDetailId &&
+                    l.LegNumber == leg.LegNumber - 1);
+
+                // previous transporter must have delivered AND the hub must have verified the package
+                if (previousLeg == null || previousLeg.LegStatus != "Delivered" ||
+                    (previousLeg.HubStatus != "Reached hub" && previousLeg.HubStatus != "Handed over"))
+                    throw new InvalidOperationException(
+                        "The hub has not verified the previous transporter's delivery yet.");
+            }
+            // ✅ END NEW -------------------------------------------------------------
 
             delivery.DeliveryStatus = dto.NewStatus;
 
@@ -660,6 +699,21 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                 case "Delivered": delivery.DeliveredAt = DateTime.UtcNow; break;
             }
 
+            // ✅ NEW (S2) ------------------------------------------------------------
+            // Keep the leg row in step with the delivery request
+            if (leg != null)
+            {
+                leg.LegStatus = dto.NewStatus;
+
+                if (dto.NewStatus == "Delivered")
+                {
+                    leg.DeliveredAt = DateTime.UtcNow;
+                    // For a middle leg the HUB sets leg.HubStatus = "Reached hub" when it verifies the
+                    // package. That verification (not this update) is what makes the leg payable.
+                }
+            }
+            // ✅ END NEW -------------------------------------------------------------
+
             // ── SYNC ShippingDetails so shopper sees updated status ──
             if (delivery.StoreOrderId.HasValue)
             {
@@ -671,7 +725,13 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
                     var current = shipping.ShippingStatus;
 
-                    if (dto.NewStatus == "ReachedPickup" &&
+                    // ✅ changed: the hub checks read ShippingStatus, which only the origin hub flow sets.
+                    // So they apply to single transporter orders and to the FIRST leg only.
+                    // Later legs are checked against the previous leg above.
+                    bool checkAgainstShipping = leg == null || leg.LegNumber == 1;
+
+                    if (checkAgainstShipping &&
+                        dto.NewStatus == "ReachedPickup" &&
                         current != "Package Reached Hub" &&
                         current != "Handed Over")
                     {
@@ -679,7 +739,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                             "You can mark reached pickup only after the package has reached the hub.");
                     }
 
-                    if (dto.NewStatus == "PickedUp" &&
+                    if (checkAgainstShipping &&
+                        dto.NewStatus == "PickedUp" &&
                         current != "Handed Over" &&
                         current != "ReachedPickup")
                     {
@@ -687,24 +748,36 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
                             "You can mark the package as picked up only after the hub has handed it over or the transporter has reached pickup.");
                     }
 
-                    shipping.ShippingStatus = dto.NewStatus switch
+                    // ✅ NEW (S3) --------------------------------------------------------
+                    // Multi transporter shipment: write to shipping_details ONLY when the final leg is Delivered.
+                    // Single transporter shipment: write on every status, as today.
+                    bool writeShipping = !isMultiLeg ||
+                                         (leg!.IsFinalLeg && dto.NewStatus == "Delivered");
+
+                    if (writeShipping)
                     {
-                        "ReachedPickup" => "ReachedPickup",
-                        "PickedUp" => "PickedUp",
-                        "InTransit" => "InTransit",
-                        "Delivered" => "Delivered",
-                        _ => shipping.ShippingStatus
-                    };
+                        shipping.ShippingStatus = dto.NewStatus switch
+                        {
+                            "ReachedPickup" => "ReachedPickup",
+                            "PickedUp" => "PickedUp",
+                            "InTransit" => "InTransit",
+                            "Delivered" => "Delivered",
+                            _ => shipping.ShippingStatus
+                        };
+                    }
+                    // ✅ END NEW ---------------------------------------------------------
 
                     // Generate tracking ID when transporter picks up the parcel
+                    // (✅ changed: for a chain, only on the FIRST transporter's pickup)
                     if (dto.NewStatus == "PickedUp" &&
+                        (leg == null || leg.LegNumber == 1) &&
                         string.IsNullOrEmpty(shipping.TrackingId))
                     {
                         shipping.TrackingId = GenerateTrackingId(shipping.StoreOrderId);
                     }
 
-                    // Mark delivery completion date
-                    if (dto.NewStatus == "Delivered")
+                    // Mark delivery completion date (final delivery only)
+                    if (dto.NewStatus == "Delivered" && writeShipping)      // ✅ changed
                     {
                         shipping.DeliveredDate = DateTime.UtcNow;
 
@@ -715,11 +788,16 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             // ── NOTIFY SHOPPER ONLY FOR REGISTERED SHOPPERS , Not for guest ──
             if (!delivery.IsGuestOrder && delivery.ShopperRegId.HasValue)
             {
+                // ✅ changed: different wording when the package only reached a hub
+                string shopperMessage = (isMiddleLeg && dto.NewStatus == "Delivered")
+                    ? $"Your delivery ({delivery.DeliveryCode}) reached the transfer hub and is being verified."
+                    : $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.";
+
                 _context.ShopperDBNotifications.Add(new ShopperDBNotifications
                 {
                     ShopperRegId = delivery.ShopperRegId.Value,
                     Title = "Delivery Update",
-                    Message = $"Your delivery ({delivery.DeliveryCode}) status is now: {dto.NewStatus}.",
+                    Message = shopperMessage,
                     IsRead = false,
                     CreatedDate = DateTime.UtcNow
                 });
@@ -737,9 +815,10 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
 
             await _context.SaveChangesAsync();
 
-            // send tracking id email to guests only
+            // send tracking id email to guests only (✅ changed: only for the first transporter's pickup)
             if (dto.NewStatus == "PickedUp" &&
-              delivery.OrderId.HasValue)
+              delivery.OrderId.HasValue &&
+              (leg == null || leg.LegNumber == 1))
             {
                 var orderConfirmation =
                     await _orderRepository.GetOrderConfirmationAsync(delivery.OrderId.Value);
@@ -1006,7 +1085,8 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
         }
 
         // mark delivered status
-        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+
+        public async Task<(string Message, bool IsFinalDelivery)> MarkAsDeliveredAsync(int storeOrderId)
         {
             var shipping = await _context.ShippingDetails
                 .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
@@ -1014,20 +1094,77 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             if (shipping == null)
                 throw new Exception("Shipping record not found");
 
-            // No file upload
+            var legs = await _context.OrderTransportLegs
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
 
-            // Update status
-            shipping.ShippingStatus = "Delivered";
-            shipping.DeliveredDate = DateTime.UtcNow;
+            // ── OLD ORDER, no legs: exactly as before ──
+            if (legs.Count == 0)
+            {
+                shipping.ShippingStatus = "Delivered";
+                shipping.DeliveredDate = DateTime.UtcNow;
 
+                await _context.SaveChangesAsync();
+                return ("Delivery marked as completed", true);
+            }
+
+            // ── ORDER WITH LEGS ──
+            // the leg being delivered now = first leg that is not Delivered yet
+            var currentLeg = legs.FirstOrDefault(l => l.LegStatus != "Delivered");
+
+            if (currentLeg == null)
+                throw new Exception("All transporters have already delivered this package.");
+
+            // 2nd and 3rd transporter: the hub must have verified the previous leg first
+            if (currentLeg.LegNumber > 1)
+            {
+                var previousLeg = legs.First(l => l.LegNumber == currentLeg.LegNumber - 1);
+
+                if (previousLeg.HubStatus != "Reached hub" && previousLeg.HubStatus != "Handed over")
+                    throw new Exception("The hub has not verified the previous transporter's delivery yet.");
+            }
+
+            // update the leg row
+            currentLeg.LegStatus = "Delivered";
+            currentLeg.DeliveredAt = DateTime.UtcNow;
+
+            if (currentLeg.IsFinalLeg)
+            {
+                // FINAL leg: only now is shipping_details updated
+                shipping.ShippingStatus = "Delivered";
+                shipping.DeliveredDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return ("Delivery marked as completed", true);
+            }
+
+            // MIDDLE leg: shipping_details is NOT touched. The hub verifies it next.
             await _context.SaveChangesAsync();
-
-            // Trigger transporter payout
-           
-
-            return "Delivery marked as completed";
-
+            return ("Delivered to the hub. Waiting for hub verification.", false);
         }
+        //public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        //{
+        //    var shipping = await _context.ShippingDetails
+        //        .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+        //    if (shipping == null)
+        //        throw new Exception("Shipping record not found");
+
+        //    // No file upload
+
+        //    // Update status
+        //    shipping.ShippingStatus = "Delivered";
+        //    shipping.DeliveredDate = DateTime.UtcNow;
+
+        //    await _context.SaveChangesAsync();
+
+        //    // Trigger transporter payout
+
+
+        //    return "Delivery marked as completed";
+
+        //}
 
         // sender orders Repository
         public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
@@ -1218,6 +1355,29 @@ public async Task<TravelPlanDto> SaveTravelPlanAsync(TravelPlanDto dto)
             )
             .OrderByDescending(x => x.CreatedDate)
             .ToListAsync();
+        }
+
+        public async Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId)
+        {
+            return await _context.OrderTransportLegs
+                .AsNoTracking()
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
+        }
+
+        public async Task<TransporterContactDto?> GetTransporterContactAsync(int transporterRegId)
+        {
+            return await _context.TransporterRegisters
+                .AsNoTracking()
+                .Where(t => t.TransporterRegId == transporterRegId)
+                .Select(t => new TransporterContactDto
+                {
+                    TransporterRegId = t.TransporterRegId,
+                    Name = t.TransporterName,
+                    Email = t.Email                // replace with your real email column name
+                })
+                .FirstOrDefaultAsync();
         }
     }
 }

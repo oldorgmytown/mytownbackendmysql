@@ -294,32 +294,68 @@ namespace mytown.Controllers
 
         // mark package as delivered
 
+        //[HttpPut("mark-delivered/{storeOrderId}")]
+        //public async Task<IActionResult> MarkAsDelivered(int storeOrderId)
+        //{
+        //    try
+        //    {
+        //        var result = await _service.MarkAsDeliveredAsync(storeOrderId);
+
+        //        try
+        //        {
+        //            var payoutResult = await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
+
+        //            if (!payoutResult.Success)
+        //            {
+        //                _logger.LogWarning(
+        //                    "Transporter payout failed for StoreOrderId {StoreOrderId}: {Message}",
+        //                    storeOrderId, payoutResult.Message);
+        //            }
+        //        }
+        //        catch (Exception payoutEx)
+        //        {
+        //            _logger.LogError(payoutEx,
+        //                "Transporter payout threw an exception for StoreOrderId {StoreOrderId}",
+        //                storeOrderId);
+        //        }
+
+        //        return Ok(new { message = result });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return BadRequest(new { error = ex.Message });
+        //    }
+        //}
+
         [HttpPut("mark-delivered/{storeOrderId}")]
         public async Task<IActionResult> MarkAsDelivered(int storeOrderId)
         {
             try
             {
-                var result = await _service.MarkAsDeliveredAsync(storeOrderId);
+                var (message, isFinalDelivery) = await _service.MarkAsDeliveredAsync(storeOrderId);
 
-                try
+                if (isFinalDelivery)
                 {
-                    var payoutResult = await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
-
-                    if (!payoutResult.Success)
+                    try
                     {
-                        _logger.LogWarning(
-                            "Transporter payout failed for StoreOrderId {StoreOrderId}: {Message}",
-                            storeOrderId, payoutResult.Message);
+                        var payoutResult = await _transporterPayoutService.CreatePayoutAsync(storeOrderId);
+
+                        if (!payoutResult.Success)
+                        {
+                            _logger.LogWarning(
+                                "Transporter payout failed for StoreOrderId {StoreOrderId}: {Message}",
+                                storeOrderId, payoutResult.Message);
+                        }
+                    }
+                    catch (Exception payoutEx)
+                    {
+                        _logger.LogError(payoutEx,
+                            "Transporter payout threw an exception for StoreOrderId {StoreOrderId}",
+                            storeOrderId);
                     }
                 }
-                catch (Exception payoutEx)
-                {
-                    _logger.LogError(payoutEx,
-                        "Transporter payout threw an exception for StoreOrderId {StoreOrderId}",
-                        storeOrderId);
-                }
 
-                return Ok(new { message = result });
+                return Ok(new { message });
             }
             catch (Exception ex)
             {

@@ -21,5 +21,8 @@ namespace mytown.Models.DTO_s
         [Column("remarks")] public string? Remarks { get; set; }
         [Column("created_at")] public DateTime CreatedAt { get; set; }
         [Column("updated_at")] public DateTime UpdatedAt { get; set; }
+
+        [Column("leg_number")]
+            public int LegNumber { get; set; }          // 0 = origin hub, 1 = hub after leg 1, 
     }
 }

@@ -254,5 +254,15 @@ namespace mytown.DataAccess.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<List<OrderTransportLeg>> GetLegsByStoreOrderIdAsync(int storeOrderId)
+        {
+            return await _context.OrderTransportLegs
+                .AsNoTracking()
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
+        }
+
     }
 }

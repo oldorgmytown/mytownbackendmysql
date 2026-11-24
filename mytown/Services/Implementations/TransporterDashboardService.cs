@@ -144,17 +144,40 @@ SearchAvailableTransportersAsync(
 
         // packaged marked as Delivered
 
-       
 
-        public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+
+        //public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        //{
+        //    return await _repo.MarkAsDeliveredAsync(storeOrderId);
+
+        //   //  return await _.CreateTransporterPayoutAsync(storeOrderId);
+
+
+        //}
+        public async Task<TransporterContactDto?> GetPickupTransporterAsync(int storeOrderId, string? hubPin)
         {
-            return await _repo.MarkAsDeliveredAsync(storeOrderId);
-           
-           //  return await _.CreateTransporterPayoutAsync(storeOrderId);
-            
+            var legs = await _repo.GetLegsByStoreOrderIdAsync(storeOrderId);
 
+            if (legs.Count == 0)
+                return null;                       // old order: use the values from the request
+
+            var lastDeliveredMiddle = legs.LastOrDefault(l => !l.IsFinalLeg && l.LegStatus == "Delivered");
+            int nextLegNumber = (lastDeliveredMiddle?.LegNumber ?? 0) + 1;
+
+            var nextLeg = legs.FirstOrDefault(l => l.LegNumber == nextLegNumber);
+            if (nextLeg == null)
+                throw new InvalidOperationException("No transporter is waiting to pick up this package.");
+
+            if (legs.Count > 1 &&
+                (string.IsNullOrWhiteSpace(hubPin) || nextLeg.FromPin.Trim() != hubPin.Trim()))
+                throw new InvalidOperationException("This package is not at your hub yet.");
+
+            var contact = await _repo.GetTransporterContactAsync(nextLeg.TransporterRegId);
+            if (contact == null)
+                throw new InvalidOperationException("Transporter not found.");
+
+            return contact;
         }
-
         // Service
         public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
         {
@@ -228,6 +251,11 @@ SearchAvailableTransportersAsync(
                 throw new ArgumentException("Title and message are required.", nameof(notification));
 
             await _repo.AddTransporterNotificationAsync(notification);
+        }
+
+        public async Task<(string Message, bool IsFinalDelivery)> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            return await _repo.MarkAsDeliveredAsync(storeOrderId);
         }
     }
 }
