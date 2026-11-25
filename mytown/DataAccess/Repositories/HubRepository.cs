@@ -118,10 +118,11 @@ namespace mytown.DataAccess.Repositories
                 join t in _context.TransporterRegisters on l.TransporterRegId equals t.TransporterRegId
 
                 where !l.IsFinalLeg
-                   && o.OrderStatus == "Paid"
-                   && (hubPin == null || l.ToPin == hubPin)
-                   && (!year.HasValue || o.OrderDate.Year == year.Value)
-                   && (!month.HasValue || o.OrderDate.Month == month.Value)
+      && l.LegStatus == "Delivered"          // ✅ NEW: show at the next hub only after the transporter delivered
+      && o.OrderStatus == "Paid"
+      && (hubPin == null || l.ToPin == hubPin)
+      && (!year.HasValue || o.OrderDate.Year == year.Value)
+      && (!month.HasValue || o.OrderDate.Month == month.Value)
                 orderby so.StoreOrderId descending
                 select new
                 {
