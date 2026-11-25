@@ -237,7 +237,7 @@ CreateExperience(
             }
         }
 
-                [HttpGet("chat-history")]
+        [HttpGet("chat-history")]
         public async Task<IActionResult> GetChatHistory(
             int userAId, UserType userAType,
             int userBId, UserType userBType)
@@ -252,7 +252,73 @@ CreateExperience(
                 .OrderBy(m => m.SentTime)
                 .ToListAsync();
 
-            return Ok(messages);
+            // opening the chat = read: mark messages sent TO userA by userB
+            var unread = messages.Where(m =>
+                m.ReceiverUserId == userAId && m.ReceiverType == userAType && !m.IsRead).ToList();
+            if (unread.Count > 0)
+            {
+                foreach (var m in unread) m.IsRead = true;
+                await _context.SaveChangesAsync();
+            }
+
+            // DateTime.SpecifyKind -> JSON gets a "Z", so the browser shows the correct local time
+            return Ok(messages.Select(m => new
+            {
+                m.ChatMessageId,
+                m.SenderUserId,
+                m.SenderType,
+                m.ReceiverUserId,
+                m.ReceiverType,
+                m.Message,
+                SentTime = DateTime.SpecifyKind(m.SentTime, DateTimeKind.Utc)
+            }));
+        }
+
+        [HttpPost("chat-mark-read")]
+        public async Task<IActionResult> MarkChatRead(
+            int userAId, UserType userAType,
+            int userBId, UserType userBType)
+        {
+            var rows = await _context.ChatMessages
+                .Where(m => m.ReceiverUserId == userAId && m.ReceiverType == userAType &&
+                            m.SenderUserId == userBId && m.SenderType == userBType &&
+                            !m.IsRead)
+                .ToListAsync();
+            foreach (var m in rows) m.IsRead = true;
+            if (rows.Count > 0) await _context.SaveChangesAsync();
+            return Ok();
+        }
+
+        [HttpGet("chat-unread")]
+        public async Task<IActionResult> GetChatUnread(int userId, UserType userType)
+        {
+            var groups = await _context.ChatMessages
+                .Where(m => m.ReceiverUserId == userId && m.ReceiverType == userType && !m.IsRead)
+                .GroupBy(m => new { m.SenderUserId, m.SenderType })
+                .Select(g => new { g.Key.SenderUserId, g.Key.SenderType, Count = g.Count() })
+                .ToListAsync();
+
+            var shopperIds = groups.Where(g => g.SenderType == UserType.Shopper)
+                                   .Select(g => g.SenderUserId).ToList();
+            var busIds = groups.Where(g => g.SenderType == UserType.Business)
+                               .Select(g => g.SenderUserId).ToList();
+
+            var shopperNames = await _context.ShopperRegisters
+                .Where(s => shopperIds.Contains(s.ShopperRegId))
+                .ToDictionaryAsync(s => s.ShopperRegId, s => s.Username);
+            var busNames = await _context.BusinessRegisters
+                .Where(b => busIds.Contains(b.BusRegId))
+                .ToDictionaryAsync(b => b.BusRegId, b => b.BusinessName);
+
+            return Ok(groups.Select(g => new
+            {
+                senderUserId = g.SenderUserId,
+                senderType = (int)g.SenderType,
+                senderName = g.SenderType == UserType.Shopper
+                    ? shopperNames.GetValueOrDefault(g.SenderUserId, "Shopper")
+                    : busNames.GetValueOrDefault(g.SenderUserId, "Store"),
+                count = g.Count
+            }));
         }
 
         [HttpGet("getcomments")]

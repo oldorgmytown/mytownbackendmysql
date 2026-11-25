@@ -15,5 +15,7 @@ namespace mytown.Models
         public string Message { get; set; } = string.Empty;
 
         public DateTime SentTime { get; set; }
+
+        public bool IsRead { get; set; }
     }
 }

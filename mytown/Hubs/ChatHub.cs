@@ -27,12 +27,7 @@ namespace mytown.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var user = _connectionManager.GetUser(Context.ConnectionId);
-
-            if (user != null)
-            {
-                _connectionManager.RemoveConnection(user.UserId, user.UserType);
-            }
+            _connectionManager.RemoveConnection(Context.ConnectionId);
 
             await base.OnDisconnectedAsync(exception);
         }
@@ -53,7 +48,7 @@ namespace mytown.Hubs
             // Don't bail out here anymore — save the message regardless of
             // whether the receiver is currently online. Only affects whether
             // we push it live via SignalR right now.
-            var receiverConnectionId = _connectionManager.GetConnection(receiverId, receiverType);
+            var receiverConnectionIds = _connectionManager.GetConnections(receiverId, receiverType);
 
             string senderName;
             string? senderPhoto = null;
@@ -72,7 +67,11 @@ namespace mytown.Hubs
             }
             else
             {
-                senderName = "Store";
+                senderName = await _context.BusinessRegisters
+                    .AsNoTracking()
+                    .Where(b => b.BusRegId == sender.UserId)
+                    .Select(b => b.BusinessName)
+                    .FirstOrDefaultAsync() ?? "Store";
             }
 
             var sentTime = DateTime.UtcNow;
@@ -103,9 +102,9 @@ namespace mytown.Hubs
             // Only push live if the receiver happens to be connected right now.
             // If not, the message is already saved — they'll see it via chat-history
             // next time they open the chat.
-            if (!string.IsNullOrEmpty(receiverConnectionId))
+            if (receiverConnectionIds.Count > 0)
             {
-                await Clients.Client(receiverConnectionId)
+                await Clients.Clients(receiverConnectionIds)
                     .SendAsync("ReceiveMessage", chatMessage);
             }
 

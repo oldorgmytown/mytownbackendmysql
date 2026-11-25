@@ -971,6 +971,10 @@ namespace mytown.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("ChatMessageId"));
 
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_read");
+
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasColumnType("longtext")
@@ -1487,6 +1491,10 @@ namespace mytown.Migrations
                         .IsRequired()
                         .HasColumnType("longtext")
                         .HasColumnName("hub_status");
+
+                    b.Property<int>("LegNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("leg_number");
 
                     b.Property<bool>("PackageHandedOver")
                         .HasColumnType("tinyint(1)")
@@ -4684,6 +4692,10 @@ namespace mytown.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_date");
+
+                    b.Property<int?>("OrderTransportLegId")
+                        .HasColumnType("int")
+                        .HasColumnName("order_transport_leg_id");
 
                     b.Property<string>("OrderType")
                         .IsRequired()
