@@ -1,16 +1,17 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using DnsClient;
+using Microsoft.AspNetCore.Session;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using mytown.DTOs;
+using mytown.Models.DTO_s;
+using mytown.Services.Interfaces;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Threading.Tasks;
-using System.Linq;
-using DnsClient;
-using Microsoft.EntityFrameworkCore;
-using mytown.Services.Interfaces;
-using mytown.Models.DTO_s;
 using System.Text;
-using Microsoft.AspNetCore.Session;
+using System.Threading.Tasks;
 
 public class EmailService : IEmailService
 {
@@ -4731,4 +4732,253 @@ private string BuildHubPackageReadyTemplate(string transporterName, string packa
 </body>
 </html>";
     }
+
+    public async Task SendServiceEnquiryToBusinessAsync(string email, ServiceEnquiryDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"New Service Enquiry - ITMT-{dto.EnquiryDate.Year}-{dto.ServiceEnquiryId:D6}",
+                    Body = BuildServiceEnquiryTemplate(dto),
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(email);
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending service enquiry email: {ex.Message}");
+            throw new Exception("Failed to send service enquiry email.");
+        }
+    }
+    private string BuildServiceEnquiryTemplate(ServiceEnquiryDto dto)
+    {
+        var font = "font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var fontInter = "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var fontManrope = "font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var businessName = WebUtility.HtmlEncode(dto.BusinessName ?? string.Empty);
+        var serviceName = WebUtility.HtmlEncode(dto.ServiceName ?? string.Empty);
+        var priority = WebUtility.HtmlEncode((dto.Priority ?? string.Empty).ToUpperInvariant());
+        var timeSlot = WebUtility.HtmlEncode(dto.TimeSlot ?? string.Empty);
+        var location = WebUtility.HtmlEncode(dto.ServiceLocation ?? string.Empty);
+        var custName = WebUtility.HtmlEncode(dto.CustomerName ?? string.Empty);
+        var custPhone = WebUtility.HtmlEncode(dto.CustomerPhone ?? string.Empty);
+        var custAddress = WebUtility.HtmlEncode(dto.CustomerAddress ?? string.Empty);
+        var message = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(dto.CustomerMessage) ? "-" : dto.CustomerMessage)
+                        .Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+        var serviceId = $"ITMT-{dto.EnquiryDate.Year}-{dto.ServiceEnquiryId:D6}";
+        var dashboardUrl = $"https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/biz/enquiries/{dto.ServiceEnquiryId}"; // adjust route if different
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>New Service Enquiry - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;{font}"">
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#FAFBFC;"">
+    <!-- ===== HEADER (LOGO - only here) ===== -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px 24px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <img src=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png""
+             alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+    <!-- ===== HELLO + INTRO ===== -->
+    <tr>
+      <td style=""padding:20px 30px 24px;border-bottom:1px solid #fff;"">
+        <p style=""color:#000;font-size:16px;font-weight:700;line-height:20px;margin:0 0 16px 0;{font}"">
+          Hello {businessName},
+        </p>
+        <p style=""color:#000;font-size:16px;font-weight:400;line-height:24px;margin:0 0 2px 0;{font}"">
+          You have received a new service enquiry through ITISMYTOWN.
+        </p>
+        <p style=""color:#000;font-size:16px;font-weight:400;line-height:24px;margin:0 0 16px 0;{font}"">
+          A verified customer is interested in your service offering. Please review the enquiry breakdown below
+          and contact the customer promptly to confirm slot availability and details.
+        </p>
+        <!-- Service ID / Enquiry Date -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #D5D5D5;border-radius:4px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:24px;"">
+              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;line-height:20px;margin-bottom:8px;{font}"">Service ID</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;line-height:20px;{font}"">{serviceId}</div>
+                  </td>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;line-height:20px;margin-bottom:8px;{font}"">Enquiry Date</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;line-height:20px;{font}"">{dto.EnquiryDate:MMMM dd, yyyy}</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- ===== CUSTOMER ENQUIRY DETAILS CARD ===== -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #CBD5E1;border-radius:12px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:0;"">
+              <!-- Dark header bar -->
+              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td bgcolor=""#12345B"" style=""background:#12345B;padding:12px 20px;border-top-left-radius:12px;border-top-right-radius:12px;"">
+                    <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                      <tr>
+                        <td style=""color:#FFFFFF;font-size:14px;font-weight:700;letter-spacing:0.3px;{fontManrope}"">
+                          Customer Enquiry Details
+                        </td>
+                        <td align=""right"">
+                          <span style=""display:inline-block;background:#22C55E;color:#FFFFFF;font-size:10px;font-weight:700;
+                                       text-transform:uppercase;letter-spacing:0.5px;padding:2px 8px;border-radius:4px;{fontInter}"">
+                            {priority}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+              <!-- Body -->
+              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td style=""padding:20px;"">
+                    <!-- Service requested / Persons -->
+                    <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:16px;"">
+                      <tr>
+                        <td width=""50%"" valign=""top"" style=""padding-right:8px;"">
+                          <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+                                 style=""background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;"">
+                            <tr>
+                              <td style=""padding:13px;"">
+                                <div style=""color:#64748B;font-size:11px;font-weight:600;text-transform:uppercase;margin-bottom:4px;{fontInter}"">Service Requested</div>
+                                <div style=""color:#12345B;font-size:15px;font-weight:700;{fontInter}"">{serviceName}</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                        <td width=""50%"" valign=""top"" style=""padding-left:8px;"">
+                          <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+                                 style=""background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;"">
+                            <tr>
+                              <td style=""padding:13px;"">
+                                <div style=""color:#64748B;font-size:11px;font-weight:600;text-transform:uppercase;margin-bottom:4px;{fontInter}"">Persons / Units</div>
+                                <div style=""color:#0F172A;font-size:15px;font-weight:700;{fontInter}"">{dto.Persons}</div>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Preferred appointment schedule -->
+                    <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+                           style=""background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;margin-bottom:16px;"">
+                      <tr>
+                        <td style=""padding:15px 17px;"">
+                          <div style=""color:#166534;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;{fontInter}"">
+                            Preferred Appointment Schedule
+                          </div>
+                          <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Preferred Date</div>
+                          <div style=""color:#14532D;font-size:14px;font-weight:700;margin-bottom:14px;{fontInter}"">{dto.PreferredDate:MMM dd, yyyy}</div>
+                          <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Time Slot</div>
+                          <div style=""color:#14532D;font-size:14px;font-weight:700;margin-bottom:14px;{fontInter}"">{timeSlot}</div>
+                          <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Service Location</div>
+                          <div style=""color:#14532D;font-size:14px;font-weight:700;{fontInter}"">{location}</div>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Customer message -->
+                    <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+                           style=""background:#fff;border-left:4px solid #12345B;border-top:1px solid #12345B;
+                                  border-right:1px solid #12345B;border-bottom:1px solid #12345B;
+                                  border-top-right-radius:8px;border-bottom-right-radius:8px;"">
+                      <tr>
+                        <td style=""padding:17px 17px 15px 20px;"">
+                          <div style=""color:#475569;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;{fontInter}"">
+                            Customer Message &amp; Specific Instructions
+                          </div>
+                          <div style=""color:#1E293B;font-size:14px;font-weight:400;line-height:21px;{font}"">
+                            {message}
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+        <!-- ===== CUSTOMER INFORMATION ===== -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #D5D5D5;border-radius:8px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:24px;"">
+              <div style=""color:#000;font-size:18px;font-weight:500;margin-bottom:16px;{font}"">Customer Information</div>
+              <div style=""color:#001F3F;font-size:16px;font-weight:700;line-height:20px;margin-bottom:6px;{fontInter}"">
+                {custName} &#8226; {custPhone}
+              </div>
+              <div style=""color:#43474E;font-size:12px;font-weight:400;line-height:19px;{fontInter}"">
+                {custAddress}
+              </div>
+            </td>
+          </tr>
+        </table>
+        <!-- ===== VIEW ENQUIRY BUTTON ===== -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td align=""center"" style=""padding:8px 0 0 0;"">
+              <a href=""{dashboardUrl}""
+                 style=""display:inline-block;background:#285A8C;color:#fff;border-radius:8px;
+                        padding:14px 28px;font-size:15px;font-weight:700;letter-spacing:0.2px;
+                        text-decoration:none;text-align:center;{fontManrope}"">
+                View Enquiry in Dashboard &#8594;
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <!-- ===== FOOTER ===== -->
+    <tr>
+      <td align=""center"" style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <div style=""color:#585858;font-size:12px;font-weight:400;line-height:18px;margin-bottom:8px;{font}"">
+          You&#39;re receiving this email because you&#39;re a Business owner on our platform.
+        </div>
+        <div style=""color:#585858;font-size:12px;font-weight:400;line-height:18px;{font}"">
+          &copy; 2026 itismytown. All rights reserved.
+        </div>
+      </td>
+    </tr>
+  </table>
+  </td>
+</tr>
+</table>
+</body>
+</html>";
+    }
+
+   
+
+
 }

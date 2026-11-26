@@ -256,6 +256,80 @@ namespace mytown.DataAccess.Repositories
 
             return true;
         }
+
+        // ---------- Service enquiry ----------
+
+        public async Task<mytown.Models.ServiceProfile?> GetEnquiryProfileAsync(int serviceProfileId)
+        {
+            return await _context.ServiceProfiles.AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ServiceProfileId == serviceProfileId);
+            // TODO: also require your "active" status value, e.g. && p.Status == "Active"
+        }
+
+        public async Task<List<mytown.Models.Service>> GetEnquiryServicesAsync(int busRegId, int busServId)
+        {
+            return await _context.Service.AsNoTracking()
+                .Where(s => s.BusRegId == busRegId && s.BusServId == busServId)
+                .OrderBy(s => s.ServiceName)
+                .ToListAsync();
+        }
+
+        public async Task<mytown.Models.Service?> GetEnquiryServiceAsync(int serviceId, int busRegId, int busServId)
+        {
+            return await _context.Service.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.ServiceId == serviceId
+                                       && s.BusRegId == busRegId
+                                       && s.BusServId == busServId);
+        }
+
+        public async Task<List<ServiceBlockedSlot>> GetBlockedSlotsAsync(int serviceProfileId, DateTime from, DateTime to)
+        {
+            return await _context.ServiceBlockedSlots.AsNoTracking()
+                .Where(b => b.ServiceProfileId == serviceProfileId
+                         && b.BlockedDate >= from.Date && b.BlockedDate <= to.Date)
+                .ToListAsync();
+        }
+
+        public async Task<List<BookedSlotDto>> GetBookedSlotsAsync(
+            int serviceProfileId, DateTime from, DateTime to, string[] statuses)
+        {
+            var raw = await _context.ServiceEnquiries.AsNoTracking()
+                .Where(e => e.ServiceProfileId == serviceProfileId && statuses.Contains(e.Status))
+                .Select(e => new
+                {
+                    Date = e.ConfirmedDate ?? e.PreferredDate,
+                    Time = e.ConfirmedTimeSlot ?? e.PreferredTimeSlot
+                })
+                .ToListAsync();
+
+            return raw
+                .Where(x => x.Date.Date >= from.Date && x.Date.Date <= to.Date)
+                .Select(x => new BookedSlotDto { Date = x.Date.Date, Time = x.Time })
+                .ToList();
+        }
+
+        public async Task AddServiceEnquiryAsync(ServiceEnquiry enquiry)
+        {
+            _context.ServiceEnquiries.Add(enquiry);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<EnquiryNotificationInfo?> GetEnquiryNotificationInfoAsync(ServiceEnquiry enquiry)
+        {
+            // TODO 1: business email  -> business register table, where BusRegId == enquiry.BusRegId
+            // TODO 2: shopper name + phone -> shopper register table, where ShopperRegId == enquiry.ShopperRegId
+            // TODO 3: address -> if enquiry.ShopperAddressId != null use that address,
+            //                    otherwise the shopper's default address
+
+            return new EnquiryNotificationInfo
+            {
+                BusinessEmail = null,
+                BusinessName = null,
+                ShopperName = null,
+                ShopperPhone = null,
+                ShopperAddress = null
+            };
+        }
     }
     
 }
