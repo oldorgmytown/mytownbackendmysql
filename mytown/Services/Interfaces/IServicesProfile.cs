@@ -23,11 +23,16 @@ namespace mytown.Services.Interfaces
         Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
 
         // ---------- Service enquiry ----------
-        Task<EnquiryFormDataDto?> GetEnquiryFormDataAsync(int serviceProfileId);
 
-        Task<AvailableDatesDto?> GetEnquiryAvailableDatesAsync(int serviceProfileId, int year, int month);
+        
 
-        Task<AvailableSlotsDto?> GetEnquiryAvailableSlotsAsync(int serviceProfileId, DateTime date);
+        Task<EnquiryFormDataDto?> GetEnquiryFormDataAsync(int busRegId, int serviceId);
+
+        Task<AvailableDatesDto?> GetEnquiryAvailableDatesAsync(
+            int busRegId, int serviceId, int year, int month);
+
+        Task<AvailableSlotsDto?> GetEnquiryAvailableSlotsAsync(
+            int busRegId, int serviceId, DateTime date);
 
         Task<EnquiryResult> AddServiceEnquiryAsync(CreateServiceEnquiryDto dto);
 

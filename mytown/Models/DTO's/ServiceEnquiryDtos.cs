@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace mytown.DTOs
 {
@@ -6,20 +7,23 @@ namespace mytown.DTOs
 
     public class EnquiryFormDataDto
     {
-        public int ServiceProfileId { get; set; }
+        public int BusRegId { get; set; }
+        public int ServiceId { get; set; }
+        public string ServiceName { get; set; } = string.Empty;
+
         public string? BusinessName { get; set; }
         public string? BusinessLocation { get; set; }
 
         public List<EnquiryServiceOptionDto> Services { get; set; } = new();
-        public List<string> Locations { get; set; } = new();     // "Location Selection" dropdown
-        public List<string> WorkingDays { get; set; } = new();   // e.g. Mon, Tue ...
+        public List<string> Locations { get; set; } = new();
+        public List<string> WorkingDays { get; set; } = new();
 
-        public string? WorkingStartTime { get; set; }            // "09:00"
-        public string? WorkingEndTime { get; set; }              // "20:00"
+        public string? WorkingStartTime { get; set; }
+        public string? WorkingEndTime { get; set; }
         public int SlotMinutes { get; set; }
 
-        public string MinDate { get; set; } = string.Empty;      // yyyy-MM-dd
-        public string MaxDate { get; set; } = string.Empty;      // yyyy-MM-dd
+        public string MinDate { get; set; } = string.Empty;
+        public string MaxDate { get; set; } = string.Empty;
     }
 
     public class EnquiryServiceOptionDto
@@ -34,33 +38,32 @@ namespace mytown.DTOs
     {
         public int Year { get; set; }
         public int Month { get; set; }
-        public List<string> AvailableDates { get; set; } = new();   // yyyy-MM-dd
+        public List<string> AvailableDates { get; set; } = new();
     }
 
     public class AvailableSlotsDto
     {
-        public string Date { get; set; } = string.Empty;            // yyyy-MM-dd
+        public string Date { get; set; } = string.Empty;
         public List<AvailableSlotDto> Slots { get; set; } = new();
     }
 
     public class AvailableSlotDto
     {
-        public string Time { get; set; } = string.Empty;   // "11:30"  (send this back when saving)
-        public string Label { get; set; } = string.Empty;  // "11:30 AM"
+        public string Time { get; set; } = string.Empty;
+        public string Label { get; set; } = string.Empty;
     }
 
     // ---------- Request ----------
 
     public class CreateServiceEnquiryDto
     {
-        // TODO: once auth is wired, read this from the JWT claim instead of the body.
-        [Required]
+        [Range(1, int.MaxValue)]
         public int ShopperRegId { get; set; }
 
-        [Required]
-        public int ServiceProfileId { get; set; }
+        [Range(1, int.MaxValue)]
+        public int BusRegId { get; set; }
 
-        [Required]
+        [Range(1, int.MaxValue)]
         public int ServiceId { get; set; }
 
         [Range(1, 1000)]
@@ -70,7 +73,7 @@ namespace mytown.DTOs
         public DateTime PreferredDate { get; set; }
 
         [Required]
-        public string PreferredTimeSlot { get; set; } = string.Empty;   // "HH:mm"
+        public string PreferredTimeSlot { get; set; } = string.Empty;
 
         [Required]
         [StringLength(150)]
@@ -79,11 +82,10 @@ namespace mytown.DTOs
         [Required]
         public string Message { get; set; } = string.Empty;
 
-        // Send only when the shopper used "Change". Omit / null = default address.
         public int? ShopperAddressId { get; set; }
     }
 
-    // ---------- Internal (repo -> service) ----------
+    // ---------- Internal ----------
 
     public class BookedSlotDto
     {
@@ -115,12 +117,11 @@ namespace mytown.DTOs
 
     public class EnquiryNotificationInfo
     {
-        public string? BusinessEmail { get; set; }   // from business register table
+        public string? BusinessEmail { get; set; }
         public string? BusinessName { get; set; }
-
-        public string? ShopperName { get; set; }     // from shopper register table
+        public string? ShopperName { get; set; }
         public string? ShopperPhone { get; set; }
-        public string? ShopperAddress { get; set; }  // selected address, else default address
+        public string? ShopperAddress { get; set; }
     }
 
     public class ServiceEnquiryDto
@@ -134,7 +135,7 @@ namespace mytown.DTOs
 
         public int Persons { get; set; }
         public DateTime PreferredDate { get; set; }
-        public string? TimeSlot { get; set; }          // e.g. "11:30 AM"
+        public string? TimeSlot { get; set; }
         public string? ServiceLocation { get; set; }
         public string? CustomerMessage { get; set; }
 
