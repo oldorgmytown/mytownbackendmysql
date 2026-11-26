@@ -591,17 +591,30 @@ namespace mytown.DataAccess.Repositories
             HubStatus = v.HubStatus
         };
 
+
         public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
         {
+            // ✅ NEW: which leg picks up from the package's current hub?
+            var legs = await _context.OrderTransportLegs
+                .AsNoTracking()
+                .Where(l => l.StoreOrderId == storeOrderId)
+                .OrderBy(l => l.LegNumber)
+                .ToListAsync();
+
+            OrderTransportLeg? pickupLeg = null;
+            int stage = 0;                                   // 0 = origin hub, k = hub after leg k
+
+            if (legs.Count > 0)
+            {
+                pickupLeg = legs.FirstOrDefault(l => l.LegStatus != "Delivered") ?? legs.Last();
+                stage = pickupLeg.LegNumber - 1;
+            }
+
+            // order, store and the first transporter ids (the transporter and plan joins are removed here)
             var r = await (
                 from sd in _context.ShippingDetails
                 join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
                 join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
-                join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
-
-                join tp in _context.TransporterTravelPlans
-                    on sd.TransporterPlanId equals tp.PlanId into tpGroup
-                from tp in tpGroup.DefaultIfEmpty()
 
                 where sd.StoreOrderId == storeOrderId && sd.TransporterRegId != null
                 select new
@@ -609,6 +622,9 @@ namespace mytown.DataAccess.Repositories
                     so.StoreOrderId,
                     so.OrderId,
                     so.Storeorder_Status,
+
+                    ShippingTransporterRegId = sd.TransporterRegId,
+                    ShippingPlanId = sd.TransporterPlanId,
 
                     b.BusRegId,
                     b.BusinessName,
@@ -619,34 +635,6 @@ namespace mytown.DataAccess.Repositories
                     b.BusinessState,
                     b.PostalCode,
                     b.BusMobileNo,
-
-                    t.TransporterRegId,
-                    t.TransporterName,
-                    t.Address,
-                    TransporterTown = t.Town,
-                    TransporterCity = t.City,
-                    TransporterState = t.State,
-                    TransporterPostal = t.PostalCode,
-                    t.PhoneNumber,
-                    TransporterEmail = t.Email,
-                    t.Status,
-
-                    PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
-                    PlanArrivalDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
-                    DestTown = tp != null ? tp.DestinationTown : null,
-                    DestCity = tp != null ? tp.DestinationCity : null,
-                    DestState = tp != null ? tp.DestinationState : null,
-                    DestCountry = tp != null ? tp.DestinationCountry : null,
-                    DestPin = tp != null ? tp.DestinationPin : null,
-                    VehicleName = tp != null ? tp.VehicleName : null,
-                    VehicleReg = tp != null ? tp.VehicleRegistration : null,
-                    VehicleType = tp != null ? tp.VehicleType : null,
-
-                    // Start location = hub whose pin matches the store pincode
-                    Hub = _context.HubDetails
-                        .Where(h => h.Pin == b.PostalCode)
-                        .Select(h => new { h.HubName, h.City, h.State })
-                        .FirstOrDefault(),
 
                     Package = _context.ShippingPackageDetails
                         .Where(p => p.StoreOrderId == so.StoreOrderId)
@@ -666,9 +654,36 @@ namespace mytown.DataAccess.Repositories
             if (r == null)
                 return null;
 
+            // ✅ changed: transporter and plan of the pickup leg (the first ones for old orders)
+            int transporterRegId = pickupLeg?.TransporterRegId ?? r.ShippingTransporterRegId!.Value;
+            int? planId = pickupLeg?.TransporterPlanId ?? r.ShippingPlanId;
+
+            var t = await _context.TransporterRegisters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.TransporterRegId == transporterRegId);
+
+            if (t == null)
+                return null;
+
+            var tp = planId.HasValue
+                ? await _context.TransporterTravelPlans
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.PlanId == planId.Value)
+                : null;
+
+            // ✅ changed: start location = the hub where the pickup leg starts (the store's hub for old orders)
+            string? startPin = pickupLeg?.FromPin ?? r.PostalCode;
+
+            var hub = await _context.HubDetails
+                .AsNoTracking()
+                .Where(h => h.Pin == startPin)
+                .Select(h => new { h.HubName, h.City, h.State })
+                .FirstOrDefaultAsync();
+
+            // ✅ changed: this hub's own verification row (store order + stage)
             var v = await _context.HubStoreOrderVerifications
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+                .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId && x.LegNumber == stage);
 
             return new HubStoreOrderDetailsDto
             {
@@ -693,33 +708,33 @@ namespace mytown.DataAccess.Repositories
 
                 Transporter = new TransporterDetailsDto
                 {
-                    TransporterRegId = r.TransporterRegId,
-                    TransporterName = r.TransporterName,
-                    Address = string.Join(", ", new[] { r.Address, r.TransporterTown, r.TransporterCity, r.TransporterState }
+                    TransporterRegId = t.TransporterRegId,
+                    TransporterName = t.TransporterName,
+                    Address = string.Join(", ", new[] { t.Address, t.Town, t.City, t.State }
                                   .Where(s => !string.IsNullOrWhiteSpace(s)))
-                              + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
-                    Phone = r.PhoneNumber,
-                    Email = r.TransporterEmail,
-                    Status = r.Status
+                              + (string.IsNullOrEmpty(t.PostalCode) ? "" : " - " + t.PostalCode),
+                    Phone = t.PhoneNumber,
+                    Email = t.Email,
+                    Status = t.Status
                 },
 
                 Travel = new TravelDetailsDto
                 {
-                    StartLocationName = r.Hub?.HubName,
-                    StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+                    StartLocationName = hub?.HubName,
+                    StartLocationAddress = hub == null ? null : $"{hub.City}, {hub.State}",
 
-                    DestinationTown = r.DestTown,
-                    DestinationCity = r.DestCity,
-                    DestinationState = r.DestState,
-                    DestinationCountry = r.DestCountry,
-                    DestinationPin = r.DestPin,
+                    DestinationTown = tp?.DestinationTown,
+                    DestinationCity = tp?.DestinationCity,
+                    DestinationState = tp?.DestinationState,
+                    DestinationCountry = tp?.DestinationCountry,
+                    DestinationPin = tp?.DestinationPin,
 
-                    StartDate = r.PlanStartDate,
-                    EtaDate = r.PlanArrivalDate,
+                    StartDate = tp?.StartDate,
+                    EtaDate = tp?.ArrivalDate,
 
-                    VehicleName = r.VehicleName,
-                    VehicleNumber = r.VehicleReg,
-                    VehicleType = r.VehicleType
+                    VehicleName = tp?.VehicleName,
+                    VehicleNumber = tp?.VehicleRegistration,
+                    VehicleType = tp?.VehicleType
                 },
 
                 Checklist = new ChecklistDto
@@ -731,9 +746,149 @@ namespace mytown.DataAccess.Repositories
                     PackageHandedOver = v?.PackageHandedOver ?? false
                 }
             };
+        //public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
+        //{
+        //    var r = await (
+        //        from sd in _context.ShippingDetails
+        //        join so in _context.StoreOrders on sd.StoreOrderId equals so.StoreOrderId
+        //        join b in _context.BusinessRegisters on so.StoreId equals b.BusRegId
+        //        join t in _context.TransporterRegisters on sd.TransporterRegId equals t.TransporterRegId
+
+            //        join tp in _context.TransporterTravelPlans
+            //            on sd.TransporterPlanId equals tp.PlanId into tpGroup
+            //        from tp in tpGroup.DefaultIfEmpty()
+
+            //        where sd.StoreOrderId == storeOrderId && sd.TransporterRegId != null
+            //        select new
+            //        {
+            //            so.StoreOrderId,
+            //            so.OrderId,
+            //            so.Storeorder_Status,
+
+            //            b.BusRegId,
+            //            b.BusinessName,
+            //            b.Address1,
+            //            b.Address2,
+            //            b.Town,
+            //            b.BusinessCity,
+            //            b.BusinessState,
+            //            b.PostalCode,
+            //            b.BusMobileNo,
+
+            //            t.TransporterRegId,
+            //            t.TransporterName,
+            //            t.Address,
+            //            TransporterTown = t.Town,
+            //            TransporterCity = t.City,
+            //            TransporterState = t.State,
+            //            TransporterPostal = t.PostalCode,
+            //            t.PhoneNumber,
+            //            TransporterEmail = t.Email,
+            //            t.Status,
+
+            //            PlanStartDate = tp != null ? tp.StartDate : (DateTime?)null,
+            //            PlanArrivalDate = tp != null ? tp.ArrivalDate : (DateTime?)null,
+            //            DestTown = tp != null ? tp.DestinationTown : null,
+            //            DestCity = tp != null ? tp.DestinationCity : null,
+            //            DestState = tp != null ? tp.DestinationState : null,
+            //            DestCountry = tp != null ? tp.DestinationCountry : null,
+            //            DestPin = tp != null ? tp.DestinationPin : null,
+            //            VehicleName = tp != null ? tp.VehicleName : null,
+            //            VehicleReg = tp != null ? tp.VehicleRegistration : null,
+            //            VehicleType = tp != null ? tp.VehicleType : null,
+
+            //            // Start location = hub whose pin matches the store pincode
+            //            Hub = _context.HubDetails
+            //                .Where(h => h.Pin == b.PostalCode)
+            //                .Select(h => new { h.HubName, h.City, h.State })
+            //                .FirstOrDefault(),
+
+            //            Package = _context.ShippingPackageDetails
+            //                .Where(p => p.StoreOrderId == so.StoreOrderId)
+            //                .Select(p => new PackageDetailsDto
+            //                {
+            //                    Length = p.PackageLength,
+            //                    Width = p.PackageWidth,
+            //                    Height = p.PackageHeight,
+            //                    DimensionUnit = p.DimensionUnit,
+            //                    Weight = p.PackageWeight,
+            //                    WeightUnit = p.WeightUnit
+            //                })
+            //                .FirstOrDefault()
+            //        }
+            //    ).AsNoTracking().FirstOrDefaultAsync();
+
+            //    if (r == null)
+            //        return null;
+
+            //    var v = await _context.HubStoreOrderVerifications
+            //        .AsNoTracking()
+            //        .FirstOrDefaultAsync(x => x.StoreOrderId == storeOrderId);
+
+            //    return new HubStoreOrderDetailsDto
+            //    {
+            //        StoreOrderId = r.StoreOrderId,
+            //        OrderId = r.OrderId,
+            //        OrderStatus =
+            //            r.Storeorder_Status == "Pending" ? "New" :
+            //            r.Storeorder_Status == "Delivered" ? "Completed" : "In Progress",
+            //        HubStatus = (v != null && v.PackageHandedOver) ? "Handed Over" : "New",
+
+            //        Package = r.Package,
+
+            //        Business = new BusinessDetailsDto
+            //        {
+            //            StoreId = r.BusRegId,
+            //            StoreName = r.BusinessName,
+            //            Address = string.Join(", ", new[] { r.Address1, r.Address2, r.Town, r.BusinessCity, r.BusinessState }
+            //                          .Where(s => !string.IsNullOrWhiteSpace(s)))
+            //                      + (string.IsNullOrEmpty(r.PostalCode) ? "" : " " + r.PostalCode),
+            //            Phone = r.BusMobileNo
+            //        },
+
+            //        Transporter = new TransporterDetailsDto
+            //        {
+            //            TransporterRegId = r.TransporterRegId,
+            //            TransporterName = r.TransporterName,
+            //            Address = string.Join(", ", new[] { r.Address, r.TransporterTown, r.TransporterCity, r.TransporterState }
+            //                          .Where(s => !string.IsNullOrWhiteSpace(s)))
+            //                      + (string.IsNullOrEmpty(r.TransporterPostal) ? "" : " - " + r.TransporterPostal),
+            //            Phone = r.PhoneNumber,
+            //            Email = r.TransporterEmail,
+            //            Status = r.Status
+            //        },
+
+            //        Travel = new TravelDetailsDto
+            //        {
+            //            StartLocationName = r.Hub?.HubName,
+            //            StartLocationAddress = r.Hub == null ? null : $"{r.Hub.City}, {r.Hub.State}",
+
+            //            DestinationTown = r.DestTown,
+            //            DestinationCity = r.DestCity,
+            //            DestinationState = r.DestState,
+            //            DestinationCountry = r.DestCountry,
+            //            DestinationPin = r.DestPin,
+
+            //            StartDate = r.PlanStartDate,
+            //            EtaDate = r.PlanArrivalDate,
+
+            //            VehicleName = r.VehicleName,
+            //            VehicleNumber = r.VehicleReg,
+            //            VehicleType = r.VehicleType
+            //        },
+
+            //        Checklist = new ChecklistDto
+            //        {
+            //            PackageVerified = v?.PackageVerified ?? false,
+            //            SecurityCheck = v?.SecurityCheck ?? false,
+            //            TravelPlanVerified = v?.TravelPlanVerified ?? false,
+            //            TransporterVerified = v?.TransporterVerified ?? false,
+            //            PackageHandedOver = v?.PackageHandedOver ?? false
+            //        }
+            //    };
 
 
-        }
+            //}
 
         public async Task<HubSenderOrderDetailsDto?> GetSenderOrderDetailsAsync(int senderOrderId)
         {
