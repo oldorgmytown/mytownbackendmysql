@@ -746,6 +746,7 @@ namespace mytown.DataAccess.Repositories
                     PackageHandedOver = v?.PackageHandedOver ?? false
                 }
             };
+        }
         //public async Task<HubStoreOrderDetailsDto?> GetStoreOrderDetailsAsync(int storeOrderId)
         //{
         //    var r = await (
