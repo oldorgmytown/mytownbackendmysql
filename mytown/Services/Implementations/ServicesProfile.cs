@@ -64,7 +64,7 @@ namespace mytown.Services.Implementations
 
         // ---------- Service enquiry : booking rules (change as needed) ----------
         private const int SlotMinutes = 30;        // length of one slot
-        private const int BookingWindowDays = 60;  // how far ahead a shopper can enquire
+        private const int BookingDays = 60;  // how far ahead a shopper can enquire
         private const int LeadTimeMinutes = 60;    // today's slots must start at least this far ahead
 
         // enquiry statuses that hold a slot (Rejected / Cancelled free it again)
@@ -73,147 +73,275 @@ namespace mytown.Services.Implementations
         // ------------------------------------------------------------------
         // Form data
         // ------------------------------------------------------------------
-        public async Task<EnquiryFormDataDto?> GetEnquiryFormDataAsync(int serviceProfileId)
+        private async Task<(Service? service, ServiceProfile? profile)> GetServiceProfileAsync(
+            int busRegId, int serviceId)
         {
-            var profile = await _repo.GetEnquiryProfileAsync(serviceProfileId);
-            if (profile == null) return null;
+            var service = await _repo.GetEnquiryServiceAsync(serviceId, busRegId);
 
-            var services = await _repo.GetEnquiryServicesAsync(profile.BusRegId, profile.BusServId);
-            var today = DateTime.Today;
+            if (service == null)
+                return (null, null);
+
+            var profile = await _repo.GetEnquiryProfileAsync(
+                busRegId, service.BusServId);
+
+            return (service, profile);
+        }
+
+        public async Task<EnquiryFormDataDto?> GetEnquiryFormDataAsync(
+            int busRegId, int serviceId)
+        {
+            var (service, profile) = await GetServiceProfileAsync(busRegId, serviceId);
+
+            if (service == null || profile == null)
+                return null;
 
             return new EnquiryFormDataDto
             {
-                ServiceProfileId = profile.ServiceProfileId,
+                BusRegId = busRegId,
+                ServiceId = service.ServiceId,
+                ServiceName = service.ServiceName,
                 BusinessName = profile.BusinessName,
                 BusinessLocation = profile.BusinessLocation,
-                Services = services.Select(s => new EnquiryServiceOptionDto
+
+                Services = new List<EnquiryServiceOptionDto>
                 {
-                    ServiceId = s.ServiceId,
-                    ServiceName = s.ServiceName,
-                    StartingPrice = s.StartingPrice,
-                    EstimatedDuration = s.EstimatedDuration
-                }).ToList(),
+                    new()
+                    {
+                        ServiceId = service.ServiceId,
+                        ServiceName = service.ServiceName,
+                        StartingPrice = service.StartingPrice,
+                        EstimatedDuration = service.EstimatedDuration
+                    }
+                },
+
                 Locations = SplitList(profile.ServiceAvailableLocations),
                 WorkingDays = SplitList(profile.WorkingDays),
                 WorkingStartTime = profile.WorkingStartTime?.ToString(@"hh\:mm"),
                 WorkingEndTime = profile.WorkingEndTime?.ToString(@"hh\:mm"),
                 SlotMinutes = SlotMinutes,
-                MinDate = today.ToString("yyyy-MM-dd"),
-                MaxDate = today.AddDays(BookingWindowDays).ToString("yyyy-MM-dd")
+                MinDate = DateTime.Today.AddDays(1).ToString("yyyy-MM-dd"),
+                MaxDate = DateTime.Today.AddDays(BookingDays).ToString("yyyy-MM-dd")
             };
         }
 
-        // ------------------------------------------------------------------
-        // Calendar: dates that still have at least one free slot
-        // ------------------------------------------------------------------
-        public async Task<AvailableDatesDto?> GetEnquiryAvailableDatesAsync(int serviceProfileId, int year, int month)
+        public async Task<AvailableDatesDto?> GetEnquiryAvailableDatesAsync(
+            int busRegId, int serviceId, int year, int month)
         {
-            var profile = await _repo.GetEnquiryProfileAsync(serviceProfileId);
-            if (profile == null) return null;
+            var (_, profile) = await GetServiceProfileAsync(busRegId, serviceId);
 
-            var now = DateTime.Now;
+            if (profile == null)
+                return null;
+
+            if (month < 1 || month > 12)
+                return null;
+
+            var today = DateTime.Today;
+            var minDate = today.AddMinutes(LeadTimeMinutes);
+            var maxDate = today.AddDays(BookingDays);
+
             var monthStart = new DateTime(year, month, 1);
             var monthEnd = monthStart.AddMonths(1).AddDays(-1);
 
-            var from = monthStart > now.Date ? monthStart : now.Date;
-            var windowEnd = now.Date.AddDays(BookingWindowDays);
-            var to = monthEnd < windowEnd ? monthEnd : windowEnd;
+            var startDate = monthStart < today.Date ? today.Date : monthStart;
+            var endDate = monthEnd > maxDate.Date ? maxDate.Date : monthEnd;
 
-            var result = new AvailableDatesDto { Year = year, Month = month };
-            if (from > to) return result;
-
-            var blocked = await _repo.GetBlockedSlotsAsync(serviceProfileId, from, to);
-            var booked = await _repo.GetBookedSlotsAsync(serviceProfileId, from, to, SlotHoldingStatuses);
-
-            for (var d = from; d <= to; d = d.AddDays(1))
+            var result = new AvailableDatesDto
             {
-                var slots = BuildAvailableSlots(
-                    profile, d,
-                    blocked.Where(b => b.BlockedDate.Date == d).ToList(),
-                    booked.Where(b => b.Date == d).Select(b => b.Time).ToList(),
-                    now);
+                Year = year,
+                Month = month
+            };
+
+            if (startDate > endDate)
+                return result;
+
+            var blocked = await _repo.GetBlockedSlotsAsync(
+                profile.ServiceProfileId, startDate, endDate);
+
+            var booked = await _repo.GetBookedSlotsAsync(
+                profile.ServiceProfileId, startDate, endDate);
+
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                var slots = BuildAvailableSlots(profile, date, blocked, booked, minDate);
 
                 if (slots.Count > 0)
-                    result.AvailableDates.Add(d.ToString("yyyy-MM-dd"));
+                    result.AvailableDates.Add(date.ToString("yyyy-MM-dd"));
             }
 
             return result;
         }
 
-        // ------------------------------------------------------------------
-        // Slots for one date
-        // ------------------------------------------------------------------
-        public async Task<AvailableSlotsDto?> GetEnquiryAvailableSlotsAsync(int serviceProfileId, DateTime date)
+        public async Task<AvailableSlotsDto?> GetEnquiryAvailableSlotsAsync(
+            int busRegId, int serviceId, DateTime date)
         {
-            var profile = await _repo.GetEnquiryProfileAsync(serviceProfileId);
-            if (profile == null) return null;
+            var (_, profile) = await GetServiceProfileAsync(busRegId, serviceId);
 
-            var slots = await GetFreeSlotsAsync(profile, date.Date);
+            if (profile == null)
+                return null;
 
-            return new AvailableSlotsDto
+            var today = DateTime.Today;
+            var minDate = today.AddMinutes(LeadTimeMinutes);
+            var maxDate = today.AddDays(BookingDays);
+
+            var result = new AvailableSlotsDto
             {
-                Date = date.ToString("yyyy-MM-dd"),
-                Slots = slots.Select(t => new AvailableSlotDto
-                {
-                    Time = t.ToString(@"hh\:mm"),
-                    Label = DateTime.Today.Add(t).ToString("hh:mm tt", CultureInfo.InvariantCulture)
-                }).ToList()
+                Date = date.ToString("yyyy-MM-dd")
             };
+
+            if (date.Date < today.Date || date.Date > maxDate.Date)
+                return result;
+
+            var blocked = await _repo.GetBlockedSlotsAsync(
+                profile.ServiceProfileId, date.Date, date.Date);
+
+            var booked = await _repo.GetBookedSlotsAsync(
+                profile.ServiceProfileId, date.Date, date.Date);
+
+            result.Slots = BuildAvailableSlots(
+                profile, date.Date, blocked, booked, minDate);
+
+            return result;
         }
 
-        // ------------------------------------------------------------------
-        // Save enquiry
-        // ------------------------------------------------------------------
-        public async Task<EnquiryResult> AddServiceEnquiryAsync(CreateServiceEnquiryDto dto)
+        private List<AvailableSlotDto> BuildAvailableSlots(
+            ServiceProfile profile,
+            DateTime date,
+            List<ServiceBlockedSlot> blocked,
+            List<BookedSlotDto> booked,
+            DateTime minDate)
         {
-            if (!TimeSpan.TryParse(dto.PreferredTimeSlot, CultureInfo.InvariantCulture, out var slot))
-                return EnquiryResult.Fail(EnquiryError.BadRequest, "Invalid time slot.");
+            var slots = new List<AvailableSlotDto>();
+
+            if (profile.WorkingStartTime == null ||
+                profile.WorkingEndTime == null ||
+                !IsWorkingDay(profile.WorkingDays, date.DayOfWeek))
+                return slots;
+
+            var start = profile.WorkingStartTime.Value;
+            var end = profile.WorkingEndTime.Value;
+
+            for (var time = start; time.Add(TimeSpan.FromMinutes(SlotMinutes)) <= end;
+                 time = time.Add(TimeSpan.FromMinutes(SlotMinutes)))
+            {
+                var slotStart = date.Date.Add(time);
+                var slotEnd = slotStart.AddMinutes(SlotMinutes);
+
+                if (slotStart < minDate)
+                    continue;
+
+                var isBlocked = blocked.Any(b =>
+                    b.BlockedDate.Date == date.Date &&
+                    (b.StartTime == null ||
+                     b.EndTime == null ||
+                     (time < b.EndTime.Value &&
+                      time.Add(TimeSpan.FromMinutes(SlotMinutes)) > b.StartTime.Value)));
+
+                var isBooked = booked.Any(b =>
+                    b.Date.Date == date.Date &&
+                    b.Time == time);
+
+                if (isBlocked || isBooked)
+                    continue;
+
+                slots.Add(new AvailableSlotDto
+                {
+                    Time = time.ToString(@"hh\:mm"),
+                    Label = DateTime.Today.Add(time).ToString("hh:mm tt")
+                });
+            }
+
+            return slots;
+        }
+
+        private bool IsWorkingDay(string? workingDays, DayOfWeek day)
+        {
+            return SplitList(workingDays).Any(d =>
+                d.Equals(day.ToString(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        private List<string> SplitList(string? value)
+        {
+            return string.IsNullOrWhiteSpace(value)
+                ? new List<string>()
+                : value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    .Select(x => x.Trim())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToList();
+        }
+
+        public async Task<EnquiryResult> AddServiceEnquiryAsync(
+            CreateServiceEnquiryDto dto)
+        {
+            var (service, profile) = await GetServiceProfileAsync(
+                dto.BusRegId, dto.ServiceId);
+
+            if (service == null || profile == null)
+                return EnquiryResult.Fail(
+                    EnquiryError.NotFound, "Selected service or profile not found.");
+
+            if (!TimeSpan.TryParseExact(
+                    dto.PreferredTimeSlot,
+                    new[] { @"hh\:mm", @"h\:mm", @"hh\:mm\:ss" },
+                    CultureInfo.InvariantCulture,
+                    out var preferredTime))
+            {
+                return EnquiryResult.Fail(
+                    EnquiryError.BadRequest, "Invalid time slot.");
+            }
 
             var date = dto.PreferredDate.Date;
+            var minDate = DateTime.Now.AddMinutes(LeadTimeMinutes);
+            var maxDate = DateTime.Today.AddDays(BookingDays);
 
-            var profile = await _repo.GetEnquiryProfileAsync(dto.ServiceProfileId);
-            if (profile == null)
-                return EnquiryResult.Fail(EnquiryError.NotFound, "Service profile not found.");
+            if (date < DateTime.Today || date > maxDate)
+                return EnquiryResult.Fail(
+                    EnquiryError.BadRequest, "Selected date is outside the booking period.");
 
-            // service must belong to this provider
-            var service = await _repo.GetEnquiryServiceAsync(dto.ServiceId, profile.BusRegId, profile.BusServId);
-            if (service == null)
-                return EnquiryResult.Fail(EnquiryError.BadRequest, "Selected service is not offered by this provider.");
+            var blocked = await _repo.GetBlockedSlotsAsync(
+                profile.ServiceProfileId, date, date);
 
-            // re-check the slot is still free (calendar may be stale)
-            var freeSlots = await GetFreeSlotsAsync(profile, date);
-            if (!freeSlots.Contains(slot))
-                return EnquiryResult.Fail(EnquiryError.Conflict, "Selected date / time slot is no longer available.");
+            var booked = await _repo.GetBookedSlotsAsync(
+                profile.ServiceProfileId, date, date);
+
+            var availableSlots = BuildAvailableSlots(
+                profile, date, blocked, booked, minDate);
+
+            if (!availableSlots.Any(s =>
+                    TimeSpan.TryParse(s.Time, out var slotTime) &&
+                    slotTime == preferredTime))
+            {
+                return EnquiryResult.Fail(
+                    EnquiryError.Conflict, "Selected time slot is no longer available.");
+            }
 
             var enquiry = new ServiceEnquiry
             {
                 ShopperRegId = dto.ShopperRegId,
                 ServiceProfileId = profile.ServiceProfileId,
-                BusRegId = profile.BusRegId,
-                BusServId = profile.BusServId,
+                BusRegId = dto.BusRegId,
+                BusServId = service.BusServId,
                 ServiceId = service.ServiceId,
                 ServiceName = service.ServiceName,
                 NumberOfUnits = dto.NumberOfUnits,
                 PreferredDate = date,
-                PreferredTimeSlot = slot,
-                ServiceLocation = dto.ServiceLocation.Trim(),
-                Message = dto.Message.Trim(),
-                ShopperAddressId = dto.ShopperAddressId,   // null = default address
+                PreferredTimeSlot = preferredTime,
+                ServiceLocation = dto.ServiceLocation,
+                Message = dto.Message,
+                ShopperAddressId = dto.ShopperAddressId,
                 Status = "Pending",
                 CreatedDate = DateTime.Now
             };
 
             await _repo.AddServiceEnquiryAsync(enquiry);
 
-            // Notify the business owner. The enquiry is already saved, so a mail
-            // problem (bad address, SMTP down) must NOT make the shopper's request fail.
+            // Send enquiry notification to business owner
             try
             {
                 var info = await _repo.GetEnquiryNotificationInfoAsync(enquiry);
 
                 if (info != null && !string.IsNullOrWhiteSpace(info.BusinessEmail))
                 {
-                    var emailDto = new ServiceEnquiryDto   // your existing email DTO
+                    var emailDto = new ServiceEnquiryDto
                     {
                         ServiceEnquiryId = enquiry.EnquiryId,
                         EnquiryDate = enquiry.CreatedDate,
@@ -222,106 +350,30 @@ namespace mytown.Services.Implementations
                         Persons = enquiry.NumberOfUnits,
                         PreferredDate = enquiry.PreferredDate,
                         TimeSlot = DateTime.Today.Add(enquiry.PreferredTimeSlot)
-                                       .ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                            .ToString("hh:mm tt", CultureInfo.InvariantCulture),
                         ServiceLocation = enquiry.ServiceLocation,
                         CustomerMessage = enquiry.Message,
                         CustomerName = info.ShopperName,
                         CustomerPhone = info.ShopperPhone,
                         CustomerAddress = info.ShopperAddress,
-                        Priority = "New"   // the form has no priority field
+                        Priority = "New"
                     };
 
-                    await _emailService.SendServiceEnquiryToBusinessAsync(info.BusinessEmail, emailDto);
+                    await _emailService.SendServiceEnquiryToBusinessAsync(
+                        info.BusinessEmail, emailDto);
                 }
             }
             catch (Exception ex)
             {
-                // TODO: use your logger instead of Console
-                Console.WriteLine($"Enquiry {enquiry.EnquiryId} saved, but owner email failed: {ex.Message}");
+                Console.WriteLine(
+                    $"Enquiry {enquiry.EnquiryId} saved, but owner email failed: {ex.Message}");
             }
 
-            return EnquiryResult.Ok(enquiry.EnquiryId,
+            return EnquiryResult.Ok(
+                enquiry.EnquiryId,
                 "Enquiry submitted. Provider availability will be confirmed on response.");
-        }
 
-        // ==================================================================
-        // Private helpers (enquiry)
-        // ==================================================================
-
-        private async Task<List<TimeSpan>> GetFreeSlotsAsync(mytown.Models.ServiceProfile profile, DateTime date)
-        {
-            var now = DateTime.Now;
-
-            if (date < now.Date || date > now.Date.AddDays(BookingWindowDays))
-                return new List<TimeSpan>();
-
-            var blocked = await _repo.GetBlockedSlotsAsync(profile.ServiceProfileId, date, date);
-            var booked = await _repo.GetBookedSlotsAsync(profile.ServiceProfileId, date, date, SlotHoldingStatuses);
-
-            return BuildAvailableSlots(profile, date, blocked, booked.Select(b => b.Time).ToList(), now);
-        }
-
-        /// Working hours cut into SlotMinutes slots, minus blocked ranges,
-        /// slots held by enquiries and slots already in the past.
-        private static List<TimeSpan> BuildAvailableSlots(
-            mytown.Models.ServiceProfile profile,
-            DateTime date,
-            List<ServiceBlockedSlot> blockedForDate,
-            List<TimeSpan> bookedTimes,
-            DateTime now)
-        {
-            var result = new List<TimeSpan>();
-
-            if (profile.WorkingStartTime == null || profile.WorkingEndTime == null)
-                return result;
-
-            if (!IsWorkingDay(profile.WorkingDays, date.DayOfWeek))
-                return result;
-
-            // whole day blocked
-            if (blockedForDate.Any(b => b.StartTime == null || b.EndTime == null))
-                return result;
-
-            var step = TimeSpan.FromMinutes(SlotMinutes);
-            var earliest = now.AddMinutes(LeadTimeMinutes);
-
-            for (var t = profile.WorkingStartTime.Value; t + step <= profile.WorkingEndTime.Value; t += step)
-            {
-                if (date.Date + t < earliest) continue;
-
-                bool isBlocked = blockedForDate.Any(b => t < b.EndTime && t + step > b.StartTime);
-                if (isBlocked) continue;
-
-                bool isBooked = bookedTimes.Any(s => t < s + step && t + step > s);
-                if (isBooked) continue;
-
-                result.Add(t);
-            }
-
-            return result;
-        }
-
-        /// Works with "Mon,Tue,Wed", "Monday, Tuesday", "Mon Tue" etc.
-        /// A range like "Mon-Sat" is NOT understood. No working days saved = not bookable.
-        private static bool IsWorkingDay(string? workingDays, DayOfWeek day)
-        {
-            if (string.IsNullOrWhiteSpace(workingDays)) return false;
-
-            var key = day.ToString().Substring(0, 3);
-            return workingDays
-                .Split(new[] { ',', ';', '|', '/', ' ' }, StringSplitOptions.RemoveEmptyEntries)
-                .Any(p => p.Trim().StartsWith(key, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static List<string> SplitList(string? value)
-        {
-            if (string.IsNullOrWhiteSpace(value)) return new List<string>();
-
-            return value
-                .Split(new[] { ',', ';', '|', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(p => p.Trim())
-                .Where(p => p.Length > 0)
-                .ToList();
+            
         }
     }
 

@@ -45,7 +45,7 @@ namespace mytown.DataAccess.Repositories
                     existingProfile.BusServId = dto.BusServId;
                     existingProfile.BusinessName = dto.BusinessName;
                     existingProfile.BusinessLocation = dto.BusinessLocation;
-                   existingProfile.ServiceDescription = dto.ServiceDescription;
+                    existingProfile.ServiceDescription = dto.ServiceDescription;
                     existingProfile.YearsOfExperience = dto.YearsOfExperience;
                     existingProfile.GovtIdDocument = dto.GovtIdDocument;
                     existingProfile.ProfessionalLicense = dto.ProfessionalLicense;
@@ -154,7 +154,7 @@ namespace mytown.DataAccess.Repositories
             var profile = await _context.ServiceProfiles
                 .FirstOrDefaultAsync(x => x.BusRegId == busRegId);
 
-          
+
 
             var result = new ServiceProfileDetailsDto
             {
@@ -168,10 +168,10 @@ namespace mytown.DataAccess.Repositories
                     business.BusinessState,
                     business.BusinessCountry
                 }.Where(x => !string.IsNullOrWhiteSpace(x))),
-                
+
                 BusinessMobileNo = business.BusMobileNo,
                 BusinessEmail = business.BusEmail,
-               ServiceDescription = profile?.ServiceDescription ?? string.Empty,
+                ServiceDescription = profile?.ServiceDescription ?? string.Empty,
                 BusServId = profile?.BusServId ?? 0,
                 YearsOfExperience = profile?.YearsOfExperience ?? 0,
                 GovtIdDocument = profile?.GovtIdDocument ?? string.Empty,
@@ -245,7 +245,7 @@ namespace mytown.DataAccess.Repositories
             if (service == null)
                 return false;
 
-           
+
             service.ServiceTypeDescription = dto.ServiceTypeDescription;
             service.InspectionFee = dto.InspectionFee;
             service.StartingPrice = dto.StartingPrice;
@@ -257,69 +257,75 @@ namespace mytown.DataAccess.Repositories
             return true;
         }
 
+
+
+
         // ---------- Service enquiry ----------
 
-        public async Task<mytown.Models.ServiceProfile?> GetEnquiryProfileAsync(int serviceProfileId)
+
+        public async Task<Service?> GetEnquiryServiceAsync(int serviceId, int busRegId)
         {
-            return await _context.ServiceProfiles.AsNoTracking()
-                .FirstOrDefaultAsync(p => p.ServiceProfileId == serviceProfileId);
-            // TODO: also require your "active" status value, e.g. && p.Status == "Active"
+            return await _context.Service
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s =>
+                    s.ServiceId == serviceId &&
+                    s.BusRegId == busRegId);
         }
 
-        public async Task<List<mytown.Models.Service>> GetEnquiryServicesAsync(int busRegId, int busServId)
+        public async Task<ServiceProfile?> GetEnquiryProfileAsync(int busRegId, int busServId)
         {
-            return await _context.Service.AsNoTracking()
-                .Where(s => s.BusRegId == busRegId && s.BusServId == busServId)
-                .OrderBy(s => s.ServiceName)
-                .ToListAsync();
+            return await _context.ServiceProfiles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p =>
+                    p.BusRegId == busRegId &&
+                    p.BusServId == busServId);
         }
 
-        public async Task<mytown.Models.Service?> GetEnquiryServiceAsync(int serviceId, int busRegId, int busServId)
+        public async Task<List<ServiceBlockedSlot>> GetBlockedSlotsAsync(
+            int serviceProfileId, DateTime startDate, DateTime endDate)
         {
-            return await _context.Service.AsNoTracking()
-                .FirstOrDefaultAsync(s => s.ServiceId == serviceId
-                                       && s.BusRegId == busRegId
-                                       && s.BusServId == busServId);
-        }
-
-        public async Task<List<ServiceBlockedSlot>> GetBlockedSlotsAsync(int serviceProfileId, DateTime from, DateTime to)
-        {
-            return await _context.ServiceBlockedSlots.AsNoTracking()
-                .Where(b => b.ServiceProfileId == serviceProfileId
-                         && b.BlockedDate >= from.Date && b.BlockedDate <= to.Date)
+            return await _context.ServiceBlockedSlots
+                .AsNoTracking()
+                .Where(b =>
+                    b.ServiceProfileId == serviceProfileId &&
+                    b.BlockedDate >= startDate.Date &&
+                    b.BlockedDate < endDate.Date.AddDays(1))
                 .ToListAsync();
         }
 
         public async Task<List<BookedSlotDto>> GetBookedSlotsAsync(
-            int serviceProfileId, DateTime from, DateTime to, string[] statuses)
+            int serviceProfileId, DateTime startDate, DateTime endDate)
         {
-            var raw = await _context.ServiceEnquiries.AsNoTracking()
-                .Where(e => e.ServiceProfileId == serviceProfileId && statuses.Contains(e.Status))
-                .Select(e => new
+            var statuses = new[] { "Pending", "Accepted", "Rescheduled" };
+
+            return await _context.ServiceEnquiries
+                .AsNoTracking()
+                .Where(e =>
+                    e.ServiceProfileId == serviceProfileId &&
+                    statuses.Contains(e.Status) &&
+                    (e.ConfirmedDate ?? e.PreferredDate) >= startDate.Date &&
+                    (e.ConfirmedDate ?? e.PreferredDate) < endDate.Date.AddDays(1))
+                .Select(e => new BookedSlotDto
                 {
                     Date = e.ConfirmedDate ?? e.PreferredDate,
                     Time = e.ConfirmedTimeSlot ?? e.PreferredTimeSlot
                 })
                 .ToListAsync();
-
-            return raw
-                .Where(x => x.Date.Date >= from.Date && x.Date.Date <= to.Date)
-                .Select(x => new BookedSlotDto { Date = x.Date.Date, Time = x.Time })
-                .ToList();
         }
 
         public async Task AddServiceEnquiryAsync(ServiceEnquiry enquiry)
         {
-            _context.ServiceEnquiries.Add(enquiry);
+            await _context.ServiceEnquiries.AddAsync(enquiry);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<EnquiryNotificationInfo?> GetEnquiryNotificationInfoAsync(ServiceEnquiry enquiry)
+        public async Task<EnquiryNotificationInfo?> GetEnquiryNotificationInfoAsync(
+    ServiceEnquiry enquiry)
         {
-            // TODO 1: business email  -> business register table, where BusRegId == enquiry.BusRegId
-            // TODO 2: shopper name + phone -> shopper register table, where ShopperRegId == enquiry.ShopperRegId
-            // TODO 3: address -> if enquiry.ShopperAddressId != null use that address,
-            //                    otherwise the shopper's default address
+            // TODO: Fetch business email and name using enquiry.BusRegId.
+            // TODO: Fetch shopper name and phone using enquiry.ShopperRegId.
+            // TODO: Fetch selected address using enquiry.ShopperAddressId,
+            //       otherwise fetch the shopper's default address.
 
             return new EnquiryNotificationInfo
             {
@@ -330,6 +336,6 @@ namespace mytown.DataAccess.Repositories
                 ShopperAddress = null
             };
         }
+
     }
-    
 }
