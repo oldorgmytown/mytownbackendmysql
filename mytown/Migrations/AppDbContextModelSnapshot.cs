@@ -1488,6 +1488,10 @@ namespace mytown.Migrations
                         .HasColumnType("longtext")
                         .HasColumnName("hub_status");
 
+                    b.Property<int>("LegNumber")
+                        .HasColumnType("int")
+                        .HasColumnName("leg_number");
+
                     b.Property<bool>("PackageHandedOver")
                         .HasColumnType("tinyint(1)")
                         .HasColumnName("package_handed_over");
@@ -3573,6 +3577,142 @@ namespace mytown.Migrations
                     b.ToTable("services");
                 });
 
+            modelBuilder.Entity("mytown.Models.ServiceBlockedSlot", b =>
+                {
+                    b.Property<int>("BlockedSlotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("blocked_slot_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("BlockedSlotId"));
+
+                    b.Property<DateTime>("BlockedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("blocked_date");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<TimeSpan?>("EndTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("end_time");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)")
+                        .HasColumnName("reason");
+
+                    b.Property<int>("ServiceProfileId")
+                        .HasColumnType("int")
+                        .HasColumnName("service_profile_id");
+
+                    b.Property<TimeSpan?>("StartTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("start_time");
+
+                    b.HasKey("BlockedSlotId");
+
+                    b.ToTable("service_blocked_slots");
+                });
+
+            modelBuilder.Entity("mytown.Models.ServiceEnquiry", b =>
+                {
+                    b.Property<int>("EnquiryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("enquiry_id");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("EnquiryId"));
+
+                    b.Property<int>("BusRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_reg_id");
+
+                    b.Property<int>("BusServId")
+                        .HasColumnType("int")
+                        .HasColumnName("bus_serv_id");
+
+                    b.Property<DateTime?>("ConfirmedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("confirmed_date");
+
+                    b.Property<TimeSpan?>("ConfirmedTimeSlot")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("confirmed_time_slot");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_date");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("message");
+
+                    b.Property<int>("NumberOfUnits")
+                        .HasColumnType("int")
+                        .HasColumnName("number_of_units");
+
+                    b.Property<DateTime>("PreferredDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("preferred_date");
+
+                    b.Property<TimeSpan>("PreferredTimeSlot")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("preferred_time_slot");
+
+                    b.Property<string>("ProviderResponse")
+                        .HasColumnType("longtext")
+                        .HasColumnName("provider_response");
+
+                    b.Property<DateTime?>("RespondedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("responded_date");
+
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int")
+                        .HasColumnName("service_id");
+
+                    b.Property<string>("ServiceLocation")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("service_location");
+
+                    b.Property<string>("ServiceName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)")
+                        .HasColumnName("service_name");
+
+                    b.Property<int>("ServiceProfileId")
+                        .HasColumnType("int")
+                        .HasColumnName("service_profile_id");
+
+                    b.Property<int?>("ShopperAddressId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_address_id");
+
+                    b.Property<int>("ShopperRegId")
+                        .HasColumnType("int")
+                        .HasColumnName("shopper_reg_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_date");
+
+                    b.HasKey("EnquiryId");
+
+                    b.ToTable("service_enquiries");
+                });
+
             modelBuilder.Entity("mytown.Models.ServiceProfile", b =>
                 {
                     b.Property<int>("ServiceProfileId")
@@ -4684,6 +4824,10 @@ namespace mytown.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_date");
+
+                    b.Property<int?>("OrderTransportLegId")
+                        .HasColumnType("int")
+                        .HasColumnName("order_transport_leg_id");
 
                     b.Property<string>("OrderType")
                         .IsRequired()

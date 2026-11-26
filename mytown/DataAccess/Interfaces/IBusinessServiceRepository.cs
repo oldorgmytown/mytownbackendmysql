@@ -24,5 +24,22 @@ namespace mytown.DataAccess.Interfaces
 
         // edit service types
         Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
+
+        // ---------- Service enquiry ----------
+        Task<mytown.Models.ServiceProfile?> GetEnquiryProfileAsync(int serviceProfileId);
+
+        Task<List<mytown.Models.Service>> GetEnquiryServicesAsync(int busRegId, int busServId);
+
+        Task<mytown.Models.Service?> GetEnquiryServiceAsync(int serviceId, int busRegId, int busServId);
+
+        Task<List<ServiceBlockedSlot>> GetBlockedSlotsAsync(int serviceProfileId, DateTime from, DateTime to);
+
+        // slots held by enquiries with one of the given statuses, between from and to (inclusive)
+        Task<List<BookedSlotDto>> GetBookedSlotsAsync(int serviceProfileId, DateTime from, DateTime to, string[] statuses);
+
+        Task AddServiceEnquiryAsync(ServiceEnquiry enquiry);
+
+        Task<EnquiryNotificationInfo?> GetEnquiryNotificationInfoAsync(ServiceEnquiry enquiry);
+
     }
 }

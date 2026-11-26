@@ -21,6 +21,16 @@ namespace mytown.Services.Interfaces
         // edit service type
         //latets
         Task<bool> UpdateServiceAsync(UpdateServiceDto dto);
-       
+
+        // ---------- Service enquiry ----------
+        Task<EnquiryFormDataDto?> GetEnquiryFormDataAsync(int serviceProfileId);
+
+        Task<AvailableDatesDto?> GetEnquiryAvailableDatesAsync(int serviceProfileId, int year, int month);
+
+        Task<AvailableSlotsDto?> GetEnquiryAvailableSlotsAsync(int serviceProfileId, DateTime date);
+
+        Task<EnquiryResult> AddServiceEnquiryAsync(CreateServiceEnquiryDto dto);
+
+
     }
 }

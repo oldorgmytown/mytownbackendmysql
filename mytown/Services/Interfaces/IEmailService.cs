@@ -1,4 +1,5 @@
-﻿using mytown.Models.DTO_s;
+﻿using mytown.DTOs;
+using mytown.Models.DTO_s;
 
 namespace mytown.Services.Interfaces
 {
@@ -58,5 +59,9 @@ namespace mytown.Services.Interfaces
     string customerName,
     BusinessOrderDetailsDto dto,
     string packageSummary);
+
+
+        //Service Enquiry email to business
+        Task SendServiceEnquiryToBusinessAsync(string email, ServiceEnquiryDto dto);
     }
 }

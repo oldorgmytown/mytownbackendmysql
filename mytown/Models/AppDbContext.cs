@@ -31,6 +31,9 @@ namespace mytown.Models
             public DbSet<ServiceSubCategory> ServiceSubCategory { get; set; }
             public DbSet<Service> Service { get; set; }
             public DbSet<ServiceProfile> ServiceProfiles { get; set; }
+
+            public DbSet<ServiceEnquiry> ServiceEnquiries { get; set; }
+            public DbSet<ServiceBlockedSlot> ServiceBlockedSlots { get; set; }
             public DbSet<Products> products { get; set; }
 
             public DbSet<ShopperRegister> ShopperRegisters { get; set; }

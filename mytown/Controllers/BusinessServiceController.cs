@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs;
+using mytown.Models;
+using mytown.Models.mytown.DataAccess;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
+using System.Globalization;
 
 namespace mytown.Controllers
 {
@@ -118,6 +121,71 @@ namespace mytown.Controllers
                 return NotFound("Service not found.");
 
             return Ok("Service updated successfully.");
+        }
+
+
+        // ---------- Service enquiry ----------
+
+        // Load the enquiry form: header, services, locations, working hours, date range
+        // GET api/businessservices/enquiry-form-data/12
+        [HttpGet("enquiry-form-data/{serviceProfileId:int}")]
+        public async Task<IActionResult> GetEnquiryFormData(int serviceProfileId)
+        {
+            var result = await _service.GetEnquiryFormDataAsync(serviceProfileId);
+
+            if (result == null)
+                return NotFound(new { message = "Service profile not found." });
+
+            return Ok(result);
+        }
+
+        // Calendar: only dates that still have a free slot
+        // GET api/businessservices/enquiry-available-dates/12?year=2026&month=11
+        [HttpGet("enquiry-available-dates/{serviceProfileId:int}")]
+        public async Task<IActionResult> GetEnquiryAvailableDates(
+            int serviceProfileId, [FromQuery] int year, [FromQuery] int month)
+        {
+            if (year < 2000 || year > 2100 || month < 1 || month > 12)
+                return BadRequest(new { message = "Invalid year or month." });
+
+            var result = await _service.GetEnquiryAvailableDatesAsync(serviceProfileId, year, month);
+
+            if (result == null)
+                return NotFound(new { message = "Service profile not found." });
+
+            return Ok(result);
+        }
+
+        // Time slots (free + unblocked) for one date
+        // GET api/businessservices/enquiry-available-slots/12?date=2026-11-24
+        [HttpGet("enquiry-available-slots/{serviceProfileId:int}")]
+        public async Task<IActionResult> GetEnquiryAvailableSlots(
+            int serviceProfileId, [FromQuery] DateTime date)
+        {
+            var result = await _service.GetEnquiryAvailableSlotsAsync(serviceProfileId, date);
+
+            if (result == null)
+                return NotFound(new { message = "Service profile not found." });
+
+            return Ok(result);
+        }
+
+        // Save the enquiry
+        // POST api/businessservices/add-service-enquiry
+        [HttpPost("add-service-enquiry")]
+        public async Task<IActionResult> AddServiceEnquiry([FromBody] CreateServiceEnquiryDto dto)
+        {
+            var result = await _service.AddServiceEnquiryAsync(dto);
+
+            if (result.Success)
+                return Ok(new { message = result.Message, enquiryId = result.EnquiryId });
+
+            return result.Error switch
+            {
+                EnquiryError.NotFound => NotFound(new { message = result.Message }),
+                EnquiryError.Conflict => Conflict(new { message = result.Message }),
+                _ => BadRequest(new { message = result.Message })
+            };
         }
     }
 }
