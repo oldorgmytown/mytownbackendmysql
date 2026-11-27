@@ -14,6 +14,8 @@
     public class BusinessServiceEnquiryListDto
     {
         public int EnquiryId { get; set; }
+        public int ShopperRegId { get; set; }
+        public int BusRegId { get; set; }
         public int ServiceId { get; set; }
         public string ServiceName { get; set; }
         public int NumberOfUnits { get; set; }

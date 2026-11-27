@@ -200,5 +200,13 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("shopper-enquiries/{shopperRegId:int}")]
+        public async Task<IActionResult> GetShopperServiceEnquiries(int shopperRegId)
+        {
+            var result = await _service.GetShopperServiceEnquiriesAsync(shopperRegId);
+            return Ok(result);
+        }
+
     }
-    }
+}

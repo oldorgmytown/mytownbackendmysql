@@ -308,5 +308,10 @@ GetSenderRegistersPaginatedAsync(
         {
             return await _adminRepo.GetAdminSenderOrderDetailAsync(senderOrderId);
         }
+
+        public async Task<List<AdminServiceEnquiryDto>> GetAllServiceEnquiriesAsync()
+        {
+            return await _adminRepo.GetAllServiceEnquiriesAsync();
+        }
     }
 }

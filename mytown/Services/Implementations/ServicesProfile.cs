@@ -407,6 +407,12 @@ namespace mytown.Services.Implementations
 
             return response;
         }
+
+        public async Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId)
+        {
+            return await _repo.GetShopperServiceEnquiriesAsync(shopperRegId);
+        }
+
     }
 
 

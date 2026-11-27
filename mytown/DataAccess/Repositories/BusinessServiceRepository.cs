@@ -358,5 +358,61 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId)
+        {
+            return await _context.ServiceEnquiries
+                .Where(x => x.ShopperRegId == shopperRegId)
+                .OrderByDescending(x => x.CreatedDate)
+                .Select(x => new BusinessServiceEnquiryListDto
+                {
+                    EnquiryId = x.EnquiryId,
+                    ShopperRegId = x.ShopperRegId,
+                    BusRegId = x.BusRegId,
+                    ServiceId = x.ServiceId,
+                    ServiceName = x.ServiceName,
+                    NumberOfUnits = x.NumberOfUnits,
+                    PreferredDate = x.PreferredDate,
+                    PreferredTimeSlot = x.PreferredTimeSlot.ToString(@"hh\:mm"),
+                    ServiceLocation = x.ServiceLocation,
+                    CustomerName = "",
+                    CustomerAddress = null,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate
+                })
+                .ToListAsync();
+        }
+
+        public async Task<List<BusinessServiceEnquiryListDto>> GetAllServiceEnquiriesAsync(
+            int? busRegId, int? shopperRegId)
+        {
+            var query = _context.ServiceEnquiries.AsQueryable();
+
+            if (busRegId.HasValue)
+                query = query.Where(x => x.BusRegId == busRegId.Value);
+
+            if (shopperRegId.HasValue)
+                query = query.Where(x => x.ShopperRegId == shopperRegId.Value);
+
+            return await query
+                .OrderByDescending(x => x.CreatedDate)
+                .Select(x => new BusinessServiceEnquiryListDto
+                {
+                    EnquiryId = x.EnquiryId,
+                    ShopperRegId = x.ShopperRegId,
+                    BusRegId = x.BusRegId,
+                    ServiceId = x.ServiceId,
+                    ServiceName = x.ServiceName,
+                    NumberOfUnits = x.NumberOfUnits,
+                    PreferredDate = x.PreferredDate,
+                    PreferredTimeSlot = x.PreferredTimeSlot.ToString(@"hh\:mm"),
+                    ServiceLocation = x.ServiceLocation,
+                    CustomerName = "",
+                    CustomerAddress = null,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate
+                })
+                .ToListAsync();
+        }
+
     }
 }
