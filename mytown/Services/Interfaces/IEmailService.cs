@@ -63,5 +63,7 @@ namespace mytown.Services.Interfaces
 
         //Service Enquiry email to business
         Task SendServiceEnquiryToBusinessAsync(string email, ServiceEnquiryDto dto);
+
+        Task SendEnquiryResponseToShopperAsync(string email, EnquiryResponseEmailDto dto);
     }
 }

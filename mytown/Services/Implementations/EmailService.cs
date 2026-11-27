@@ -4978,7 +4978,226 @@ private string BuildHubPackageReadyTemplate(string transporterName, string packa
 </html>";
     }
 
-   
+  // =====================================================================
+// EMAIL TO THE SHOPPER WHEN THE PROVIDER RESPONDS
+// ADD TO: your email service class (same class as SendServiceEnquiryToBusinessAsync)
+// + add to its interface:
+//     Task SendEnquiryResponseToShopperAsync(string email, EnquiryResponseEmailDto dto);
+// =====================================================================
+ 
+public async Task SendEnquiryResponseToShopperAsync(string email, EnquiryResponseEmailDto dto)
+    {
+        if (!await DomainHasMX(email))
+            throw new Exception("The email domain is not valid (no MX records found).");
+
+        try
+        {
+            using (var smtpClient = new SmtpClient(_smtpServer))
+            {
+                smtpClient.Port = _smtpPort;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                smtpClient.EnableSsl = true;
+
+                using (var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_senderEmail, "ITISMYTOWN"),
+                    Subject = $"Your Service Enquiry ITMT-{dto.EnquiryDate.Year}-{dto.ServiceEnquiryId:D6} - {dto.Status}",
+                    Body = BuildEnquiryResponseTemplate(dto),
+                    IsBodyHtml = true
+                })
+                {
+                    mailMessage.To.Add(email);
+                    await smtpClient.SendMailAsync(mailMessage);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending enquiry response email: {ex.Message}");
+            throw new Exception("Failed to send enquiry response email.");
+        }
+    }
+
+    private string BuildEnquiryResponseTemplate(EnquiryResponseEmailDto dto)
+    {
+        var font = "font-family:'Inter Tight',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var fontInter = "font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+        var fontManrope = "font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;";
+
+        var shopperName = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(dto.ShopperName) ? "there" : dto.ShopperName);
+        var businessName = WebUtility.HtmlEncode(dto.BusinessName ?? string.Empty);
+        var businessLocation = WebUtility.HtmlEncode(dto.BusinessLocation ?? string.Empty);
+        var serviceName = WebUtility.HtmlEncode(dto.ServiceName ?? string.Empty);
+        var location = WebUtility.HtmlEncode(dto.ServiceLocation ?? string.Empty);
+        var requestedTime = WebUtility.HtmlEncode(dto.PreferredTimeSlot ?? string.Empty);
+        var confirmedTime = WebUtility.HtmlEncode(dto.ConfirmedTimeSlot ?? string.Empty);
+        var providerMsg = WebUtility.HtmlEncode(string.IsNullOrWhiteSpace(dto.ProviderResponse) ? "-" : dto.ProviderResponse)
+                            .Replace("\r\n", "<br/>").Replace("\n", "<br/>");
+
+        var serviceId = $"ITMT-{dto.EnquiryDate.Year}-{dto.ServiceEnquiryId:D6}";
+        var enquiryUrl = $"https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/enquiries/{dto.ServiceEnquiryId}"; // adjust route if different
+
+        // badge colour, headline and intro depend on the response
+        var (badgeBg, headline, intro) = dto.Status switch
+        {
+            "Accepted" => ("#22C55E",
+                "Your enquiry has been accepted",
+                "Good news! The service provider has accepted your enquiry. Your appointment details are below."),
+            "Rescheduled" => ("#F59E0B",
+                "A new time has been proposed",
+                "The service provider cannot do your preferred slot and has suggested a new date and time. The new schedule is below."),
+            _ => ("#EF4444",
+                "Your enquiry could not be accepted",
+                "Unfortunately the service provider is unable to take your enquiry this time. You can try another date or another provider.")
+        };
+
+        // confirmed schedule card (Accepted / Rescheduled only)
+        var confirmedBlock = string.Empty;
+        if ((dto.Status == "Accepted" || dto.Status == "Rescheduled") && dto.ConfirmedDate != null)
+        {
+            var label = dto.Status == "Accepted" ? "Confirmed Appointment" : "New Proposed Schedule";
+            confirmedBlock = $@"
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:15px 17px;"">
+              <div style=""color:#166534;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;{fontInter}"">{label}</div>
+              <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Date</div>
+              <div style=""color:#14532D;font-size:14px;font-weight:700;margin-bottom:14px;{fontInter}"">{dto.ConfirmedDate:MMM dd, yyyy}</div>
+              <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Time Slot</div>
+              <div style=""color:#14532D;font-size:14px;font-weight:700;margin-bottom:14px;{fontInter}"">{confirmedTime}</div>
+              <div style=""color:#15803D;font-size:11px;font-weight:500;margin-bottom:1px;{fontInter}"">Service Location</div>
+              <div style=""color:#14532D;font-size:14px;font-weight:700;{fontInter}"">{location}</div>
+            </td>
+          </tr>
+        </table>";
+        }
+
+        return $@"<!DOCTYPE html>
+<html lang=""en"">
+<head>
+  <meta charset=""UTF-8"">
+  <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+  <title>Service Enquiry Update - ITISMYTOWN</title>
+</head>
+<body style=""margin:0;padding:0;background:#FAFBFC;{font}"">
+<table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" bgcolor=""#FAFBFC"">
+<tr>
+  <td align=""center"" style=""padding:0;"">
+  <table width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#FAFBFC;"">
+ 
+    <!-- HEADER -->
+    <tr>
+      <td align=""center"" style=""padding:20px 30px 24px;border-bottom:1px solid #F1F1F3;background:#fff;"">
+        <img src=""https://kind-meadow-0fe6b9000-qa.eastasia.7.azurestaticapps.net/images/mainlogoblue.png""
+             alt=""ITISMYTOWN"" height=""55""
+             style=""height:55px;width:auto;display:block;margin:0 auto;"" />
+      </td>
+    </tr>
+ 
+    <tr>
+      <td style=""padding:20px 30px 24px;"">
+        <p style=""color:#000;font-size:16px;font-weight:700;line-height:20px;margin:0 0 16px 0;{font}"">Hello {shopperName},</p>
+ 
+        <!-- Status banner -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin-bottom:16px;"">
+          <tr>
+            <td bgcolor=""{badgeBg}"" style=""background:{badgeBg};border-radius:8px;padding:14px 18px;"">
+              <div style=""color:#FFFFFF;font-size:16px;font-weight:700;{fontManrope}"">{headline}</div>
+            </td>
+          </tr>
+        </table>
+ 
+        <p style=""color:#000;font-size:16px;font-weight:400;line-height:24px;margin:0 0 16px 0;{font}"">{intro}</p>
+ 
+        <!-- Enquiry summary -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border:1px solid #D5D5D5;border-radius:4px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:20px 24px;"">
+              <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+                <tr>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;{font}"">Enquiry ID</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;{font}"">{serviceId}</div>
+                  </td>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;{font}"">Service</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;{font}"">{serviceName}</div>
+                  </td>
+                </tr>
+                <tr><td colspan=""2"" style=""height:14px;""></td></tr>
+                <tr>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;{font}"">Provider</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;{font}"">{businessName}</div>
+                    <div style=""color:#43474E;font-size:12px;{fontInter}"">{businessLocation}</div>
+                  </td>
+                  <td width=""50%"" valign=""top"">
+                    <div style=""color:#585858;font-size:14px;font-weight:500;margin-bottom:6px;{font}"">You Requested</div>
+                    <div style=""color:#001F3F;font-size:16px;font-weight:600;{font}"">{dto.PreferredDate:MMM dd, yyyy}</div>
+                    <div style=""color:#43474E;font-size:12px;{fontInter}"">{requestedTime} &#8226; {dto.Persons} person(s)</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+ 
+        {confirmedBlock}
+ 
+        <!-- Provider message -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0""
+               style=""background:#fff;border-left:4px solid #12345B;border-top:1px solid #12345B;
+                      border-right:1px solid #12345B;border-bottom:1px solid #12345B;
+                      border-top-right-radius:8px;border-bottom-right-radius:8px;margin-bottom:16px;"">
+          <tr>
+            <td style=""padding:17px 17px 15px 20px;"">
+              <div style=""color:#475569;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;{fontInter}"">
+                Message from {businessName}
+              </div>
+              <div style=""color:#1E293B;font-size:14px;font-weight:400;line-height:21px;{font}"">{providerMsg}</div>
+            </td>
+          </tr>
+        </table>
+ 
+        <!-- Button -->
+        <table width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td align=""center"" style=""padding:8px 0 0 0;"">
+              <a href=""{enquiryUrl}""
+                 style=""display:inline-block;background:#285A8C;color:#fff;border-radius:8px;
+                        padding:14px 28px;font-size:15px;font-weight:700;letter-spacing:0.2px;
+                        text-decoration:none;text-align:center;{fontManrope}"">
+                View Enquiry &#8594;
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+ 
+    <!-- FOOTER -->
+    <tr>
+      <td align=""center"" style=""background:rgba(139,139,139,0.08);padding:20px 30px 24px;"">
+        <div style=""color:#585858;font-size:12px;font-weight:400;line-height:18px;margin-bottom:8px;{font}"">
+          You&#39;re receiving this email because you sent a service enquiry on our platform.
+        </div>
+        <div style=""color:#585858;font-size:12px;font-weight:400;line-height:18px;{font}"">
+          &copy; 2026 itismytown. All rights reserved.
+        </div>
+      </td>
+    </tr>
+ 
+  </table>
+  </td>
+</tr>
+</table>
+</body>
+</html>";
+    }
+
 
 
 }

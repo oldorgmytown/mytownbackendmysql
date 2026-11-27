@@ -45,5 +45,10 @@ namespace mytown.DataAccess.Interfaces
 
         Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId);
 
+        Task<ServiceEnquiry?> GetEnquiryByIdAsync(int enquiryId);     // tracked (will be updated)
+
+        Task SaveEnquiryResponseAsync(ServiceEnquiry enquiry, ServiceBlockedSlot? blockedSlot);
+
+        Task<ShopperContactDto?> GetShopperContactAsync(int shopperRegId);
     }
 }

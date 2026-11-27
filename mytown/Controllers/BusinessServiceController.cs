@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using mytown.DTOs;
 using mytown.Models;
+using mytown.Models.DTO_s;
 using mytown.Models.mytown.DataAccess;
 using mytown.Services.Implementations;
 using mytown.Services.Interfaces;
@@ -153,6 +154,7 @@ namespace mytown.Controllers
             return Ok(result);
         }
 
+
         [HttpGet("enquiry-available-slots/{busRegId:int}/{serviceId:int}")]
         public async Task<IActionResult> GetEnquiryAvailableSlots(
             int busRegId, int serviceId, DateTime date)
@@ -206,6 +208,23 @@ namespace mytown.Controllers
         {
             var result = await _service.GetShopperServiceEnquiriesAsync(shopperRegId);
             return Ok(result);
+        }
+
+        // PUT api/businessservices/respond-service-enquiry
+        [HttpPut("respond-service-enquiry")]
+        public async Task<IActionResult> RespondToServiceEnquiry([FromBody] RespondServiceEnquiryDto dto)
+        {
+            var result = await _service.RespondToServiceEnquiryAsync(dto);
+
+            if (result.Success)
+                return Ok(new { message = result.Message, enquiryId = result.EnquiryId });
+
+            return result.Error switch
+            {
+                EnquiryError.NotFound => NotFound(new { message = result.Message }),
+                EnquiryError.Conflict => Conflict(new { message = result.Message }),
+                _ => BadRequest(new { message = result.Message })
+            };
         }
 
     }
