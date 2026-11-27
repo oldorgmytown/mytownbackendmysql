@@ -36,6 +36,9 @@ namespace mytown.Services.Interfaces
 
         Task<EnquiryResult> AddServiceEnquiryAsync(CreateServiceEnquiryDto dto);
 
+        Task<BusinessServiceEnquiriesResponseDto> GetBusinessServiceEnquiriesAsync(
+    int busRegId, string? status, int? serviceId, string? serviceType);
+
 
     }
 }

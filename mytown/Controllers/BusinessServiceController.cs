@@ -187,5 +187,18 @@ namespace mytown.Controllers
 
             return Ok(result);
         }
+
+        [HttpGet("enquiries/{busRegId:int}")]
+        public async Task<IActionResult> GetBusinessServiceEnquiries(
+    int busRegId,
+    [FromQuery] string? status,
+    [FromQuery] int? serviceId,
+    [FromQuery] string? serviceType)
+        {
+            var result = await _service.GetBusinessServiceEnquiriesAsync(
+                busRegId, status, serviceId, serviceType);
+
+            return Ok(result);
+        }
     }
     }

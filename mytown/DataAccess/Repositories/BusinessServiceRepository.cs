@@ -337,5 +337,26 @@ namespace mytown.DataAccess.Repositories
             };
         }
 
+        public async Task<List<BusinessServiceEnquiryListDto>> GetBusinessServiceEnquiriesAsync(int busRegId)
+        {
+            return await _context.ServiceEnquiries
+                .Where(x => x.BusRegId == busRegId)
+                .Select(x => new BusinessServiceEnquiryListDto
+                {
+                    EnquiryId = x.EnquiryId,
+                    ServiceId = x.ServiceId,
+                    ServiceName = x.ServiceName,
+                    NumberOfUnits = x.NumberOfUnits,
+                    PreferredDate = x.PreferredDate,
+                    PreferredTimeSlot = x.PreferredTimeSlot.ToString(@"hh\:mm"),
+                    ServiceLocation = x.ServiceLocation,
+                    CustomerName = "",
+                    CustomerAddress = null,
+                    Status = x.Status,
+                    CreatedDate = x.CreatedDate
+                })
+                .ToListAsync();
+        }
+
     }
 }
