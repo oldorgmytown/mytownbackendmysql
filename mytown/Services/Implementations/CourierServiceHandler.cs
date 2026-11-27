@@ -1,11 +1,17 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using MimeKit.Encodings;
 using mytown.DataAccess.Interfaces;
+using mytown.Helpers;
 using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
+using Stripe;
 using System.Globalization;
+using System.Numerics;
+using System.Text;
 using System.Text.Json;
+using static mytown.Services.Implementations.CourierServiceHandler;
 
 namespace mytown.Services.Implementations
 {
@@ -16,19 +22,21 @@ namespace mytown.Services.Implementations
         private readonly IVerificationLinkBuildercourier _verificationLinkBuilder;
         private readonly IConfiguration _configuration;
         private readonly ILogger<CourierService> _logger;
-        
+        private readonly HttpClient _httpClient;
+
         public CourierServiceHandler(
             ICourierServiceRepository repo,
             IEmailService emailService,
             IVerificationLinkBuildercourier verificationLinkBuilder,
             IConfiguration configuration,
-            ILogger<CourierService> logger)
+            ILogger<CourierService> logger, HttpClient httpClient)
         {
             _repo = repo;
             _emailService = emailService;
             _verificationLinkBuilder = verificationLinkBuilder;
             _configuration = configuration;
             _logger = logger;
+            _httpClient = httpClient;
         }
 
         public async Task<bool> IsCourierEmailTakenAsync(string email)
@@ -149,9 +157,42 @@ namespace mytown.Services.Implementations
             };
 
             var created = await _repo.RegisterCourier(courier);
-            await _repo.DeletePendingCourierVerification(token);
 
-            return created;
+            //add bank account details
+            var bank = new CourierAccountDetail
+            {
+                CourierId = created.CourierId,
+                AccountHolderName = courierDto.AccountHolderName,
+                BankName = courierDto.BankName,
+                AccountNumber = courierDto.AccountNumber,
+                IFSCCode = courierDto.IFSCCode,               
+                CreatedDate = DateTime.UtcNow
+            };
+
+            // --- Cashfree beneficiary creation (non-blocking) ---
+try
+{
+    var beneficiaryRequest = new CreateCashfreeBeneficiaryRequestCourier
+    {
+        CourierId = created.CourierId,
+        BeneficiaryName = bank.AccountHolderName,
+        BankAccountNumber = bank.AccountNumber,
+        BankIfsc = bank.IFSCCode
+    };
+
+    await CreateBeneficiaryAsync(beneficiaryRequest);
+}
+catch (Exception cfEx)
+{
+    _logger.LogError(cfEx,
+        "Cashfree beneficiary creation failed for CourierId {CourierId}. Will retry later.",
+        created.CourierId);
+}
+// --- end beneficiary block ---
+
+await _repo.DeletePendingCourierVerification(token);
+
+return created;
         }
 
         public async Task<PendingCourierVerification?> FindPendingVerificationByEmail(string email)
@@ -203,111 +244,439 @@ namespace mytown.Services.Implementations
             return result;
         }
 
-// ============================================================
-// REPLACE the entire GetBestCourierOptionsByStoresAsync method
-// in CourierServiceHandler.cs with this
-// ============================================================
+        // ============================================================
+        //  GetBestCourierOptionsByStoresAsync method for shopper and guest
+        //
+        // ============================================================
 
-public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
-    int shopperId,
-    List<int> storeIds)
-{
-    var shopper = await _repo.GetShopperByIdAsync(shopperId)
-        ?? throw new Exception("Shopper not found");
-
-    var stores = await _repo.GetStoresByIdsAsync(storeIds);
-    var storeWeights = await _repo.GetStoreWeightsAsync(shopperId, storeIds);
-
-    var results = new List<StoreCourierResultDto>();
-
-    foreach (var storeId in storeIds)
-    {
-        if (!stores.TryGetValue(storeId, out var store))
-            continue;
-
-        var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
-            ? weight
-            : 0;
-
-        // ─── Standard + Express courier options ───────────────────────────
-        var allCourierOptions = await _repo.GetBestCourierOptions(
-            store.BusinessCity,
-            store.BusinessState,
-            store.BusinessCountry,
-            shopper.City,
-            totalWeight
-        );
-
-        // Cheapest Surface → Standard Delivery
-        var cheapestSurface = allCourierOptions
-            .Where(c => c.ShippingMode.Equals("Surface", StringComparison.OrdinalIgnoreCase))
-            .OrderBy(c => c.Cost)
-            .FirstOrDefault();
-
-        // Fastest Air → Express Delivery
-        var fastestAir = allCourierOptions
-            .Where(c => c.ShippingMode.Equals("Air", StringComparison.OrdinalIgnoreCase))
-            .OrderBy(c => c.MaxDeliveryDays)
-            .FirstOrDefault();
-
-        var selectedCouriers = new List<BestcourierinfoDto>();
-
-        if (cheapestSurface != null)
+        public async Task<List<StoreCourierResultDto>> GetBestCourierOptionsByStoresAsync(
+            StoreCourierRequestDto request)
         {
-            cheapestSurface.ShippingMode = "Standard Delivery";
-            selectedCouriers.Add(cheapestSurface);
+            string city;
+            string town;
+            string state;
+            string country;
+            string pincode;
+
+            Dictionary<int, decimal> storeWeights;
+
+            // SHOPPER FLOW (existing) for main address or altrenate address
+            if (request.ShopperId.HasValue && request.ShopperId.Value > 0)
+            {
+                var shopper = await _repo.GetShopperByIdAsync(request.ShopperId.Value)
+                    ?? throw new Exception("Shopper not found");
+
+                if (request.UseAlternateAddress)
+                {
+                    var altAddress = await _repo.GetAlternateAddressByShopperIdAsync(request.ShopperId.Value);
+
+                    if (altAddress == null)
+                        throw new Exception("Alternate address not found.");
+
+                    city = altAddress.AltCity;
+                    town = altAddress.AltTown;
+                    state = altAddress.AltState;
+                    country = altAddress.AltCountry;
+                    pincode = altAddress.AltPostalCode;
+                }
+                else
+                {
+                    city = shopper.City;
+                    town = shopper.Town;
+                    state = shopper.State;
+                    country = shopper.Country;
+                    pincode = shopper.PostalCode;
+                }
+
+                storeWeights = await _repo.GetStoreWeightsAsync(
+                    request.ShopperId.Value,
+                    request.StoreIds);
+            }
+            // GUEST FLOW
+            else if (request.GuestCustomerId.HasValue && request.GuestCustomerId.Value > 0)
+            {
+                var guest = await _repo.GetGuestDetailsByIdAsync(request.GuestCustomerId.Value)
+                    ?? throw new Exception("Guest not found");
+
+                city = guest.City;
+                town = guest.Town;
+                state = guest.State;
+                country = guest.Country;
+                pincode = guest.PostalCode;
+                storeWeights = request.StoreWeights?
+                    .ToDictionary(
+                        x => x.StoreId,
+                        x => x.TotalWeightKg)
+                    ?? new Dictionary<int, decimal>();
+            }
+            else
+            {
+                throw new Exception("ShopperId or GuestCustomerId is required.");
+            }
+
+            var stores = await _repo.GetStoresByIdsAsync(request.StoreIds);
+
+            var results = new List<StoreCourierResultDto>();
+
+            foreach (var storeId in request.StoreIds)
+            {
+                if (!stores.TryGetValue(storeId, out var store))
+                    continue;
+
+                var totalWeight = storeWeights.TryGetValue(storeId, out var weight)
+                    ? weight
+                    : 0m;
+                var totalweightkg = totalWeight + 0.05m;
+
+                // Standard + Express
+                var allCourierOptions = await _repo.GetBestCourierOptions(
+                    store.BusinessCity,
+                    store.BusinessState,
+                    store.BusinessCountry,
+                    state,
+                    totalweightkg
+                );
+
+                var cheapestSurface = allCourierOptions
+                    .Where(c => c.ShippingMode.Equals("Surface",
+                        StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(c => c.Cost)
+                    .FirstOrDefault();
+
+                var fastestAir = allCourierOptions
+                    .Where(c => c.ShippingMode.Equals("Air",
+                        StringComparison.OrdinalIgnoreCase))
+                    .OrderBy(c => c.MaxDeliveryDays)
+                    .FirstOrDefault();
+
+                var selectedCouriers = new List<BestcourierinfoDto>();
+
+                if (cheapestSurface != null)
+                {
+                    cheapestSurface.ShippingMode = "Standard Delivery";
+                    selectedCouriers.Add(cheapestSurface);
+                }
+
+                if (fastestAir != null)
+                {
+                    fastestAir.ShippingMode = "Express Delivery";
+                    selectedCouriers.Add(fastestAir);
+                }
+
+                // P2P Matching
+                //var matchingTransporter = await _repo.FindMatchingTransporterAsync(
+                //    store.Town,
+                //    store.BusinessCity,
+                //    store.BusinessState,
+                //    store.BusinessCountry,                    
+                //    town,
+                //    city,
+                //    state,
+                //    country,
+                //    totalWeight
+                //);
+
+
+                var matchingTransporter = await FindMatchingTransporterByPincodeAsync(store.PostalCode, pincode, totalweightkg);
+
+
+                if (matchingTransporter != null)
+                {
+                    // one transporter: keep your existing price rule
+                    if (matchingTransporter.HopCount <= 1)
+                    {
+                        decimal basePrice = cheapestSurface?.Cost
+                            ?? fastestAir?.Cost
+                            ?? 333m;
+
+                        decimal p2pCost = Math.Round(basePrice * 0.50m, 2);
+                        matchingTransporter.Cost = Math.Max(p2pCost, 50m);
+                    }
+                    // two or three transporters: keep the cost from the matching (100 or 150)
+
+                    matchingTransporter.ShippingMode = "P2P";
+                    selectedCouriers.Add(matchingTransporter);
+                }
+
+                results.Add(new StoreCourierResultDto
+                {
+                    StoreId = storeId,
+                    TotalWeightKg = totalWeight,
+                    CourierOptions = selectedCouriers
+                });
+            }
+
+            return results;
         }
 
-        if (fastestAir != null)
+        public async Task<LocationCourierPricingResponseDto> GetCourierPricingAsync(
+          LocationCourierPricingRequestDto request)
         {
-            fastestAir.ShippingMode = "Express Delivery";
-            selectedCouriers.Add(fastestAir);
+            var response = new LocationCourierPricingResponseDto();
+
+            // 1. Resolve the store's address from BusRegId
+            var storesDict = await _repo.GetStoresByIdsAsync(
+                new List<int> { request.BusRegId });
+
+            if (!storesDict.TryGetValue(request.BusRegId, out var store))
+            {
+                return response;
+            }
+
+            // NOTE: adjust these property names to match your actual
+            // BusinessRegister model (e.g. BusTown, BusCity, BusState, BusCountry)
+            string storeTown = store.Town;
+            string storeCity = store.BusinessCity;
+            string storeState = store.BusinessState;
+            string storeCountry = store.BusinessCountry;
+
+            // 2. Run both lookups concurrently — independent of each other
+            var courierTask = _repo.GetCourierPricingByLocation(
+                storeTown,
+                storeCity,
+                storeState,
+                storeCountry,
+                request.ShopperState);
+
+            var transporterTask = _repo.FindMatchingTransporterByLocationAsync(
+                storeTown,
+                storeCity,
+                storeState,
+                storeCountry,
+                request.ShopperTown,
+                request.ShopperCity,
+                request.ShopperState,
+                request.ShopperCountry);
+
+            try
+            {
+                await Task.WhenAll(courierTask, transporterTask);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception in GetCourierPricingAsync: {ex.Message}");
+            }
+
+            response.CourierOptions = courierTask.IsCompletedSuccessfully
+                ? courierTask.Result
+                : new List<BestcourierinfoDto>();
+
+            response.TransporterOption = transporterTask.IsCompletedSuccessfully
+                ? transporterTask.Result
+                : null;
+
+            return response;
         }
 
-        // ─── P2P option — find real matching transporter ──────────────────
-        // storeCity = store.BusinessCity  (transporter picks up FROM here)
-        // shopperCity = shopper.City      (transporter drops off TO here)
-        var matchingTransporter = await _repo.FindMatchingTransporterAsync(
-            store.BusinessCity,
-            shopper.City,
-            totalWeight
-        );
-
-        if (matchingTransporter != null)
+        public async Task<CashfreeBeneficiaryResponse> CreateBeneficiaryAsync(CreateCashfreeBeneficiaryRequestCourier request)
         {
-            // P2P cost = 30% of Standard Delivery price
-            // If no standard option exists, fall back to 30% of Express, else ₹100 minimum
-            decimal basePrice = cheapestSurface?.Cost
-                ?? fastestAir?.Cost
-                ?? 333m; // fallback so 30% = ~₹100
+            var clientId = _configuration["CashfreePayout:ClientId"];
+            var clientSecret = _configuration["CashfreePayout:ClientSecret"];
+            var baseUrl = _configuration["CashfreePayout:BaseUrl"];
+            // Falls back to clientId if CashfreePayout:SignatureClientId isn't set -
+            
+         //   var signatureClientId = _configuration["CashfreePayout:SignatureClientId"] ?? clientId;
 
-            decimal p2pCost = Math.Round(basePrice * 0.30m, 2);
-            p2pCost = Math.Max(p2pCost, 50m); // minimum ₹50
+            if (string.IsNullOrWhiteSpace(request.BeneficiaryId))
+                request.BeneficiaryId = $"COUR_{request.CourierId}";
 
-            matchingTransporter.Cost = p2pCost;
-            matchingTransporter.ShippingMode = "P2P";
+            var payload = new
+            {
+                beneficiary_id = request.BeneficiaryId,
+                beneficiary_name = request.BeneficiaryName,
+                beneficiary_instrument_details = new
+                {
+                    bank_account_number = request.BankAccountNumber,
+                    bank_ifsc = request.BankIfsc
+                },
+                beneficiary_contact_details = new
+                {
+                    beneficiary_email = request.BeneficiaryEmail,
+                    beneficiary_phone = request.BeneficiaryPhone,
+                    beneficiary_country_code = request.BeneficiaryCountryCode
+                }
+            };
 
-            selectedCouriers.Add(matchingTransporter);
+            var json = JsonSerializer.Serialize(payload);
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/beneficiary");
+            httpRequest.Headers.Add("x-client-id", clientId);
+            httpRequest.Headers.Add("x-client-secret", clientSecret);
+            httpRequest.Headers.Add("x-api-version", "2024-01-01");
+            httpRequest.Headers.Add("x-request-id", Guid.NewGuid().ToString());
+            httpRequest.Headers.Add(
+    "x-cf-signature",
+    CashfreeSignatureHelper.GenerateSignature(clientId, _configuration["CashfreePayoutPublicKey"]));
+            httpRequest.Content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.SendAsync(httpRequest);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                throw new Exception($"Creating beneficiary failed. Status: {response.StatusCode}, Response: {responseContent}");
+
+            var cfResponse = JsonSerializer.Deserialize<CashfreeBeneficiaryResponse>(responseContent,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            var accountDetail = await _repo.GetCourierAccountDetailByCourierId(request.CourierId);
+            if (accountDetail != null)
+            {
+                accountDetail.CashfreeBeneficiaryId = cfResponse.BeneficiaryId;
+                accountDetail.CashfreeBeneficiaryStatus = cfResponse.BeneficiaryStatus;
+                accountDetail.CashfreeBeneficiaryCreatedDate = DateTime.UtcNow;
+                await _repo.UpdateCourierAccountDetails(accountDetail);
+            }
+            else
+            {
+                _logger.LogWarning("Beneficiary created on Cashfree but no CourierAccountDetail found for CourierId {CourierId}", request.CourierId);
+            }
+
+            return cfResponse;
         }
-        // If no transporter matches → P2P option is simply NOT shown to shopper
-        // (no fallback dummy P2P entry)
 
-        results.Add(new StoreCourierResultDto
+       
+
+            // Try one transporter, then two
+           public async Task<BestcourierinfoDto?> FindMatchingTransporterByPincodeAsync(
+            string storePincode,
+            string shopperPincode,
+            decimal packageWeight)
         {
-            StoreId = storeId,
-            TotalWeightKg = totalWeight,
-            CourierOptions = selectedCouriers
-        });
+            DateTime now = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "India Standard Time");
+
+            // STEP 1: one transporter (existing logic)
+            var oneLeg = await _repo.GetDirectPlanAsync(
+                storePincode, shopperPincode, packageWeight, now);
+
+            if (oneLeg != null)
+                return BuildResult(new List<PlanLeg> { oneLeg }, now);
+
+            // List A: plans leaving from the store pincode (they end at some hub)
+            var fromStore = await _repo.GetPlansStartingAtAsync(storePincode, packageWeight, now);
+            if (fromStore.Count == 0) return null;
+
+            // List B: plans ending at the shopper pincode (they start at some hub)
+            var toShopper = await _repo.GetPlansEndingAtAsync(shopperPincode, packageWeight, now);
+            if (toShopper.Count == 0) return null;
+
+            // STEP 2: two transporters
+            var twoLegs = FindTwoTransporters(fromStore, toShopper, storePincode, shopperPincode);
+            if (twoLegs != null)
+                return BuildResult(twoLegs, now);
+
+            // STEP 3: three transporters
+            var threeLegs = await FindThreeTransportersAsync(
+                fromStore, toShopper, storePincode, shopperPincode, packageWeight, now);
+            if (threeLegs != null)
+                return BuildResult(threeLegs, now);
+
+            return null; // no P2P option
+        }
+
+        // Two plans that meet at a hub pincode
+        private static List<PlanLeg>? FindTwoTransporters(
+            List<PlanLeg> fromStore, List<PlanLeg> toShopper,
+            string storePincode, string shopperPincode)
+        {
+            var pairs = from first in fromStore
+                        join second in toShopper
+                            on first.DestinationPin equals second.StartLocationPin   // meet at same hub
+                        where first.DestinationPin != storePincode
+                           && first.DestinationPin != shopperPincode
+                           && second.StartDate >= first.ArrivalDate                  // no buffer, no limit
+                           && first.TransporterRegId != second.TransporterRegId
+                        orderby second.ArrivalDate, first.StartDate                  // earliest delivery first
+                        select new List<PlanLeg> { first, second };
+
+            return pairs.FirstOrDefault();
+        }
+
+        // Three plans: first -> middle -> last, meeting at two hub pincodes to QA
+        private async Task<List<PlanLeg>?> FindThreeTransportersAsync(
+            List<PlanLeg> fromStore, List<PlanLeg> toShopper,
+            string storePincode, string shopperPincode,
+            decimal packageWeight, DateTime now)
+        {
+            // Hubs reached from the store, and hubs from where plans go to the shopper
+            var firstEndPins = fromStore.Select(p => p.DestinationPin).Distinct().ToList();
+            var lastStartPins = toShopper.Select(p => p.StartLocationPin).Distinct().ToList();
+
+            // Middle plans: start where a first plan ends, end where a last plan starts
+            var middle = await _repo.GetPlansBetweenAsync(firstEndPins, lastStartPins, packageWeight, now);
+            if (middle.Count == 0) return null;
+
+            var chains = from first in fromStore
+                         join mid in middle
+                             on first.DestinationPin equals mid.StartLocationPin
+                         join last in toShopper
+                             on mid.DestinationPin equals last.StartLocationPin
+                         where mid.StartDate >= first.ArrivalDate                    // second after first arrives
+                            && last.StartDate >= mid.ArrivalDate                     // third after second arrives
+                            // three different transporters
+                            && first.TransporterRegId != mid.TransporterRegId
+                            && mid.TransporterRegId != last.TransporterRegId
+                            && first.TransporterRegId != last.TransporterRegId
+                            // no pincode repeated: store, hub 1, hub 2, shopper
+                            && new[] { storePincode, first.DestinationPin, mid.DestinationPin, shopperPincode }
+                                   .Distinct().Count() == 4
+                         orderby last.ArrivalDate, first.StartDate                   // earliest delivery first
+                         select new List<PlanLeg> { first, mid, last };
+
+            return chains.FirstOrDefault();
+        }
+
+        // Build the response: hops list, total time, cost
+        private static BestcourierinfoDto BuildResult(List<PlanLeg> legs, DateTime now)
+        {
+            var first = legs.First();
+            var last = legs.Last();
+
+            // Total time the shopper waits: from booking to final arrival
+            TimeSpan total = last.ArrivalDate - now;
+            if (total < TimeSpan.Zero) total = TimeSpan.Zero;
+
+            int totalDays = (int)total.TotalDays;
+            string totalText = totalDays > 0
+                ? $"{totalDays} day(s) {total.Hours} hr"
+                : $"{total.Hours} hr";
+
+            int estimatedDays = Math.Max(1, (last.ArrivalDate.Date - now.Date).Days);
+            int CostPerLeg = 50; // Assuming a fixed cost per leg for demonstration purposes
+            return new BestcourierinfoDto
+            {
+                BranchId = 0,
+                ShippingMode = "P2P",
+                Cost = CostPerLeg * legs.Count,                 // 50, 100 or 150
+                HopCount = legs.Count,
+                MaxDeliveryDays = estimatedDays,
+                DeliveryDaysRange = estimatedDays <= 1 ? "Same day / Next day" : $"{estimatedDays} days",
+                EstimatedDeliveryDate = last.ArrivalDate.ToString(
+                    "MMM dd, yyyy", System.Globalization.CultureInfo.InvariantCulture),
+                TotalDurationHours = Math.Round(total.TotalHours, 1),
+                TotalDurationText = totalText,
+
+                // first transporter, so existing callers keep working
+                TransporterRegId = first.TransporterRegId,
+                TransporterPlanId = first.PlanId,
+                TransporterName = first.TransporterName,
+                VehicleType = first.VehicleType,
+
+                Hops = legs.Select((l, i) => new TransportHopDto
+                {
+                    LegNumber = i + 1,
+                    IsFinalLeg = i == legs.Count - 1,
+                    TransporterRegId = l.TransporterRegId,
+                    TransporterPlanId = l.PlanId,
+                    TransporterName = l.TransporterName,
+                    VehicleType = l.VehicleType,
+                    FromPin = l.StartLocationPin,
+                    ToPin = l.DestinationPin,
+                    StartDate = l.StartDate,
+                    ArrivalDate = l.ArrivalDate
+                }).ToList()
+            };
+        }
+    }
     }
 
-    return results;
-}
-
-
-
-        //public async Task<List<AssignedOrderDto>> GetAssignedOrdersByCourierIdAsync(int courierId)
-        //{
-        //    return await _repo.GetAssignedOrdersByCourierIdAsync(courierId);
-        //}
-    }
-}

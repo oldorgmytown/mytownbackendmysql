@@ -6,17 +6,27 @@ using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
 using Stripe;
 using Stripe.Climate;
+using Razorpay.Api;
+using System.Security.Cryptography;
+using System.Text;
+
 
 namespace mytown.Services.Implementations
 {
     public class PaymentService : IPaymentService
     {
         private readonly IPaymentRepository _paymentRepo;
+        private readonly string _razorpayKeyId;
+        private readonly string _razorpayKeySecret;
 
         public PaymentService(IPaymentRepository paymentRepo, IConfiguration configuration)
         {
             _paymentRepo = paymentRepo;
             StripeConfiguration.ApiKey = configuration["Stripe:SecretKey"];
+
+            _razorpayKeyId = configuration["Razorpay:KeyId"];
+            _razorpayKeySecret = configuration["Razorpay:KeySecret"];
+
         }
 
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(int orderId)
@@ -44,7 +54,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = subTotal * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
@@ -83,11 +93,11 @@ namespace mytown.Services.Implementations
                 throw new Exception("Order not found");
 
             // verify stripe payment first (important)
-            //var service = new PaymentIntentService();
-            //var intent = await service.GetAsync(stripePaymentIntentId);
+            var service = new PaymentIntentService();
+            var intent = await service.GetAsync(stripePaymentIntentId);
 
-            //if (intent.Status != "succeeded")
-            //    throw new Exception("Payment not completed");
+            if (intent.Status != "succeeded")
+                throw new Exception("Payment not completed");
 
             // decimal totalAmount = order.TotalAmount + order.ShippingDetails.Sum(s => s.Cost);
 
@@ -103,7 +113,7 @@ namespace mytown.Services.Implementations
             decimal subTotal = orderAmount + shippingTotal;
 
             // 4️ 18% GST
-            decimal gstAmount = subTotal * 0.18m;
+            decimal gstAmount = orderAmount * 0;//( made 18% into 0% for testing purpose) 0.18m;
 
             // 5️ Final Amount
             decimal finalAmount = subTotal + gstAmount;
@@ -117,18 +127,145 @@ namespace mytown.Services.Implementations
 
             order.OrderStatus = "Paid";
 
+            //  Update cart status after successful payment
+            await _paymentRepo.UpdateCartStatusAsync(orderId);
+
             return payment;
         }
 
+        //--------Razor Pay Payments--------------------//
+
+     
+
+    public async Task<RazorpayOrderResponseDto> CreateRazorpayOrderAsync(int orderId)
+    {
+        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+        if (order == null)
+            throw new Exception("Order not found");
+
+        if (order.OrderStatus == "Paid")
+            throw new Exception("Order already paid");
+
+        decimal orderAmount = order.TotalAmount;
+        decimal shippingTotal = order.ShippingDetails != null
+            ? order.ShippingDetails.Sum(s => s.Cost)
+            : 0;
+        decimal subTotal = orderAmount + shippingTotal;
+        decimal gstAmount = orderAmount * 0;// now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
+
+        // Razorpay also expects amount in paise
+        int amountInPaise = (int)(finalAmount * 100);
+
+        RazorpayClient client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+
+        Dictionary<string, object> options = new Dictionary<string, object>
+    {
+        { "amount", amountInPaise },
+        { "currency", "INR" },
+        { "receipt", $"order_rcpt_{orderId}" },
+        { "payment_capture", 1 } // auto-capture
+    };
+
+            Razorpay.Api.Order razorpayOrder = client.Order.Create(options);
+
+        return new RazorpayOrderResponseDto
+        {
+            RazorpayOrderId = razorpayOrder["id"].ToString(),
+            Amount = amountInPaise,
+            Currency = "INR",
+            KeyId = _razorpayKeyId  // frontend needs this to open checkout
+        };
+    }
+
+ 
+public async Task<Payments> AddRazorpayPaymentAsync(
+    int orderId,
+    string razorpayOrderId,
+    string razorpayPaymentId,
+    string razorpaySignature)
+    {
+        var order = await _paymentRepo.GetOrderWithShippingDetailsAsync(orderId);
+        if (order == null)
+            throw new Exception("Order not found");
+
+        // Check for replay/double processing
+        var existingPayment = await _paymentRepo.GetPaymentByStripePaymentIntentId(razorpayPaymentId);
+        if (existingPayment != null)
+            throw new Exception("Payment has already been processed.");
+
+        // Verify signature: HMAC-SHA256 of "order_id|payment_id" using your Key Secret
+        string payload = $"{razorpayOrderId}|{razorpayPaymentId}";
+        string generatedSignature;
+
+        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_razorpayKeySecret)))
+        {
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            generatedSignature = BitConverter.ToString(hash).Replace("-", "").ToLower();
+        }
+
+        if (generatedSignature != razorpaySignature)
+            throw new Exception("Payment signature verification failed.");
+
+        decimal orderAmount = order.TotalAmount;
+        decimal shippingTotal = order.ShippingDetails != null
+            ? order.ShippingDetails.Sum(s => s.Cost)
+            : 0;
+        decimal subTotal = orderAmount + shippingTotal;
+        decimal gstAmount = orderAmount * 0; // now gst is 0% for testing purpose 0.18m;
+            decimal finalAmount = subTotal + gstAmount;
+
+            // ---- NEW: fetch payment from Razorpay (works for card, UPI, etc.) ----
+            var client = new RazorpayClient(_razorpayKeyId, _razorpayKeySecret);
+            Razorpay.Api.Payment rzpPayment = client.Payment.Fetch(razorpayPaymentId);
+
+            string status = rzpPayment["status"]?.ToString();
+
+            // Cards can still be "authorized" at this point, so capture explicitly
+            if (status == "authorized")
+            {
+                var captureOptions = new Dictionary<string, object>
+        {
+            { "amount", Convert.ToInt64(rzpPayment["amount"]) },
+            { "currency", "INR" }
+        };
+                rzpPayment = rzpPayment.Capture(captureOptions);
+                status = rzpPayment["status"]?.ToString();
+            }
+
+            if (status != "captured")
+                throw new Exception($"Payment not captured. Status: {status}");
+
+            string method = rzpPayment["method"]?.ToString() switch
+            {
+                "card" => "Card",
+                "upi" => "UPI",
+                "netbanking" => "NetBanking",
+                "wallet" => "Wallet",
+                _ => "Other"
+            };
+            // ---------------------------------------------------------------------
+
+            var payment = await _paymentRepo.AddPaymentAsync(
+            orderId,
+            finalAmount,
+            method, // passing from razor pay
+            razorpayPaymentId
+        );
+
+        order.OrderStatus = "Paid";
+        await _paymentRepo.UpdateCartStatusAsync(orderId);
+
+        return payment;
+    }
 
 
+    //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
+    //{
+    //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
+    //}
 
-        //public Payments AddPayment(int orderId, decimal amountPaid, string paymentMethod)
-        //{
-        //    return _paymentRepo.AddPayment(orderId, amountPaid, paymentMethod);
-        //}
-
-        public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
+    public List<BusinessRegisterDto> GetStoreDetailsByOrderId(int orderId)
         {
             return _paymentRepo.GetStoreDetailsByOrderId(orderId);
         }
@@ -148,65 +285,187 @@ namespace mytown.Services.Implementations
             return _paymentRepo.GetShopperDetailsByOrderId(orderId);
         }
 
-public async Task ProcessPostPaymentAsync(int orderId)
-{
-    var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
+        //public async Task ProcessPostPaymentAsync(int orderId)
+        //{
+        //    var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
 
-    var storeWiseShipments = shippingDetails
-        .GroupBy(s => s.StoreOrderId)
-        .Select(g => g.First())
-        .ToList();
+        //    var storeWiseShipments = shippingDetails
+        //        .GroupBy(s => s.StoreOrderId)
+        //        .Select(g => g.First())
+        //        .ToList();
 
-    foreach (var shipping in storeWiseShipments)
-    {
-        if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+        //    foreach (var shipping in storeWiseShipments)
+        //    {
+        //        if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+        //        {
+        //            // ✅ Read TransporterRegId directly from 
+        //            if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
+        //                continue;
+
+        //            int transporterRegId = shipping.TransporterRegId.Value;
+
+        //            var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
+        //            if (storeOrder == null) continue;
+
+        //            await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+        //            {
+        //                PlanId = shipping.TransporterPlanId ?? 0,
+        //                TransporterRegId = transporterRegId,
+        //                ShopperRegId = storeOrder.Order.ShopperRegId,
+        //                GuestRegId = storeOrder.Order.GuestRegId,
+        //                IsGuestOrder = storeOrder.Order.IsGuestOrder,
+        //                OrderId          = orderId,
+        //                StoreOrderId     = shipping.StoreOrderId,
+        //                PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
+        //                DropoffLocation  = shipping.DeliveryAddress,
+        //                PackageWeightKg  = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId),
+        //                NumberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId),
+        //                DeliveryFee      = shipping.Cost,
+        //                PackageTags      = "NA"
+        //            });
+
+        //            // ✅ Notify transporter
+        //            await CreateTransporterNotificationAsync(
+        //                transporterRegId: transporterRegId,
+        //                title: "New P2P Delivery Request",
+        //                message: $"A new delivery for Order #{orderId} has been assigned to you. Check your dashboard."
+        //            );
+
+        //            await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
+        //        }
+        //        else
+        //        {
+        //                    if (shipping.BranchId.HasValue)
+        //                    {
+        //                        var courierId = await _paymentRepo
+        //                            .GetCourierIdByBranchIdAsync(shipping.BranchId.Value);
+
+        //                        await AddCourierNotificationAsync(
+        //                            courierId: courierId,
+        //                            branchId: shipping.BranchId.Value,
+        //                            title: "New Order Assigned",
+        //                            message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+        //                        );
+        //                    }
+        //                }
+        //    }
+        //}
+
+
+        // ---------------------------------------------------------------------------
+        // 2. ProcessPostPaymentAsync: one delivery request for EACH transporter (leg)
+        //    Changes are marked  ✅ NEW. Old orders with no leg rows work as before.
+        // ---------------------------------------------------------------------------
+        public async Task ProcessPostPaymentAsync(int orderId)
         {
-            // ✅ Read TransporterRegId directly from 
-            if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
-                continue;
+            var shippingDetails = _paymentRepo.GetShippingDetailsByOrderId(orderId);
 
-            int transporterRegId = shipping.TransporterRegId.Value;
+            var storeWiseShipments = shippingDetails
+                .GroupBy(s => s.StoreOrderId)
+                .Select(g => g.First())
+                .ToList();
 
-            var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
-            if (storeOrder == null) continue;
-
-            await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+            foreach (var shipping in storeWiseShipments)
             {
-                PlanId = shipping.TransporterPlanId ?? 0,
-                TransporterRegId = transporterRegId,
-                ShopperRegId     = storeOrder.Order.ShopperRegId,
-                OrderId          = orderId,
-                StoreOrderId     = shipping.StoreOrderId,
-                PickupLocation   = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
-                DropoffLocation  = shipping.DeliveryAddress,
-                PackageWeightKg  = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId),
-                NumberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId),
-                DeliveryFee      = shipping.Cost,
-                PackageTags      = "NA"
-            });
- 
-            // ✅ Notify transporter
-            await CreateTransporterNotificationAsync(
-                transporterRegId: transporterRegId,
-                title: "New P2P Delivery Request",
-                message: $"A new delivery for Order #{orderId} has been assigned to you. Check your dashboard."
-            );
+                if (shipping.ShippingType?.Trim().ToLower() == "p2p")
+                {
+                    var storeOrder = await _paymentRepo.GetStoreOrderByIdAsync(shipping.StoreOrderId);
+                    if (storeOrder == null) continue;
 
-            await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
-        }
-        else
-        {
-            var courierId = await _paymentRepo.GetCourierIdByBranchIdAsync(shipping.BranchId);
+                    // ✅ NEW (P1) ------------------------------------------------------------
+                    // Legs saved when the order was created (1, 2 or 3 transporters)
+                    var legs = await _paymentRepo.GetLegsByStoreOrderIdAsync(shipping.StoreOrderId);
 
-            await AddCourierNotificationAsync(
-                courierId: courierId,
-                branchId: shipping.BranchId,
-                title: "New Order Assigned",
-                message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
-            );
+                    var requests = new List<P2PLegRequestInfoDto>();
+
+                    if (legs.Count > 0)
+                    {
+                        // placeholder text until you have a hub address table
+                        string HubText(string pin) => $"Transfer hub (pincode {pin})";
+
+                        string storeAddressForLeg1 = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId);
+
+                        foreach (var leg in legs)
+                        {
+                            requests.Add(new P2PLegRequestInfoDto
+                            {
+                                PlanId = leg.TransporterPlanId,
+                                TransporterRegId = leg.TransporterRegId,
+                                PickupLocation = leg.LegNumber == 1 ? storeAddressForLeg1 : HubText(leg.FromPin),
+                                DropoffLocation = leg.IsFinalLeg ? shipping.DeliveryAddress : HubText(leg.ToPin),
+                                DeliveryFee = leg.LegCost,                       // each transporter's own fee
+                                LegText = legs.Count > 1 ? $" (leg {leg.LegNumber} of {legs.Count})" : ""
+                            });
+                        }
+                    }
+                    else
+                    {
+                        // old order with no leg rows: one transporter from shipping_details, exactly as before
+                        if (!shipping.TransporterRegId.HasValue || shipping.TransporterRegId <= 0)
+                            continue;
+
+                        requests.Add(new P2PLegRequestInfoDto
+                        {
+                            PlanId = shipping.TransporterPlanId ?? 0,
+                            TransporterRegId = shipping.TransporterRegId.Value,
+                            PickupLocation = await _paymentRepo.GetStoreAddressAsync(storeOrder.StoreId),
+                            DropoffLocation = shipping.DeliveryAddress,
+                            DeliveryFee = shipping.Cost,
+                            LegText = ""
+                        });
+                    }
+
+                    // weight and item count are the same for every transporter, so read them once
+                    var packageWeightKg = await _paymentRepo.GetStoreOrderWeightAsync(shipping.StoreOrderId);
+                    var numberOfPackages = await _paymentRepo.GetStoreOrderItemCountAsync(shipping.StoreOrderId);
+
+                    foreach (var req in requests)
+                    {
+                        await _paymentRepo.CreateP2PDeliveryRequestAsync(new CreateP2PDeliveryRequestDto
+                        {
+                            PlanId = req.PlanId,
+                            TransporterRegId = req.TransporterRegId,
+                            ShopperRegId = storeOrder.Order.ShopperRegId,
+                            GuestRegId = storeOrder.Order.GuestRegId,
+                            IsGuestOrder = storeOrder.Order.IsGuestOrder,
+                            OrderId = orderId,
+                            StoreOrderId = shipping.StoreOrderId,
+                            PickupLocation = req.PickupLocation,
+                            DropoffLocation = req.DropoffLocation,
+                            PackageWeightKg = packageWeightKg,
+                            NumberOfPackages = numberOfPackages,
+                            DeliveryFee = req.DeliveryFee,
+                            PackageTags = "NA"
+                        });
+
+                        // ✅ Notify each transporter
+                        await CreateTransporterNotificationAsync(
+                            transporterRegId: req.TransporterRegId,
+                            title: "New P2P Delivery Request",
+                            message: $"A new delivery for Order #{orderId}{req.LegText} has been assigned to you. Check your dashboard."
+                        );
+                    }
+                    // ✅ END NEW -------------------------------------------------------------
+
+                    await _paymentRepo.UpdateOrderStatusAsync(orderId, "Paid");
+                }
+                else
+                {
+                    if (shipping.BranchId.HasValue)
+                    {
+                        var courierId = await _paymentRepo
+                            .GetCourierIdByBranchIdAsync(shipping.BranchId.Value);
+
+                        await AddCourierNotificationAsync(
+                            courierId: courierId,
+                            branchId: shipping.BranchId.Value,
+                            title: "New Order Assigned",
+                            message: $"StoreOrder #{shipping.StoreOrderId} needs to be shipped."
+                        );
+                    }
+                }
+            }
         }
-    }
-}
 
         public async Task AddCourierNotificationAsync(
     int courierId,

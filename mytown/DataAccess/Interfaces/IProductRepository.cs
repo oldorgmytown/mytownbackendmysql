@@ -16,7 +16,7 @@ namespace mytown.DataAccess.Interfaces
         Task<Products> UpdateProductAsync(int productId, ProductCreateDto dto);
 
         //Update productvariant
-        Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto, List<IFormFile> imageFiles);
+        Task<Sku_ProductVariant?> UpdateVariantAsync(Sku_ProductVariantDto dto);
 
         Task<ProductSizeMeasurementDto?> GetMeasurementBySizeIdAsync(int sizeId);
         //---------------------------------------------------------------------------------//
