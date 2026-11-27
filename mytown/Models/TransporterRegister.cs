@@ -70,7 +70,7 @@ namespace mytown.Models
         //public string PhotoName { get; set; } = string.Empty;
 
         [Column("status")]
-        public string? Status { get; set; }
+        public string? Status { get; set; } = "Pending"; // Default status when a transporter registers
 
         [Required]
         [Column("transporter_reg_date")]

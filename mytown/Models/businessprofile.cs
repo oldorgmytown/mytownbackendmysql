@@ -24,6 +24,11 @@ namespace mytown.Models
         [JsonPropertyName("business_name")]
         public string? BusinessName { get; set; }
 
+        [Column("business_tagline")]
+        [StringLength(150)]
+        [JsonPropertyName("business_tagline")]
+        public string? BusinessTagline { get; set; }
+
         [Column("business_location")]
         [StringLength(255)]
         [JsonPropertyName("business_location")]
@@ -60,6 +65,18 @@ namespace mytown.Models
         [Column("approved_date")]
         [JsonPropertyName("approved_date")]
         public DateTime? ApprovedDate { get; set; }
+
+        [NotMapped]
+        [JsonPropertyName("average_rating")]
+        public decimal AverageRating { get; set; }
+
+        [NotMapped]
+        [JsonPropertyName("review_count")]
+        public int ReviewCount { get; set; }
+
+        [NotMapped]
+        [JsonPropertyName("connection_count")]
+        public int ConnectionCount { get; set; }
 
         [JsonIgnore]
         public virtual BusinessRegister? BusinessRegister { get; set; }

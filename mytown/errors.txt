@@ -1,0 +1,3 @@
+e:\projects\Itismytown\mytownbackendmysql\mytown\Services\Implementations\EmailService.cs(2327,10): error CS0103: The name 'hubHtml' does not exist in the current context [e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj]
+e:\projects\Itismytown\mytownbackendmysql\mytown\Services\Implementations\EmailService.cs(2327,10): error CS0103: The name 'hubHtml' does not exist in the current context [e:\projects\Itismytown\mytownbackendmysql\mytown\mytown.csproj]
+    1 Error(s)

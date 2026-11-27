@@ -1,7 +1,9 @@
+using Azure.Storage.Blobs;
 using mytown.DataAccess.Interfaces;
+using mytown.Models;
 using mytown.Models.DTO_s;
 using mytown.Services.Interfaces;
-using Azure.Storage.Blobs;
+using Stripe;
 
 namespace mytown.Services.Implementations
 {
@@ -30,9 +32,28 @@ namespace mytown.Services.Implementations
         public Task<bool> DeactivatePlanAsync(int planId, int transporterRegId)
             => _repo.DeactivatePlanAsync(planId, transporterRegId);
 
-        public Task<List<AvailableTransporterDto>> SearchAvailableTransportersAsync(
-            string fromLocation, string toLocation, DateTime travelDate)
-            => _repo.SearchAvailableTransportersAsync(fromLocation, toLocation, travelDate);
+        public Task<List<AvailableTransporterDto>>
+SearchAvailableTransportersAsync(
+    string startTown,
+    string startCity,
+    string startState,
+    string startCountry,
+
+    string destinationTown,
+    string destinationCity,
+    string destinationState,
+    string destinationCountry)
+
+
+=> _repo.SearchAvailableTransportersAsync(
+    startTown,
+    startCity,
+    startState,
+    startCountry,
+    destinationTown,
+    destinationCity,
+    destinationState,
+    destinationCountry);
 
         // Request is auto-assigned to the transporter linked to PlanId — no Accept step
         public async Task<(bool success, string message, int deliveryReqId)> CreateDeliveryRequestAsync(
@@ -120,5 +141,121 @@ namespace mytown.Services.Implementations
 
         public async Task MarkEachNotificationReadAsync(int notificationId)
             => await _repo.MarkEachNotificationReadAsync(notificationId);
+
+        // packaged marked as Delivered
+
+
+
+        //public async Task<string> MarkAsDeliveredAsync(int storeOrderId)
+        //{
+        //    return await _repo.MarkAsDeliveredAsync(storeOrderId);
+
+        //   //  return await _.CreateTransporterPayoutAsync(storeOrderId);
+
+
+        //}
+        public async Task<TransporterContactDto?> GetPickupTransporterAsync(int storeOrderId, string? hubPin)
+        {
+            var legs = await _repo.GetLegsByStoreOrderIdAsync(storeOrderId);
+
+            if (legs.Count == 0)
+                return null;                       // old order: use the values from the request
+
+            var lastDeliveredMiddle = legs.LastOrDefault(l => !l.IsFinalLeg && l.LegStatus == "Delivered");
+            int nextLegNumber = (lastDeliveredMiddle?.LegNumber ?? 0) + 1;
+
+            var nextLeg = legs.FirstOrDefault(l => l.LegNumber == nextLegNumber);
+            if (nextLeg == null)
+                throw new InvalidOperationException("No transporter is waiting to pick up this package.");
+
+            if (legs.Count > 1 &&
+                (string.IsNullOrWhiteSpace(hubPin) || nextLeg.FromPin.Trim() != hubPin.Trim()))
+                throw new InvalidOperationException("This package is not at your hub yet.");
+
+            var contact = await _repo.GetTransporterContactAsync(nextLeg.TransporterRegId);
+            if (contact == null)
+                throw new InvalidOperationException("Transporter not found.");
+
+            return contact;
+        }
+        // Service
+        public async Task<List<SenderOrder>> GetTransporterDeliversSendersOrdersAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterDeliversSendersOrdersAsync(transporterRegId);
+        }
+
+        //update sendre orders - deliveries
+        public async Task<bool> UpdateTransporterDeliveryStatusAsync(
+           int senderOrderId,
+           int transporterRegId,
+           string deliveryStatus)
+        {
+            return await _repo.UpdateTransporterDeliveryStatusAsync(
+                senderOrderId,
+                transporterRegId,
+                deliveryStatus);
+        }
+
+        public async Task<bool> UpdateTransporterAccountDetailsAsync(int transRegId, UpdateTransporterAccountDetailDto dto)
+        {
+            var account = await _repo.GetTransporterAccountDetailByRegId(transRegId);
+
+            if (account == null)
+            {
+                // No existing record — create a new one
+                account = new TransporterAccountDetail
+                {
+                    TransporterRegId = transRegId,
+                    AccountHolderName = dto.AccountHolderName,
+                    BankName = dto.BankName,
+                    AccountNumber = dto.AccountNumber,
+                    IFSCCode = dto.IFSCCode,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _repo.AddTransporterAccountDetails(account);
+                return true;
+            }
+
+            // Existing record — update it
+            account.AccountHolderName = dto.AccountHolderName;
+            account.BankName = dto.BankName;
+            account.AccountNumber = dto.AccountNumber;
+            account.IFSCCode = dto.IFSCCode;
+            account.UpdatedDate = DateTime.UtcNow;
+
+            await _repo.UpdateTransporterAccountDetails(account);
+            return true;
+        }
+
+        public async Task<TransporterAccountDetail?> GetTransporterAccountDetailsByTransRegIdAsync(int transRegId)
+        {
+            return await _repo.GetTransporterAccountDetailByRegId(transRegId);
+        }
+
+        public async Task<List<TransporterPayoutDashboardDto>> GetTransporterPayoutsByTransRegIdAsync(int transporterRegId)
+        {
+            return await _repo.GetTransporterPayoutsByTransRegIdAsync(transporterRegId);
+        }
+
+        public async Task AddTransporterNotificationAsync(TransporterDBNotifications notification)
+        {
+            if (notification == null)
+                throw new ArgumentNullException(nameof(notification));
+
+            if (notification.TransporterRegId <= 0)
+                throw new ArgumentException("TransporterRegId is required.", nameof(notification));
+
+            if (string.IsNullOrWhiteSpace(notification.Title) ||
+                string.IsNullOrWhiteSpace(notification.Message))
+                throw new ArgumentException("Title and message are required.", nameof(notification));
+
+            await _repo.AddTransporterNotificationAsync(notification);
+        }
+
+        public async Task<(string Message, bool IsFinalDelivery)> MarkAsDeliveredAsync(int storeOrderId)
+        {
+            return await _repo.MarkAsDeliveredAsync(storeOrderId);
+        }
     }
 }
