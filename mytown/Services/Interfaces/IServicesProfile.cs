@@ -41,7 +41,7 @@ namespace mytown.Services.Interfaces
 
         Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId);
 
-        
+        Task<EnquiryResult> RespondToServiceEnquiryAsync(RespondServiceEnquiryDto dto);
 
 
     }

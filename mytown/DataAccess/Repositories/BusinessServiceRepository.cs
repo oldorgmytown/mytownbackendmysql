@@ -414,5 +414,36 @@ namespace mytown.DataAccess.Repositories
                 .ToListAsync();
         }
 
+        public async Task<ServiceEnquiry?> GetEnquiryByIdAsync(int enquiryId)
+        {
+            return await _context.ServiceEnquiries
+                .FirstOrDefaultAsync(e => e.EnquiryId == enquiryId);
+        }
+
+        // one SaveChanges = one transaction: enquiry update + blocked slot change together
+        public async Task SaveEnquiryResponseAsync(ServiceEnquiry enquiry, ServiceBlockedSlot? blockedSlot)
+        {
+            // drop any block this enquiry created earlier, then add the new one (if any)
+            var old = await _context.ServiceBlockedSlots
+                .Where(b => b.EnquiryId == enquiry.EnquiryId)
+                .ToListAsync();
+            _context.ServiceBlockedSlots.RemoveRange(old);
+
+            if (blockedSlot != null)
+                _context.ServiceBlockedSlots.Add(blockedSlot);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<ShopperContactDto?> GetShopperContactAsync(int shopperRegId)
+        {
+            // TODO: shopper register table, where ShopperRegId == shopperRegId
+            //return await _context.< ShopperRegisters >.AsNoTracking()
+            //    .Where(s => s.ShopperRegId == shopperRegId)
+            //    .Select(s => new ShopperContactDto { Name = s.< NameColumn >, Email = s.< EmailColumn > })
+            //    .FirstOrDefaultAsync();
+            return null;
+        }
+
     }
 }

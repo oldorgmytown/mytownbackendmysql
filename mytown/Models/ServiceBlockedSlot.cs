@@ -18,6 +18,9 @@ namespace mytown.Models
         [Column("service_profile_id")]
         public int ServiceProfileId { get; set; }
 
+        [Column("enquiry_id")]
+        public int? EnquiryId { get; set; }
+
         [Required]
         [Column("blocked_date")]
         public DateTime BlockedDate { get; set; }

@@ -413,6 +413,132 @@ namespace mytown.Services.Implementations
             return await _repo.GetShopperServiceEnquiriesAsync(shopperRegId);
         }
 
+        public async Task<EnquiryResult> RespondToServiceEnquiryAsync(RespondServiceEnquiryDto dto)
+        {
+            // 1) validate the action
+            var allowed = new[] { "Accepted", "Rejected", "Rescheduled" };
+            var status = allowed.FirstOrDefault(a =>
+                a.Equals(dto.Action?.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (status == null)
+                return EnquiryResult.Fail(EnquiryError.BadRequest, "Action must be Accepted, Rejected or Rescheduled.");
+
+            // 2) load enquiry, check it belongs to this business and is still open
+            var enquiry = await _repo.GetEnquiryByIdAsync(dto.EnquiryId);
+            if (enquiry == null || enquiry.BusRegId != dto.BusRegId)
+                return EnquiryResult.Fail(EnquiryError.NotFound, "Enquiry not found.");
+
+            if (enquiry.Status != "Pending")
+                return EnquiryResult.Fail(EnquiryError.Conflict, $"This enquiry is already {enquiry.Status}.");
+
+            var profile = await _repo.GetEnquiryProfileAsync(enquiry.BusRegId, enquiry.ServiceProfileId);
+            if (profile == null)
+                return EnquiryResult.Fail(EnquiryError.NotFound, "Service profile not found.");
+
+            // 3) work out the confirmed date / time
+            DateTime? confirmedDate = null;
+            TimeSpan? confirmedTime = null;
+
+            if (status == "Accepted")
+            {
+                // accepted exactly as the shopper asked
+                confirmedDate = enquiry.PreferredDate.Date;
+                confirmedTime = enquiry.PreferredTimeSlot;
+            }
+            //else if (status == "Rescheduled")
+            //{
+            //    if (dto.ConfirmedDate == null ||
+            //        !TimeSpan.TryParse(dto.ConfirmedTimeSlot, CultureInfo.InvariantCulture, out var newSlot))
+            //        return EnquiryResult.Fail(EnquiryError.BadRequest, "New date and time are required to reschedule.");
+
+            //    var newDate = dto.ConfirmedDate.Value.Date;
+
+            //    var freeSlots = await GetFreeSlotsAsync(profile, newDate);
+            //    if (!freeSlots.Contains(newSlot))
+            //        return EnquiryResult.Fail(EnquiryError.Conflict, "The new date / time slot is not available.");
+
+            //    confirmedDate = newDate;
+            //    confirmedTime = newSlot;
+            //}
+            // Rejected: no confirmed time -> the slot is freed automatically
+
+            // 4) update the enquiry
+            enquiry.Status = status;
+            enquiry.ProviderResponse = dto.ProviderResponse?.Trim();
+            enquiry.ConfirmedDate = confirmedDate;
+            enquiry.ConfirmedTimeSlot = confirmedTime;
+            enquiry.RespondedDate = DateTime.Now;
+            enquiry.UpdatedDate = DateTime.Now;
+
+            // 5) fill the blocked slot for Accepted / Rescheduled
+            ServiceBlockedSlot? blockedSlot = null;
+            if (confirmedDate != null && confirmedTime != null)
+            {
+                blockedSlot = new ServiceBlockedSlot
+                {
+                    ServiceProfileId = enquiry.ServiceProfileId,
+                    BlockedDate = confirmedDate.Value,
+                    StartTime = confirmedTime.Value,
+                    EndTime = confirmedTime.Value + TimeSpan.FromMinutes(SlotMinutes),
+                    EnquiryId = enquiry.EnquiryId,
+                    Reason = $"Enquiry ITMT-{enquiry.CreatedDate.Year}-{enquiry.EnquiryId:D6}"
+                };
+            }
+
+            await _repo.SaveEnquiryResponseAsync(enquiry, blockedSlot);
+
+            // 6) email the shopper - the response is already saved, so a mail problem must not fail the API
+            try
+            {
+                var shopper = await _repo.GetShopperContactAsync(enquiry.ShopperRegId);
+
+                if (shopper != null && !string.IsNullOrWhiteSpace(shopper.Email))
+                {
+                    var emailDto = new EnquiryResponseEmailDto
+                    {
+                        ServiceEnquiryId = enquiry.EnquiryId,
+                        EnquiryDate = enquiry.CreatedDate,
+                        ShopperName = shopper.Name,
+                        BusinessName = profile.BusinessName,
+                        BusinessLocation = profile.BusinessLocation,
+                        ServiceName = enquiry.ServiceName,
+                        Persons = enquiry.NumberOfUnits,
+                        ServiceLocation = enquiry.ServiceLocation,
+                        Status = status,
+                        ProviderResponse = enquiry.ProviderResponse,
+                        PreferredDate = enquiry.PreferredDate,
+                        PreferredTimeSlot = DateTime.Today.Add(enquiry.PreferredTimeSlot)
+                                                .ToString("hh:mm tt", CultureInfo.InvariantCulture),
+                        ConfirmedDate = confirmedDate,
+                        ConfirmedTimeSlot = confirmedTime == null ? null
+                                                : DateTime.Today.Add(confirmedTime.Value)
+                                                      .ToString("hh:mm tt", CultureInfo.InvariantCulture)
+                    };
+
+                    await _emailService.SendEnquiryResponseToShopperAsync(shopper.Email, emailDto);
+                }
+            }
+            catch (Exception ex)
+            {
+                // TODO: use your logger instead of Console
+                Console.WriteLine($"Enquiry {enquiry.EnquiryId} updated, but shopper email failed: {ex.Message}");
+            }
+
+            return EnquiryResult.Ok(enquiry.EnquiryId, $"Enquiry {status.ToLower()} successfully.");
+        }
+
+        //private async Task<List<TimeSpan>> GetFreeSlotsAsync(mytown.Models.ServiceProfile profile, DateTime date)
+        //{
+        //    var now = DateTime.Now;
+
+        //    if (date < now.Date || date > now.Date.AddDays(BookingDays))
+        //        return new List<TimeSpan>();
+
+        //    var blocked = await _repo.GetBlockedSlotsAsync(profile.ServiceProfileId, date, date);
+        //    var booked = await _repo.GetBookedSlotsAsync(profile.ServiceProfileId, date, date, SlotHoldingStatus);
+
+        //    return BuildAvailableSlots(profile, date, blocked, booked.Select(b => b.Time).ToList(), now);
+        //}
+
     }
 
 
