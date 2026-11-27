@@ -109,7 +109,7 @@ namespace mytown.Controllers
             return Ok(services);
         }
 
-        //edit service types on dashboard
+        //edit service types on dashboard prod
         [HttpPut("editservicetypes")]
         public async Task<IActionResult> UpdateService(
     [FromBody] UpdateServiceDto dto)
