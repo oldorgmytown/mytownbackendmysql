@@ -1990,12 +1990,30 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
                     BusRegId = p.BusRegId,
                     BusinessName = p.BusinessName,
                     BusinessLocation = p.BusinessLocation,
+
+                    // NEW: service category name
+                    ServiceCategoryName = _context.BusinessServices
+                        .Where(s => s.BusServId == p.BusServId)
+                        .Select(s => s.BusinessServiceName)          
+                        .FirstOrDefault(),
+
                     TotalEnquiries = _context.ServiceEnquiries
-                        .Count(e => e.BusRegId == p.BusRegId),
+                        .Count(e => e.ServiceProfileId == p.ServiceProfileId),
+
+                    // NEW: status counts
+                    NewEnquiries = _context.ServiceEnquiries
+                        .Count(e => e.ServiceProfileId == p.ServiceProfileId
+                                 && e.Status == "Pending"),
+
+                    RespondedEnquiries = _context.ServiceEnquiries
+                        .Count(e => e.ServiceProfileId == p.ServiceProfileId
+                                 && (e.Status == "Accepted"
+                                  || e.Status == "Rejected"
+                                  || e.Status == "Rescheduled")),
+
                     Status = p.Status
                 })
                 .ToListAsync();
         }
-
     }
 }
