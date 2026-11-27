@@ -375,6 +375,44 @@ namespace mytown.Services.Implementations
 
             
         }
+
+        public async Task<BusinessServiceEnquiriesResponseDto> GetBusinessServiceEnquiriesAsync(
+    int busRegId, string? status, int? serviceId, string? serviceType)
+        {
+            var enquiries = await _repo.GetBusinessServiceEnquiriesAsync(busRegId);
+
+            var response = new BusinessServiceEnquiriesResponseDto
+            {
+                TotalCount = enquiries.Count,
+                NewCount = enquiries.Count(x => x.Status == "New"),
+                PendingCount = enquiries.Count(x => x.Status == "Pending"),
+                RespondedCount = enquiries.Count(x => x.Status == "Responded"),
+                CompletedCount = enquiries.Count(x => x.Status == "Completed")
+            };
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+                enquiries = enquiries.Where(x => x.Status.Equals(
+                    status, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (serviceId.HasValue)
+                enquiries = enquiries.Where(x => x.ServiceId == serviceId.Value).ToList();
+
+            if (!string.IsNullOrWhiteSpace(serviceType))
+                enquiries = enquiries.Where(x => x.ServiceName.Contains(
+                    serviceType, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            response.Enquiries = enquiries
+                .OrderByDescending(x => x.CreatedDate)
+                .ToList();
+
+            return response;
+        }
+
+        public async Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId)
+        {
+            return await _repo.GetShopperServiceEnquiriesAsync(shopperRegId);
+        }
+
     }
 
 

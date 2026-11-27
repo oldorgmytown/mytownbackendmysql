@@ -96,5 +96,7 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search);
     int pageNumber, int pageSize);
 
         Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId);
+
+        Task<List<AdminServiceEnquiryDto>> GetAllServiceEnquiriesAsync();
     }
 }

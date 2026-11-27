@@ -84,5 +84,7 @@ namespace mytown.Services.Interfaces
     int pageNumber, int pageSize);
 
         Task<AdminSenderOrderDetailDto?> GetAdminSenderOrderDetailAsync(int senderOrderId);
+
+        Task<List<AdminServiceEnquiryDto>> GetAllServiceEnquiriesAsync();
     }
 }

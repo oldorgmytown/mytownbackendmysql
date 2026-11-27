@@ -1982,7 +1982,20 @@ GetCourierRegistersPaginatedAsync(int page, int pageSize, string? search)
 
             return dto;
         }
+        public async Task<List<AdminServiceEnquiryDto>> GetAllServiceEnquiriesAsync()
+        {
+            return await _context.ServiceProfiles
+                .Select(p => new AdminServiceEnquiryDto
+                {
+                    BusRegId = p.BusRegId,
+                    BusinessName = p.BusinessName,
+                    BusinessLocation = p.BusinessLocation,
+                    TotalEnquiries = _context.ServiceEnquiries
+                        .Count(e => e.BusRegId == p.BusRegId),
+                    Status = p.Status
+                })
+                .ToListAsync();
+        }
 
-       
     }
 }

@@ -583,5 +583,12 @@ public async Task<IActionResult> GetBusinessLocationCounts()
                 });
             }
         }
+
+        [HttpGet("admin-service-enquiries")]
+        public async Task<IActionResult> GetAllServiceEnquiries()
+        {
+            var result = await _adminService.GetAllServiceEnquiriesAsync();
+            return Ok(result);
+        }
     }
 }

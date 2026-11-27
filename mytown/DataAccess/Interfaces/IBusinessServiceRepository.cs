@@ -41,5 +41,9 @@ namespace mytown.DataAccess.Interfaces
 
         Task<EnquiryNotificationInfo?> GetEnquiryNotificationInfoAsync(ServiceEnquiry enquiry);
 
+        Task<List<BusinessServiceEnquiryListDto>> GetBusinessServiceEnquiriesAsync(int busRegId);
+
+        Task<List<BusinessServiceEnquiryListDto>> GetShopperServiceEnquiriesAsync(int shopperRegId);
+
     }
 }
